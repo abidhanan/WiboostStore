@@ -15,7 +15,7 @@ use Illuminate\View\View;
 class RegisteredUserController extends Controller
 {
     /**
-     * Display the registration view.
+     * Menampilkan halaman registrasi.
      */
     public function create(): View
     {
@@ -23,28 +23,35 @@ class RegisteredUserController extends Controller
     }
 
     /**
-     * Handle an incoming registration request.
+     * Memproses data pendaftaran user baru.
      *
      * @throws \Illuminate\Validation\ValidationException
      */
     public function store(Request $request): RedirectResponse
     {
+        // 1. Validasi input dari form register
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        // 2. Simpan user baru ke database
+        // Catatan: role_id tidak perlu diisi manual karena file migration kita 
+        // sudah mengaturnya secara default menjadi 5 (User biasa).
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
+        // 3. Memicu event Registered (berguna jika nanti Anda mengaktifkan verifikasi email)
         event(new Registered($user));
 
+        // 4. Langsung login otomatis setelah berhasil mendaftar
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        // 5. REDIRECT CUSTOM: Arahkan ke Dasbor khusus pelanggan Wiboost Store
+        return redirect()->intended(route('user.dashboard', absolute: false));
     }
 }

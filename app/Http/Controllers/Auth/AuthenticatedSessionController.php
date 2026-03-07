@@ -1,47 +1,19 @@
-<?php
-
-namespace App\Http\Controllers\Auth;
-
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
-
-class AuthenticatedSessionController extends Controller
-{
-    /**
-     * Display the login view.
-     */
-    public function create(): View
+public function store(LoginRequest $request): RedirectResponse
     {
-        return view('auth.login');
-    }
-
-    /**
-     * Handle an incoming authentication request.
-     */
-    public function store(LoginRequest $request): RedirectResponse
-    {
+        // 1. Validasi kredensial email & password
         $request->authenticate();
 
+        // 2. Buat sesi baru untuk keamanan
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // 3. LOGIKA REDIRECT BERDASARKAN ROLE ID
+        $role = $request->user()->role_id;
+
+        if (in_array($role, [1, 2, 3, 4])) {
+            // Jika yang login adalah tim Manajemen (Super Admin, Admin, Office, Stok)
+            return redirect()->intended(route('admin.dashboard'));
+        }
+
+        // Jika yang login adalah Pelanggan / User Biasa (Role 5)
+        return redirect()->intended(route('user.dashboard'));
     }
-
-    /**
-     * Destroy an authenticated session.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        Auth::guard('web')->logout();
-
-        $request->session()->invalidate();
-
-        $request->session()->regenerateToken();
-
-        return redirect('/');
-    }
-}
