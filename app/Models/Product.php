@@ -7,7 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     protected $fillable = [
-        'category_id', 'provider_id', 'name', 'description', 'price', 'status'
+        'category_id',
+        'name',
+        'slug',
+        'description',
+        'price',
+        'provider_product_id', // <-- Tambahkan baris ini
+        'image',
+        'is_active',
     ];
 
     public function category()
