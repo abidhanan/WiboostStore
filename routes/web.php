@@ -1,24 +1,40 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+
+// --- CONTROLLER IMPORTS ---
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\FrontendController;
+
+// Admin Controllers (Nanti kita buat file-nya)
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\ManualOrderController;
+use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
+
+// User Controllers (Nanti kita buat file-nya)
+use App\Http\Controllers\User\DashboardController as UserDashboardController;
+use App\Http\Controllers\User\TransactionHistoryController;
+use App\Http\Controllers\User\OrderController;
+
 
 /*
 |--------------------------------------------------------------------------
 | 1. PUBLIC ROUTES (Akses Terbuka)
 |--------------------------------------------------------------------------
-| Jalur ini bisa diakses oleh siapa saja tanpa perlu login.
+| Menampilkan Landing Page dengan statistik real-time.
 */
-Route::get('/', function () {
-    return view('welcome'); // Nanti kita ganti dengan desain Landing Page Wiboost Store
-})->name('home');
+Route::get('/', [FrontendController::class, 'index'])->name('home');
 
 
 /*
 |--------------------------------------------------------------------------
 | 2. GLOBAL AUTH ROUTES (Semua User Login)
 |--------------------------------------------------------------------------
-| Jalur untuk pengaturan profil bawaan Breeze. Semua role bisa akses ini.
+| Bawaan Laravel Breeze untuk mengatur email dan password.
 */
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -31,21 +47,21 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 | 3. USER PANEL ROUTES (Khusus Pelanggan / Role: 5)
 |--------------------------------------------------------------------------
-| Jalur khusus pembeli untuk melihat dasbor, kategori, dan riwayat.
+| Area khusus pembeli Wiboost Store.
 */
-Route::middleware(['auth', 'role:5'])->group(function () {
+Route::middleware(['auth', 'role:5'])->prefix('user')->name('user.')->group(function () {
     
-    Route::get('/dashboard', function () {
-        return view('dashboard'); // Menampilkan dashboard pembeli bawaan Breeze untuk sementara
-    })->name('dashboard');
+    // Dasbor Pembeli (Pilih Kategori)
+    Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/history', function () {
-        return "Halaman Riwayat Transaksi & Nota Pembeli";
-    })->name('user.history');
+    // Riwayat Transaksi & Nota
+    Route::get('/history', [TransactionHistoryController::class, 'index'])->name('history');
 
-    Route::get('/kategori/{slug}', function ($slug) {
-        return "Menampilkan form pemesanan untuk kategori: " . $slug;
-    })->name('user.category');
+    // Form Pemesanan Berdasarkan Kategori
+    Route::get('/order/{slug}', [OrderController::class, 'showCategory'])->name('order.category');
+    
+    // Proses Checkout (Saat tombol Pesan Sekarang dipencet)
+    Route::post('/checkout', [OrderController::class, 'processCheckout'])->name('checkout.process');
 
 });
 
@@ -54,42 +70,38 @@ Route::middleware(['auth', 'role:5'])->group(function () {
 |--------------------------------------------------------------------------
 | 4. ADMIN PANEL ROUTES (Super Admin, Admin, Office, Stok)
 |--------------------------------------------------------------------------
-| Prefix '/admin' akan otomatis ditambahkan ke URL.
-| Name 'admin.' akan otomatis ditambahkan ke nama route.
 */
 Route::middleware(['auth', 'role:1,2,3,4'])->prefix('admin')->name('admin.')->group(function () {
 
-    // Dasbor Umum Manajemen (Bisa diakses role 1, 2, 3, 4)
-    Route::get('/dashboard', function () {
-        return "Selamat datang di Dasbor Manajemen Wiboost Store!";
-    })->name('dashboard');
+    // Dasbor Umum Manajemen (Grafik & Statistik)
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
 
     // --- HAK AKSES SUPER ADMIN (1) ---
     Route::middleware(['role:1'])->group(function () {
-        Route::get('/users', function () { return "Halaman Manajemen Staff & User"; })->name('users.index');
-        Route::get('/categories', function () { return "Halaman Kelola Kategori Layanan"; })->name('categories.index');
-        Route::get('/products', function () { return "Halaman Kelola Produk & Harga API"; })->name('products.index');
-        Route::get('/settings', function () { return "Halaman Konfigurasi API (Midtrans, OrderSosmed, dll)"; })->name('settings');
+        Route::resource('users', UserController::class);
+        Route::resource('categories', CategoryController::class);
+        Route::resource('products', ProductController::class);
     });
 
 
     // --- HAK AKSES: SUPER ADMIN (1) & STOK (4) ---
     Route::middleware(['role:1,4'])->group(function () {
-        Route::get('/stocks', function () { return "Halaman Restok Akun Premium (Netflix, Canva, dll)"; })->name('stocks.index');
+        Route::resource('stocks', StockController::class);
     });
 
 
     // --- HAK AKSES: SUPER ADMIN (1) & ADMIN (2) ---
     Route::middleware(['role:1,2'])->group(function () {
-        Route::get('/manual-orders', function () { return "Halaman Eksekusi Pesanan Buzzer & Nomor Luar"; })->name('manual-orders.index');
+        Route::get('/manual-orders', [ManualOrderController::class, 'index'])->name('manual-orders.index');
+        Route::post('/manual-orders/{id}/complete', [ManualOrderController::class, 'markAsComplete'])->name('manual-orders.complete');
     });
 
 
     // --- HAK AKSES: SUPER ADMIN (1), ADMIN (2), & OFFICE (3) ---
     Route::middleware(['role:1,2,3'])->group(function () {
-        Route::get('/transactions', function () { return "Halaman Pantau Semua Transaksi"; })->name('transactions.index');
-        Route::get('/reports', function () { return "Halaman Laporan & Analitik Pendapatan"; })->name('reports.index');
+        Route::get('/transactions', [AdminTransactionController::class, 'index'])->name('transactions.index');
+        Route::get('/reports', [AdminTransactionController::class, 'reports'])->name('reports.index');
     });
 
 });
