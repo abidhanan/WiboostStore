@@ -3,12 +3,22 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<div class="relative overflow-hidden bg-indigo-600 rounded-3xl p-8 mb-10 shadow-xl shadow-indigo-100">
+<div class="relative overflow-hidden bg-indigo-600 rounded-3xl p-8 mb-10 shadow-xl shadow-indigo-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
     <div class="relative z-10">
         <h1 class="text-3xl font-bold text-white mb-2">Halo, {{ Auth::user()->name }}! 👋</h1>
-        <p class="text-indigo-100 max-w-md">Siap buat sosmed dan game kamu makin GG hari ini? Pilih kategori layanan di bawah.</p>
+        <p class="text-indigo-100 max-w-md">Siap buat sosmed dan game kamu makin GG hari ini? Pilih kategori di bawah.</p>
     </div>
-    <div class="absolute -right-10 -bottom-10 opacity-10">
+    
+    <div class="relative z-10 bg-white/20 backdrop-blur-md px-6 py-5 rounded-2xl border border-white/30 w-full md:w-auto text-left md:text-right shadow-inner">
+        <p class="text-indigo-100 text-sm font-bold uppercase tracking-widest mb-1">Saldo Wiboost</p>
+        <p class="text-3xl font-extrabold text-white tracking-tight mb-3">Rp {{ number_format(Auth::user()->balance, 0, ',', '.') }}</p>
+        <a href="#" class="inline-flex items-center gap-2 bg-white text-indigo-600 px-5 py-2 rounded-full text-sm font-bold hover:bg-indigo-50 hover:scale-105 transition-all shadow-md">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            Top Up Saldo
+        </a>
+    </div>
+
+    <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
         <svg width="300" height="300" viewBox="0 0 24 24" fill="white"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
     </div>
 </div>
