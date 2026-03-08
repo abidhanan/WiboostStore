@@ -10,10 +10,10 @@ class TransactionHistoryController extends Controller
 {
     public function index()
     {
-        // Mengambil semua transaksi milik user yang sedang login, diurutkan dari yang terbaru
+        // Mengambil semua transaksi milik user yang sedang login
         $transactions = Transaction::where('user_id', Auth::id())
                                     ->with('product') // Mengambil data produk terkait
-                                    ->orderBy('created_at', 'desc')
+                                    ->orderBy('created_at', 'desc') // Urutkan dari yang terbaru
                                     ->get();
 
         return view('user.history', compact('transactions'));
