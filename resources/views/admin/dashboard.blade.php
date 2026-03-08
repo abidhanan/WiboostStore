@@ -10,7 +10,7 @@
             </div>
             <div>
                 <p class="text-sm text-gray-500 font-medium">Total Pendapatan</p>
-                <h3 class="text-2xl font-bold text-gray-900">Rp 0</h3>
+                <h3 class="text-2xl font-bold text-gray-900">Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</h3>
             </div>
         </div>
 
@@ -20,7 +20,7 @@
             </div>
             <div>
                 <p class="text-sm text-gray-500 font-medium">Pesanan Sukses</p>
-                <h3 class="text-2xl font-bold text-gray-900">0</h3>
+                <h3 class="text-2xl font-bold text-gray-900">{{ $pesananSukses }}</h3>
             </div>
         </div>
 
@@ -30,7 +30,7 @@
             </div>
             <div>
                 <p class="text-sm text-gray-500 font-medium">Total Pengguna</p>
-                <h3 class="text-2xl font-bold text-gray-900">0</h3>
+                <h3 class="text-2xl font-bold text-gray-900">{{ $totalPengguna }}</h3>
             </div>
         </div>
     </div>

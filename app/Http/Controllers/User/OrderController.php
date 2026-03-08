@@ -25,7 +25,7 @@ class OrderController extends Controller
         // Mengambil produk yang aktif di kategori tersebut, diurutkan dari harga termurah
         // Menggunakan kolom 'status' sesuai dengan file migration kita
         $products = Product::where('category_id', $category->id)
-                            ->where('status', 'active')
+                            ->where('is_active', true)
                             ->orderBy('price', 'asc')
                             ->get();
 

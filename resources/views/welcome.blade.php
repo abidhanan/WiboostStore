@@ -32,7 +32,11 @@
                 </div>
                 <div>
                     @auth
-                        <a href="{{ url('/user/dashboard') }}" class="px-5 py-2 rounded-full text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md transition-all">Dasbor Saya</a>
+                        @if(Auth::user()->role_id == 1 || Auth::user()->role_id == 2)
+                            <a href="{{ url('/admin/dashboard') }}" class="px-5 py-2 rounded-full text-sm font-bold text-white bg-slate-800 hover:bg-slate-900 shadow-md transition-all">Ruang Kendali</a>
+                        @else
+                            <a href="{{ url('/user/dashboard') }}" class="px-5 py-2 rounded-full text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md transition-all">Dasbor Saya</a>
+                        @endif
                     @else
                         <a href="{{ route('login') }}" class="text-sm font-bold text-gray-600 hover:text-blue-600 mr-4 transition-colors">Masuk</a>
                         <a href="{{ route('register') }}" class="px-5 py-2 rounded-full text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg transition-all">Daftar</a>
@@ -100,13 +104,22 @@
     </div>
 
     <div class="bg-white py-8 border-y border-gray-200">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row justify-around items-center gap-6">
                 <div class="text-center">
                     <p class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Total Pengguna</p>
                     <p class="mt-1 text-4xl font-extrabold text-blue-600">{{ number_format($totalUsers, 0, ',', '.') }}<span class="text-2xl">+</span></p>
                 </div>
+                
                 <div class="hidden md:block w-px h-16 bg-gray-200"></div>
+                
+                <div class="text-center">
+                    <p class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Layanan Aktif</p>
+                    <p class="mt-1 text-4xl font-extrabold text-purple-600">{{ number_format($activeProducts, 0, ',', '.') }}</p>
+                </div>
+                
+                <div class="hidden md:block w-px h-16 bg-gray-200"></div>
+
                 <div class="text-center">
                     <p class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Transaksi Sukses</p>
                     <p class="mt-1 text-4xl font-extrabold text-green-500">{{ number_format($totalTransactions, 0, ',', '.') }}<span class="text-2xl">+</span></p>
