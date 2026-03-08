@@ -19,11 +19,8 @@ class OrderController extends Controller
      */
     public function showCategory($slug)
     {
-        // Mencari kategori berdasarkan slug (contoh: 'suntik-sosmed')
         $category = Category::where('slug', $slug)->firstOrFail();
 
-        // Mengambil produk yang aktif di kategori tersebut, diurutkan dari harga termurah
-        // Menggunakan kolom 'status' sesuai dengan file migration kita
         $products = Product::where('category_id', $category->id)
                             ->where('is_active', true)
                             ->orderBy('price', 'asc')
@@ -33,25 +30,63 @@ class OrderController extends Controller
     }
 
     /**
-     * Memproses pembuatan pesanan dan menghasilkan Snap Token Midtrans.
+     * Memproses pembuatan pesanan, memotong saldo, ATAU menghasilkan Snap Token Midtrans.
      */
     public function processCheckout(Request $request)
     {
         // 1. Validasi Input
         $request->validate([
-            'product_id'   => 'required|exists:products,id',
-            'target_data'  => 'required|string|min:3',
-            'target_notes' => 'nullable|string|max:500', // Untuk instruksi buzzer
+            'product_id'     => 'required|exists:products,id',
+            'target_data'    => 'required|string|min:3',
+            'target_notes'   => 'nullable|string|max:500',
+            'payment_method' => 'required|string|in:wallet,manual', // Pastikan metode valid
         ]);
 
         try {
-            // 2. Ambil data produk untuk mendapatkan harga terbaru
+            // 2. Ambil data produk dan user
             $product = Product::findOrFail($request->product_id);
+            $user = Auth::user();
 
-            // 3. Buat data transaksi di database dengan status 'unpaid'
+            // ==========================================
+            // LOGIKA PEMBAYARAN: SALDO WIBOOST (WALLET)
+            // ==========================================
+            if ($request->payment_method === 'wallet') {
+                
+                // Cek ketersediaan saldo
+                if ($user->balance < $product->price) {
+                    return back()->with('error', 'Saldo Wiboost tidak mencukupi. Silakan top up terlebih dahulu.');
+                }
+
+                // Potong saldo
+                $user->decrement('balance', $product->price);
+
+                // Buat transaksi LUNAS
+                $transaction = Transaction::create([
+                    'invoice_number' => 'WIB-' . strtoupper(Str::random(12)),
+                    'user_id'        => $user->id,
+                    'product_id'     => $product->id,
+                    'amount'         => $product->price,
+                    'target_data'    => $request->target_data,
+                    'target_notes'   => $request->target_notes,
+                    'payment_status' => 'paid',
+                    'order_status'   => 'processing',
+                ]);
+
+                // Tembak ke Provider (Opsional/Nanti)
+                // $digiflazz = new \App\Services\DigiflazzService();
+                // $digiflazz->placeOrder($transaction);
+
+                return redirect()->route('user.history')->with('success', 'Pesanan berhasil dibayar menggunakan Saldo Wiboost!');
+            }
+
+            // ==========================================
+            // LOGIKA PEMBAYARAN: MIDTRANS (QRIS/BANK)
+            // ==========================================
+            
+            // Buat transaksi MENUNGGU BAYAR
             $transaction = Transaction::create([
                 'invoice_number' => 'WIB-' . strtoupper(Str::random(12)),
-                'user_id'        => Auth::id(),
+                'user_id'        => $user->id,
                 'product_id'     => $product->id,
                 'amount'         => $product->price,
                 'target_data'    => $request->target_data,
@@ -60,18 +95,17 @@ class OrderController extends Controller
                 'order_status'   => 'pending',
             ]);
 
-            // 4. Inisialisasi Midtrans Service untuk mendapatkan Snap Token
+            // Dapatkan Token Midtrans
             $midtransService = new MidtransService();
             $snapToken = $midtransService->getSnapToken($transaction);
 
-            // 5. Arahkan ke halaman checkout pembayaran
+            // Arahkan ke halaman konfirmasi
             return view('user.checkout', [
                 'transaction' => $transaction,
                 'snapToken'   => $snapToken
             ]);
 
         } catch (Exception $e) {
-            // Jika terjadi kesalahan (misal: API Midtrans mati atau Server Key salah)
             return back()->with('error', 'Gagal memproses pesanan: ' . $e->getMessage());
         }
     }
