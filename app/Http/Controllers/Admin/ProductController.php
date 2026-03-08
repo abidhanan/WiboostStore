@@ -11,10 +11,25 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('category')->latest()->get();
-        return view('admin.products.index', compact('products'));
+        $query = Product::with('category');
+
+        // Filter Pencarian (Nama Produk atau Provider ID)
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('provider_product_id', 'like', '%' . $request->search . '%');
+        }
+
+        // Filter Dropdown Kategori
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        $products = $query->latest()->get();
+        $categories = Category::all(); // Diperlukan untuk opsi filter dropdown
+
+        return view('admin.products.index', compact('products', 'categories'));
     }
 
     public function create()

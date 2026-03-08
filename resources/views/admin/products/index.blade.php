@@ -3,10 +3,10 @@
 @section('title', 'Kelola Produk')
 
 @section('content')
-<div class="flex justify-between items-center mb-6">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
     <div>
         <h3 class="text-xl font-bold text-gray-800">Daftar Produk & Layanan</h3>
-        <p class="text-sm text-gray-500">Total: {{ $products->count() }} item tersedia.</p>
+        <p class="text-sm text-gray-500">Total: {{ $products->count() }} item ditemukan.</p>
     </div>
     <a href="{{ route('admin.products.create') }}" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-100 flex items-center gap-2">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
@@ -15,10 +15,42 @@
 </div>
 
 @if(session('success'))
-    <div class="bg-emerald-50 border border-emerald-100 text-emerald-600 px-4 py-3 rounded-xl mb-6 font-bold">
+    <div class="bg-emerald-50 border border-emerald-100 text-emerald-600 px-4 py-3 rounded-xl mb-6 font-bold flex items-center gap-3">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
         {{ session('success') }}
     </div>
 @endif
+
+<div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6">
+    <form action="{{ route('admin.products.index') }}" method="GET" class="flex flex-col md:flex-row gap-4">
+        <div class="relative flex-grow">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </span>
+            <input type="text" name="search" value="{{ request('search') }}" 
+                   class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-indigo-500 transition text-sm font-medium" 
+                   placeholder="Cari nama produk atau Provider ID...">
+        </div>
+
+        <div class="w-full md:w-56">
+            <select name="category" onchange="this.form.submit()" 
+                    class="w-full px-4 py-2.5 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-indigo-500 transition text-sm font-bold text-gray-600">
+                <option value="">Semua Kategori</option>
+                @foreach($categories as $cat)
+                    <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>
+                        {{ $cat->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        @if(request('search') || request('category'))
+            <a href="{{ route('admin.products.index') }}" class="px-6 py-2.5 text-sm font-bold text-rose-500 hover:bg-rose-50 rounded-xl transition flex items-center justify-center border border-rose-100">
+                Reset
+            </a>
+        @endif
+    </form>
+</div>
 
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
     <div class="overflow-x-auto">
@@ -81,8 +113,11 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-6 py-12 text-center text-gray-500 italic">
-                        Belum ada produk. Silakan tambahkan layanan pertamamu.
+                    <td colspan="6" class="px-6 py-16 text-center">
+                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 mb-4">
+                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <p class="text-gray-500 font-medium">Tidak ada produk yang sesuai dengan pencarianmu.</p>
                     </td>
                 </tr>
                 @endforelse
