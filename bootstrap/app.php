@@ -12,10 +12,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Mendaftarkan alias 'role' untuk middleware CheckRole buatan kita
+        
+        // Mendaftarkan alias 'role' untuk middleware CheckRole
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
+
+        // Mengizinkan Midtrans mengirim Webhook tanpa terkena blokir CSRF Token
+        $middleware->validateCsrfTokens(except: [
+            '/midtrans/callback',
+        ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Konfigurasi penanganan error bisa ditambahkan di sini nanti jika diperlukan

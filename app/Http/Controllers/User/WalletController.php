@@ -7,32 +7,73 @@ use App\Models\Deposit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Exception;
 
 class WalletController extends Controller
 {
+    /**
+     * Menampilkan halaman dompet dan riwayat top up.
+     */
     public function index()
     {
-        // Menampilkan riwayat top up milik user
         $deposits = Deposit::where('user_id', Auth::id())->latest()->get();
         return view('user.wallet.index', compact('deposits'));
     }
 
+    /**
+     * Memproses permintaan top up saldo dan membuat Snap Token Midtrans.
+     */
     public function store(Request $request)
     {
+        // Validasi minimal top up Rp 10.000
         $request->validate([
-            'amount' => 'required|numeric|min:10000', // Minimal top up Rp 10.000
+            'amount' => 'required|numeric|min:10000',
         ]);
 
-        // Membuat tiket deposit baru
-        $deposit = Deposit::create([
-            'user_id' => Auth::id(),
-            'invoice_number' => 'DEP-' . strtoupper(Str::random(10)),
-            'amount' => $request->amount,
-            'payment_status' => 'unpaid',
-        ]);
+        try {
+            // 1. Buat tiket deposit di database dengan status unpaid
+            $deposit = Deposit::create([
+                'user_id' => Auth::id(),
+                'invoice_number' => 'DEP-' . strtoupper(Str::random(10)),
+                'amount' => $request->amount,
+                'payment_status' => 'unpaid',
+            ]);
 
-        // Karena akun Midtrans/Digiflazz kamu sedang tahap konfirmasi, 
-        // kita arahkan ke halaman instruksi manual terlebih dahulu.
-        return redirect()->route('user.wallet.index')->with('success', 'Tiket deposit berhasil dibuat! Silakan lakukan pembayaran.');
+            // 2. Konfigurasi Midtrans
+            \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+            \Midtrans\Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
+            \Midtrans\Config::$isSanitized = true;
+            \Midtrans\Config::$is3ds = true;
+
+            // 3. Siapkan Payload (Data Tagihan untuk Midtrans)
+            $params = [
+                'transaction_details' => [
+                    'order_id' => $deposit->invoice_number,
+                    'gross_amount' => $deposit->amount,
+                ],
+                'item_details' => [
+                    [
+                        'id' => 'TOPUP-WIBOOST',
+                        'price' => $deposit->amount,
+                        'quantity' => 1,
+                        'name' => 'Top Up Saldo Wiboost'
+                    ]
+                ],
+                'customer_details' => [
+                    'first_name' => Auth::user()->name,
+                    'email' => Auth::user()->email,
+                ]
+            ];
+
+            // 4. Dapatkan Snap Token dari API Midtrans
+            $snapToken = \Midtrans\Snap::getSnapToken($params);
+
+            // 5. Arahkan pengguna ke halaman Checkout khusus Top Up
+            return view('user.wallet.checkout', compact('deposit', 'snapToken'));
+
+        } catch (Exception $e) {
+            // Jika ada masalah dengan server Midtrans atau konfigurasi
+            return back()->with('error', 'Gagal terhubung ke server pembayaran: ' . $e->getMessage());
+        }
     }
 }
