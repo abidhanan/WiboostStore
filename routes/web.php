@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\TransactionController as AdminTransactionControll
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\User\TransactionHistoryController;
 use App\Http\Controllers\User\OrderController;
+use App\Http\Controllers\User\WalletController; // <--- Import Wallet Controller Baru
 
 
 /*
@@ -47,10 +48,19 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:5'])->prefix('user')->name('user.')->group(function () {
+    
+    // Dasbor & Transaksi
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
     Route::get('/history', [TransactionHistoryController::class, 'index'])->name('history');
+    
+    // Pemesanan
     Route::get('/order/{slug}', [OrderController::class, 'showCategory'])->name('order.category');
     Route::post('/checkout/process', [OrderController::class, 'processCheckout'])->name('checkout.process');
+
+    // Wiboost Wallet (Top Up Saldo)
+    Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
+    Route::post('/wallet/topup', [WalletController::class, 'store'])->name('wallet.topup');
+
 });
 
 

@@ -12,7 +12,7 @@
     <div class="relative z-10 bg-white/20 backdrop-blur-md px-6 py-5 rounded-2xl border border-white/30 w-full md:w-auto text-left md:text-right shadow-inner">
         <p class="text-indigo-100 text-sm font-bold uppercase tracking-widest mb-1">Saldo Wiboost</p>
         <p class="text-3xl font-extrabold text-white tracking-tight mb-3">Rp {{ number_format(Auth::user()->balance, 0, ',', '.') }}</p>
-        <a href="#" class="inline-flex items-center gap-2 bg-white text-indigo-600 px-5 py-2 rounded-full text-sm font-bold hover:bg-indigo-50 hover:scale-105 transition-all shadow-md">
+        <a href="{{ route('user.wallet.index') }}" class="inline-flex items-center gap-2 bg-white text-indigo-600 px-5 py-2 rounded-full text-sm font-bold hover:bg-indigo-50 hover:scale-105 transition-all shadow-md">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
             Top Up Saldo
         </a>
