@@ -53,6 +53,9 @@ Route::middleware(['auth', 'role:5'])->prefix('user')->name('user.')->group(func
 
     Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
     Route::post('/wallet/topup', [WalletController::class, 'store'])->name('wallet.topup');
+    
+    // Rute untuk melanjutkan pembayaran deposit yang tertunda
+    Route::get('/wallet/pay/{invoice_number}', [WalletController::class, 'pay'])->name('wallet.pay');
 });
 
 /*

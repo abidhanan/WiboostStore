@@ -80,7 +80,12 @@
                             @elseif($deposit->payment_status == 'failed')
                                 <span class="text-rose-500 text-xs font-bold uppercase mt-1 inline-block">Gagal</span>
                             @else
-                                <span class="text-amber-500 text-xs font-bold uppercase mt-1 inline-block border border-amber-200 bg-amber-50 px-2 py-0.5 rounded-md">Menunggu Bayar</span>
+                                <div class="flex flex-col items-end gap-2 mt-1">
+                                    <span class="text-amber-500 text-xs font-bold uppercase border border-amber-200 bg-amber-50 px-2 py-0.5 rounded-md">Menunggu Bayar</span>
+                                    <a href="{{ route('user.wallet.pay', $deposit->invoice_number) }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-1.5 px-4 rounded-lg transition-colors shadow-sm">
+                                        Bayar Sekarang
+                                    </a>
+                                </div>
                             @endif
                         </div>
                     </div>

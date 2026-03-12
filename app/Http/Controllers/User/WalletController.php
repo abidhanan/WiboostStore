@@ -76,4 +76,55 @@ class WalletController extends Controller
             return back()->with('error', 'Gagal terhubung ke server pembayaran: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Memanggil ulang halaman pembayaran untuk deposit yang berstatus unpaid.
+     */
+    public function pay($invoice_number)
+    {
+        // Cari deposit milik user yang sedang login
+        $deposit = Deposit::where('invoice_number', $invoice_number)
+                          ->where('user_id', Auth::id())
+                          ->firstOrFail();
+
+        // Pastikan statusnya masih unpaid
+        if ($deposit->payment_status !== 'unpaid') {
+            return redirect()->route('user.wallet.index')->with('error', 'Tagihan ini sudah lunas atau dibatalkan.');
+        }
+
+        try {
+            // Konfigurasi Midtrans
+            \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+            \Midtrans\Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
+            \Midtrans\Config::$isSanitized = true;
+            \Midtrans\Config::$is3ds = true;
+
+            $params = [
+                'transaction_details' => [
+                    'order_id' => $deposit->invoice_number,
+                    'gross_amount' => $deposit->amount,
+                ],
+                'item_details' => [
+                    [
+                        'id' => 'TOPUP-WIBOOST',
+                        'price' => $deposit->amount,
+                        'quantity' => 1,
+                        'name' => 'Top Up Saldo Wiboost'
+                    ]
+                ],
+                'customer_details' => [
+                    'first_name' => Auth::user()->name,
+                    'email' => Auth::user()->email,
+                ]
+            ];
+
+            // Midtrans cukup pintar, jika order_id sama dan belum expired, dia akan mengembalikan token yang sama
+            $snapToken = \Midtrans\Snap::getSnapToken($params);
+
+            return view('user.wallet.checkout', compact('deposit', 'snapToken'));
+
+        } catch (Exception $e) {
+            return back()->with('error', 'Gagal memuat ulang pembayaran: ' . $e->getMessage());
+        }
+    }
 }
