@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\ManualOrderController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
+use App\Http\Controllers\Admin\DepositController as AdminDepositController; // <--- Import Deposit Controller Admin
 
 // User / Customer Controllers
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
@@ -66,24 +67,35 @@ Route::middleware(['auth', 'role:5'])->prefix('user')->name('user.')->group(func
 Route::middleware(['auth', 'role:1,2,3,4'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
+    // --- SUPER ADMIN ONLY (1) ---
     Route::middleware(['role:1'])->group(function () {
         Route::resource('users', AdminUserController::class);
         Route::resource('categories', CategoryController::class);
         Route::resource('products', ProductController::class);
     });
 
+    // --- STOK (4) ---
     Route::middleware(['role:1,4'])->group(function () {
         Route::resource('stocks', StockController::class);
     });
 
+    // --- MANUAL PROCESS (2) ---
     Route::middleware(['role:1,2'])->group(function () {
         Route::get('/manual-orders', [ManualOrderController::class, 'index'])->name('manual-orders.index');
         Route::post('/manual-orders/{id}/complete', [ManualOrderController::class, 'markAsComplete'])->name('manual-orders.complete');
     });
 
+    // --- TRANSAKSI, DEPOSIT & REPORTS (1,2,3) ---
     Route::middleware(['role:1,2,3'])->group(function () {
+        // Transaksi
         Route::get('/transactions', [AdminTransactionController::class, 'index'])->name('transactions.index');
         Route::patch('/transactions/{id}/update', [AdminTransactionController::class, 'updateStatus'])->name('transactions.update');
+        
+        // Deposit (Baru)
+        Route::get('/deposits', [AdminDepositController::class, 'index'])->name('deposits.index');
+        Route::patch('/deposits/{id}', [AdminDepositController::class, 'update'])->name('deposits.update');
+        
+        // Laporan
         Route::get('/reports', [AdminTransactionController::class, 'reports'])->name('reports.index');
     });
 });
