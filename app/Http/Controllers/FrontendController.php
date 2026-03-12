@@ -6,23 +6,26 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Transaction;
 use App\Models\Category;
-use App\Models\Product; // Pastikan Model Product dipanggil
+use App\Models\Product;
 
 class FrontendController extends Controller
 {
+    /**
+     * Menampilkan Landing Page dengan data dinamis.
+     */
     public function index()
     {
-        // Mengambil data untuk statistik real-time di Landing Page
+        // 1. Mengambil data untuk statistik metrik real-time
         $totalUsers = User::where('role_id', 5)->count();
         $totalTransactions = Transaction::where('payment_status', 'paid')->count();
-        
-        // Tambahan: Menghitung total layanan/produk yang aktif dijual
         $activeProducts = Product::where('is_active', true)->count();
         
-        // Mengambil semua kategori untuk ditampilkan di menu
-        $categories = Category::all();
+        // 2. Mengambil semua kategori beserta jumlah produk yang ada di dalamnya
+        $categories = Category::withCount(['products' => function ($query) {
+            $query->where('is_active', true);
+        }])->get();
 
-        // Mengirim data tersebut ke file tampilan (view) 'welcome.blade.php'
+        // 3. Melempar semua data ke file tampilan 'welcome.blade.php'
         return view('welcome', compact('totalUsers', 'totalTransactions', 'activeProducts', 'categories'));
     }
 }
