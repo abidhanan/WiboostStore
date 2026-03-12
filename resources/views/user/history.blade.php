@@ -5,78 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Riwayat Transaksi - Wiboost Store</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Poppins', sans-serif; } </style>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Nunito', sans-serif; } </style>
 </head>
-<body class="bg-gray-50 pb-12">
+<body class="bg-[#f4f9ff] text-slate-800 antialiased pb-20">
 
-    <nav class="bg-white shadow-sm border-b p-4 sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto flex items-center justify-between">
-            <div class="flex items-center">
-                <a href="{{ route('user.dashboard') }}" class="text-blue-600 mr-4 hover:bg-blue-50 p-2 rounded-full transition">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                </a>
-                <h1 class="text-xl font-bold text-gray-800">Riwayat Transaksi</h1>
-            </div>
+    <nav class="bg-white/90 backdrop-blur-md border-b-4 border-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 flex items-center h-20">
+            <a href="{{ route('user.dashboard') }}" class="w-10 h-10 bg-[#f0f5ff] hover:bg-[#e0ebff] text-[#5a76c8] rounded-full flex items-center justify-center transition mr-4 border-2 border-white shadow-sm">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+            </a>
+            <h1 class="text-2xl font-black text-[#2b3a67]">Riwayat Pesanan</h1>
         </div>
     </nav>
 
-    <main class="max-w-4xl mx-auto py-8 px-4">
-        <div class="space-y-4">
+    <main class="max-w-4xl mx-auto py-10 px-4">
+        
+        @if(session('success'))
+            <div class="bg-[#e6fff7] border-4 border-white text-emerald-500 px-6 py-4 rounded-[2rem] mb-8 font-black flex items-center gap-3 shadow-sm">
+                <span class="text-2xl">🎉</span> {{ session('success') }}
+            </div>
+        @endif
+
+        <div class="space-y-6">
             @forelse($transactions as $trx)
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center hover:shadow-md transition">
+                <div class="bg-white rounded-[2rem] p-6 shadow-lg shadow-[#bde0fe]/20 border-4 border-white flex flex-col md:flex-row justify-between items-start md:items-center hover:border-[#bde0fe] hover:-translate-y-1 transition-all group">
                     
-                    <div class="mb-4 md:mb-0">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">{{ $trx->invoice_number }}</span>
-                            <span class="text-xs text-gray-400">{{ $trx->created_at->format('d M Y, H:i') }} WIB</span>
+                    <div class="mb-5 md:mb-0 w-full md:w-2/3">
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
+                            <span class="text-xs font-black text-white bg-[#5a76c8] px-3 py-1 rounded-full border-2 border-white shadow-sm">{{ $trx->invoice_number }}</span>
+                            <span class="text-xs font-bold text-[#8faaf3]">{{ $trx->created_at->format('d M Y, H:i') }} WIB</span>
                         </div>
                         
-                        <h4 class="font-bold text-lg text-gray-800 mt-2">{{ $trx->product->name ?? 'Produk Tidak Tersedia' }}</h4>
+                        <h4 class="font-black text-xl text-[#2b3a67]">{{ $trx->product->name ?? 'Produk Dihapus' }}</h4>
                         
-                        <div class="flex items-center gap-2 mt-1">
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                            <p class="text-sm text-gray-600">Target: <span class="font-bold">{{ $trx->target_data }}</span></p>
+                        <div class="inline-flex items-center gap-2 mt-2 bg-[#f0f5ff] px-4 py-1.5 rounded-xl border border-white shadow-inner">
+                            <span class="text-lg">🎯</span>
+                            <p class="text-sm text-[#5a76c8] font-bold">Target: <span class="font-black">{{ $trx->target_data }}</span></p>
                         </div>
                     </div>
                     
-                    <div class="flex flex-col items-start md:items-end w-full md:w-auto bg-gray-50 md:bg-transparent p-4 md:p-0 rounded-xl md:rounded-none">
-                        <p class="font-extrabold text-gray-900 text-xl mb-3">Rp {{ number_format($trx->amount, 0, ',', '.') }}</p>
+                    <div class="flex flex-col items-start md:items-end w-full md:w-auto bg-[#f4f9ff] md:bg-transparent p-5 md:p-0 rounded-[1.5rem] md:rounded-none border-2 border-white md:border-0 shadow-inner md:shadow-none">
+                        <p class="font-black text-[#5a76c8] text-2xl mb-3">Rp {{ number_format($trx->amount, 0, ',', '.') }}</p>
                         
-                        <div class="flex gap-2">
+                        <div class="flex flex-wrap justify-start md:justify-end gap-2">
                             @if($trx->payment_status == 'paid')
-                                <span class="bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-xs font-bold uppercase border border-green-200">Lunas</span>
+                                <span class="bg-[#e6fff7] text-emerald-500 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-white shadow-sm">Lunas</span>
                             @elseif($trx->payment_status == 'failed')
-                                <span class="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold uppercase border border-red-200">Gagal Bayar</span>
+                                <span class="bg-[#ffe5e5] text-[#ff6b6b] px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-white shadow-sm">Gagal Bayar</span>
                             @else
-                                <span class="bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded-lg text-xs font-bold uppercase border border-yellow-200">Belum Bayar</span>
+                                <span class="bg-[#fff5eb] text-amber-500 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-white shadow-sm">Menunggu Bayar</span>
                             @endif
 
                             @if($trx->payment_status == 'paid')
                                 @if($trx->order_status == 'success')
-                                    <span class="bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-bold uppercase border border-indigo-200">Pesanan Masuk</span>
+                                    <span class="bg-[#e6fff7] text-emerald-500 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-white shadow-sm">Pesanan Sukses</span>
                                 @elseif($trx->order_status == 'processing')
-                                    <span class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg text-xs font-bold uppercase border border-amber-200">Diproses Provider</span>
+                                    <span class="bg-[#f0f5ff] text-[#5a76c8] px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-white shadow-sm animate-pulse">Diproses</span>
                                 @elseif($trx->order_status == 'failed')
-                                    <span class="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold uppercase border border-red-200">Gagal Provider</span>
+                                    <span class="bg-[#ffe5e5] text-[#ff6b6b] px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-white shadow-sm">Pesanan Gagal</span>
                                 @else
-                                    <span class="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold uppercase border border-gray-200">Menunggu</span>
+                                    <span class="bg-[#f4f9ff] text-[#8faaf3] px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-white shadow-sm">Menunggu</span>
                                 @endif
                             @endif
                         </div>
                     </div>
                 </div>
             @empty
-                <div class="text-center py-24 bg-white rounded-3xl border border-dashed border-gray-300 shadow-sm">
-                    <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-800 mb-1">Belum Ada Transaksi</h3>
-                    <p class="text-sm text-gray-500 max-w-sm mx-auto">Pesanan yang kamu buat akan otomatis muncul di halaman ini.</p>
+                <div class="text-center py-24 bg-white rounded-[2rem] border-4 border-dashed border-[#bde0fe] shadow-sm">
+                    <div class="text-7xl mb-4 opacity-50">🛒</div>
+                    <h3 class="text-xl font-black text-[#5a76c8] mb-2">Belum Ada Transaksi</h3>
+                    <p class="text-[#8faaf3] font-bold max-w-sm mx-auto">Pesanan yang kamu buat akan otomatis muncul di sini. Yuk mulai jajan!</p>
                 </div>
             @endforelse
         </div>
     </main>
-
 </body>
 </html>
