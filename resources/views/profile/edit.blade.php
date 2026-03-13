@@ -1,29 +1,33 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Profile') }}
-        </h2>
-    </x-slot>
+@extends(Auth::user()->role_id == 1 || Auth::user()->role_id == 2 ? 'layouts.admin' : 'layouts.user')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-profile-information-form')
-                </div>
-            </div>
+@section('title', 'Pengaturan Akun')
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
-            </div>
+@section('content')
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+    .wiboost-font { font-family: 'Nunito', sans-serif; }
+</style>
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
-            </div>
-        </div>
+<div class="wiboost-font pb-12 max-w-4xl mx-auto mt-4">
+    <div class="mb-10 pl-2">
+        <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pengaturan Akun ⚙️</h2>
+        <p class="text-[#8faaf3] font-bold text-sm mt-1">Kelola informasi profil dan keamanan akunmu di sini.</p>
     </div>
-</x-app-layout>
+
+    <div class="space-y-8">
+        
+        <div class="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-lg shadow-[#bde0fe]/20 border-4 border-white">
+            @include('profile.partials.update-profile-information-form')
+        </div>
+
+        <div class="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-lg shadow-[#bde0fe]/20 border-4 border-white">
+            @include('profile.partials.update-password-form')
+        </div>
+
+        <div class="bg-[#fff0f0] rounded-[2.5rem] p-8 md:p-10 shadow-lg shadow-[#ffe5e5]/50 border-4 border-white">
+            @include('profile.partials.delete-user-form')
+        </div>
+
+    </div>
+</div>
+@endsection

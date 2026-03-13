@@ -1,78 +1,63 @@
 @extends('layouts.admin')
 
-@section('title', 'Kelola Kategori')
+@section('title', 'Manajemen Kategori')
 
 @section('content')
-<div class="mb-10">
-    <div class="flex items-center gap-3 mb-2">
-        <span class="bg-indigo-100 text-indigo-600 p-2 rounded-lg">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
-        </span>
-        <h3 class="text-2xl font-extrabold text-slate-800">Struktur Kategori</h3>
-    </div>
-    <p class="text-slate-500">Organisir layanan Wiboost Store agar pelanggan lebih mudah melakukan pencarian.</p>
-</div>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+    .wiboost-font { font-family: 'Nunito', sans-serif; }
+</style>
 
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-    
-    <div class="lg:col-span-4 sticky top-0">
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
-            <h4 class="font-bold text-slate-800 mb-6 flex items-center gap-2">
-                Tambah Baru
-                <span class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
-            </h4>
-            
-            <form action="{{ route('admin.categories.store') }}" method="POST">
-                @csrf
-                <div class="space-y-5">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Nama Kategori</label>
-                        <input type="text" name="name" 
-                               class="w-full px-5 py-3 rounded-2xl border border-slate-200 bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm font-medium" 
-                               placeholder="Contoh: Voucher Game" required>
-                    </div>
-                    
-                    <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95">
-                        Simpan Kategori
-                    </button>
-                </div>
-            </form>
+<div class="wiboost-font pb-12">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4 pl-2">
+        <div>
+            <h3 class="text-3xl font-black text-[#2b3a67] tracking-tight">Kategori Layanan 🗂️</h3>
+            <p class="text-sm text-[#8faaf3] font-bold mt-1">Kelola daftar kategori yang tampil di Halaman Depan.</p>
         </div>
-
-        @if(session('success'))
-        <div class="mt-4 bg-emerald-50 border border-emerald-100 text-emerald-600 px-5 py-3 rounded-2xl text-sm font-bold flex items-center gap-3 animate-bounce">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-            {{ session('success') }}
-        </div>
-        @endif
+        <a href="{{ route('admin.categories.create') }}" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white px-6 py-3 rounded-full font-black transition-transform active:scale-95 flex items-center gap-2 shadow-lg shadow-[#5a76c8]/30 border-4 border-white">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+            Tambah Kategori
+        </a>
     </div>
 
-    <div class="lg:col-span-8">
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-            <table class="w-full text-left">
-                <thead class="bg-slate-50 border-b border-slate-100">
+    @if(session('success'))
+        <div class="bg-[#e6fff7] border-4 border-white text-emerald-500 px-6 py-4 rounded-[2rem] mb-8 font-black flex items-center gap-3 shadow-sm">
+            <span class="text-2xl">🎉</span> {{ session('success') }}
+        </div>
+    @endif
+
+    <div class="bg-white rounded-[2rem] shadow-lg shadow-[#bde0fe]/20 border-4 border-white overflow-hidden">
+        <div class="overflow-x-auto p-4">
+            <table class="w-full text-left whitespace-nowrap">
+                <thead>
                     <tr>
-                        <th class="px-8 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">Nama & Slug</th>
-                        <th class="px-8 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] text-center">Aksi</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest w-16">No</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Nama Kategori</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Slug (URL)</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @forelse($categories as $cat)
-                    <tr class="group hover:bg-slate-50/50 transition-colors">
-                        <td class="px-8 py-5">
-                            <div class="flex flex-col">
-                                <span class="font-bold text-slate-800">{{ $cat->name }}</span>
-                                <span class="text-xs font-mono text-slate-400">/order/{{ $cat->slug }}</span>
-                            </div>
+                <tbody class="divide-y-2 divide-dashed divide-[#f0f5ff]">
+                    @forelse($categories as $index => $category)
+                    <tr class="hover:bg-[#f4f9ff] transition-colors rounded-xl group">
+                        <td class="px-6 py-4 font-black text-[#8faaf3]">{{ $index + 1 }}</td>
+                        <td class="px-6 py-4">
+                            <p class="font-black text-[#2b3a67] text-lg">{{ $category->name }}</p>
                         </td>
-                        <td class="px-8 py-5">
-                            <div class="flex justify-center">
-                                <form action="{{ route('admin.categories.destroy', $cat->id) }}" method="POST" 
-                                      onsubmit="return confirm('Peringatan: Menghapus kategori akan berdampak pada produk di dalamnya. Lanjutkan?')">
+                        <td class="px-6 py-4">
+                            <span class="bg-[#f0f5ff] text-[#5a76c8] px-3 py-1.5 rounded-full text-xs font-bold border border-white shadow-inner">
+                                {{ $category->slug }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <a href="{{ route('admin.categories.edit', $category->id) }}" class="bg-[#fff5eb] text-amber-500 hover:bg-amber-500 hover:text-white p-2.5 rounded-xl transition-colors shadow-sm border-2 border-white" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                </a>
+                                <form action="{{ route('admin.categories.destroy', $category->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus kategori ini?');">
                                     @csrf @method('DELETE')
-                                    <button type="submit" 
-                                            class="text-rose-500 hover:bg-rose-50 px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all">
-                                        Hapus
+                                    <button type="submit" class="bg-[#ffe5e5] text-[#ff6b6b] hover:bg-[#ff6b6b] hover:text-white p-2.5 rounded-xl transition-colors shadow-sm border-2 border-white" title="Hapus">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                     </button>
                                 </form>
                             </div>
@@ -80,11 +65,11 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="2" class="px-8 py-16 text-center">
-                            <div class="flex flex-col items-center opacity-40">
-                                <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                                <p class="text-sm font-medium">Belum ada kategori yang terdaftar.</p>
+                        <td colspan="4" class="px-6 py-12 text-center">
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-[1.5rem] bg-[#f0f5ff] border-4 border-white mb-3 shadow-inner">
+                                <span class="text-3xl">📂</span>
                             </div>
+                            <p class="text-[#8faaf3] font-black text-sm">Belum ada kategori yang dibuat.</p>
                         </td>
                     </tr>
                     @endforelse

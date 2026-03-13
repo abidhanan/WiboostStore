@@ -3,76 +3,79 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title') - Wiboost Admin</title>
+    <title>@yield('title') - Admin Wiboost</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Plus Jakarta Sans', sans-serif; } </style>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style> 
+        body { font-family: 'Nunito', sans-serif; } 
+        /* Scrollbar custom agar estetik */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f4f9ff; }
+        ::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
+    </style>
 </head>
-<body class="bg-gray-50 flex h-screen overflow-hidden antialiased text-slate-900">
+<body class="bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white flex h-screen overflow-hidden">
 
-    <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex shrink-0">
-        <div class="h-16 flex items-center px-6 border-b border-slate-800">
-            <span class="text-xl font-bold tracking-tight">Wiboost<span class="text-indigo-500">Admin</span></span>
+    <aside class="w-72 bg-white/90 backdrop-blur-md border-r-4 border-white shadow-xl shadow-[#bde0fe]/40 hidden md:flex flex-col rounded-r-[2.5rem] z-20 my-4 ml-4">
+        <div class="h-24 flex items-center px-8 border-b-2 border-dashed border-[#f0f5ff]">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#8faaf3] to-[#5a76c8] rounded-[1rem] flex items-center justify-center text-white font-black text-2xl shadow-inner border-2 border-white">W</div>
+                <span class="font-black text-2xl tracking-tight text-[#2b3a67]">Admin<span class="text-[#8faaf3]">Panel</span></span>
+            </div>
         </div>
-        
-        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-            <a href="{{ route('admin.dashboard') }}" 
-               class="flex items-center gap-3 px-4 py-3 rounded-xl transition group {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                <span class="font-semibold">Dashboard</span>
+
+        <nav class="flex-1 overflow-y-auto px-4 py-6 space-y-2">
+            <p class="px-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mb-2">Menu Utama</p>
+            
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-4 px-5 py-3.5 rounded-[1.5rem] font-black transition-all {{ request()->routeIs('admin.dashboard') ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white' : 'text-[#5a76c8] hover:bg-[#f0f5ff] hover:border-2 border-2 border-transparent hover:border-white' }}">
+                <span class="text-xl drop-shadow-sm">🏠</span> Dashboard
             </a>
             
-            <p class="px-4 pt-6 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Manajemen Stok</p>
+            <p class="px-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mt-6 mb-2">Katalog Toko</p>
             
-            <a href="{{ route('admin.categories.index') }}" 
-               class="flex items-center gap-3 px-4 py-3 rounded-xl transition group {{ request()->routeIs('admin.categories.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
-                <span class="font-semibold">Kategori</span>
+            <a href="{{ route('admin.categories.index') }}" class="flex items-center gap-4 px-5 py-3.5 rounded-[1.5rem] font-black transition-all {{ request()->routeIs('admin.categories.*') ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white' : 'text-[#5a76c8] hover:bg-[#f0f5ff] hover:border-2 border-2 border-transparent hover:border-white' }}">
+                <span class="text-xl drop-shadow-sm">🗂️</span> Kategori
+            </a>
+            <a href="{{ route('admin.products.index') }}" class="flex items-center gap-4 px-5 py-3.5 rounded-[1.5rem] font-black transition-all {{ request()->routeIs('admin.products.*') ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white' : 'text-[#5a76c8] hover:bg-[#f0f5ff] hover:border-2 border-2 border-transparent hover:border-white' }}">
+                <span class="text-xl drop-shadow-sm">🛍️</span> Produk
             </a>
 
-            <a href="{{ route('admin.products.index') }}" 
-               class="flex items-center gap-3 px-4 py-3 rounded-xl transition group {{ request()->routeIs('admin.products.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                <span class="font-semibold">Produk & Layanan</span>
+            <p class="px-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mt-6 mb-2">Keuangan</p>
+            
+            <a href="{{ route('admin.transactions.index') }}" class="flex items-center gap-4 px-5 py-3.5 rounded-[1.5rem] font-black transition-all {{ request()->routeIs('admin.transactions.*') ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white' : 'text-[#5a76c8] hover:bg-[#f0f5ff] hover:border-2 border-2 border-transparent hover:border-white' }}">
+                <span class="text-xl drop-shadow-sm">🧾</span> Transaksi
             </a>
-
-            <p class="px-4 pt-6 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Keuangan</p>
-
-            <a href="{{ route('admin.transactions.index') }}" 
-               class="flex items-center gap-3 px-4 py-3 rounded-xl transition group {{ request()->routeIs('admin.transactions.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                <span class="font-semibold">Riwayat Transaksi</span>
-            </a>
-            <a href="{{ route('admin.deposits.index') }}" 
-               class="flex items-center gap-3 px-4 py-3 rounded-xl transition group {{ request()->routeIs('admin.deposits.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span class="font-semibold">Riwayat Deposit</span>
+            <a href="{{ route('admin.deposits.index') }}" class="flex items-center gap-4 px-5 py-3.5 rounded-[1.5rem] font-black transition-all {{ request()->routeIs('admin.deposits.*') ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white' : 'text-[#5a76c8] hover:bg-[#f0f5ff] hover:border-2 border-2 border-transparent hover:border-white' }}">
+                <span class="text-xl drop-shadow-sm">💰</span> Deposit
             </a>
         </nav>
-
-        <div class="p-4 border-t border-slate-800">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition font-semibold">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                    Logout
-                </button>
-            </form>
-        </div>
     </aside>
 
     <div class="flex-1 flex flex-col h-screen overflow-hidden">
-        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 z-10">
-            <h2 class="text-xl font-extrabold text-slate-800 tracking-tight">@yield('title')</h2>
-            <div class="flex items-center gap-3 bg-slate-50 px-4 py-1.5 rounded-full border border-slate-200">
-                <span class="text-xs font-bold text-slate-600">{{ Auth::user()->name }}</span>
-                <div class="w-7 h-7 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-xs shadow-md">
-                    {{ substr(Auth::user()->name, 0, 1) }}
-                </div>
+        <header class="h-24 bg-white/80 backdrop-blur-md shadow-sm border-b-4 border-white flex items-center justify-between px-6 lg:px-10 z-10 rounded-b-[2.5rem] mx-4 mt-4">
+            <h2 class="text-xl font-black text-[#2b3a67] hidden md:block">@yield('title')</h2>
+            
+            <button class="md:hidden p-2 bg-[#f0f5ff] rounded-xl text-[#5a76c8] border-2 border-white shadow-sm">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+
+            <div class="flex items-center gap-3 md:gap-4">
+                <a href="{{ route('profile.edit') }}" class="text-sm font-black transition-all px-4 py-2.5 rounded-full border-2 border-white flex items-center gap-2 {{ request()->routeIs('profile.edit') ? 'bg-[#5a76c8] text-white shadow-md' : 'bg-[#f0f5ff] text-[#5a76c8] hover:bg-[#e0fbfc] hover:-translate-y-0.5 shadow-inner' }}" title="Pengaturan Profil">
+                    <span>👨‍💻</span> 
+                    <span class="hidden sm:inline">{{ Auth::user()->name }}</span>
+                </a>
+
+                <form method="POST" action="{{ route('logout') }}" class="m-0">
+                    @csrf
+                    <button type="submit" class="bg-[#ffe5e5] hover:bg-[#ffcccc] text-[#ff6b6b] px-5 py-2.5 rounded-full font-black transition-transform active:scale-95 border-2 border-white shadow-sm">
+                        Keluar
+                    </button>
+                </form>
             </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto p-8 bg-[#F8FAFC]">
+        <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 lg:p-10">
             @yield('content')
         </main>
     </div>

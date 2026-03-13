@@ -1,27 +1,37 @@
-<x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('This is a secure area of the application. Please confirm your password before continuing.') }}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Konfirmasi Keamanan - Wiboost Store</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Nunito', sans-serif; background: linear-gradient(180deg, #bde0fe 0%, #e0fbfc 100%); } </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <div class="w-full max-w-md relative z-10">
+        <div class="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl shadow-[#5a76c8]/20 border-4 border-white">
+            <div class="text-center mb-8">
+                <div class="text-5xl mb-4">🔒</div>
+                <h2 class="text-2xl font-black text-[#2b3a67]">Area Aman</h2>
+                <p class="text-[#8faaf3] font-bold text-sm mt-2">Ini adalah area sensitif. Harap masukkan kata sandi kamu lagi untuk melanjutkan.</p>
+            </div>
+
+            <form method="POST" action="{{ route('password.confirm') }}">
+                @csrf
+                <div class="mb-8">
+                    <label for="password" class="block text-sm font-black text-[#8faaf3] mb-2 pl-2">Kata Sandi</label>
+                    <input id="password" type="password" name="password" required autocomplete="current-password"
+                           class="w-full bg-[#f4f9ff] border-2 border-[#e0fbfc] focus:border-[#5a76c8] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition"
+                           placeholder="••••••••">
+                    @error('password')<p class="mt-2 text-[#ff6b6b] text-xs font-bold pl-2">{{ $message }}</p>@enderror
+                </div>
+
+                <button type="submit" class="w-full bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black py-4 rounded-[1.5rem] transition-transform active:scale-95 shadow-lg shadow-[#5a76c8]/30 border-2 border-white">
+                    Konfirmasi Lanjut &rarr;
+                </button>
+            </form>
+        </div>
     </div>
-
-    <form method="POST" action="{{ route('password.confirm') }}">
-        @csrf
-
-        <!-- Password -->
-        <div>
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
-
-        <div class="flex justify-end mt-4">
-            <x-primary-button>
-                {{ __('Confirm') }}
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+</body>
+</html>
