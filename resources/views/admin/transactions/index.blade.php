@@ -26,25 +26,48 @@
         </div>
     @endif
 
-    <div class="bg-white p-5 rounded-[2rem] shadow-lg shadow-[#bde0fe]/20 border-4 border-white mb-8">
-        <form action="{{ route('admin.transactions.index') }}" method="GET" class="flex flex-col md:flex-row gap-4">
-            <div class="relative flex-1">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-5 text-[#8faaf3]">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </span>
-                <input type="text" name="search" value="{{ request('search') }}" 
-                       class="w-full pl-14 pr-5 py-4 bg-[#f4f9ff] rounded-[1.5rem] border-2 border-[#e0fbfc] focus:border-[#5a76c8] outline-none transition text-[#2b3a67] font-black placeholder-[#a3bbfb]" 
-                       placeholder="Cari Nomor Invoice atau Nama Pelanggan...">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
+        
+        <div class="bg-white p-5 rounded-[2rem] shadow-lg shadow-[#bde0fe]/20 border-4 border-white flex items-center h-full">
+            <form action="{{ route('admin.transactions.index') }}" method="GET" class="flex flex-col md:flex-row gap-3 w-full">
+                <div class="relative flex-1">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-[#8faaf3]">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </span>
+                    <input type="text" name="search" value="{{ request('search') }}" 
+                           class="w-full pl-12 pr-4 py-3 bg-[#f4f9ff] rounded-[1rem] border-2 border-[#e0fbfc] focus:border-[#5a76c8] outline-none transition text-[#2b3a67] font-black text-sm placeholder-[#a3bbfb]" 
+                           placeholder="Cari Invoice...">
+                </div>
+                <button type="submit" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white px-6 py-3 rounded-[1rem] font-black transition-transform active:scale-95 shadow-md shadow-[#5a76c8]/30 border-2 border-white whitespace-nowrap text-sm">Cari</button>
+                @if(request('search'))
+                    <a href="{{ route('admin.transactions.index') }}" class="bg-[#ffe5e5] hover:bg-[#ffcccc] text-[#ff6b6b] px-4 py-3 rounded-[1rem] font-black transition text-sm flex items-center border-2 border-white">Reset</a>
+                @endif
+            </form>
+        </div>
+
+        <div class="bg-gradient-to-r from-[#e0fbfc] to-[#f4f9ff] p-5 rounded-[2rem] shadow-lg shadow-[#bde0fe]/20 border-4 border-white flex items-center justify-between gap-4 h-full">
+            <div class="hidden sm:block">
+                <h4 class="font-black text-[#2b3a67] text-md">Cetak Laporan 🖨️</h4>
+                <p class="text-[10px] font-bold text-[#8faaf3]">Unduh PDF bulanan.</p>
             </div>
-            <button type="submit" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white px-10 py-4 rounded-[1.5rem] font-black transition-transform active:scale-95 shadow-lg shadow-[#5a76c8]/30 border-2 border-white whitespace-nowrap">
-                Cari Pesanan
-            </button>
-            @if(request('search'))
-                <a href="{{ route('admin.transactions.index') }}" class="bg-[#ffe5e5] hover:bg-[#ffcccc] text-[#ff6b6b] px-8 py-4 rounded-[1.5rem] font-black transition flex items-center justify-center border-2 border-white whitespace-nowrap">
-                    Reset
-                </a>
-            @endif
-        </form>
+            <form action="{{ route('admin.transactions.export_pdf') }}" method="GET" class="flex flex-1 sm:flex-none items-center gap-2">
+                <select name="month" class="bg-white border-2 border-white focus:border-[#5a76c8] rounded-[1rem] px-3 py-3 text-[#2b3a67] font-black outline-none transition appearance-none cursor-pointer text-sm shadow-sm flex-1">
+                    @for($m=1; $m<=12; $m++)
+                        <option value="{{ sprintf('%02d', $m) }}" {{ date('m') == $m ? 'selected' : '' }}>
+                            {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                        </option>
+                    @endfor
+                </select>
+                <select name="year" class="bg-white border-2 border-white focus:border-[#5a76c8] rounded-[1rem] px-3 py-3 text-[#2b3a67] font-black outline-none transition appearance-none cursor-pointer text-sm shadow-sm w-24">
+                    @for($y=date('Y'); $y>=date('Y')-3; $y--)
+                        <option value="{{ $y }}">{{ $y }}</option>
+                    @endfor
+                </select>
+                <button type="submit" class="bg-[#4bc6b9] hover:bg-[#3ba398] text-white px-5 py-3 rounded-[1rem] font-black transition-transform active:scale-95 shadow-md shadow-[#4bc6b9]/30 border-2 border-white flex items-center justify-center" title="Download PDF">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+                </button>
+            </form>
+        </div>
     </div>
 
     <div class="bg-white rounded-[2rem] shadow-lg shadow-[#bde0fe]/20 border-4 border-white overflow-hidden">

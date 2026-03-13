@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class TransactionController extends Controller
 {
@@ -46,6 +48,40 @@ class TransactionController extends Controller
         ]);
 
         return back()->with('success', 'Status pesanan ' . $transaction->invoice_number . ' berhasil diperbarui menjadi ' . strtoupper($request->order_status) . '!');
+    }
+
+    /**
+     * Export data transaksi bulanan ke format PDF
+     */
+    public function exportPdf(Request $request)
+    {
+        // Ambil input bulan dan tahun, default ke bulan dan tahun saat ini
+        $month = $request->input('month', date('m'));
+        $year = $request->input('year', date('Y'));
+
+        // Ambil data transaksi yang LUNAS (paid) pada bulan & tahun tersebut
+        $transactions = Transaction::with(['user', 'product'])
+            ->where('payment_status', 'paid')
+            ->whereMonth('created_at', $month)
+            ->whereYear('created_at', $year)
+            ->latest()
+            ->get();
+
+        // Hitung total pendapatan
+        $totalRevenue = $transactions->sum('amount');
+
+        // Set bahasa Carbon ke Indonesia untuk nama bulan
+        Carbon::setLocale('id');
+        $monthName = Carbon::createFromDate($year, $month, 1)->translatedFormat('F Y');
+
+        // Load view PDF
+        $pdf = Pdf::loadView('admin.transactions.pdf', compact('transactions', 'totalRevenue', 'monthName'));
+        
+        // Atur ukuran kertas
+        $pdf->setPaper('A4', 'landscape');
+
+        // Download otomatis
+        return $pdf->download('Laporan_Cuan_Wiboost_'.$monthName.'.pdf');
     }
 
     /**

@@ -14,7 +14,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\ManualOrderController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
-use App\Http\Controllers\Admin\DepositController as AdminDepositController; // <--- Import Deposit Controller Admin
+use App\Http\Controllers\Admin\DepositController as AdminDepositController;
 
 // User / Customer Controllers
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
@@ -87,8 +87,9 @@ Route::middleware(['auth', 'role:1,2,3,4'])->prefix('admin')->name('admin.')->gr
 
     // --- TRANSAKSI, DEPOSIT & REPORTS (1,2,3) ---
     Route::middleware(['role:1,2,3'])->group(function () {
-        // Transaksi
+        // Transaksi & Export PDF
         Route::get('/transactions', [AdminTransactionController::class, 'index'])->name('transactions.index');
+        Route::get('/transactions/export-pdf', [AdminTransactionController::class, 'exportPdf'])->name('transactions.export_pdf');
         Route::patch('/transactions/{id}/update', [AdminTransactionController::class, 'updateStatus'])->name('transactions.update');
         
         // Deposit (Baru)
