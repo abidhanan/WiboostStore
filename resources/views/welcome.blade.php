@@ -8,11 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style> 
         body { font-family: 'Nunito', sans-serif; } 
-        /* Tema Warna Background Biru Langit (Sky Blue) khas Wiboost */
         .bg-wiboost-sky { background: linear-gradient(180deg, #bde0fe 0%, #e0fbfc 100%); }
         .bg-wiboost-card { background-color: rgba(255, 255, 255, 0.9); }
         
-        /* Animasi mengambang untuk elemen awan/bintang */
         .animate-float { animation: float 6s ease-in-out infinite; }
         .animate-float-delayed { animation: float 6s ease-in-out 3s infinite; }
         @keyframes float {
@@ -20,6 +18,10 @@
             50% { transform: translateY(-15px); }
             100% { transform: translateY(0px); }
         }
+
+        /* Animasi FOMO Popup */
+        .popup-enter { transform: translateY(0); opacity: 1; pointer-events: auto; }
+        .popup-leave { transform: translateY(150%); opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body class="bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white flex flex-col min-h-screen">
@@ -86,16 +88,12 @@
                     <p class="text-sm font-black text-[#8faaf3] uppercase tracking-widest">Pengguna Aktif</p>
                     <p class="mt-2 text-5xl font-black text-[#5a76c8]">{{ number_format($totalUsers, 0, ',', '.') }}<span class="text-3xl text-[#a3bbfb]">+</span></p>
                 </div>
-                
                 <div class="hidden md:block w-1.5 h-20 bg-[#f0f5ff] rounded-full"></div>
-                
                 <div class="text-center">
                     <p class="text-sm font-black text-[#8faaf3] uppercase tracking-widest">Layanan Tersedia</p>
                     <p class="mt-2 text-5xl font-black text-[#9a8ce5]">{{ number_format($activeProducts, 0, ',', '.') }}</p>
                 </div>
-                
                 <div class="hidden md:block w-1.5 h-20 bg-[#f0f5ff] rounded-full"></div>
-
                 <div class="text-center">
                     <p class="text-sm font-black text-[#8faaf3] uppercase tracking-widest">Transaksi Sukses</p>
                     <p class="mt-2 text-5xl font-black text-[#4bc6b9]">{{ number_format($totalTransactions, 0, ',', '.') }}<span class="text-3xl text-[#8ce0d7]">+</span></p>
@@ -132,6 +130,15 @@
         </div>
     </section>
 
+    <div id="fomo-toast" class="fixed bottom-6 left-4 md:left-8 z-50 bg-white border-4 border-white shadow-2xl shadow-[#bde0fe]/50 rounded-[2rem] p-4 pr-8 flex items-center gap-4 transition-all duration-700 popup-leave max-w-[320px]">
+        <div class="w-12 h-12 bg-[#e6fff7] rounded-[1rem] flex items-center justify-center text-2xl border-2 border-white shadow-inner shrink-0">🛒</div>
+        <div>
+            <p class="text-[10px] text-[#8faaf3] font-black uppercase tracking-widest" id="fomo-name">Seseorang</p>
+            <p class="text-sm text-[#2b3a67] font-black leading-tight mt-0.5">Membeli <span class="text-[#5a76c8]" id="fomo-product">Produk</span></p>
+            <p class="text-[10px] text-amber-500 font-bold mt-1" id="fomo-time">Baru saja</p>
+        </div>
+    </div>
+
     <footer class="bg-white pt-16 pb-8 border-t-[6px] border-[#f0f5ff] relative overflow-hidden">
         <div class="absolute -top-10 -right-10 text-8xl opacity-10">☁️</div>
         <div class="absolute -top-5 -left-10 text-6xl opacity-10">☁️</div>
@@ -159,5 +166,30 @@
         </div>
     </footer>
 
+    <script>
+        const fakeNames = ["Jokowi", "Prabowo", "Gibran", "Mulyono", "Fuad", "Gatot", "Fufufafa"];
+        const fakeProducts = ["86 Diamond MLBB", "1000 Followers IG", "Netflix Premium 1 Bulan", "Spotify 1 Bulan", "PUBG 250 UC"];
+        const fomoToast = document.getElementById('fomo-toast');
+        const fomoName = document.getElementById('fomo-name');
+        const fomoProduct = document.getElementById('fomo-product');
+
+        function showFomo() {
+            fomoName.innerText = fakeNames[Math.floor(Math.random() * fakeNames.length)];
+            fomoProduct.innerText = fakeProducts[Math.floor(Math.random() * fakeProducts.length)];
+            
+            fomoToast.classList.remove('popup-leave');
+            fomoToast.classList.add('popup-enter');
+
+            setTimeout(() => {
+                fomoToast.classList.remove('popup-enter');
+                fomoToast.classList.add('popup-leave');
+            }, 4000);
+        }
+
+        setTimeout(() => {
+            showFomo();
+            setInterval(showFomo, Math.floor(Math.random() * (20000 - 10000 + 1) + 10000));
+        }, 3000);
+    </script>
 </body>
 </html>
