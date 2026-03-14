@@ -27,7 +27,6 @@
     @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
-        
         <div class="bg-white p-5 rounded-[2rem] shadow-lg shadow-[#bde0fe]/20 border-4 border-white flex items-center h-full">
             <form action="{{ route('admin.transactions.index') }}" method="GET" class="flex flex-col md:flex-row gap-3 w-full">
                 <div class="relative flex-1">
@@ -77,10 +76,11 @@
                     <tr>
                         <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Waktu & Invoice</th>
                         <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Pelanggan</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Pesanan & Target</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Nominal</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Bayar</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Update Status</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Pesanan</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Target</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Harga</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Pembayaran</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Status</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y-2 divide-dashed divide-[#f0f5ff]">
@@ -90,20 +90,15 @@
                             <p class="font-black text-[#5a76c8] text-sm mb-0.5">{{ $trx->invoice_number }}</p>
                             <p class="text-[10px] font-bold text-[#8faaf3]">{{ $trx->created_at->format('d M Y, H:i') }}</p>
                         </td>
-                        <td class="px-6 py-4 min-w-[200px]">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-[#f0f5ff] text-[#5a76c8] flex items-center justify-center font-black text-xs uppercase border-2 border-white shadow-inner shrink-0">
-                                    {{ substr($trx->user->name ?? '?', 0, 2) }}
-                                </div>
-                                <div>
-                                    <p class="font-black text-[#2b3a67] text-sm truncate max-w-[150px]" title="{{ $trx->user->name ?? 'Guest' }}">{{ $trx->user->name ?? 'Guest' }}</p>
-                                    <p class="text-[10px] font-bold text-[#8faaf3] truncate max-w-[150px]">{{ $trx->user->email ?? '-' }}</p>
-                                </div>
-                            </div>
+                        <td class="px-6 py-4">
+                            <p class="font-black text-[#2b3a67] text-sm truncate max-w-[150px]" title="{{ $trx->user->name ?? 'Guest' }}">{{ $trx->user->name ?? 'Guest' }}</p>
+                            <p class="text-[10px] font-bold text-[#8faaf3] truncate max-w-[150px]">{{ $trx->user->email ?? '-' }}</p>
                         </td>
                         <td class="px-6 py-4 min-w-[200px] whitespace-normal">
                             <p class="font-black text-[#2b3a67] text-sm line-clamp-2 leading-tight">{{ $trx->product->name ?? 'Produk Dihapus' }}</p>
-                            <p class="text-[10px] font-black text-[#5a76c8] mt-1 bg-[#f0f5ff] inline-block px-3 py-1 rounded-full border border-white shadow-inner truncate max-w-full">{{ $trx->target_data }}</p>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="text-[10px] font-black text-[#5a76c8] bg-[#f0f5ff] inline-block px-3 py-1.5 rounded-md border border-white shadow-inner truncate max-w-[150px]" title="{{ $trx->target_data }}">{{ $trx->target_data }}</span>
                         </td>
                         <td class="px-6 py-4">
                             <p class="font-black text-[#2b3a67] text-sm">Rp {{ number_format($trx->amount, 0, ',', '.') }}</p>
@@ -117,25 +112,31 @@
                                 <span class="bg-[#fff5eb] text-amber-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm">Pending</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 min-w-[180px]">
-                            <form action="{{ route('admin.transactions.update', $trx->id) }}" method="POST" class="flex items-center gap-2 justify-center">
-                                @csrf
-                                @method('PATCH')
-                                <select name="order_status" class="bg-[#f0f5ff] border-2 border-white text-[#2b3a67] text-xs rounded-full focus:border-[#5a76c8] block px-4 py-2.5 font-black outline-none shadow-inner cursor-pointer hover:bg-[#e0fbfc] transition-colors appearance-none text-center">
-                                    <option value="pending" {{ $trx->order_status == 'pending' ? 'selected' : '' }}>⏳ Pending</option>
-                                    <option value="processing" {{ $trx->order_status == 'processing' ? 'selected' : '' }}>⚙️ Diproses</option>
-                                    <option value="success" {{ $trx->order_status == 'success' ? 'selected' : '' }}>✅ Sukses</option>
-                                    <option value="failed" {{ $trx->order_status == 'failed' ? 'selected' : '' }}>❌ Gagal</option>
-                                </select>
-                                <button type="submit" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white p-3 rounded-full transition shadow-md active:scale-95 border-2 border-white shrink-0" title="Simpan Status">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
-                                </button>
-                            </form>
+                        <td class="px-6 py-4 min-w-[180px] text-center">
+                            @if($trx->product && $trx->product->category && (str_contains(strtolower($trx->product->category->slug), 'buzzer') || str_contains(strtolower($trx->product->category->slug), 'manual')))
+                                <form action="{{ route('admin.transactions.update', $trx->id) }}" method="POST" class="flex items-center gap-2 justify-center">
+                                    @csrf
+                                    @method('PATCH')
+                                    <select name="order_status" class="bg-[#f0f5ff] border-2 border-white text-[#2b3a67] text-xs rounded-full focus:border-[#5a76c8] block px-4 py-2.5 font-black outline-none shadow-inner cursor-pointer hover:bg-[#e0fbfc] transition-colors appearance-none text-center">
+                                        <option value="pending" {{ $trx->order_status == 'pending' ? 'selected' : '' }}>⏳ Pending</option>
+                                        <option value="processing" {{ $trx->order_status == 'processing' ? 'selected' : '' }}>⚙️ Diproses</option>
+                                        <option value="success" {{ $trx->order_status == 'success' ? 'selected' : '' }}>✅ Sukses</option>
+                                        <option value="failed" {{ $trx->order_status == 'failed' ? 'selected' : '' }}>❌ Gagal</option>
+                                    </select>
+                                    <button type="submit" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white p-3 rounded-full transition shadow-md active:scale-95 border-2 border-white shrink-0" title="Simpan Status">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                                    </button>
+                                </form>
+                            @else
+                                <span class="bg-[#f0f5ff] text-[#8faaf3] px-4 py-2 rounded-full text-[10px] font-black border-2 border-white shadow-inner uppercase tracking-widest inline-flex items-center gap-1">
+                                    <span>⚡</span> Sistem API
+                                </span>
+                            @endif
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-16 text-center">
+                        <td colspan="7" class="px-6 py-16 text-center">
                             <div class="inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-[#f0f5ff] border-4 border-white mb-4 shadow-inner">
                                 <span class="text-4xl">📭</span>
                             </div>
