@@ -66,29 +66,34 @@
                     <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Harga Jual (Rp)</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-6 font-black text-[#5a76c8]">Rp</span>
-                        <input type="number" name="price" required value="{{ old('price', $product->price) }}"
+                        <input type="number" name="price" required value="{{ old('price', $product->price) }}" min="0"
                                class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] pl-14 pr-6 py-4 text-[#2b3a67] font-black outline-none transition">
                     </div>
                 </div>
-                
                 <div>
-                    <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Ganti Gambar (Opsional)</label>
-                    <input type="file" name="image" class="w-full text-sm font-bold text-[#8faaf3] file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-black file:bg-[#f0f5ff] file:text-[#5a76c8] hover:file:bg-[#e0ebff] file:transition-colors cursor-pointer bg-[#f4f9ff] rounded-[1.5rem] p-2 border-2 border-transparent">
+                    <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Status Layanan</label>
+                    <select name="is_active" required class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition cursor-pointer appearance-none">
+                        <option value="1" {{ old('is_active', $product->is_active) == '1' ? 'selected' : '' }}>🟢 Aktif (Bisa dibeli)</option>
+                        <option value="0" {{ old('is_active', $product->is_active) == '0' ? 'selected' : '' }}>🔴 Nonaktif (Sembunyikan)</option>
+                    </select>
                 </div>
             </div>
 
-            <label class="relative bg-gradient-to-r from-[#f0f5ff] to-white border-2 border-[#e0fbfc] rounded-[1.5rem] p-5 flex items-center gap-4 cursor-pointer hover:border-[#bde0fe] transition-colors mt-4">
-                <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', $product->is_active) ? 'checked' : '' }} class="sr-only peer">
-                
-                <div class="w-6 h-6 rounded-md border-2 border-[#8faaf3] peer-checked:bg-[#4bc6b9] peer-checked:border-[#4bc6b9] flex items-center justify-center transition-colors">
-                    <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
-                </div>
-                
-                <div>
-                    <p class="font-black text-[#2b3a67]">Produk Aktif</p>
-                    <p class="text-xs font-bold text-[#8faaf3]">Munculkan produk ini di halaman toko</p>
-                </div>
-            </label>
+            <div class="mb-6">
+                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Deskripsi Produk (Opsional)</label>
+                <textarea name="description" rows="3"
+                          class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">{{ old('description', $product->description) }}</textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Ganti Gambar (Opsional)</label>
+                @if($product->image)
+                    <div class="mb-4">
+                        <img src="{{ Storage::url($product->image) }}" alt="Preview" class="h-20 w-20 rounded-[1rem] border-2 border-[#bde0fe] object-cover">
+                    </div>
+                @endif
+                <input type="file" name="image" class="w-full text-sm font-bold text-[#8faaf3] file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-black file:bg-[#f0f5ff] file:text-[#5a76c8] hover:file:bg-[#e0ebff] file:transition-colors cursor-pointer bg-[#f4f9ff] rounded-[1.5rem] p-2 border-2 border-transparent">
+            </div>
 
             <div class="pt-6 flex flex-col sm:flex-row gap-4">
                 <button type="submit" class="flex-1 bg-[#4bc6b9] hover:bg-[#3ba398] text-white font-black text-lg py-4 rounded-[1.5rem] transition-transform active:scale-95 shadow-lg shadow-[#4bc6b9]/30 border-2 border-white flex justify-center items-center gap-2">

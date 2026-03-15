@@ -44,8 +44,8 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'provider_product_id' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'is_active' => 'required|boolean',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'is_active' => 'required|in:0,1', // Validasi strict dropdown
         ]);
 
         $imagePath = null;
@@ -55,7 +55,7 @@ class ProductController extends Controller
 
         Product::create([
             'name' => $request->name,
-            'slug' => Str::slug($request->name) . '-' . Str::random(5), // Tambahkan random string agar slug pasti unik
+            'slug' => Str::slug($request->name) . '-' . Str::random(5),
             'category_id' => $request->category_id,
             'price' => $request->price,
             'provider_product_id' => $request->provider_product_id,
@@ -83,16 +83,13 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'provider_product_id' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            // Checkbox HTML tidak mengirim nilai jika tidak dicentang, 
-            // jadi kita tidak perlu validasi strict untuk is_active saat update
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'is_active' => 'required|in:0,1', // Validasi strict dropdown
         ]);
 
         $data = $request->except('image');
         $data['slug'] = Str::slug($request->name) . '-' . Str::random(5);
-        
-        // Cek apakah checkbox 'is_active' dicentang (bernilai 1) atau tidak (bernilai null/false)
-        $data['is_active'] = $request->has('is_active') ? true : false;
+        $data['is_active'] = $request->is_active;
 
         if ($request->hasFile('image')) {
             // Hapus gambar lama jika ada

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Manajemen Deposit')
+@section('title', 'Riwayat Deposit')
 
 @section('content')
 <style>

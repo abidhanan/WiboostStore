@@ -19,7 +19,6 @@
             100% { transform: translateY(0px); }
         }
 
-        /* Animasi FOMO Popup */
         .popup-enter { transform: translateY(0); opacity: 1; pointer-events: auto; }
         .popup-leave { transform: translateY(150%); opacity: 0; pointer-events: none; }
     </style>
@@ -111,12 +110,17 @@
 
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-8">
                 @forelse($categories as $cat)
-                    <a href="{{ route('login') }}" class="group block bg-wiboost-card rounded-[2rem] p-6 border-4 border-white shadow-lg shadow-[#bde0fe]/40 hover:-translate-y-3 hover:shadow-2xl hover:shadow-[#bde0fe]/60 hover:border-[#bde0fe] transition-all duration-300 text-center relative overflow-hidden">
+                    <a href="{{ route('login') }}" class="group block bg-wiboost-card rounded-[2rem] p-6 border-4 border-white shadow-lg shadow-[#bde0fe]/40 hover:-translate-y-3 hover:shadow-2xl hover:shadow-[#bde0fe]/60 hover:border-[#bde0fe] transition-all duration-300 text-center relative overflow-hidden flex flex-col items-center justify-center">
                         <div class="absolute -right-6 -top-6 w-24 h-24 bg-gradient-to-br from-white/80 to-transparent rounded-full opacity-50 pointer-events-none"></div>
                         
-                        <div class="w-20 h-20 mx-auto bg-gradient-to-br from-[#f0f5ff] to-[#e0ebff] rounded-2xl border-2 border-white shadow-inner flex items-center justify-center text-[#5a76c8] mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                            <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                        <div class="w-20 h-20 bg-gradient-to-br from-[#f0f5ff] to-[#e0ebff] rounded-2xl border-2 border-white shadow-inner flex items-center justify-center text-[#5a76c8] mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 overflow-hidden">
+                            @if($cat->image)
+                                <img src="{{ asset('storage/' . $cat->image) }}" alt="{{ $cat->name }}" class="w-full h-full object-cover">
+                            @else
+                                <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                            @endif
                         </div>
+
                         <h3 class="font-black text-[#2b3a67] text-xl mb-1">{{ $cat->name }}</h3>
                         <p class="text-sm text-[#8faaf3] font-bold bg-[#f0f5ff] inline-block px-3 py-1 rounded-full">{{ $cat->products_count }} Produk</p>
                     </a>

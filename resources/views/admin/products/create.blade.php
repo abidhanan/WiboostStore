@@ -63,18 +63,34 @@
                 </div>
             </div>
 
-            <div>
-                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Harga Jual (Rp)</label>
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-6 font-black text-[#5a76c8]">Rp</span>
-                    <input type="number" name="price" required value="{{ old('price') }}"
-                           class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] pl-14 pr-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" 
-                           placeholder="15000">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Harga Jual (Rp)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-6 font-black text-[#5a76c8]">Rp</span>
+                        <input type="number" name="price" required value="{{ old('price') }}" min="0"
+                               class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] pl-14 pr-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" 
+                               placeholder="15000">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Status Layanan</label>
+                    <select name="is_active" required class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition cursor-pointer appearance-none">
+                        <option value="1" {{ old('is_active', '1') == '1' ? 'selected' : '' }}>🟢 Aktif (Bisa dibeli)</option>
+                        <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>🔴 Nonaktif (Sembunyikan)</option>
+                    </select>
                 </div>
             </div>
 
+            <div class="mb-6">
+                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Deskripsi Produk (Opsional)</label>
+                <textarea name="description" rows="3"
+                          class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" 
+                          placeholder="Masukkan keterangan tambahan..."></textarea>
+            </div>
+
             <div>
-                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Ikon Produk (Opsional)</label>
+                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Ikon / Gambar Produk (Opsional)</label>
                 <input type="file" name="image" class="w-full text-sm font-bold text-[#8faaf3] file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-black file:bg-[#f0f5ff] file:text-[#5a76c8] hover:file:bg-[#e0ebff] file:transition-colors cursor-pointer bg-[#f4f9ff] rounded-[1.5rem] p-2 border-2 border-transparent">
             </div>
 

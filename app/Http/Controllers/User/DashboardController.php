@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Category;
 use App\Models\Transaction;
+use App\Models\Promo; // <-- Model Promo dipanggil
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -15,10 +16,13 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // Mengambil semua kategori yang aktif
-        $categories = Category::all();
+        // 1. Mengambil semua kategori yang aktif beserta jumlah produknya
+        $categories = Category::withCount('products')->get();
 
-        // Menghitung statistik transaksi sukses milik user ini (patokan: sudah dibayar/paid)
+        // 2. Mengambil semua banner promo yang statusnya aktif (is_active = 1)
+        $promos = Promo::where('is_active', true)->latest()->get();
+
+        // 3. Menghitung statistik transaksi sukses milik user ini
         $totalAllTime = Transaction::where('user_id', $user->id)
                             ->where('payment_status', 'paid')
                             ->count();
@@ -29,11 +33,12 @@ class DashboardController extends Controller
                             ->whereYear('created_at', Carbon::now()->year)
                             ->count();
 
-        // Tambahan: Menghitung total uang yang sudah dihabiskan user
+        // 4. Menghitung total uang yang sudah dihabiskan user
         $totalSpent = Transaction::where('user_id', $user->id)
                             ->where('payment_status', 'paid')
                             ->sum('amount');
 
-        return view('user.dashboard', compact('categories', 'totalAllTime', 'totalThisMonth', 'totalSpent'));
+        // Lempar semua data ke view
+        return view('user.dashboard', compact('categories', 'promos', 'totalAllTime', 'totalThisMonth', 'totalSpent'));
     }
 }

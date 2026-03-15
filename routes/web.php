@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\ManualOrderController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
 use App\Http\Controllers\Admin\DepositController as AdminDepositController;
+use App\Http\Controllers\Admin\PromoController; // <-- Controller Promo sudah di-import
 
 // User / Customer Controllers
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
@@ -72,6 +73,7 @@ Route::middleware(['auth', 'role:1,2,3,4'])->prefix('admin')->name('admin.')->gr
         Route::resource('users', AdminUserController::class);
         Route::resource('categories', CategoryController::class);
         Route::resource('products', ProductController::class);
+        Route::resource('promos', PromoController::class); // <-- Promo masuk dengan aman di sini
     });
 
     // --- STOK (4) ---
@@ -92,7 +94,7 @@ Route::middleware(['auth', 'role:1,2,3,4'])->prefix('admin')->name('admin.')->gr
         Route::get('/transactions/export-pdf', [AdminTransactionController::class, 'exportPdf'])->name('transactions.export_pdf');
         Route::patch('/transactions/{id}/update', [AdminTransactionController::class, 'updateStatus'])->name('transactions.update');
         
-        // Deposit (Baru)
+        // Deposit
         Route::get('/deposits', [AdminDepositController::class, 'index'])->name('deposits.index');
         Route::patch('/deposits/{id}', [AdminDepositController::class, 'update'])->name('deposits.update');
         

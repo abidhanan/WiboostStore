@@ -40,6 +40,9 @@
             <a href="{{ route('admin.products.index') }}" class="flex items-center gap-4 px-5 py-3.5 rounded-[1.5rem] font-black transition-all {{ request()->routeIs('admin.products.*') ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white' : 'text-[#5a76c8] hover:bg-[#f0f5ff] hover:border-2 border-2 border-transparent hover:border-white' }}">
                 <span class="text-xl drop-shadow-sm">🛍️</span> Produk
             </a>
+            <a href="{{ route('admin.promos.index') }}" class="flex items-center gap-4 px-5 py-3.5 rounded-[1.5rem] font-black transition-all {{ request()->routeIs('admin.promos.*') ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white' : 'text-[#5a76c8] hover:bg-[#f0f5ff] hover:border-2 border-2 border-transparent hover:border-white' }}">
+                <span class="text-xl drop-shadow-sm">📢</span> Banner
+            </a>
 
             <p class="px-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mt-6 mb-2">Keuangan</p>
             
