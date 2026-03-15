@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Tambah Promo Baru')
+@section('title', 'Tambah Banner Baru')
 
 @section('content')
 <style>

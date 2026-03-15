@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Category;
 use App\Models\Transaction;
-use App\Models\Promo; // <-- Model Promo dipanggil
+use App\Models\Promo;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -16,10 +16,13 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Mengambil semua kategori yang aktif beserta jumlah produknya
-        $categories = Category::withCount('products')->get();
+        // 1. Mengambil HANYA kategori utama (parent_id = null)
+        // Sekalian hitung jumlah sub-kategori (children) dan produk langsungnya
+        $categories = Category::whereNull('parent_id')
+                                ->withCount(['children', 'products'])
+                                ->get();
 
-        // 2. Mengambil semua banner promo yang statusnya aktif (is_active = 1)
+        // 2. Mengambil semua banner promo yang statusnya aktif
         $promos = Promo::where('is_active', true)->latest()->get();
 
         // 3. Menghitung statistik transaksi sukses milik user ini

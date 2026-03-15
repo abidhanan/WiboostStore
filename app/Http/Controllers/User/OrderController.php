@@ -19,13 +19,21 @@ class OrderController extends Controller
      */
     public function showCategory($slug)
     {
-        $category = Category::where('slug', $slug)->firstOrFail();
+        // 1. Cari kategori berdasarkan slug, sekalian ambil data anak (sub-kategori) dan produk aktif
+        $category = Category::with(['children', 'products' => function($q) {
+            $q->where('is_active', true)->orderBy('price', 'asc');
+        }])->where('slug', $slug)->firstOrFail();
 
-        $products = Product::where('category_id', $category->id)
-                            ->where('is_active', true)
-                            ->orderBy('price', 'asc')
-                            ->get();
+        // 2. CEK LOGIKA SUB-KATEGORI:
+        // Jika kategori ini punya "Anak" (Contoh: Kategori Utama "Suntik Sosmed")
+        if ($category->children->count() > 0) {
+            // Arahkan ke halaman pemilihan Sub-Kategori (Nanti kita buat view-nya)
+            return view('user.order_sub', compact('category'));
+        }
 
+        // 3. Jika tidak punya "Anak" (Contoh: Sub-Kategori "Instagram")
+        // Maka langsung tampilkan halaman order produk seperti biasa
+        $products = $category->products;
         return view('user.order', compact('category', 'products'));
     }
 
