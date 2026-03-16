@@ -28,15 +28,24 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse($promos as $promo)
+            @php
+                $bgClass = 'from-[#8faaf3] to-[#5a76c8]';
+                if($promo->theme == 'teal') $bgClass = 'from-[#4bc6b9] to-[#3ba398]';
+                elseif($promo->theme == 'orange') $bgClass = 'from-[#fbbf24] to-[#d97706]';
+                elseif($promo->theme == 'rose') $bgClass = 'from-[#fb7185] to-[#e11d48]';
+            @endphp
+
             <div class="rounded-[2.5rem] p-6 text-white relative overflow-hidden flex flex-col justify-between shadow-lg border-4 border-white group transition-transform hover:-translate-y-2
-                @if($promo->theme == 'blue') bg-gradient-to-br from-[#8faaf3] to-[#5a76c8] shadow-[#bde0fe]/50
-                @elseif($promo->theme == 'teal') bg-gradient-to-br from-[#4bc6b9] to-[#3ba398] shadow-[#4bc6b9]/40
-                @elseif($promo->theme == 'orange') bg-gradient-to-br from-[#fbbf24] to-[#d97706] shadow-amber-200/40
-                @elseif($promo->theme == 'rose') bg-gradient-to-br from-[#fb7185] to-[#e11d48] shadow-rose-200/40
-                @endif
+                @if(!$promo->image) bg-gradient-to-br {{ $bgClass }} 
+                @else bg-[#2b3a67] @endif
                 {{ !$promo->is_active ? 'opacity-60 grayscale' : '' }}">
                 
-                <div class="relative z-10">
+                @if($promo->image)
+                    <img src="{{ Storage::url($promo->image) }}" class="absolute inset-0 w-full h-full object-cover z-0 opacity-60">
+                    <div class="absolute inset-0 bg-gradient-to-br from-black/80 to-transparent z-10"></div>
+                @endif
+                
+                <div class="relative z-20">
                     <div class="flex justify-between items-start mb-3">
                         <span class="bg-white/20 backdrop-blur-md text-white text-[10px] font-black px-3 py-1 rounded-full shadow-inner tracking-widest uppercase">{{ $promo->badge_text }}</span>
                         
@@ -53,9 +62,11 @@
                     <p class="font-bold text-white/90 text-xs line-clamp-2">{{ $promo->description }}</p>
                 </div>
                 
-                <div class="text-6xl opacity-40 absolute -right-2 -bottom-2 transform rotate-12 pointer-events-none group-hover:scale-110 transition-transform">
-                    {{ $promo->emoji }}
-                </div>
+                @if(!$promo->image)
+                    <div class="text-6xl opacity-40 absolute -right-2 -bottom-2 transform rotate-12 pointer-events-none group-hover:scale-110 transition-transform">
+                        {{ $promo->emoji }}
+                    </div>
+                @endif
             </div>
         @empty
             <div class="col-span-full text-center py-16 bg-white rounded-[2.5rem] border-4 border-dashed border-[#bde0fe]">

@@ -15,7 +15,7 @@
         </a>
         <div>
             <h3 class="text-3xl font-black text-[#2b3a67] tracking-tight">Tambah Kategori 📁</h3>
-            <p class="text-[#8faaf3] font-bold text-sm mt-1">Buat Kategori Utama atau Sub-Kategori baru.</p>
+            <p class="text-[#8faaf3] font-bold text-sm mt-1">Sistem otomatis menyesuaikan form Kategori Utama / Sub-Kategori.</p>
         </div>
     </div>
 
@@ -38,47 +38,67 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Nama Kategori / Layanan</label>
-                <input type="text" name="name" required value="{{ old('name') }}"
-                       class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" 
-                       placeholder="Contoh: Instagram / Suntik Sosmed">
+                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Nama Kategori / Aplikasi</label>
+                <input type="text" name="name" required value="{{ old('name') }}" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition" placeholder="Cth: Mobile Legends / Top Up Game">
             </div>
             <div>
                 <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Kategori Induk</label>
-                <select name="parent_id" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition cursor-pointer appearance-none">
+                <select name="parent_id" id="parent_id_select" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition cursor-pointer appearance-none">
                     <option value="">⭐ Jadikan Kategori Utama</option>
                     @foreach($mainCategories as $main)
                         <option value="{{ $main->id }}" {{ old('parent_id') == $main->id ? 'selected' : '' }}>Sub-Kategori dari: {{ $main->name }}</option>
                     @endforeach
                 </select>
-                <p class="text-[10px] font-bold text-amber-500 mt-2 ml-2">Pilih jika ingin membuat "Instagram" di dalam "Suntik Sosmed".</p>
+                <p class="text-[10px] font-bold text-amber-500 mt-2 ml-2">Pilih Kategori Induk jika sedang membuat aplikasi seperti "Instagram".</p>
             </div>
         </div>
 
         <div class="mb-6">
-            <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Deskripsi Kategori (Disarankan untuk Sub-Kategori)</label>
-            <textarea name="description" rows="3"
-                      class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" 
-                      placeholder="Contoh: Pilih layanan Followers, Likes, dan Views khusus Instagram dengan kualitas server terbaik dan bergaransi...">{{ old('description') }}</textarea>
-        </div>
-
-        <div class="mb-6">
             <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Slug (URL Kategori)</label>
-            <input type="text" name="slug" value="{{ old('slug') }}"
-                   class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" 
-                   placeholder="Kosongkan agar otomatis dari Nama">
+            <input type="text" name="slug" value="{{ old('slug') }}" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition" placeholder="Kosongkan agar otomatis dari Nama">
         </div>
 
-        <div class="mb-8">
-            <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Ikon / Logo Kategori (Opsional)</label>
-            <input type="file" name="image" accept="image/*"
-                   class="w-full text-sm font-bold text-[#8faaf3] file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-black file:bg-[#f0f5ff] file:text-[#5a76c8] hover:file:bg-[#e0ebff] file:transition-colors cursor-pointer bg-[#f4f9ff] rounded-[1.5rem] p-2 border-2 border-transparent">
+        <div class="mb-6" id="emote_container">
+            <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Emote <span class="text-amber-500">(Khusus Kategori Utama)</span></label>
+            <input type="text" name="emote" value="{{ old('emote') }}" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition text-2xl" placeholder="Cth: 🎮 atau 📱">
+        </div>
+
+        <div class="mb-6" id="image_container" style="display: none;">
+            <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Logo/Ikon <span class="text-emerald-500">(Khusus Sub-Kategori)</span></label>
+            <input type="file" name="image" accept="image/*" class="w-full text-sm font-bold text-[#8faaf3] file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:bg-[#f0f5ff] file:text-[#5a76c8] bg-[#f4f9ff] rounded-[1.5rem] p-2 cursor-pointer hover:file:bg-[#e0ebff] file:transition-colors file:font-black">
             <p class="text-xs font-bold text-amber-500 mt-2 ml-2">💡 Disarankan gambar kotak (1:1) format PNG transparan maksimal 2MB.</p>
         </div>
 
-        <button type="submit" class="w-full bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black text-xl py-4 rounded-[1.5rem] transition-transform active:scale-95 shadow-lg shadow-[#5a76c8]/30 border-2 border-white flex justify-center items-center gap-2">
-            Simpan Kategori 🚀
-        </button>
+        <div class="mb-8" id="description_container" style="display: none;">
+            <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Deskripsi Layanan <span class="text-emerald-500">(Khusus Sub-Kategori)</span></label>
+            <textarea name="description" rows="3" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition" placeholder="Deskripsi layanan untuk aplikasi ini...">{{ old('description') }}</textarea>
+        </div>
+
+        <button type="submit" class="w-full bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black text-xl py-4 rounded-[1.5rem] transition-transform active:scale-95 shadow-lg border-2 border-white flex justify-center items-center gap-2">Simpan Kategori 🚀</button>
     </form>
 </div>
+
+<script>
+    const parentSelect = document.getElementById('parent_id_select');
+    const descContainer = document.getElementById('description_container');
+    const imageContainer = document.getElementById('image_container');
+    const emoteContainer = document.getElementById('emote_container');
+    
+    function toggleCategoryType() {
+        if(parentSelect.value === "") {
+            // Jika Kategori Utama
+            descContainer.style.display = "none";
+            imageContainer.style.display = "none";
+            emoteContainer.style.display = "block";
+        } else {
+            // Jika Sub-Kategori
+            descContainer.style.display = "block";
+            imageContainer.style.display = "block";
+            emoteContainer.style.display = "none";
+        }
+    }
+
+    parentSelect.addEventListener('change', toggleCategoryType);
+    toggleCategoryType(); 
+</script>
 @endsection

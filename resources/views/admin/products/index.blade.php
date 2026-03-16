@@ -65,7 +65,6 @@
                     <tr class="hover:bg-[#f4f9ff] transition-colors rounded-xl group">
                         <td class="px-6 py-4 min-w-[200px] whitespace-normal">
                             <p class="font-black text-[#2b3a67] text-md line-clamp-2 leading-tight">{{ $product->name }}</p>
-                            <p class="text-[10px] font-bold text-[#8faaf3] truncate max-w-[200px] mt-1">{{ $product->description ?? '-' }}</p>
                         </td>
                         <td class="px-6 py-4">
                             <span class="bg-[#e0fbfc] text-[#4bc6b9] px-3 py-1.5 rounded-full text-xs font-black border border-white shadow-sm">

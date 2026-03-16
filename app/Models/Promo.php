@@ -9,12 +9,14 @@ class Promo extends Model
 {
     use HasFactory;
 
+    // Menambahkan 'image'
     protected $fillable = [
         'badge_text',
         'title',
         'description',
         'emoji',
         'theme',
+        'image',
         'is_active'
     ];
 }

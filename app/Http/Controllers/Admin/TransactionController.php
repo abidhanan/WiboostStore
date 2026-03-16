@@ -10,14 +10,12 @@ use Carbon\Carbon;
 
 class TransactionController extends Controller
 {
-    /**
-     * Menampilkan daftar semua transaksi dengan fitur pencarian dan pagination.
-     */
     public function index(Request $request)
     {
-        $query = Transaction::with(['user', 'product'])->latest();
+        // Pastikan memuat relasi product.category agar bisa mengecek slug kategori
+        $query = Transaction::with(['user', 'product.category'])->latest();
 
-        // Fitur Pencarian berdasarkan Invoice atau Nama User
+        // 1. Pencarian
         if ($request->filled('search')) {
             $query->where('invoice_number', 'like', '%' . $request->search . '%')
                   ->orWhereHas('user', function($q) use ($request) {
@@ -25,18 +23,21 @@ class TransactionController extends Controller
                   });
         }
 
-        // Gunakan paginate (20 data per halaman) agar tidak memberatkan server
-        $transactions = $query->paginate(20);
+        // 2. Filter Bulan & Tahun
+        $selectedMonth = $request->input('month', date('m'));
+        $selectedYear = $request->input('year', date('Y'));
 
-        return view('admin.transactions.index', compact('transactions'));
+        $query->whereMonth('created_at', $selectedMonth)
+              ->whereYear('created_at', $selectedYear);
+
+        // Pagination
+        $transactions = $query->paginate(20)->appends($request->all());
+
+        return view('admin.transactions.index', compact('transactions', 'selectedMonth', 'selectedYear'));
     }
 
-    /**
-     * Memperbarui status pesanan secara manual via dropdown.
-     */
     public function updateStatus(Request $request, $id)
     {
-        // Validasi input status
         $request->validate([
             'order_status' => 'required|in:pending,processing,success,failed'
         ]);
@@ -47,19 +48,14 @@ class TransactionController extends Controller
             'order_status' => $request->order_status
         ]);
 
-        return back()->with('success', 'Status pesanan ' . $transaction->invoice_number . ' berhasil diperbarui menjadi ' . strtoupper($request->order_status) . '!');
+        return back()->with('success', 'Status pesanan ' . $transaction->invoice_number . ' berhasil diperbarui!');
     }
 
-    /**
-     * Export data transaksi bulanan ke format PDF
-     */
     public function exportPdf(Request $request)
     {
-        // Ambil input bulan dan tahun, default ke bulan dan tahun saat ini
         $month = $request->input('month', date('m'));
         $year = $request->input('year', date('Y'));
 
-        // Ambil data transaksi yang LUNAS (paid) pada bulan & tahun tersebut
         $transactions = Transaction::with(['user', 'product'])
             ->where('payment_status', 'paid')
             ->whereMonth('created_at', $month)
@@ -67,26 +63,17 @@ class TransactionController extends Controller
             ->latest()
             ->get();
 
-        // Hitung total pendapatan
         $totalRevenue = $transactions->sum('amount');
 
-        // Set bahasa Carbon ke Indonesia untuk nama bulan
         Carbon::setLocale('id');
         $monthName = Carbon::createFromDate($year, $month, 1)->translatedFormat('F Y');
 
-        // Load view PDF
         $pdf = Pdf::loadView('admin.transactions.pdf', compact('transactions', 'totalRevenue', 'monthName'));
-        
-        // Atur ukuran kertas
         $pdf->setPaper('A4', 'landscape');
 
-        // Download otomatis
         return $pdf->download('Laporan_Cuan_Wiboost_'.$monthName.'.pdf');
     }
 
-    /**
-     * Halaman Laporan (Akan kita kembangkan untuk analitik keuangan)
-     */
     public function reports()
     {
         $totalRevenue = Transaction::where('payment_status', 'paid')

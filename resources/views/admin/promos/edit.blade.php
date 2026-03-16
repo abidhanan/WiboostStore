@@ -19,45 +19,50 @@
     </div>
 
     @if ($errors->any())
-        <div class="bg-[#ffe5e5] border-4 border-white text-[#ff6b6b] px-6 py-4 rounded-[2rem] mb-8 font-black shadow-sm">
-            <ul class="list-disc list-inside">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
+        <div class="bg-[#ffe5e5] border-4 border-white text-[#ff6b6b] px-6 py-4 rounded-[2rem] mb-8 font-black shadow-sm flex items-start gap-4">
+            <span class="text-2xl mt-1">⚠️</span>
+            <ul class="list-disc list-inside text-sm font-bold">
+                @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
             </ul>
         </div>
     @endif
 
-    <form action="{{ route('admin.promos.update', $promo->id) }}" method="POST" class="bg-white rounded-[2rem] shadow-lg shadow-[#bde0fe]/20 border-4 border-white p-8">
+    <form action="{{ route('admin.promos.update', $promo->id) }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-[2rem] shadow-lg shadow-[#bde0fe]/20 border-4 border-white p-8">
         @csrf
         @method('PUT')
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Teks Badge</label>
-                <input type="text" name="badge_text" required value="{{ old('badge_text', $promo->badge_text) }}"
-                       class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">
+                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Judul Promo / Headline</label>
+                <input type="text" name="title" required value="{{ old('title', $promo->title) }}" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">
             </div>
             <div>
-                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Emoji Latar Belakang</label>
-                <input type="text" name="emoji" required value="{{ old('emoji', $promo->emoji) }}"
-                       class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">
+                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Teks Badge</label>
+                <input type="text" name="badge_text" required value="{{ old('badge_text', $promo->badge_text) }}" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">
             </div>
-        </div>
-
-        <div class="mb-6">
-            <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Judul Promo</label>
-            <input type="text" name="title" required value="{{ old('title', $promo->title) }}"
-                   class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">
         </div>
 
         <div class="mb-6">
             <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Deskripsi Lengkap</label>
-            <textarea name="description" rows="3" required
-                      class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">{{ old('description', $promo->description) }}</textarea>
+            <textarea name="description" rows="3" required class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">{{ old('description', $promo->description) }}</textarea>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="mb-8 p-5 bg-[#f0f5ff] rounded-[1.5rem] border-2 border-dashed border-[#bde0fe]">
+            <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Ganti Gambar Custom Banner (Opsional)</label>
+            @if($promo->image)
+                <div class="mb-4 ml-2">
+                    <img src="{{ Storage::url($promo->image) }}" class="h-32 w-auto object-cover rounded-[1rem] border-2 border-white shadow-sm">
+                </div>
+            @endif
+            <input type="file" name="image" accept="image/*" class="w-full text-sm font-bold text-[#8faaf3] file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:bg-white file:text-[#5a76c8] cursor-pointer bg-white rounded-[1.5rem] p-2 border-2 border-transparent shadow-sm">
+            <p class="text-xs font-bold text-[#8faaf3] mt-3 ml-2">💡 Jika kamu mengunggah gambar, maka desain Emoji & Warna Tema akan diabaikan.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div>
+                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Emoji</label>
+                <input type="text" name="emoji" value="{{ old('emoji', $promo->emoji) }}" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition text-2xl">
+            </div>
             <div>
                 <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Warna Tema Banner</label>
                 <select name="theme" required class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition cursor-pointer appearance-none">
@@ -76,9 +81,7 @@
             </div>
         </div>
 
-        <button type="submit" class="w-full bg-[#4bc6b9] hover:bg-[#3ba398] text-white font-black text-xl py-4 rounded-[1.5rem] transition-transform active:scale-95 shadow-lg shadow-[#4bc6b9]/30 border-2 border-white flex justify-center items-center gap-2">
-            Simpan Perubahan ✨
-        </button>
+        <button type="submit" class="w-full bg-[#4bc6b9] hover:bg-[#3ba398] text-white font-black text-xl py-4 rounded-[1.5rem] transition-transform active:scale-95 shadow-lg border-2 border-white">Simpan Perubahan ✨</button>
     </form>
 </div>
 @endsection

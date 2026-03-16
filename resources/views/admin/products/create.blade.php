@@ -33,7 +33,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-[2rem] shadow-lg shadow-[#bde0fe]/20 border-4 border-white p-6 md:p-8">
+    <form action="{{ route('admin.products.store') }}" method="POST" class="bg-white rounded-[2rem] shadow-lg shadow-[#bde0fe]/20 border-4 border-white p-6 md:p-8">
         @csrf
         
         <div class="space-y-6">
@@ -80,18 +80,6 @@
                         <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>🔴 Nonaktif (Sembunyikan)</option>
                     </select>
                 </div>
-            </div>
-
-            <div class="mb-6">
-                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Deskripsi Produk (Opsional)</label>
-                <textarea name="description" rows="3"
-                          class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" 
-                          placeholder="Masukkan keterangan tambahan..."></textarea>
-            </div>
-
-            <div>
-                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Ikon / Gambar Produk (Opsional)</label>
-                <input type="file" name="image" class="w-full text-sm font-bold text-[#8faaf3] file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-black file:bg-[#f0f5ff] file:text-[#5a76c8] hover:file:bg-[#e0ebff] file:transition-colors cursor-pointer bg-[#f4f9ff] rounded-[1.5rem] p-2 border-2 border-transparent">
             </div>
 
             <div class="pt-6 flex flex-col sm:flex-row gap-4">

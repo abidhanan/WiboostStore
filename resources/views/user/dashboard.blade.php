@@ -71,54 +71,49 @@
         </div>
     </div>
 
-    <div class="mb-10 relative rounded-[2rem] overflow-hidden shadow-lg shadow-[#bde0fe]/30 border-4 border-white group">
+    <div class="mb-10 relative rounded-[2.5rem] overflow-hidden shadow-lg border-4 border-white group">
         <div id="promo-slider" class="flex overflow-x-auto snap-x snap-mandatory hide-scroll scroll-smooth">
 
-            @forelse($promos as $promo)
-                @php
-                    $bgClass = 'from-[#8faaf3] to-[#5a76c8]';
-                    $badgeClass = 'bg-[#e0fbfc] text-[#5a76c8]';
-                    $textClass = 'text-[#e0fbfc]';
-
-                    if($promo->theme == 'teal') {
-                        $bgClass = 'from-[#4bc6b9] to-[#3ba398]';
-                        $badgeClass = 'bg-[#e6fff7] text-[#3ba398]';
-                        $textClass = 'text-[#e6fff7]';
-                    } elseif($promo->theme == 'orange') {
-                        $bgClass = 'from-[#fbbf24] to-[#d97706]';
-                        $badgeClass = 'bg-[#fff5eb] text-[#d97706]';
-                        $textClass = 'text-[#fff5eb]';
-                    } elseif($promo->theme == 'rose') {
-                        $bgClass = 'from-[#fb7185] to-[#e11d48]';
-                        $badgeClass = 'bg-[#ffe5e5] text-[#e11d48]';
-                        $textClass = 'text-[#ffe5e5]';
-                    }
-                @endphp
-
-                <div class="snap-center shrink-0 w-full bg-gradient-to-r {{ $bgClass }} p-8 md:p-10 text-white relative overflow-hidden flex items-center justify-between">
-                    <div class="relative z-10">
-                        <span class="{{ $badgeClass }} text-xs font-black px-3 py-1 rounded-full mb-3 inline-block shadow-sm uppercase">{{ $promo->badge_text }}</span>
-                        <h2 class="text-2xl md:text-3xl font-black mb-2 drop-shadow-sm">{{ $promo->title }}</h2>
-                        <p class="font-bold {{ $textClass }} text-sm md:text-base max-w-md">{{ $promo->description }}</p>
-                    </div>
-                    <div class="text-7xl opacity-50 absolute right-5 transform {{ $loop->iteration % 2 == 0 ? '-rotate-12' : 'rotate-12' }} pointer-events-none">
-                        {{ $promo->emoji }}
-                    </div>
+            <div class="snap-center shrink-0 w-full bg-gradient-to-r from-[#8faaf3] to-[#5a76c8] p-8 md:p-12 text-white relative overflow-hidden flex items-center h-[250px] md:h-[300px]">
+                <div class="relative z-20">
+                    <span class="bg-[#e0fbfc] text-[#5a76c8] text-xs font-black px-3 py-1 rounded-full mb-3 inline-block shadow-sm uppercase tracking-widest">PENGUMUMAN</span>
+                    <h2 class="text-3xl md:text-5xl font-black mb-2 drop-shadow-md">Selamat Datang di Wiboost! 🚀</h2>
+                    <p class="font-bold text-white/90 text-sm md:text-lg max-w-lg drop-shadow-md">Nikmati layanan top up tercepat dan termurah se-Indonesia hanya di sini.</p>
                 </div>
-            @empty
-                <div class="snap-center shrink-0 w-full bg-gradient-to-r from-[#4bc6b9] to-[#3ba398] p-8 md:p-10 text-white relative overflow-hidden flex items-center justify-between">
-                    <div class="relative z-10">
-                        <span class="bg-[#e6fff7] text-[#3ba398] text-xs font-black px-3 py-1 rounded-full mb-3 inline-block shadow-sm">PENGUMUMAN</span>
-                        <h2 class="text-2xl md:text-3xl font-black mb-2 drop-shadow-sm">Selamat Datang di Wiboost! 🚀</h2>
-                        <p class="font-bold text-[#e6fff7] text-sm md:text-base max-w-md">Nikmati layanan top up tercepat dan termurah se-Indonesia hanya di sini.</p>
+                <div class="text-7xl md:text-8xl opacity-50 absolute right-10 transform -rotate-12 pointer-events-none">✨</div>
+            </div>
+
+            @foreach($promos as $promo)
+                <div class="snap-center shrink-0 w-full p-8 md:p-12 text-white relative overflow-hidden flex items-center h-[250px] md:h-[300px]
+                    @if(!$promo->image)
+                        @if($promo->theme == 'teal') bg-gradient-to-r from-[#4bc6b9] to-[#3ba398]
+                        @elseif($promo->theme == 'orange') bg-gradient-to-r from-[#fbbf24] to-[#d97706]
+                        @elseif($promo->theme == 'rose') bg-gradient-to-r from-[#fb7185] to-[#e11d48]
+                        @else bg-gradient-to-r from-[#8faaf3] to-[#5a76c8] @endif
+                    @else bg-[#2b3a67] @endif">
+                    
+                    @if($promo->image)
+                        <img src="{{ Storage::url($promo->image) }}" class="absolute inset-0 w-full h-full object-cover z-0 opacity-70">
+                        <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent z-10"></div>
+                    @endif
+
+                    <div class="relative z-20">
+                        <span class="bg-[#e0fbfc] text-[#5a76c8] text-xs font-black px-3 py-1 rounded-full mb-3 inline-block shadow-sm uppercase tracking-widest">{{ $promo->badge_text }}</span>
+                        <h2 class="text-3xl md:text-5xl font-black mb-2 drop-shadow-md">{{ $promo->title }}</h2>
+                        <p class="font-bold text-white/90 text-sm md:text-lg max-w-lg drop-shadow-md">{{ $promo->description }}</p>
                     </div>
-                    <div class="text-7xl opacity-50 absolute right-5 transform -rotate-12 pointer-events-none">✨</div>
+                    
+                    @if(!$promo->image)
+                        <div class="text-7xl md:text-8xl opacity-50 absolute right-10 transform {{ $loop->iteration % 2 == 0 ? '-rotate-12' : 'rotate-12' }} pointer-events-none">
+                            {{ $promo->emoji }}
+                        </div>
+                    @endif
                 </div>
-            @endforelse
+            @endforeach
             
         </div>
         
-        @if(isset($promos) && $promos->count() > 1)
+        @if(count($promos) >= 1)
             <button onclick="slidePromo(-1)" class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/50 hover:bg-white backdrop-blur-md rounded-full flex items-center justify-center text-[#5a76c8] transition shadow-sm opacity-0 group-hover:opacity-100 z-10">❮</button>
             <button onclick="slidePromo(1)" class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/50 hover:bg-white backdrop-blur-md rounded-full flex items-center justify-center text-[#5a76c8] transition shadow-sm opacity-0 group-hover:opacity-100 z-10">❯</button>
         @endif
@@ -129,24 +124,19 @@
         <h3 class="text-2xl font-black text-[#2b3a67]">Pilih Kategori Jajan</h3>
     </div>
     
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-12">
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 mb-12">
         @forelse($categories as $category)
-        <a href="{{ route('user.order.category', $category->slug) }}" class="group bg-white p-6 rounded-[2rem] border-4 border-white hover:border-[#bde0fe] shadow-lg shadow-[#bde0fe]/20 hover:-translate-y-2 transition-all text-center flex flex-col items-center justify-center">
+        <a href="{{ route('user.order.category', $category->slug) }}" class="group bg-white p-6 md:p-8 rounded-[2.5rem] border-4 border-white hover:border-[#bde0fe] shadow-lg shadow-[#bde0fe]/20 hover:-translate-y-2 transition-all text-center flex flex-col items-center justify-center">
             
-            <div class="w-16 h-16 bg-[#f0f5ff] rounded-2xl mb-4 flex items-center justify-center group-hover:scale-110 group-hover:bg-[#e0fbfc] text-[#5a76c8] transition-all border-2 border-white shadow-inner shrink-0 overflow-hidden">
-                @if($category->image)
-                    <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="w-full h-full object-cover">
-                @else
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                @endif
+            <div class="text-5xl md:text-6xl mb-4 group-hover:scale-110 group-hover:rotate-6 transition-transform drop-shadow-sm">
+                {{ $category->emote ?? '✨' }}
             </div>
             
-            <span class="text-sm font-black text-[#2b3a67]">{{ $category->name }}</span>
-            <span class="text-[10px] text-[#8faaf3] font-bold mt-1">{{ $category->products_count }} Layanan</span>
+            <span class="text-base font-black text-[#2b3a67]">{{ $category->name }}</span>
         </a>
         @empty
-        <div class="col-span-full text-center py-10">
-            <p class="text-[#8faaf3] font-black">Belum ada kategori layanan.</p>
+        <div class="col-span-full text-center py-16 bg-white rounded-[2.5rem] border-4 border-dashed border-[#bde0fe]">
+            <p class="text-[#8faaf3] font-black text-xl">Belum ada kategori layanan yang aktif.</p>
         </div>
         @endforelse
     </div>
@@ -179,8 +169,11 @@
             const scrollAmount = slider.clientWidth;
             slider.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
             
+            // Infinite scroll logic
             if (direction === 1 && slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 10) {
                 slider.scrollTo({ left: 0, behavior: 'smooth' });
+            } else if (direction === -1 && slider.scrollLeft <= 10) {
+                slider.scrollTo({ left: slider.scrollWidth, behavior: 'smooth' });
             }
             
             clearInterval(autoSlide);
@@ -188,8 +181,8 @@
         }
     }
 
-    const fakeNames = ["Jokowi", "Prabowo", "Gibran", "Mulyono", "Fuad", "Gatot", "Fufufafa"];
-    const fakeProducts = ["86 Diamond MLBB", "1000 Followers IG", "Netflix Premium 1 Bulan", "Spotify 1 Bulan", "PUBG 250 UC"];
+    const fakeNames = ["Ganjar", "Gibran", "Prabowo", "Jokowi", "Mulyono", "Gibran", "Jokowi", "Prabowo"];
+    const fakeProducts = ["1000 Followers IG", "86 Diamond MLBB", "Netflix Premium", "Spotify Family", "100 Likes TikTok", "PUBG 250 UC"];
     const fomoToast = document.getElementById('fomo-toast');
     const fomoName = document.getElementById('fomo-name');
     const fomoProduct = document.getElementById('fomo-product');
