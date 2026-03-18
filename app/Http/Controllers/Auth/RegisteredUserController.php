@@ -29,23 +29,23 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        // 1. Validasi input dari form register
+        // 1. Validasi input dari form register (tambah whatsapp)
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'whatsapp' => ['required', 'string', 'max:20'], // <-- Validasi WhatsApp
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         // 2. Simpan user baru ke database
-        // Catatan: role_id tidak perlu diisi manual karena file migration kita 
-        // sudah mengaturnya secara default menjadi 5 (User biasa).
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'whatsapp' => $request->whatsapp, // <-- Simpan WhatsApp
             'password' => Hash::make($request->password),
         ]);
 
-        // 3. Memicu event Registered (berguna jika nanti Anda mengaktifkan verifikasi email)
+        // 3. Memicu event Registered
         event(new Registered($user));
 
         // 4. Langsung login otomatis setelah berhasil mendaftar

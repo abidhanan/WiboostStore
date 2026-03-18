@@ -57,6 +57,14 @@
                 </div>
 
                 <div class="mb-5">
+                    <label for="whatsapp" class="block text-sm font-black text-[#8faaf3] mb-2 pl-2">Nomor WhatsApp</label>
+                    <input id="whatsapp" type="text" name="whatsapp" value="{{ old('whatsapp') }}" required
+                           class="w-full bg-[#f4f9ff] border-2 border-[#e0fbfc] focus:border-[#5a76c8] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]"
+                           placeholder="Contoh: 081234567890">
+                    @error('whatsapp')<p class="mt-2 text-[#ff6b6b] text-xs font-bold pl-2">{{ $message }}</p>@enderror
+                </div>
+
+                <div class="mb-5">
                     <label for="password" class="block text-sm font-black text-[#8faaf3] mb-2 pl-2">Kata Sandi</label>
                     <input id="password" type="password" name="password" required
                            class="w-full bg-[#f4f9ff] border-2 border-[#e0fbfc] focus:border-[#5a76c8] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]"

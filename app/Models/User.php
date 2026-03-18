@@ -12,6 +12,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'whatsapp', // <-- Tambahan kolom WhatsApp
         'password',
         'role_id',
         'balance',
