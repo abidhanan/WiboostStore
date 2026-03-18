@@ -30,7 +30,7 @@ class OrderController extends Controller
 
     public function processCheckout(Request $request)
     {
-        // 1. Validasi Input (Tanpa Notes)
+        // 1. Validasi Input
         $request->validate([
             'product_id'     => 'required|exists:products,id',
             'target_data'    => 'required|string|min:3',
@@ -41,7 +41,7 @@ class OrderController extends Controller
             $product = Product::findOrFail($request->product_id);
             $user = Auth::user();
 
-            // LOGIKA WALLET
+            // --- LOGIKA WALLET ---
             if ($request->payment_method === 'wallet') {
                 if ($user->balance < $product->price) {
                     return back()->with('error', 'Saldo Wiboost tidak mencukupi. Silakan top up terlebih dahulu.');
@@ -57,12 +57,13 @@ class OrderController extends Controller
                     'target_data'    => $request->target_data,
                     'payment_status' => 'paid',
                     'order_status'   => 'processing',
+                    'payment_method' => 'wallet',
                 ]);
 
                 return redirect()->route('user.history')->with('success', 'Pesanan berhasil dibayar menggunakan Saldo Wiboost!');
             }
 
-            // LOGIKA MIDTRANS
+            // --- LOGIKA MIDTRANS (MANUAL/GATEWAY) ---
             $transaction = Transaction::create([
                 'invoice_number' => 'WIB-' . strtoupper(Str::random(12)),
                 'user_id'        => $user->id,
@@ -71,10 +72,17 @@ class OrderController extends Controller
                 'target_data'    => $request->target_data,
                 'payment_status' => 'unpaid',
                 'order_status'   => 'pending',
+                'payment_method' => 'manual', // Sesuai input
             ]);
 
+            // Ambil token dari Midtrans
             $midtransService = new MidtransService();
             $snapToken = $midtransService->getSnapToken($transaction);
+
+            // ✨ BAGIAN PENTING: SIMPAN TOKEN KE DATABASE ✨
+            $transaction->update([
+                'snap_token' => $snapToken
+            ]);
 
             return view('user.checkout', [
                 'transaction' => $transaction,

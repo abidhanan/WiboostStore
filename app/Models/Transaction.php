@@ -7,9 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class Transaction extends Model
 {
     protected $fillable = [
-        'invoice_number', 'user_id', 'product_id', 'amount', 
-        'target_data', 'target_notes', 'response_data', 
-        'payment_status', 'order_status'
+        'invoice_number', 
+        'user_id', 
+        'product_id', 
+        'amount', 
+        'target_data', 
+        'target_notes', 
+        'response_data', 
+        'payment_status', 
+        'order_status',
+        'payment_method', // <-- Tambahkan ini
+        'snap_token'      // <-- Tambahkan ini
     ];
 
     public function user()

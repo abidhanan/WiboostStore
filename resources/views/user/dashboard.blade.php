@@ -62,7 +62,7 @@
 
         <div class="bg-white p-6 rounded-[2rem] border-4 border-white shadow-lg shadow-[#bde0fe]/30 flex items-center gap-5 hover:-translate-y-1 transition">
             <div class="w-14 h-14 bg-[#e6fff7] rounded-2xl flex items-center justify-center text-emerald-500 border-2 border-white shadow-inner shrink-0">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0-2.08-.402-2.599 1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
             <div class="truncate">
                 <p class="text-xs font-black text-emerald-400 uppercase tracking-wider">Pengeluaran</p>
@@ -151,15 +151,38 @@
     </div>
 </div>
 
-<a href="https://wa.me/6285326513324?text=Halo%20Admin%20Wiboost,%20saya%20butuh%20bantuan%20terkait%20pesanan%20saya..." 
-   target="_blank" 
-   title="Hubungi Admin"
-   class="fixed bottom-6 right-4 md:right-8 z-50 bg-[#25D366] text-white w-16 h-16 rounded-full flex items-center justify-center shadow-lg shadow-[#25D366]/40 border-4 border-white hover:scale-110 transition-transform animate-bounce" style="animation-duration: 3s;">
-    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 0C5.385 0 .004 5.385.004 12.033c0 2.128.555 4.195 1.611 6.01L0 24l6.115-1.603c1.748.966 3.735 1.475 5.912 1.475 6.643 0 12.022-5.385 12.022-12.031C24.048 5.385 18.667 0 12.031 0zm3.585 17.26c-.162.457-.93.863-1.32.915-.39.052-1.026.114-3.21-1.127-2.616-1.488-4.286-4.168-4.417-4.34-.131-.173-1.053-1.405-1.053-2.68 0-1.275.666-1.905.901-2.164.235-.259.51-.326.68-.326.17 0 .34 0 .484.008.156.009.366-.059.574.404.215.485.692 1.698.75 1.819.06.12.099.261.02.434-.08.172-.12.28-.24.419-.12.139-.253.298-.36.406-.12.12-.246.252-.11.485.136.234.606 1.009 1.135 1.477.681.603 1.435.838 1.669.957.235.12.373.099.513-.06.14-.158.606-.708.769-.951.163-.243.326-.202.542-.12.215.081 1.365.642 1.601.761.234.12.391.18.448.28.057.1.057.579-.105 1.036z"/></svg>
-</a>
+<div class="fixed bottom-6 right-4 md:right-8 z-50 flex flex-col items-end">
+    
+    <div id="wa-menu" class="mb-4 w-64 bg-white rounded-[1.5rem] shadow-2xl shadow-[#bde0fe]/50 border-4 border-white overflow-hidden transition-all duration-300 origin-bottom-right scale-0 opacity-0 pointer-events-none flex flex-col">
+        <div class="bg-[#25D366] text-white font-black text-[10px] px-4 py-3 tracking-widest uppercase text-center shadow-inner">
+            Ada Kendala Apa?
+        </div>
+        
+        <a href="https://wa.me/6281234567890?text=Halo%20Admin%20OTP,%20saya%20butuh%20bantuan..." target="_blank" class="px-5 py-4 font-black text-sm text-[#2b3a67] hover:bg-[#f4f9ff] hover:text-[#25D366] transition-colors border-b-2 border-dashed border-[#f0f5ff] flex items-center gap-3">
+            <span class="text-2xl drop-shadow-sm">📩</span> OTP
+        </a>
+        
+        <a href="https://wa.me/6281234567891?text=Halo%20Admin%20Garansi,%20pesanan%20suntik%20sosmed%20saya..." target="_blank" class="px-5 py-4 font-black text-sm text-[#2b3a67] hover:bg-[#f4f9ff] hover:text-[#25D366] transition-colors border-b-2 border-dashed border-[#f0f5ff] flex items-center gap-3">
+            <span class="text-2xl drop-shadow-sm">❤️</span> Suntik Sosmed
+        </a>
+        
+        <a href="https://wa.me/6281234567892?text=Halo%20Admin,%20saya%20klaim%20garansi%20aplikasi%20premium..." target="_blank" class="px-5 py-4 font-black text-sm text-[#2b3a67] hover:bg-[#f4f9ff] hover:text-[#25D366] transition-colors border-b-2 border-dashed border-[#f0f5ff] flex items-center gap-3">
+            <span class="text-2xl drop-shadow-sm">📺</span> Aplikasi Premium
+        </a>
+        
+        <a href="https://wa.me/6285326513324?text=Halo%20Admin%20CS,%20saya%20butuh%20bantuan%20transaksi..." target="_blank" class="px-5 py-4 font-black text-sm text-[#2b3a67] hover:bg-[#f4f9ff] hover:text-[#25D366] transition-colors flex items-center gap-3">
+            <span class="text-2xl drop-shadow-sm">💸</span> Kuota, Top Up, & Deposit
+        </a>
+    </div>
 
+    <button onclick="toggleWaMenu()" class="bg-[#25D366] text-white w-16 h-16 rounded-full flex items-center justify-center shadow-lg shadow-[#25D366]/40 border-4 border-white hover:scale-110 transition-transform animate-bounce outline-none" style="animation-duration: 3s;">
+        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 0C5.385 0 .004 5.385.004 12.033c0 2.128.555 4.195 1.611 6.01L0 24l6.115-1.603c1.748.966 3.735 1.475 5.912 1.475 6.643 0 12.022-5.385 12.022-12.031C24.048 5.385 18.667 0 12.031 0zm3.585 17.26c-.162.457-.93.863-1.32.915-.39.052-1.026.114-3.21-1.127-2.616-1.488-4.286-4.168-4.417-4.34-.131-.173-1.053-1.405-1.053-2.68 0-1.275.666-1.905.901-2.164.235-.259.51-.326.68-.326.17 0 .34 0 .484.008.156.009.366-.059.574.404.215.485.692 1.698.75 1.819.06.12.099.261.02.434-.08.172-.12.28-.24.419-.12.139-.253.298-.36.406-.12.12-.246.252-.11.485.136.234.606 1.009 1.135 1.477.681.603 1.435.838 1.669.957.235.12.373.099.513-.06.14-.158.606-.708.769-.951.163-.243.326-.202.542-.12.215.081 1.365.642 1.601.761.234.12.391.18.448.28.057.1.057.579-.105 1.036z"/></svg>
+    </button>
+
+</div>
 
 <script>
+    // --- Slider Promo Logic ---
     const slider = document.getElementById('promo-slider');
     
     if(slider && slider.children.length > 1) {
@@ -181,19 +204,17 @@
         }
     }
 
-    const fakeNames = ["Ganjar", "Gibran", "Prabowo", "Jokowi", "Mulyono", "Gibran", "Jokowi", "Prabowo"];
+    // --- FOMO Toast Logic ---
+    const fakeNames = ["Ganjar", "Gibran", "Prabowo", "Jokowi", "Mulyono"];
     const fakeProducts = ["1000 Followers IG", "86 Diamond MLBB", "Netflix Premium", "Spotify Family", "100 Likes TikTok", "PUBG 250 UC"];
     const fomoToast = document.getElementById('fomo-toast');
     const fomoName = document.getElementById('fomo-name');
     const fomoProduct = document.getElementById('fomo-product');
 
     function showFomo() {
-        const randomName = fakeNames[Math.floor(Math.random() * fakeNames.length)];
-        const randomProduct = fakeProducts[Math.floor(Math.random() * fakeProducts.length)];
+        fomoName.innerText = fakeNames[Math.floor(Math.random() * fakeNames.length)];
+        fomoProduct.innerText = fakeProducts[Math.floor(Math.random() * fakeProducts.length)];
         
-        fomoName.innerText = randomName;
-        fomoProduct.innerText = randomProduct;
-
         fomoToast.classList.remove('popup-leave');
         fomoToast.classList.add('popup-enter');
 
@@ -207,6 +228,30 @@
         showFomo();
         setInterval(showFomo, Math.floor(Math.random() * (20000 - 10000 + 1) + 10000));
     }, 3000);
+
+    // --- WhatsApp Menu Toggle Logic ---
+    function toggleWaMenu() {
+        const menu = document.getElementById('wa-menu');
+        if (menu.classList.contains('scale-0')) {
+            // Tampilkan Menu
+            menu.classList.remove('scale-0', 'opacity-0', 'pointer-events-none');
+            menu.classList.add('scale-100', 'opacity-100', 'pointer-events-auto');
+        } else {
+            // Sembunyikan Menu
+            menu.classList.remove('scale-100', 'opacity-100', 'pointer-events-auto');
+            menu.classList.add('scale-0', 'opacity-0', 'pointer-events-none');
+        }
+    }
+
+    // Menutup menu jika klik di luar area menu
+    document.addEventListener('click', function(event) {
+        const menu = document.getElementById('wa-menu');
+        const waBtnContainer = menu.parentElement;
+        
+        if (!waBtnContainer.contains(event.target) && !menu.classList.contains('scale-0')) {
+            toggleWaMenu();
+        }
+    });
 </script>
 
 @endsection
