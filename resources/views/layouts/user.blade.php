@@ -8,9 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style> 
         body { font-family: 'Nunito', sans-serif; } 
-        /* Gradasi Khas Wiboost */
         .bg-wiboost-sky { background: linear-gradient(180deg, #bde0fe 0%, #e0fbfc 100%); }
-        /* Scrollbar custom agar estetik */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f4f9ff; }
         ::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; }
@@ -32,6 +30,9 @@
                 </a>
 
                 <div class="flex items-center gap-1 sm:gap-3 shrink-0">
+                    @if(Auth::check() && Auth::user()->isAdmin())
+                        <a href="{{ route('admin.dashboard') }}" class="text-xs font-black bg-[#ffe5e5] text-[#ff6b6b] px-4 py-2 rounded-full transition-transform active:scale-95 shadow-sm border border-white hover:bg-[#ffcccc]">Panel Admin</a>
+                    @endif
                     <a href="{{ route('user.dashboard') }}" class="text-sm font-black px-4 py-2 rounded-full transition-colors {{ request()->routeIs('user.dashboard') ? 'bg-[#f0f5ff] text-[#5a76c8] border-2 border-white shadow-sm' : 'text-[#8faaf3] hover:text-[#5a76c8]' }}">Home</a>
                     <a href="{{ route('user.history') }}" class="text-sm font-black px-4 py-2 rounded-full transition-colors {{ request()->routeIs('user.history') ? 'bg-[#f0f5ff] text-[#5a76c8] border-2 border-white shadow-sm' : 'text-[#8faaf3] hover:text-[#5a76c8]' }}">Riwayat</a>
                     
@@ -93,6 +94,5 @@
             </div>
         </div>
     </footer>
-
 </body>
 </html>

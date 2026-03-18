@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
-use App\Models\Deposit; // <-- Jangan lupa pastikan Model Deposit di-import jika ada
+use App\Models\Deposit; 
 use App\Models\User;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -28,8 +28,8 @@ class DashboardController extends Controller
             ->whereYear('created_at', $currentYear)
             ->sum('amount');
 
-        // 3. Total Pelanggan Terdaftar (Role ID 5 = Customer)
-        $totalUsers = User::where('role_id', 5)->count();
+        // 3. Total Pelanggan Terdaftar (Role ID 2 = Buyer)
+        $totalUsers = User::where('role_id', 2)->count(); // <-- Diubah menjadi 2
 
         // 4. Ambil 5 Transaksi Paling Baru untuk preview tabel
         $recentTransactions = Transaction::with(['user', 'product'])
@@ -38,7 +38,6 @@ class DashboardController extends Controller
             ->get();
 
         // 5. Ambil 5 Deposit Paling Baru untuk preview tabel
-        // Hapus atau sesuaikan blok ini jika kamu belum punya tabel/model Deposit
         $recentDeposits = collect(); 
         if (class_exists(Deposit::class)) {
             $recentDeposits = Deposit::with('user')
