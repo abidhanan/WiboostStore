@@ -47,6 +47,12 @@
             <textarea name="description" required rows="3" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition" placeholder="Gunakan kode promo WIBOOSTGG saat checkout...">{{ old('description') }}</textarea>
         </div>
 
+        <div class="mb-6">
+            <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Link Tujuan / URL Promo (Opsional)</label>
+            <input type="url" name="link" value="{{ old('link') }}" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" placeholder="Cth: https://wiboost.com/order/kategori">
+            <p class="text-[10px] font-bold text-[#8faaf3] mt-2 ml-2">Kosongkan jika banner tidak ingin bisa diklik.</p>
+        </div>
+
         <div class="mb-8 p-5 bg-[#f0f5ff] rounded-[1.5rem] border-2 border-dashed border-[#bde0fe]">
             <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Gambar Custom Banner (Opsional)</label>
             <input type="file" name="image" accept="image/*" class="w-full text-sm font-bold text-[#8faaf3] file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:bg-white file:text-[#5a76c8] cursor-pointer bg-white rounded-[1.5rem] p-2 border-2 border-transparent shadow-sm">

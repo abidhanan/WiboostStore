@@ -9,7 +9,6 @@ class Promo extends Model
 {
     use HasFactory;
 
-    // Menambahkan 'image'
     protected $fillable = [
         'badge_text',
         'title',
@@ -17,6 +16,7 @@ class Promo extends Model
         'emoji',
         'theme',
         'image',
+        'link', // <-- Menambahkan field link
         'is_active'
     ];
 }

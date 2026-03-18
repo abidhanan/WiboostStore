@@ -74,17 +74,8 @@
     <div class="mb-10 relative rounded-[2.5rem] overflow-hidden shadow-lg border-4 border-white group">
         <div id="promo-slider" class="flex overflow-x-auto snap-x snap-mandatory hide-scroll scroll-smooth">
 
-            <div class="snap-center shrink-0 w-full bg-gradient-to-r from-[#8faaf3] to-[#5a76c8] p-8 md:p-12 text-white relative overflow-hidden flex items-center h-[250px] md:h-[300px]">
-                <div class="relative z-20">
-                    <span class="bg-[#e0fbfc] text-[#5a76c8] text-xs font-black px-3 py-1 rounded-full mb-3 inline-block shadow-sm uppercase tracking-widest">PENGUMUMAN</span>
-                    <h2 class="text-3xl md:text-5xl font-black mb-2 drop-shadow-md">Selamat Datang di Wiboost! 🚀</h2>
-                    <p class="font-bold text-white/90 text-sm md:text-lg max-w-lg drop-shadow-md">Nikmati layanan top up tercepat dan termurah se-Indonesia hanya di sini.</p>
-                </div>
-                <div class="text-7xl md:text-8xl opacity-50 absolute right-10 transform -rotate-12 pointer-events-none">✨</div>
-            </div>
-
-            @foreach($promos as $promo)
-                <div class="snap-center shrink-0 w-full p-8 md:p-12 text-white relative overflow-hidden flex items-center h-[250px] md:h-[300px]
+            @forelse($promos as $promo)
+                <div class="snap-center shrink-0 w-full p-8 md:p-12 text-white relative overflow-hidden flex items-center h-[250px] md:h-[300px] group/slide
                     @if(!$promo->image)
                         @if($promo->theme == 'teal') bg-gradient-to-r from-[#4bc6b9] to-[#3ba398]
                         @elseif($promo->theme == 'orange') bg-gradient-to-r from-[#fbbf24] to-[#d97706]
@@ -92,30 +83,46 @@
                         @else bg-gradient-to-r from-[#8faaf3] to-[#5a76c8] @endif
                     @else bg-[#2b3a67] @endif">
                     
+                    @if(!empty($promo->link))
+                        <a href="{{ $promo->link }}" target="_blank" class="absolute inset-0 z-30 cursor-pointer"></a>
+                        
+                        <div class="absolute top-6 right-6 z-20 bg-white/20 backdrop-blur-md p-3 rounded-full opacity-0 group-hover/slide:opacity-100 transition-opacity duration-300 pointer-events-none">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        </div>
+                    @endif
+
                     @if($promo->image)
-                        <img src="{{ Storage::url($promo->image) }}" class="absolute inset-0 w-full h-full object-cover z-0 opacity-70">
+                        <img src="{{ Storage::url($promo->image) }}" class="absolute inset-0 w-full h-full object-cover z-0 opacity-70 group-hover/slide:scale-105 transition-transform duration-700">
                         <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent z-10"></div>
                     @endif
 
-                    <div class="relative z-20">
+                    <div class="relative z-20 pointer-events-none">
                         <span class="bg-[#e0fbfc] text-[#5a76c8] text-xs font-black px-3 py-1 rounded-full mb-3 inline-block shadow-sm uppercase tracking-widest">{{ $promo->badge_text }}</span>
                         <h2 class="text-3xl md:text-5xl font-black mb-2 drop-shadow-md">{{ $promo->title }}</h2>
                         <p class="font-bold text-white/90 text-sm md:text-lg max-w-lg drop-shadow-md">{{ $promo->description }}</p>
                     </div>
                     
                     @if(!$promo->image)
-                        <div class="text-7xl md:text-8xl opacity-50 absolute right-10 transform {{ $loop->iteration % 2 == 0 ? '-rotate-12' : 'rotate-12' }} pointer-events-none">
+                        <div class="text-7xl md:text-8xl opacity-50 absolute right-10 transform {{ $loop->iteration % 2 == 0 ? '-rotate-12' : 'rotate-12' }} pointer-events-none group-hover/slide:scale-110 transition-transform duration-500">
                             {{ $promo->emoji }}
                         </div>
                     @endif
                 </div>
-            @endforeach
+            @empty
+                <div class="snap-center shrink-0 w-full bg-gradient-to-r from-[#8faaf3] to-[#5a76c8] p-8 md:p-12 text-white relative overflow-hidden flex items-center justify-center h-[250px] md:h-[300px]">
+                    <div class="text-center relative z-20">
+                        <span class="text-6xl mb-4 block animate-float">✨</span>
+                        <h2 class="text-3xl md:text-4xl font-black mb-2 drop-shadow-md">Belum Ada Promo</h2>
+                        <p class="font-bold text-white/90 text-sm md:text-lg drop-shadow-md">Nantikan penawaran menarik dari Wiboost!</p>
+                    </div>
+                </div>
+            @endforelse
             
         </div>
         
-        @if(count($promos) >= 1)
-            <button onclick="slidePromo(-1)" class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/50 hover:bg-white backdrop-blur-md rounded-full flex items-center justify-center text-[#5a76c8] transition shadow-sm opacity-0 group-hover:opacity-100 z-10">❮</button>
-            <button onclick="slidePromo(1)" class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/50 hover:bg-white backdrop-blur-md rounded-full flex items-center justify-center text-[#5a76c8] transition shadow-sm opacity-0 group-hover:opacity-100 z-10">❯</button>
+        @if(count($promos) > 1)
+            <button onclick="slidePromo(-1)" class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/50 hover:bg-white backdrop-blur-md rounded-full flex items-center justify-center text-[#5a76c8] transition shadow-sm opacity-0 group-hover:opacity-100 z-40">❮</button>
+            <button onclick="slidePromo(1)" class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/50 hover:bg-white backdrop-blur-md rounded-full flex items-center justify-center text-[#5a76c8] transition shadow-sm opacity-0 group-hover:opacity-100 z-40">❯</button>
         @endif
     </div>
 
@@ -188,7 +195,7 @@
     if(slider && slider.children.length > 1) {
         let autoSlide = setInterval(() => slidePromo(1), 5000);
 
-        function slidePromo(direction) {
+        window.slidePromo = function(direction) {
             const scrollAmount = slider.clientWidth;
             slider.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
             
@@ -230,20 +237,17 @@
     }, 3000);
 
     // --- WhatsApp Menu Toggle Logic ---
-    function toggleWaMenu() {
+    window.toggleWaMenu = function() {
         const menu = document.getElementById('wa-menu');
         if (menu.classList.contains('scale-0')) {
-            // Tampilkan Menu
             menu.classList.remove('scale-0', 'opacity-0', 'pointer-events-none');
             menu.classList.add('scale-100', 'opacity-100', 'pointer-events-auto');
         } else {
-            // Sembunyikan Menu
             menu.classList.remove('scale-100', 'opacity-100', 'pointer-events-auto');
             menu.classList.add('scale-0', 'opacity-0', 'pointer-events-none');
         }
     }
 
-    // Menutup menu jika klik di luar area menu
     document.addEventListener('click', function(event) {
         const menu = document.getElementById('wa-menu');
         const waBtnContainer = menu.parentElement;
@@ -253,5 +257,4 @@
         }
     });
 </script>
-
 @endsection

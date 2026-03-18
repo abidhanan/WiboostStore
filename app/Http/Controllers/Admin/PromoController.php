@@ -28,13 +28,13 @@ class PromoController extends Controller
             'description' => 'required|string',
             'emoji' => 'nullable|string|max:10',
             'theme' => 'required|in:blue,teal,orange,rose',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072', // Validasi Gambar Banner Maks 3MB
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'link' => 'nullable|url|max:500', // <-- Validasi URL untuk link
             'is_active' => 'required|boolean',
         ]);
 
         $data = $request->all();
         
-        // Simpan gambar jika Admin melakukan upload
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('promos', 'public');
         }
@@ -58,17 +58,17 @@ class PromoController extends Controller
             'emoji' => 'nullable|string|max:10',
             'theme' => 'required|in:blue,teal,orange,rose',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'link' => 'nullable|url|max:500', // <-- Validasi URL untuk link
             'is_active' => 'required|boolean',
         ]);
 
         $data = $request->all();
 
-        // Ganti gambar jika Admin melakukan upload saat Edit
         if ($request->hasFile('image')) {
             if ($promo->image) {
-                Storage::disk('public')->delete($promo->image); // Hapus file lama
+                Storage::disk('public')->delete($promo->image);
             }
-            $data['image'] = $request->file('image')->store('promos', 'public'); // Simpan file baru
+            $data['image'] = $request->file('image')->store('promos', 'public');
         }
 
         $promo->update($data);
@@ -78,7 +78,6 @@ class PromoController extends Controller
 
     public function destroy(Promo $promo)
     {
-        // Hapus file gambar dari Storage saat Promo dihapus
         if ($promo->image) {
             Storage::disk('public')->delete($promo->image);
         }

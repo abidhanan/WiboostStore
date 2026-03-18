@@ -47,6 +47,12 @@
             <textarea name="description" rows="3" required class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">{{ old('description', $promo->description) }}</textarea>
         </div>
 
+        <div class="mb-6">
+            <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Link Tujuan / URL Promo (Opsional)</label>
+            <input type="url" name="link" value="{{ old('link', $promo->link) }}" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" placeholder="Cth: https://wiboost.com/order/kategori">
+            <p class="text-[10px] font-bold text-[#8faaf3] mt-2 ml-2">Kosongkan jika banner tidak ingin bisa diklik.</p>
+        </div>
+
         <div class="mb-8 p-5 bg-[#f0f5ff] rounded-[1.5rem] border-2 border-dashed border-[#bde0fe]">
             <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Ganti Gambar Custom Banner (Opsional)</label>
             @if($promo->image)
