@@ -50,79 +50,142 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-[2.5rem] shadow-lg shadow-[#bde0fe]/20 border-4 border-white overflow-hidden mb-8">
-        <div class="px-6 py-5 md:px-8 md:py-6 border-b-2 border-dashed border-[#f0f5ff] flex justify-between items-center bg-[#f4f9ff]">
-            <h4 class="font-black text-[#2b3a67] text-lg flex items-center gap-2">
-                <span class="text-2xl">⚡</span> 5 Transaksi Terbaru
-            </h4>
-            <a href="{{ route('admin.transactions.index') }}" class="text-[10px] md:text-xs font-black text-white bg-[#5a76c8] px-4 md:px-5 py-2.5 rounded-full hover:bg-[#4760a9] transition shadow-md shadow-[#5a76c8]/30 border border-white whitespace-nowrap">Lihat Semua &rarr;</a>
-        </div>
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
         
-        <div class="overflow-x-auto p-2 md:p-4">
-            <table class="w-full text-left whitespace-nowrap">
-                <thead>
-                    <tr>
-                        <th class="px-4 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Waktu & Invoice</th>
-                        <th class="px-4 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Pelanggan</th>
-                        <th class="px-4 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Layanan</th>
-                        <th class="px-4 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Harga</th>
-                        <th class="px-4 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y-2 divide-dashed divide-[#f0f5ff]">
-                    @forelse($recentTransactions ?? [] as $trx)
-                    <tr class="hover:bg-[#f4f9ff] transition-colors rounded-xl group">
-                        
-                        <td class="px-4 py-5 align-top">
-                            <p class="font-black text-[#5a76c8] text-sm mb-1">{{ $trx->invoice_number }}</p>
-                            <p class="text-[10px] font-bold text-[#8faaf3]">{{ $trx->created_at->diffForHumans() }}</p>
-                        </td>
-                        
-                        <td class="px-4 py-5 align-top">
-                            <p class="font-black text-[#2b3a67] text-sm truncate max-w-[120px] md:max-w-[150px]" title="{{ $trx->user->name ?? 'Guest' }}">{{ $trx->user->name ?? 'Guest' }}</p>
-                            <p class="text-[10px] font-bold text-[#8faaf3] truncate max-w-[120px] md:max-w-[150px] mt-1">{{ $trx->user->email ?? '-' }}</p>
-                        </td>
-                        
-                        <td class="px-4 py-5 align-top min-w-[180px] whitespace-normal">
-                            <p class="font-black text-[#2b3a67] text-sm line-clamp-2 leading-snug">{{ $trx->product->name ?? 'Produk Dihapus' }}</p>
-                        </td>
+        <div class="bg-white rounded-[2.5rem] shadow-lg shadow-[#bde0fe]/20 border-4 border-white flex flex-col overflow-hidden h-full">
+            <div class="px-5 py-5 md:px-8 md:py-6 border-b-2 border-dashed border-[#f0f5ff] flex justify-between items-center bg-[#f4f9ff]">
+                <h4 class="font-black text-[#2b3a67] text-lg flex items-center gap-2">
+                    <span class="text-2xl">⚡</span> Transaksi Terbaru
+                </h4>
+                <a href="{{ route('admin.transactions.index') }}" class="text-[10px] md:text-xs font-black text-white bg-[#5a76c8] px-4 md:px-5 py-2.5 rounded-full hover:bg-[#4760a9] transition shadow-md shadow-[#5a76c8]/30 border border-white whitespace-nowrap">Lihat Semua &rarr;</a>
+            </div>
+            
+            <div class="overflow-hidden flex-1 p-2 md:p-4 w-full">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr>
+                            <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Invoice</th>
+                            <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">User</th>
+                            <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Nominal</th>
+                            <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y-2 divide-dashed divide-[#f0f5ff]">
+                        @forelse($recentTransactions ?? [] as $trx)
+                        <tr class="hover:bg-[#f4f9ff] transition-colors rounded-xl group">
+                            
+                            <td class="px-2 md:px-4 py-4 align-middle w-[30%]">
+                                <p class="font-black text-[#5a76c8] text-[11px] md:text-sm mb-1 leading-tight break-all">{{ $trx->invoice_number }}</p>
+                                <p class="text-[9px] md:text-[10px] font-bold text-[#8faaf3]">{{ $trx->created_at->diffForHumans() }}</p>
+                            </td>
+                            
+                            <td class="px-2 md:px-4 py-4 align-middle w-[25%]">
+                                <p class="font-black text-[#2b3a67] text-xs md:text-sm truncate max-w-[60px] md:max-w-[120px]" title="{{ $trx->user->name ?? 'Guest' }}">{{ $trx->user->name ?? 'Guest' }}</p>
+                            </td>
 
-                        <td class="px-4 py-5 align-top">
-                            <p class="font-black text-[#4bc6b9] text-sm">Rp {{ number_format($trx->amount, 0, ',', '.') }}</p>
-                        </td>
-                        
-                        <td class="px-4 py-5 align-top text-center min-w-[120px]">
-                            @php
-                                $statusClasses = [
-                                    'success' => 'bg-[#e6fff7] text-emerald-500',
-                                    'processing' => 'bg-[#e0fbfc] text-[#5a76c8]',
-                                    'pending' => 'bg-[#fff5eb] text-amber-500',
-                                    'failed' => 'bg-[#ffe5e5] text-[#ff6b6b]',
-                                ];
-                                $currentStatus = $trx->order_status;
-                            @endphp
-                            <span class="{{ $statusClasses[$currentStatus] ?? 'bg-gray-100 text-gray-500' }} px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm inline-block w-full text-center">
-                                @if($currentStatus == 'success') ✅ Sukses
-                                @elseif($currentStatus == 'processing') ⚙️ Proses
-                                @elseif($currentStatus == 'pending') ⏳ Pending
-                                @else ❌ Gagal @endif
-                            </span>
-                        </td>
-
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="5" class="px-4 py-16 text-center">
-                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-[2rem] bg-[#f0f5ff] border-4 border-white mb-4 shadow-inner">
-                                <span class="text-3xl">📭</span>
-                            </div>
-                            <p class="text-[#8faaf3] font-black text-sm">Belum ada transaksi masuk.</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                            <td class="px-2 md:px-4 py-4 align-middle w-[25%] whitespace-nowrap">
+                                <p class="font-black text-[#4bc6b9] text-xs md:text-sm">Rp {{ number_format($trx->amount, 0, ',', '.') }}</p>
+                            </td>
+                            
+                            <td class="px-2 md:px-4 py-4 align-middle text-center w-[20%] whitespace-nowrap">
+                                @php
+                                    $statusClasses = [
+                                        'success' => 'bg-[#e6fff7] text-emerald-500',
+                                        'processing' => 'bg-[#e0fbfc] text-[#5a76c8]',
+                                        'pending' => 'bg-[#fff5eb] text-amber-500',
+                                        'failed' => 'bg-[#ffe5e5] text-[#ff6b6b]',
+                                    ];
+                                    $currentStatus = $trx->order_status;
+                                @endphp
+                                <span class="{{ $statusClasses[$currentStatus] ?? 'bg-gray-100 text-gray-500' }} px-2 md:px-3 py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest border border-white shadow-sm inline-block">
+                                    @if($currentStatus == 'success') ✅
+                                    @elseif($currentStatus == 'processing') ⚙️
+                                    @elseif($currentStatus == 'pending') ⏳
+                                    @else ❌ @endif
+                                    <span class="hidden sm:inline">{{ $currentStatus }}</span>
+                                </span>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="4" class="px-4 py-16 text-center">
+                                <div class="inline-flex items-center justify-center w-14 h-14 rounded-[2rem] bg-[#f0f5ff] border-4 border-white mb-3 shadow-inner"><span class="text-2xl">📭</span></div>
+                                <p class="text-[#8faaf3] font-black text-xs">Belum ada transaksi.</p>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+        <div class="bg-white rounded-[2.5rem] shadow-lg shadow-[#bde0fe]/20 border-4 border-white flex flex-col overflow-hidden h-full">
+            <div class="px-5 py-5 md:px-8 md:py-6 border-b-2 border-dashed border-[#f0f5ff] flex justify-between items-center bg-[#fff9f0]">
+                <h4 class="font-black text-[#2b3a67] text-lg flex items-center gap-2">
+                    <span class="text-2xl">💳</span> Deposit Terbaru
+                </h4>
+                <a href="{{ route('admin.deposits.index') }}" class="text-[10px] md:text-xs font-black text-white bg-amber-500 px-4 md:px-5 py-2.5 rounded-full hover:bg-amber-600 transition shadow-md shadow-amber-500/30 border border-white whitespace-nowrap">Lihat Semua &rarr;</a>
+            </div>
+            
+            <div class="overflow-hidden flex-1 p-2 md:p-4 w-full">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr>
+                            <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">ID</th>
+                            <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">User</th>
+                            <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Nominal</th>
+                            <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y-2 divide-dashed divide-[#f0f5ff]">
+                        @forelse($recentDeposits ?? [] as $deposit)
+                        <tr class="hover:bg-[#f4f9ff] transition-colors rounded-xl group">
+                            
+                            <td class="px-2 md:px-4 py-4 align-middle w-[30%]">
+                                <p class="font-black text-amber-500 text-[11px] md:text-sm mb-1 leading-tight break-all">{{ $deposit->invoice_number ?? 'DEP-'.$deposit->id }}</p>
+                                <p class="text-[9px] md:text-[10px] font-bold text-[#8faaf3]">{{ $deposit->created_at->diffForHumans() }}</p>
+                            </td>
+                            
+                            <td class="px-2 md:px-4 py-4 align-middle w-[25%]">
+                                <p class="font-black text-[#2b3a67] text-xs md:text-sm truncate max-w-[60px] md:max-w-[120px]" title="{{ $deposit->user->name ?? 'Guest' }}">{{ $deposit->user->name ?? 'Guest' }}</p>
+                            </td>
+                            
+                            <td class="px-2 md:px-4 py-4 align-middle w-[25%] whitespace-nowrap">
+                                <p class="font-black text-[#4bc6b9] text-xs md:text-sm">Rp {{ number_format($deposit->amount, 0, ',', '.') }}</p>
+                            </td>
+                            
+                            <td class="px-2 md:px-4 py-4 align-middle text-center w-[20%] whitespace-nowrap">
+                                @php
+                                    $depStatus = $deposit->status ?? $deposit->payment_status ?? 'pending';
+                                    $depClasses = [
+                                        'success' => 'bg-[#e6fff7] text-emerald-500',
+                                        'paid' => 'bg-[#e6fff7] text-emerald-500',
+                                        'pending' => 'bg-[#fff5eb] text-amber-500',
+                                        'unpaid' => 'bg-[#fff5eb] text-amber-500',
+                                        'failed' => 'bg-[#ffe5e5] text-[#ff6b6b]',
+                                    ];
+                                @endphp
+                                <span class="{{ $depClasses[$depStatus] ?? 'bg-gray-100 text-gray-500' }} px-2 md:px-3 py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest border border-white shadow-sm inline-block">
+                                    @if($depStatus == 'success' || $depStatus == 'paid') ✅
+                                    @elseif($depStatus == 'pending' || $depStatus == 'unpaid') ⏳
+                                    @else ❌ @endif
+                                    <span class="hidden sm:inline">{{ $depStatus }}</span>
+                                </span>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="4" class="px-4 py-16 text-center">
+                                <div class="inline-flex items-center justify-center w-14 h-14 rounded-[2rem] bg-[#fff9f0] border-4 border-white mb-3 shadow-inner"><span class="text-2xl">💤</span></div>
+                                <p class="text-[#8faaf3] font-black text-xs">Belum ada deposit masuk.</p>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 </div>
 @endsection
