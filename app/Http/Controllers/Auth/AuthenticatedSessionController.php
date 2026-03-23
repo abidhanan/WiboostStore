@@ -30,16 +30,14 @@ class AuthenticatedSessionController extends Controller
         // 2. Buat sesi baru untuk keamanan
         $request->session()->regenerate();
 
-        // 3. LOGIKA REDIRECT BERDASARKAN ROLE ID
-        $role = $request->user()->role_id;
-
-        if (in_array($role, [1, 2, 3, 4])) {
-            // Jika Manajemen (Super Admin, Admin, Office, Stok)
-            return redirect()->intended(route('admin.dashboard'));
+        // 3. LOGIKA REDIRECT BERDASARKAN ROLE BARU (Hanya 2 Role)
+        if ($request->user()->isAdmin()) {
+            // Jika dia adalah Admin (Role 1), arahkan ke Panel Admin
+            return redirect()->intended(route('admin.dashboard', absolute: false));
         }
 
-        // Jika Pelanggan Biasa (Role 5)
-        return redirect()->intended(route('user.dashboard'));
+        // Jika dia adalah Buyer (Role 2), arahkan ke Dashboard Pelanggan
+        return redirect()->intended(route('user.dashboard', absolute: false));
     }
 
     /**
