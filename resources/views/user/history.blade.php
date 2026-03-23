@@ -97,6 +97,18 @@
                     </div>
 
                     <div class="flex-1 overflow-y-auto hide-scroll space-y-5 pr-1">
+
+                        @if($trx->order_status == 'failed' && !empty($trx->target_notes))
+                            <div class="bg-[#ffe5e5] p-5 rounded-[1.5rem] border-2 border-red-200 shadow-sm relative overflow-hidden mb-5">
+                                <div class="absolute -right-4 -top-4 text-6xl opacity-10">💸</div>
+                                <div class="relative z-10">
+                                    <p class="text-[10px] font-black text-[#ff6b6b] uppercase tracking-widest mb-1 flex items-center gap-1">
+                                        <span>ℹ️</span> Keterangan Sistem
+                                    </p>
+                                    <p class="font-bold text-[#2b3a67] text-sm leading-tight">{{ $trx->target_notes }}</p>
+                                </div>
+                            </div>
+                        @endif
                         
                         @if($credentials)
                             <div class="bg-[#fffcf0] p-5 rounded-[1.5rem] border-2 border-amber-200 shadow-sm relative overflow-hidden">
@@ -214,20 +226,17 @@
         modals.forEach(modal => document.body.appendChild(modal));
 
         // LOGIKA AUTO-OPEN MODAL TRANSAKSI
-        // 1. Jika pengguna bayar via Saldo Wiboost (didapat dari Session)
         @if(session('new_trx_id'))
             setTimeout(() => {
                 openModal('modal-{{ session('new_trx_id') }}');
             }, 300);
         @endif
 
-        // 2. Jika pengguna bayar via Midtrans (didapat dari URL Parameter)
         const urlParams = new URLSearchParams(window.location.search);
         if(urlParams.has('auto_open')) {
             setTimeout(() => {
                 openModal('modal-' + urlParams.get('auto_open'));
             }, 300);
-            // Bersihkan URL agar modal tidak terbuka terus-terusan saat di-refresh
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     });
@@ -250,7 +259,6 @@
         }
     }
 
-    // Fungsi Midtrans diperbarui agar mengirim URL Parameter ?auto_open=id_transaksi
     function payWithMidtrans(snapToken, trxId) {
         if(!snapToken) return alert("Maaf, token pembayaran tidak ditemukan. Hubungi Admin.");
         snap.pay(snapToken, {
