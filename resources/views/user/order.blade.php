@@ -76,9 +76,13 @@
                     @endif
                 >
                     
-                    @if($product->image && $product->process_type == 'number')
+                    @if($product->image)
                         <div class="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-xl overflow-hidden border-2 border-[#f0f5ff] shadow-sm bg-[#f4f9ff]">
                             <img src="{{ Storage::url($product->image) }}" alt="Logo" class="w-full h-full object-cover">
+                        </div>
+                    @elseif($product->emote)
+                        <div class="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-xl bg-[#f0f5ff] text-[#5a76c8] flex items-center justify-center border-2 border-white shadow-inner text-2xl md:text-3xl">
+                            {{ $product->emote }}
                         </div>
                     @else
                         <div class="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-xl bg-[#f0f5ff] text-[#8faaf3] flex items-center justify-center border-2 border-white shadow-inner text-xl">
@@ -211,28 +215,22 @@
     const noTargetMsg = document.getElementById('no_target_msg');
     const stepNumber2 = document.getElementById('step_number_2');
 
-    // Menerima parameter process_type dari tombol
     function goToCheckout(id, name, price, processType) {
         document.getElementById('checkout_product_id').value = id;
         document.getElementById('checkout_product_name').innerText = name;
         document.getElementById('checkout_product_price').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(price);
 
-        // LOGIKA PENYEMBUNYIAN INPUT TARGET
         if(processType === 'account' || processType === 'number') {
-            // Sembunyikan input target & hapus attribute required
             targetContainer.classList.add('hidden');
             inputTarget.removeAttribute('required');
-            inputTarget.value = ''; // Kosongkan nilainya
+            inputTarget.value = ''; 
             
-            // Tampilkan pesan pengganti & ubah bulatan langkah ke-2 jadi 1
             noTargetMsg.classList.remove('hidden');
             stepNumber2.innerText = '1';
         } else {
-            // Tampilkan kembali input target & jadikan required lagi
             targetContainer.classList.remove('hidden');
             inputTarget.setAttribute('required', 'required');
             
-            // Sembunyikan pesan pengganti & kembalikan bulatan langkah ke-2
             noTargetMsg.classList.add('hidden');
             stepNumber2.innerText = '2';
         }

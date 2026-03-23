@@ -14,8 +14,9 @@ class Product extends Model
         'price',
         'provider_product_id',
         'process_type',
-        'stock_reminder', // <-- Tambahan kolom pengingat batas stok
+        'stock_reminder',
         'image',
+        'emote', // <-- Kolom baru untuk menampung emoji
         'is_active',
     ];
 
@@ -39,7 +40,6 @@ class Product extends Model
         return $this->hasMany(Transaction::class);
     }
 
-    // Fungsi cerdas untuk menghitung Sisa Stok Akun/Nomor
     public function getAvailableStockAttribute()
     {
         if (!in_array($this->process_type, ['account', 'number'])) return null;

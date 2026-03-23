@@ -27,7 +27,6 @@ class ProductController extends Controller
 
     public function create()
     {
-        // Hanya ambil Sub-Kategori (yang punya parent_id) ATAU kategori yang tidak punya anak
         $categories = Category::whereNotNull('parent_id')->orDoesntHave('children')->get();
         return view('admin.products.create', compact('categories'));
     }
@@ -42,12 +41,12 @@ class ProductController extends Controller
             'process_type'        => 'required|in:api,account,number,manual',
             'stock_reminder'      => 'nullable|integer|min:0',
             'is_active'           => 'required|in:0,1',
-            'image'               => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // Validasi Gambar
+            'image'               => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'emote'               => 'nullable|string|max:50', // Validasi Emote
         ]);
 
         $imagePath = null;
-        // Hanya simpan gambar jika tipenya Nomor Luar
-        if ($request->hasFile('image') && $request->process_type == 'number') {
+        if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('products', 'public');
         }
 
@@ -59,7 +58,8 @@ class ProductController extends Controller
             'provider_product_id' => $request->provider_product_id,
             'process_type'        => $request->process_type,
             'stock_reminder'      => $request->stock_reminder ?? 0,
-            'image'               => $imagePath, // Simpan path gambar
+            'image'               => $imagePath,
+            'emote'               => $request->emote, // Menyimpan Emote
             'is_active'           => $request->is_active,
         ]);
 
@@ -83,27 +83,18 @@ class ProductController extends Controller
             'stock_reminder'      => 'nullable|integer|min:0',
             'is_active'           => 'required|in:0,1',
             'image'               => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'emote'               => 'nullable|string|max:50',
         ]);
 
-        $data = $request->only(['name', 'category_id', 'price', 'provider_product_id', 'process_type', 'stock_reminder', 'is_active']);
+        $data = $request->only(['name', 'category_id', 'price', 'provider_product_id', 'process_type', 'stock_reminder', 'is_active', 'emote']);
         
-        // Jika bukan tipe akun/nomor, paksa stock reminder jadi 0
         if (!in_array($request->process_type, ['account', 'number'])) {
             $data['stock_reminder'] = 0;
         }
 
-        // Proses Gambar khusus tipe Nomor Luar
-        if ($request->hasFile('image') && $request->process_type == 'number') {
-            if ($product->image) {
-                Storage::disk('public')->delete($product->image);
-            }
+        if ($request->hasFile('image')) {
+            if ($product->image) Storage::disk('public')->delete($product->image);
             $data['image'] = $request->file('image')->store('products', 'public');
-        } elseif ($request->process_type != 'number') {
-            // Hapus gambar secara otomatis jika admin mengganti tipe produk jadi bukan nomor luar
-            if ($product->image) {
-                Storage::disk('public')->delete($product->image);
-                $data['image'] = null;
-            }
         }
 
         $data['slug'] = Str::slug($request->name) . '-' . Str::random(5);
@@ -115,9 +106,7 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        if ($product->image) {
-            Storage::disk('public')->delete($product->image);
-        }
+        if ($product->image) Storage::disk('public')->delete($product->image);
         $product->delete();
         return back()->with('success', 'Produk berhasil dihapus dari katalog! 🗑️');
     }

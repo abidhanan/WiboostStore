@@ -88,17 +88,25 @@
                 </div>
             </div>
 
-            <div id="image_upload_container" style="display: none;">
-                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Gambar / Logo Bendera</label>
-                @if($product->image)
-                    <div class="mb-3 ml-2 flex items-center gap-3">
-                        <img src="{{ Storage::url($product->image) }}" alt="Preview" class="h-14 rounded-xl shadow-sm border-2 border-[#f0f5ff] object-cover">
-                        <span class="text-xs font-bold text-[#8faaf3]">Gambar saat ini</span>
+            <div class="bg-[#f0f5ff] p-5 rounded-[1.5rem] border-2 border-white shadow-inner">
+                <p class="font-black text-[#2b3a67] mb-4">Tambahkan Ikon Visual (Opsional)</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-[#8faaf3] mb-2 ml-2">Gunakan Emoji</label>
+                        <input type="text" name="emote" value="{{ old('emote', $product->emote) }}" class="w-full bg-white border-2 border-transparent focus:border-[#5a76c8] rounded-xl px-4 py-3 text-[#2b3a67] font-black outline-none transition shadow-sm" placeholder="Contoh: 🍿 atau 💎">
                     </div>
-                @endif
-                <input type="file" name="image" accept="image/*"
-                       class="w-full bg-[#f4f9ff] border-2 border-dashed border-[#bde0fe] hover:border-[#5a76c8] rounded-[1.5rem] px-6 py-3 text-[#2b3a67] font-black outline-none transition cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-[#5a76c8] file:text-white hover:file:bg-[#4760a9]">
-                <p class="text-[10px] font-bold text-[#8faaf3] mt-2 ml-2">Biarkan kosong jika tidak ingin mengubah gambar.</p>
+                    <div>
+                        <label class="block text-xs font-bold text-[#8faaf3] mb-2 ml-2">Atau Upload Gambar</label>
+                        @if($product->image)
+                            <div class="mb-3 ml-2 flex items-center gap-3">
+                                <img src="{{ Storage::url($product->image) }}" class="h-10 rounded-xl shadow-sm border-2 border-[#f0f5ff] object-cover">
+                                <span class="text-xs font-bold text-[#8faaf3]">Gambar saat ini</span>
+                            </div>
+                        @endif
+                        <input type="file" name="image" accept="image/*" class="w-full bg-white border-2 border-dashed border-[#bde0fe] hover:border-[#5a76c8] rounded-xl px-4 py-2 text-[#2b3a67] font-black outline-none transition cursor-pointer file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-[#5a76c8] file:text-white hover:file:bg-[#4760a9]">
+                        <p class="text-[9px] font-bold text-[#8faaf3] mt-1 ml-1">*Gambar akan mengalahkan Emoji</p>
+                    </div>
+                </div>
             </div>
 
             <div class="pt-6 flex flex-col sm:flex-row gap-4">
@@ -115,12 +123,11 @@
     document.addEventListener('DOMContentLoaded', function() {
         const processTypeSelect = document.getElementById('process_type');
         const stockReminderContainer = document.getElementById('stock_reminder_container');
-        const imageUploadContainer = document.getElementById('image_upload_container');
 
         function toggleFields() {
             const type = processTypeSelect.value;
+            // Pengingat stok hanya muncul untuk Akun & Nomor
             stockReminderContainer.style.display = (type === 'account' || type === 'number') ? 'block' : 'none';
-            imageUploadContainer.style.display = (type === 'number') ? 'block' : 'none';
         }
 
         processTypeSelect.addEventListener('change', toggleFields);
