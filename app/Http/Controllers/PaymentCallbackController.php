@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Transaction;
 use App\Models\Deposit;
-use App\Models\User;
+use App\Models\User; // <-- Wajib ada untuk proses refund
 use App\Models\ProductCredential;
 use App\Services\OrderSosmedService;
 use Illuminate\Support\Facades\Log;
@@ -88,10 +88,20 @@ class PaymentCallbackController extends Controller
             if ($apiResponse['success']) {
                 $transaction->update(['order_status' => 'success']);
             } else {
+                // LOGIKA REFUND OTOMATIS JIKA API GAGAL HIT (Provider Error)
                 $transaction->update([
                     'order_status' => 'failed',
-                    'target_notes' => 'Gagal hit API Pusat: ' . $apiResponse['message']
+                    'target_notes' => 'Gagal hit API Pusat: ' . $apiResponse['message'] . ' (Saldo Otomatis Dikembalikan)'
                 ]);
+
+                // Pastikan status pembayarannya lunas sebelum merefund
+                if ($transaction->payment_status === 'paid') {
+                    $user = User::find($transaction->user_id);
+                    if ($user) {
+                        $user->increment('balance', $transaction->amount);
+                        Log::info("REFUND API GAGAL: Rp {$transaction->amount} dikembalikan ke Saldo User ID {$user->id} (Invoice: {$transaction->invoice_number})");
+                    }
+                }
             }
         } 
         elseif ($product->process_type === 'account' || $product->process_type === 'number') {
@@ -103,7 +113,6 @@ class PaymentCallbackController extends Controller
             if ($credential) {
                 $credential->increment('current_usage');
                 
-                // Merekam data ke dalam brankas JSON
                 $transaction->update([
                     'order_status' => 'success',
                     'credential_data' => json_encode([
