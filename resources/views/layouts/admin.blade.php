@@ -8,28 +8,33 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style> 
         body { font-family: 'Nunito', sans-serif; } 
-        /* Scrollbar custom agar estetik */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f4f9ff; }
         ::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white flex h-screen overflow-hidden">
+<body class="bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white flex h-screen w-screen overflow-hidden">
 
-    <aside class="w-72 bg-white/90 backdrop-blur-md border-r-4 border-white shadow-xl shadow-[#bde0fe]/40 hidden md:flex flex-col rounded-r-[2.5rem] z-20 my-4 ml-4">
-        <div class="h-24 flex items-center px-8 border-b-2 border-dashed border-[#f0f5ff]">
+    <aside class="w-72 bg-white/90 backdrop-blur-md border-r-4 border-white shadow-xl shadow-[#bde0fe]/40 hidden md:flex flex-col shrink-0 rounded-r-[2.5rem] z-20 my-4 ml-4 h-[calc(100vh-2rem)]">
+        <div class="h-24 shrink-0 flex items-center px-8 border-b-2 border-dashed border-[#f0f5ff]">
             <div class="flex items-center gap-3">
                 <div class="w-12 h-12 bg-gradient-to-br from-[#8faaf3] to-[#5a76c8] rounded-[1rem] flex items-center justify-center text-white font-black text-2xl shadow-inner border-2 border-white">W</div>
                 <span class="font-black text-2xl tracking-tight text-[#2b3a67]">Admin<span class="text-[#8faaf3]">Panel</span></span>
             </div>
         </div>
 
-        <nav class="flex-1 overflow-y-auto px-4 py-6 space-y-2">
+        <nav class="flex-1 overflow-y-auto no-scrollbar px-4 py-6 space-y-2">
             <p class="px-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mb-2">Menu Utama</p>
             
             <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-4 px-5 py-3.5 rounded-[1.5rem] font-black transition-all {{ request()->routeIs('admin.dashboard') ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white' : 'text-[#5a76c8] hover:bg-[#f0f5ff] hover:border-2 border-2 border-transparent hover:border-white' }}">
                 <span class="text-xl drop-shadow-sm">🏠</span> Dashboard
+            </a>
+            
+            <a href="{{ route('admin.users.index') }}" class="flex items-center gap-4 px-5 py-3.5 rounded-[1.5rem] font-black transition-all {{ request()->routeIs('admin.users.*') ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white' : 'text-[#5a76c8] hover:bg-[#f0f5ff] hover:border-2 border-2 border-transparent hover:border-white' }}">
+                <span class="text-xl drop-shadow-sm">👥</span> Pengguna
             </a>
             
             <p class="px-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mt-6 mb-2">Katalog Toko</p>
@@ -55,8 +60,8 @@
         </nav>
     </aside>
 
-    <div class="flex-1 flex flex-col h-screen overflow-hidden">
-        <header class="h-24 bg-white/80 backdrop-blur-md shadow-sm border-b-4 border-white flex items-center justify-between px-6 lg:px-10 z-10 rounded-b-[2.5rem] mx-4 mt-4">
+    <div class="flex-1 flex flex-col h-[calc(100vh-2rem)] overflow-hidden my-4 mr-4">
+        <header class="h-24 shrink-0 bg-white/80 backdrop-blur-md shadow-sm border-b-4 border-white flex items-center justify-between px-6 lg:px-10 z-10 rounded-[2.5rem] mx-4 mb-4">
             <h2 class="text-xl font-black text-[#2b3a67] hidden md:block">@yield('title')</h2>
             
             <button class="md:hidden p-2 bg-[#f0f5ff] rounded-xl text-[#5a76c8] border-2 border-white shadow-sm">
@@ -78,7 +83,7 @@
             </div>
         </header>
 
-        <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 lg:p-10">
+        <main class="flex-1 overflow-x-hidden overflow-y-auto px-4 md:px-8 pb-10 pt-2 rounded-[2.5rem]">
             @yield('content')
         </main>
     </div>
