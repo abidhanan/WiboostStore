@@ -10,7 +10,7 @@
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4 pl-2">
         <div>
             <h3 class="text-3xl font-black text-[#2b3a67] tracking-tight">Katalog Produk 🛒</h3>
-            <p class="text-sm text-[#8faaf3] font-bold mt-1">Kelola harga, status aktif, dan kode SKU Provider di sini.</p>
+            <p class="text-sm text-[#8faaf3] font-bold mt-1">Kelola harga, stok otomatis, dan integrasi SKU Provider.</p>
         </div>
         <a href="{{ route('admin.products.create') }}" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white px-6 py-3 rounded-full font-black transition-transform active:scale-95 flex items-center gap-2 shadow-lg shadow-[#5a76c8]/30 border-4 border-white">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
@@ -53,11 +53,11 @@
             <table class="w-full text-left whitespace-nowrap">
                 <thead>
                     <tr>
-                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Layanan / Produk</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Tipe & Stok</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Produk & Kategori</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Tipe Proses</th>
                         <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Harga Jual</th>
                         <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">SKU</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Status</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Stok</th>
                         <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -66,32 +66,33 @@
                     <tr class="hover:bg-[#f4f9ff] transition-colors rounded-xl group">
                         
                         <td class="px-6 py-4 min-w-[200px] whitespace-normal">
-                            <p class="font-black text-[#2b3a67] text-md line-clamp-2 leading-tight">{{ $product->name }}</p>
-                            <span class="bg-[#e0fbfc] text-[#4bc6b9] px-2 py-0.5 mt-2 rounded-md text-[10px] font-black shadow-sm inline-block">
-                                {{ $product->category->name ?? 'Tanpa Kategori' }}
-                            </span>
+                            <div class="flex items-center gap-3">
+                                @if($product->image)
+                                    <img src="{{ Storage::url($product->image) }}" class="w-10 h-10 rounded-xl object-cover border-2 border-white shadow-sm">
+                                @elseif($product->emote)
+                                    <div class="w-10 h-10 bg-[#f0f5ff] rounded-xl flex items-center justify-center text-xl shadow-inner border-2 border-white">{{ $product->emote }}</div>
+                                @endif
+                                <div>
+                                    <p class="font-black text-[#2b3a67] text-md line-clamp-1 leading-tight">{{ $product->name }}</p>
+                                    <span class="bg-[#e0fbfc] text-[#4bc6b9] px-2 py-0.5 mt-1 rounded-md text-[9px] font-black shadow-sm inline-block uppercase">
+                                        {{ $product->category->name ?? 'N/A' }}
+                                    </span>
+                                    @if(!$product->is_active)
+                                        <span class="text-[9px] font-black text-rose-400 ml-1 uppercase">[Nonaktif]</span>
+                                    @endif
+                                </div>
+                            </div>
                         </td>
                         
                         <td class="px-6 py-4 text-center">
                             @if($product->process_type == 'api')
-                                <span class="text-[#8faaf3] font-black text-xs px-3 py-1 bg-[#f0f5ff] rounded-lg inline-block">⚡ API</span>
+                                <span class="text-[#8faaf3] font-black text-[10px] px-3 py-1.5 bg-[#f4f9ff] border border-[#e0ebff] rounded-lg inline-block uppercase tracking-widest">⚡ API</span>
                             @elseif($product->process_type == 'account' || $product->process_type == 'number')
-                                <div class="flex flex-col items-center justify-center gap-1.5">
-                                    <a href="{{ route('admin.credentials.index', $product->id) }}" class="inline-flex items-center gap-2 bg-[#ffeef2] text-[#e1306c] hover:bg-[#e1306c] hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-black transition-colors shadow-sm border border-white uppercase tracking-widest" title="Kelola Gudang Data">
-                                        📦 {{ $product->process_type == 'account' ? 'Akun' : 'Nomor' }}
-                                    </a>
-                                    
-                                    <div class="bg-[#f4f9ff] px-2 py-1 rounded-md text-[9px] font-black border border-white shadow-inner flex items-center justify-center gap-1 w-full max-w-[110px] mx-auto uppercase tracking-widest">
-                                        <span class="text-[#8faaf3]">Stok:</span>
-                                        @if($product->available_stock <= $product->stock_reminder)
-                                            <span class="text-[#ff6b6b] animate-pulse drop-shadow-sm">{{ (int)$product->available_stock }}</span>
-                                        @else
-                                            <span class="text-emerald-500">{{ (int)$product->available_stock }}</span>
-                                        @endif
-                                    </div>
-                                </div>
+                                <a href="{{ route('admin.credentials.index', $product->id) }}" class="inline-flex items-center gap-2 bg-[#ffeef2] text-[#e1306c] hover:bg-[#e1306c] hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-black transition-all shadow-sm border border-white uppercase tracking-widest" title="Kelola Gudang Data">
+                                    📦 {{ $product->process_type == 'account' ? 'Akun' : 'Nomor' }}
+                                </a>
                             @else
-                                <span class="text-[#8faaf3] font-black text-xs px-3 py-1 bg-[#f0f5ff] rounded-lg inline-block">✍️ Manual</span>
+                                <span class="text-[#8faaf3] font-black text-[10px] px-3 py-1.5 bg-[#f4f9ff] border border-[#e0ebff] rounded-lg inline-block uppercase tracking-widest">✍️ Manual</span>
                             @endif
                         </td>
 
@@ -106,10 +107,19 @@
                         </td>
                         
                         <td class="px-6 py-4 text-center">
-                            @if($product->is_active)
-                                <span class="bg-[#e6fff7] text-emerald-500 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm">Aktif</span>
+                            @if(in_array($product->process_type, ['api', 'manual']))
+                                <span class="text-[#8faaf3] font-black text-lg">-</span>
                             @else
-                                <span class="bg-[#ffe5e5] text-[#ff6b6b] px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm">Nonaktif</span>
+                                @php $stock = (int)$product->available_stock; @endphp
+                                @if($stock <= $product->stock_reminder)
+                                    <span class="bg-[#ffe5e5] text-[#ff6b6b] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm animate-pulse inline-block min-w-[70px]">
+                                        {{ $stock }} (Limit)
+                                    </span>
+                                @else
+                                    <span class="bg-[#e6fff7] text-emerald-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm inline-block min-w-[70px]">
+                                        {{ $stock }}
+                                    </span>
+                                @endif
                             @endif
                         </td>
                         
@@ -118,7 +128,7 @@
                                 <a href="{{ route('admin.products.edit', $product->id) }}" class="bg-[#fff5eb] text-amber-500 hover:bg-amber-500 hover:text-white p-2.5 rounded-xl transition-colors shadow-sm border-2 border-white" title="Edit">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                 </a>
-                                <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus produk ini?');">
+                                <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus produk ini? Semua data gudang terkait juga akan hilang!');">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="bg-[#ffe5e5] text-[#ff6b6b] hover:bg-[#ff6b6b] hover:text-white p-2.5 rounded-xl transition-colors shadow-sm border-2 border-white" title="Hapus">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -129,9 +139,9 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center">
-                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-[1.5rem] bg-[#f0f5ff] border-4 border-white mb-3 shadow-inner"><span class="text-3xl">🛍️</span></div>
-                            <p class="text-[#8faaf3] font-black text-sm">Data produk tidak ditemukan.</p>
+                        <td colspan="6" class="px-6 py-20 text-center">
+                            <div class="inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-[#f4f9ff] border-4 border-white mb-4 shadow-inner text-4xl">📭</div>
+                            <p class="text-[#8faaf3] font-black text-lg">Oops! Produk tidak ditemukan.</p>
                         </td>
                     </tr>
                     @endforelse

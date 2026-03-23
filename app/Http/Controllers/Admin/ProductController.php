@@ -42,7 +42,7 @@ class ProductController extends Controller
             'stock_reminder'      => 'nullable|integer|min:0',
             'is_active'           => 'required|in:0,1',
             'image'               => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'emote'               => 'nullable|string|max:50', // Validasi Emote
+            'emote'               => 'nullable|string|max:50', 
         ]);
 
         $imagePath = null;
@@ -59,11 +59,11 @@ class ProductController extends Controller
             'process_type'        => $request->process_type,
             'stock_reminder'      => $request->stock_reminder ?? 0,
             'image'               => $imagePath,
-            'emote'               => $request->emote, // Menyimpan Emote
+            'emote'               => $request->emote, 
             'is_active'           => $request->is_active,
         ]);
 
-        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan ke katalog! 🚀');
+        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan! 🚀');
     }
 
     public function edit(Product $product)
@@ -92,13 +92,20 @@ class ProductController extends Controller
             $data['stock_reminder'] = 0;
         }
 
-        if ($request->hasFile('image')) {
+        // LOGIKA HAPUS GAMBAR
+        if ($request->has('remove_image')) {
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+                $data['image'] = null;
+            }
+        } 
+        // LOGIKA UPDATE GAMBAR (Hanya jika tidak sedang menghapus & ada file baru)
+        elseif ($request->hasFile('image')) {
             if ($product->image) Storage::disk('public')->delete($product->image);
             $data['image'] = $request->file('image')->store('products', 'public');
         }
 
         $data['slug'] = Str::slug($request->name) . '-' . Str::random(5);
-
         $product->update($data);
 
         return redirect()->route('admin.products.index')->with('success', 'Perubahan produk berhasil disimpan! ✨');
@@ -108,6 +115,6 @@ class ProductController extends Controller
     {
         if ($product->image) Storage::disk('public')->delete($product->image);
         $product->delete();
-        return back()->with('success', 'Produk berhasil dihapus dari katalog! 🗑️');
+        return back()->with('success', 'Produk berhasil dihapus! 🗑️');
     }
 }

@@ -30,8 +30,7 @@
         <div class="space-y-6">
             <div>
                 <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Nama Produk / Layanan</label>
-                <input type="text" name="name" required value="{{ old('name', $product->name) }}"
-                       class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">
+                <input type="text" name="name" required value="{{ old('name', $product->name) }}" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -43,7 +42,6 @@
                         @endforeach
                     </select>
                 </div>
-                
                 <div>
                     <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Tipe Proses Order</label>
                     <select name="process_type" id="process_type" required class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition cursor-pointer appearance-none">
@@ -60,14 +58,12 @@
                     <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Harga Jual (Rp)</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-6 font-black text-[#5a76c8]">Rp</span>
-                        <input type="number" name="price" required value="{{ old('price', $product->price) }}" min="0"
-                               class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] pl-14 pr-6 py-4 text-[#2b3a67] font-black outline-none transition">
+                        <input type="number" name="price" required value="{{ old('price', $product->price) }}" min="0" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] pl-14 pr-6 py-4 text-[#2b3a67] font-black outline-none transition">
                     </div>
                 </div>
                 <div>
                     <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Provider SKU</label>
-                    <input type="text" name="provider_product_id" value="{{ old('provider_product_id', $product->provider_product_id) }}"
-                           class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">
+                    <input type="text" name="provider_product_id" value="{{ old('provider_product_id', $product->provider_product_id) }}" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">
                 </div>
             </div>
 
@@ -79,38 +75,40 @@
                         <option value="0" {{ old('is_active', $product->is_active) == '0' ? 'selected' : '' }}>🔴 Nonaktif</option>
                     </select>
                 </div>
-                
                 <div id="stock_reminder_container" style="display: none;">
                     <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Pengingat Stok Minimum</label>
-                    <input type="number" name="stock_reminder" value="{{ old('stock_reminder', $product->stock_reminder) }}" min="0"
-                           class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">
-                    <p class="text-[10px] font-bold text-[#8faaf3] mt-2 ml-2">Munculkan alert jika sisa stok menyentuh angka ini.</p>
+                    <input type="number" name="stock_reminder" value="{{ old('stock_reminder', $product->stock_reminder) }}" min="0" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">
                 </div>
             </div>
 
             <div class="bg-[#f0f5ff] p-5 rounded-[1.5rem] border-2 border-white shadow-inner">
-                <p class="font-black text-[#2b3a67] mb-4">Tambahkan Ikon Visual (Opsional)</p>
+                <p class="font-black text-[#2b3a67] mb-4">Ikon Visual Produk</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-xs font-bold text-[#8faaf3] mb-2 ml-2">Gunakan Emoji</label>
                         <input type="text" name="emote" value="{{ old('emote', $product->emote) }}" class="w-full bg-white border-2 border-transparent focus:border-[#5a76c8] rounded-xl px-4 py-3 text-[#2b3a67] font-black outline-none transition shadow-sm" placeholder="Contoh: 🍿 atau 💎">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-[#8faaf3] mb-2 ml-2">Atau Upload Gambar</label>
+                        <label class="block text-xs font-bold text-[#8faaf3] mb-2 ml-2">Upload Gambar</label>
                         @if($product->image)
-                            <div class="mb-3 ml-2 flex items-center gap-3">
-                                <img src="{{ Storage::url($product->image) }}" class="h-10 rounded-xl shadow-sm border-2 border-[#f0f5ff] object-cover">
-                                <span class="text-xs font-bold text-[#8faaf3]">Gambar saat ini</span>
+                            <div class="mb-3 ml-2 flex items-center justify-between bg-white/50 p-2 rounded-xl border border-white">
+                                <div class="flex items-center gap-3">
+                                    <img src="{{ Storage::url($product->image) }}" class="h-10 w-10 rounded-lg object-cover border-2 border-white shadow-sm">
+                                    <span class="text-[10px] font-black text-[#5a76c8] uppercase tracking-tighter">Aktif</span>
+                                </div>
+                                <label class="flex items-center gap-2 cursor-pointer group">
+                                    <input type="checkbox" name="remove_image" class="w-4 h-4 rounded border-gray-300 text-rose-500 focus:ring-rose-500 cursor-pointer">
+                                    <span class="text-[10px] font-black text-rose-500 uppercase group-hover:underline">Hapus</span>
+                                </label>
                             </div>
                         @endif
-                        <input type="file" name="image" accept="image/*" class="w-full bg-white border-2 border-dashed border-[#bde0fe] hover:border-[#5a76c8] rounded-xl px-4 py-2 text-[#2b3a67] font-black outline-none transition cursor-pointer file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-[#5a76c8] file:text-white hover:file:bg-[#4760a9]">
-                        <p class="text-[9px] font-bold text-[#8faaf3] mt-1 ml-1">*Gambar akan mengalahkan Emoji</p>
+                        <input type="file" name="image" accept="image/*" class="w-full bg-white border-2 border-dashed border-[#bde0fe] hover:border-[#5a76c8] rounded-xl px-4 py-2 text-[#2b3a67] font-black outline-none transition cursor-pointer file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-[#5a76c8] file:text-white">
                     </div>
                 </div>
             </div>
 
             <div class="pt-6 flex flex-col sm:flex-row gap-4">
-                <button type="submit" class="flex-1 bg-[#4bc6b9] hover:bg-[#3ba398] text-white font-black text-lg py-4 rounded-[1.5rem] transition-transform active:scale-95 shadow-lg shadow-[#4bc6b9]/30 border-2 border-white flex justify-center items-center gap-2">
+                <button type="submit" class="flex-1 bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black text-lg py-4 rounded-[1.5rem] transition-transform active:scale-95 shadow-lg shadow-[#5a76c8]/30 border-2 border-white flex justify-center items-center gap-2">
                     Simpan Perubahan ✨
                 </button>
                 <a href="{{ route('admin.products.index') }}" class="flex-none bg-white border-4 border-[#f0f5ff] text-[#8faaf3] font-black text-lg py-4 px-8 rounded-[1.5rem] hover:bg-[#f4f9ff] transition-colors text-center">Batal</a>
@@ -123,13 +121,10 @@
     document.addEventListener('DOMContentLoaded', function() {
         const processTypeSelect = document.getElementById('process_type');
         const stockReminderContainer = document.getElementById('stock_reminder_container');
-
         function toggleFields() {
             const type = processTypeSelect.value;
-            // Pengingat stok hanya muncul untuk Akun & Nomor
             stockReminderContainer.style.display = (type === 'account' || type === 'number') ? 'block' : 'none';
         }
-
         processTypeSelect.addEventListener('change', toggleFields);
         toggleFields(); 
     });
