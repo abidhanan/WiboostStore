@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Models\Deposit; 
 use App\Models\User;
+use App\Models\Product; // <-- Import Product model
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -28,8 +29,8 @@ class DashboardController extends Controller
             ->whereYear('created_at', $currentYear)
             ->sum('amount');
 
-        // 3. Total Pelanggan Terdaftar (Role ID 2 = Buyer)
-        $totalUsers = User::where('role_id', 2)->count(); // <-- Diubah menjadi 2
+        // 3. Total Pelanggan Terdaftar
+        $totalUsers = User::where('role_id', 2)->count();
 
         // 4. Ambil 5 Transaksi Paling Baru untuk preview tabel
         $recentTransactions = Transaction::with(['user', 'product'])
@@ -46,12 +47,21 @@ class DashboardController extends Controller
                 ->get();
         }
 
+        // 6. Cek Produk yang Perlu Re-Stok (Hanya Akun & Nomor)
+        $lowStockProducts = Product::whereIn('process_type', ['account', 'number'])
+            ->get()
+            ->filter(function ($product) {
+                // Ambil produk yang stoknya <= stock_reminder (abaikan jika stock_reminder 0)
+                return $product->stock_reminder > 0 && $product->available_stock <= $product->stock_reminder;
+            });
+
         return view('admin.dashboard', compact(
             'totalTransactionsMonth', 
             'revenueMonth', 
             'totalUsers', 
             'recentTransactions',
-            'recentDeposits'
+            'recentDeposits',
+            'lowStockProducts' // <-- Lempar data stok tipis ke view
         ));
     }
 }

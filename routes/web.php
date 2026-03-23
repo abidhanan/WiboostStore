@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\CredentialController; // <-- Import Controller Credential
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\ManualOrderController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
@@ -76,7 +77,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Master Data (CRUD)
     Route::resource('users', AdminUserController::class);
     Route::resource('categories', CategoryController::class);
+    
+    // Produk & Manajemen Stok Kredensial (Akun Premium/Nomor Luar)
     Route::resource('products', ProductController::class);
+    Route::get('/products/{product}/credentials', [CredentialController::class, 'index'])->name('credentials.index');
+    Route::post('/products/{product}/credentials', [CredentialController::class, 'store'])->name('credentials.store');
+    Route::delete('/credentials/{credential}', [CredentialController::class, 'destroy'])->name('credentials.destroy');
+
     Route::resource('promos', PromoController::class);
     Route::resource('stocks', StockController::class);
 

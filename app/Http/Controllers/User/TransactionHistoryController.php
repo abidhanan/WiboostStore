@@ -10,11 +10,12 @@ class TransactionHistoryController extends Controller
 {
     public function index()
     {
-        // Mengambil semua transaksi milik user yang sedang login
+        // Mengambil transaksi milik user yang login, diurutkan dari terbaru
+        // Menggunakan paginate() agar fungsi links() di view berjalan normal
         $transactions = Transaction::where('user_id', Auth::id())
-                                    ->with('product') // Mengambil data produk terkait
-                                    ->orderBy('created_at', 'desc') // Urutkan dari yang terbaru
-                                    ->get();
+                                    ->with('product') 
+                                    ->orderBy('created_at', 'desc') 
+                                    ->paginate(10); 
 
         return view('user.history', compact('transactions'));
     }

@@ -61,10 +61,43 @@
 
         <div class="flex flex-col gap-3">
             @forelse($products as $product)
-                <button type="button" onclick="goToCheckout({{ $product->id }}, '{{ addslashes($product->name) }}', {{ $product->price }})" 
-                        class="w-full bg-white rounded-[1.5rem] p-5 border-4 border-white hover:border-[#bde0fe] shadow-lg shadow-[#bde0fe]/20 flex justify-between items-center transition-all active:scale-95 text-left group">
-                    <span class="font-black text-[#2b3a67] text-base md:text-lg group-hover:text-[#5a76c8] pr-4 flex-1">{{ $product->name }}</span>
-                    <span class="font-black text-[#4bc6b9] text-lg md:text-xl shrink-0">Rp {{ number_format($product->price, 0, ',', '.') }}</span>
+                @php
+                    // Logika deteksi stok habis (Hanya untuk tipe Account & Number)
+                    $isOutOfStock = in_array($product->process_type, ['account', 'number']) && $product->available_stock <= 0;
+                @endphp
+
+                <button type="button" 
+                    @if(!$isOutOfStock)
+                        onclick="goToCheckout({{ $product->id }}, '{{ addslashes($product->name) }}', {{ $product->price }}, '{{ $product->process_type }}')" 
+                        class="w-full bg-white rounded-[1.5rem] p-4 md:p-5 border-4 border-white hover:border-[#bde0fe] shadow-lg shadow-[#bde0fe]/20 flex items-center gap-4 transition-all active:scale-95 text-left group"
+                    @else
+                        disabled
+                        class="w-full bg-gray-50 rounded-[1.5rem] p-4 md:p-5 border-4 border-white shadow-sm flex items-center gap-4 text-left opacity-60 cursor-not-allowed grayscale relative overflow-hidden"
+                    @endif
+                >
+                    
+                    @if($product->image && $product->process_type == 'number')
+                        <div class="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-xl overflow-hidden border-2 border-[#f0f5ff] shadow-sm bg-[#f4f9ff]">
+                            <img src="{{ Storage::url($product->image) }}" alt="Logo" class="w-full h-full object-cover">
+                        </div>
+                    @else
+                        <div class="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-xl bg-[#f0f5ff] text-[#8faaf3] flex items-center justify-center border-2 border-white shadow-inner text-xl">
+                            @if($product->process_type == 'number') 📱 
+                            @elseif($product->process_type == 'account') 📦
+                            @elseif($product->process_type == 'api') ⚡
+                            @else 🛍️ @endif
+                        </div>
+                    @endif
+
+                    <span class="font-black text-[#2b3a67] text-sm md:text-lg {{ !$isOutOfStock ? 'group-hover:text-[#5a76c8]' : '' }} pr-2 flex-1 leading-tight">{{ $product->name }}</span>
+                    
+                    @if($isOutOfStock)
+                        <span class="font-black text-[#ff6b6b] text-xs md:text-sm shrink-0 bg-[#ffe5e5] px-3 py-1.5 rounded-lg border border-white shadow-sm flex items-center gap-1">
+                            ⚠️ HABIS
+                        </span>
+                    @else
+                        <span class="font-black text-[#4bc6b9] text-base md:text-xl shrink-0">Rp {{ number_format($product->price, 0, ',', '.') }}</span>
+                    @endif
                 </button>
             @empty
                 <div class="text-center py-16 bg-white rounded-[2.5rem] border-4 border-dashed border-[#bde0fe]">
@@ -88,7 +121,7 @@
             <p class="text-[#8faaf3] font-bold mt-1">Lengkapi data tujuan dan pilih metode pembayaran.</p>
         </div>
 
-        <form action="{{ route('user.checkout.process') }}" method="POST" onsubmit="showLoadingBtn()">
+        <form action="{{ route('user.checkout.process') }}" method="POST" id="checkoutForm" onsubmit="showLoadingBtn()">
             @csrf
             <input type="hidden" name="product_id" id="checkout_product_id">
 
@@ -106,26 +139,34 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-[2rem] shadow-lg shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-8 mb-8 relative">
+            <div id="target_data_container" class="bg-white rounded-[2rem] shadow-lg shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-8 mb-8 relative">
                 <div class="absolute -left-3 -top-3 w-12 h-12 bg-[#5a76c8] text-white rounded-full flex items-center justify-center font-black text-xl border-4 border-[#f4f9ff] shadow-sm">1</div>
                 <h4 class="text-xl font-black text-[#2b3a67] mb-6 ml-6">Informasi Target</h4>
                 
                 <div>
-                    <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">
+                    <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2" id="label_target_data">
                         @if(Str::contains(Str::lower($category->name), 'game'))
                             Target Pesanan (User ID & Zone ID)
                         @else
                             Target Pesanan (Username / Link Profile)
                         @endif
                     </label>
-                    <input type="text" name="target_data" required 
+                    <input type="text" name="target_data" id="input_target_data" required 
                            class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" 
                            placeholder="Ketik target tujuan di sini...">
                 </div>
             </div>
+            
+            <div id="no_target_msg" class="hidden bg-[#e6fff7] rounded-[2rem] shadow-lg shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-8 mb-8 relative flex items-center gap-4">
+                <div class="text-5xl drop-shadow-sm shrink-0">🎁</div>
+                <div>
+                    <h4 class="font-black text-emerald-500 text-lg">Kamu Tidak Perlu Mengisi Apapun!</h4>
+                    <p class="font-bold text-[#8faaf3] text-sm leading-tight mt-1">Data akun atau nomor akan otomatis dikirimkan ke halaman riwayat pesananmu setelah pembayaran lunas.</p>
+                </div>
+            </div>
 
             <div class="bg-white rounded-[2rem] shadow-lg shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-8 mb-8 relative">
-                <div class="absolute -left-3 -top-3 w-12 h-12 bg-[#5a76c8] text-white rounded-full flex items-center justify-center font-black text-xl border-4 border-[#f4f9ff] shadow-sm">2</div>
+                <div id="step_number_2" class="absolute -left-3 -top-3 w-12 h-12 bg-[#5a76c8] text-white rounded-full flex items-center justify-center font-black text-xl border-4 border-[#f4f9ff] shadow-sm">2</div>
                 <h4 class="text-xl font-black text-[#2b3a67] mb-6 ml-6">Metode Pembayaran</h4>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -163,11 +204,38 @@
 <script>
     const pageProductList = document.getElementById('page-product-list');
     const pageCheckout = document.getElementById('page-checkout');
+    
+    // Element Kontrol Target Data
+    const targetContainer = document.getElementById('target_data_container');
+    const inputTarget = document.getElementById('input_target_data');
+    const noTargetMsg = document.getElementById('no_target_msg');
+    const stepNumber2 = document.getElementById('step_number_2');
 
-    function goToCheckout(id, name, price) {
+    // Menerima parameter process_type dari tombol
+    function goToCheckout(id, name, price, processType) {
         document.getElementById('checkout_product_id').value = id;
         document.getElementById('checkout_product_name').innerText = name;
         document.getElementById('checkout_product_price').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(price);
+
+        // LOGIKA PENYEMBUNYIAN INPUT TARGET
+        if(processType === 'account' || processType === 'number') {
+            // Sembunyikan input target & hapus attribute required
+            targetContainer.classList.add('hidden');
+            inputTarget.removeAttribute('required');
+            inputTarget.value = ''; // Kosongkan nilainya
+            
+            // Tampilkan pesan pengganti & ubah bulatan langkah ke-2 jadi 1
+            noTargetMsg.classList.remove('hidden');
+            stepNumber2.innerText = '1';
+        } else {
+            // Tampilkan kembali input target & jadikan required lagi
+            targetContainer.classList.remove('hidden');
+            inputTarget.setAttribute('required', 'required');
+            
+            // Sembunyikan pesan pengganti & kembalikan bulatan langkah ke-2
+            noTargetMsg.classList.add('hidden');
+            stepNumber2.innerText = '2';
+        }
 
         pageProductList.classList.add('hidden');
         pageCheckout.classList.remove('hidden');

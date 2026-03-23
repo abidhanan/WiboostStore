@@ -1,7 +1,5 @@
 @extends('layouts.admin')
-
 @section('title', 'Dashboard Wiboost')
-
 @section('content')
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
@@ -13,6 +11,27 @@
         <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Selamat Datang, {{ Auth::user()->name }}! 👋</h2>
         <p class="text-sm font-bold text-[#8faaf3] mt-1">Ringkasan performa bisnis Wiboost Store bulan ini.</p>
     </div>
+
+    @if($lowStockProducts->count() > 0)
+        <div class="bg-[#fff5eb] border-4 border-white text-amber-600 px-6 py-5 rounded-[2rem] mb-10 shadow-lg shadow-amber-500/20 relative overflow-hidden group">
+            <div class="absolute -right-4 -top-8 text-8xl opacity-10 transform rotate-12 pointer-events-none group-hover:scale-110 transition-transform">⚠️</div>
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="text-2xl animate-pulse">🚨</span>
+                    <h3 class="font-black text-xl tracking-tight">Waspada Stok Menipis!</h3>
+                </div>
+                <p class="text-sm font-bold mb-4">Beberapa produk aplikasi premium/nomor luar ini sudah menyentuh batas stok minimum. Segera restock agar pelanggan tidak kecewa.</p>
+                <div class="flex flex-wrap gap-2">
+                    @foreach($lowStockProducts as $lowStock)
+                        <a href="{{ route('admin.credentials.index', $lowStock->id) }}" class="bg-white border-2 border-amber-200 hover:border-amber-400 text-amber-600 px-4 py-2 rounded-xl text-xs font-black transition-colors shadow-sm inline-flex items-center gap-2">
+                            {{ $lowStock->name }}
+                            <span class="bg-[#ffe5e5] text-[#ff6b6b] px-2 py-0.5 rounded-md text-[10px]">Sisa: {{ $lowStock->available_stock }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         

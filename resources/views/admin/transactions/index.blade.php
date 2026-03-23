@@ -1,7 +1,5 @@
 @extends('layouts.admin')
-
 @section('title', 'Riwayat Transaksi')
-
 @section('content')
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
@@ -71,7 +69,7 @@
                         <th class="px-4 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Pelanggan</th>
                         <th class="px-4 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Layanan</th>
                         <th class="px-4 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Harga</th>
-                        <th class="px-4 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Target</th>
+                        <th class="px-4 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Target</th>
                         <th class="px-4 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Metode</th>
                         <th class="px-4 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Status</th>
                     </tr>
@@ -98,10 +96,16 @@
                             <p class="font-black text-[#4bc6b9] text-sm">Rp {{ number_format($trx->amount, 0, ',', '.') }}</p>
                         </td>
 
-                        <td class="px-4 py-5 align-top">
-                            <span class="text-[11px] font-black text-[#2b3a67] bg-[#f0f5ff] inline-block px-3 py-1.5 rounded-lg border border-white shadow-inner truncate max-w-[120px] md:max-w-[150px]" title="{{ $trx->target_data }}">
-                                {{ $trx->target_data }}
-                            </span>
+                        <td class="px-4 py-5 align-top text-center">
+                            @if(in_array($trx->product->process_type ?? '', ['account', 'number']))
+                                <span class="text-[14px] font-black text-[#a3bbfb] bg-[#f0f5ff] inline-block px-4 py-1 rounded-lg border border-white shadow-inner" title="Diproses Otomatis oleh Sistem">
+                                    -
+                                </span>
+                            @else
+                                <span class="text-[11px] font-black text-[#2b3a67] bg-[#f0f5ff] inline-block px-3 py-1.5 rounded-lg border border-white shadow-inner truncate max-w-[120px] md:max-w-[150px]" title="{{ $trx->target_data }}">
+                                    {{ $trx->target_data }}
+                                </span>
+                            @endif
                         </td>
                         
                         <td class="px-4 py-5 align-top text-center">

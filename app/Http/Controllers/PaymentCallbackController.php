@@ -6,32 +6,24 @@ use Illuminate\Http\Request;
 use App\Models\Transaction;
 use App\Models\Deposit;
 use App\Models\User;
+use App\Models\ProductCredential;
 use App\Services\OrderSosmedService;
 use Illuminate\Support\Facades\Log;
 
 class PaymentCallbackController extends Controller
 {
-    /**
-     * Menangani Webhook/Notifikasi dari Midtrans.
-     */
     public function handleNotification(Request $request)
     {
-        // 1. Bypass halaman peringatan Ngrok (Khusus tahap development lokal)
         if ($request->header('User-Agent') == 'Midtrans') {
             header('ngrok-skip-browser-warning: true');
         }
 
-        // 2. Catat semua data yang masuk untuk keperluan audit & debugging
         Log::info('Midtrans Webhook Masuk:', $request->all());
-
         $payload = $request->getContent();
         $notification = json_decode($payload);
 
-        if (!$notification) {
-            return response()->json(['message' => 'Invalid payload'], 400);
-        }
+        if (!$notification) return response()->json(['message' => 'Invalid payload'], 400);
 
-        // 3. Validasi Signature Key (Keamanan anti-hacker)
         $serverKey = env('MIDTRANS_SERVER_KEY');
         $signatureKey = hash("sha512", $notification->order_id . $notification->status_code . $notification->gross_amount . $serverKey);
 
@@ -43,84 +35,34 @@ class PaymentCallbackController extends Controller
         $transactionStatus = $notification->transaction_status;
         $orderId = $notification->order_id;
 
-        // =================================================================
-        // SKENARIO A: PEMBAYARAN TOP UP SALDO (Wiboost Wallet)
-        // =================================================================
+        // TOP UP SALDO
         if (str_starts_with($orderId, 'DEP-')) {
             $deposit = Deposit::where('invoice_number', $orderId)->first();
-
-            if (!$deposit) {
-                return response()->json(['message' => 'Deposit not found'], 404);
-            }
+            if (!$deposit) return response()->json(['message' => 'Deposit not found'], 404);
 
             if ($transactionStatus == 'settlement' || $transactionStatus == 'capture') {
                 if ($deposit->payment_status == 'unpaid') {
-                    // Update status deposit jadi lunas
                     $deposit->update([
                         'payment_status' => 'paid',
                         'payment_method' => $notification->payment_type
                     ]);
-
-                    // Tambahkan saldo ke user
-                    $user = User::find($deposit->user_id);
-                    $user->increment('balance', $deposit->amount);
-
-                    Log::info('Deposit Saldo Sukses: ' . $deposit->invoice_number);
+                    User::find($deposit->user_id)->increment('balance', $deposit->amount);
                 }
             } elseif (in_array($transactionStatus, ['deny', 'expire', 'cancel'])) {
                 $deposit->update(['payment_status' => 'failed']);
             }
-
-            return response()->json(['message' => 'Deposit callback handled successfully']);
+            return response()->json(['message' => 'Deposit handled successfully']);
         }
 
-        // =================================================================
-        // SKENARIO B: PEMBAYARAN PRODUK & LAYANAN (Transaksi Utama)
-        // =================================================================
+        // TRANSAKSI PRODUK
         if (str_starts_with($orderId, 'WIB-')) {
             $transaction = Transaction::where('invoice_number', $orderId)->first();
-
-            if (!$transaction) {
-                return response()->json(['message' => 'Transaction not found'], 404);
-            }
+            if (!$transaction) return response()->json(['message' => 'Transaction not found'], 404);
 
             if ($transactionStatus == 'settlement' || $transactionStatus == 'capture') {
                 if ($transaction->payment_status == 'unpaid') {
-                    
-                    // Ubah status pembayaran
-                    $transaction->update([
-                        'payment_status' => 'paid',
-                        'order_status'   => 'processing'
-                    ]);
-
-                    Log::info("Pembayaran Lunas untuk Invoice: {$transaction->invoice_number}. Memulai proses fulfillment...");
-
-                    // Otomatisasi Provider (Suntik Sosmed)
-                    if ($transaction->product->category_id == 1) {
-                        $orderSosmed = new OrderSosmedService();
-                        
-                        $providerServiceId = $transaction->product->provider_product_id;
-                        $quantity = 1000; // Sesuaikan dengan kuantitas aslinya nanti
-
-                        $apiResponse = $orderSosmed->placeOrder(
-                            $providerServiceId, 
-                            $transaction->target_data, 
-                            $quantity
-                        );
-
-                        if ($apiResponse['success']) {
-                            $transaction->update(['order_status' => 'success']);
-                            Log::info("Fulfillment Sukses Invoice {$transaction->invoice_number}");
-                        } else {
-                            $transaction->update([
-                                'order_status' => 'failed',
-                                'target_notes' => 'Gagal hit API Pusat: ' . $apiResponse['message']
-                            ]);
-                            Log::error("Fulfillment Gagal Invoice {$transaction->invoice_number}");
-                        }
-                    } else {
-                        Log::info("Menunggu integrasi provider lain untuk Kategori ID: " . $transaction->product->category_id);
-                    }
+                    $transaction->update(['payment_status' => 'paid']);
+                    $this->processFulfillment($transaction);
                 }
             } elseif (in_array($transactionStatus, ['deny', 'expire', 'cancel'])) {
                 $transaction->update([
@@ -128,10 +70,57 @@ class PaymentCallbackController extends Controller
                     'order_status'   => 'failed'
                 ]);
             }
-
             return response()->json(['message' => 'Transaction callback handled successfully']);
         }
 
         return response()->json(['message' => 'Unknown Order ID format'], 400);
+    }
+
+    private function processFulfillment($transaction)
+    {
+        $product = $transaction->product;
+
+        if ($product->process_type === 'api') {
+            $transaction->update(['order_status' => 'processing']);
+            $orderSosmed = new OrderSosmedService();
+            $apiResponse = $orderSosmed->placeOrder($product->provider_product_id, $transaction->target_data, 1000);
+
+            if ($apiResponse['success']) {
+                $transaction->update(['order_status' => 'success']);
+            } else {
+                $transaction->update([
+                    'order_status' => 'failed',
+                    'target_notes' => 'Gagal hit API Pusat: ' . $apiResponse['message']
+                ]);
+            }
+        } 
+        elseif ($product->process_type === 'account' || $product->process_type === 'number') {
+            $credential = ProductCredential::where('product_id', $product->id)
+                ->where('is_active', true)
+                ->whereColumn('current_usage', '<', 'max_usage')
+                ->first();
+
+            if ($credential) {
+                $credential->increment('current_usage');
+                
+                // Merekam data ke dalam brankas JSON
+                $transaction->update([
+                    'order_status' => 'success',
+                    'credential_data' => json_encode([
+                        'email'    => ($credential->data_1 !== '-' && $credential->data_1 !== null) ? $credential->data_1 : null,
+                        'password' => $credential->data_2,
+                        'profile'  => $credential->data_3,
+                        'pin'      => $credential->data_4,
+                        'link'     => $credential->data_5,
+                        'type'     => $product->process_type
+                    ])
+                ]);
+            } else {
+                $transaction->update(['order_status' => 'pending']);
+            }
+        } 
+        elseif ($product->process_type === 'manual') {
+            $transaction->update(['order_status' => 'processing']);
+        }
     }
 }

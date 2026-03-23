@@ -16,8 +16,9 @@ class Transaction extends Model
         'response_data', 
         'payment_status', 
         'order_status',
-        'payment_method', // <-- Tambahkan ini
-        'snap_token'      // <-- Tambahkan ini
+        'payment_method',
+        'snap_token',
+        'credential_data', // <-- TAMBAHAN VITAL: Untuk menyimpan data akun/nomor luar ✨
     ];
 
     public function user()

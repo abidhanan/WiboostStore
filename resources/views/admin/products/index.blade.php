@@ -1,7 +1,5 @@
 @extends('layouts.admin')
-
 @section('title', 'Manajemen Produk')
-
 @section('content')
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
@@ -25,6 +23,11 @@
             <span class="text-2xl">🎉</span> {{ session('success') }}
         </div>
     @endif
+    @if(session('error'))
+        <div class="bg-[#ffe5e5] border-4 border-white text-[#ff6b6b] px-6 py-4 rounded-[2rem] mb-8 font-black flex items-center gap-3 shadow-sm">
+            <span class="text-2xl">⚠️</span> {{ session('error') }}
+        </div>
+    @endif
 
     <div class="bg-white p-5 rounded-[2rem] shadow-lg shadow-[#bde0fe]/20 border-4 border-white mb-8">
         <form action="{{ route('admin.products.index') }}" method="GET" class="flex flex-col md:flex-row gap-4">
@@ -40,9 +43,7 @@
                 Cari Produk
             </button>
             @if(request('search'))
-                <a href="{{ route('admin.products.index') }}" class="bg-[#ffe5e5] hover:bg-[#ffcccc] text-[#ff6b6b] px-8 py-4 rounded-[1.5rem] font-black transition flex items-center justify-center border-2 border-white whitespace-nowrap">
-                    Reset
-                </a>
+                <a href="{{ route('admin.products.index') }}" class="bg-[#ffe5e5] hover:bg-[#ffcccc] text-[#ff6b6b] px-8 py-4 rounded-[1.5rem] font-black transition flex items-center justify-center border-2 border-white whitespace-nowrap">Reset</a>
             @endif
         </form>
     </div>
@@ -53,9 +54,9 @@
                 <thead>
                     <tr>
                         <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Layanan / Produk</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Kategori</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Tipe & Stok</th>
                         <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Harga Jual</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">SKU Provider</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">SKU</th>
                         <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Status</th>
                         <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Aksi</th>
                     </tr>
@@ -63,22 +64,47 @@
                 <tbody class="divide-y-2 divide-dashed divide-[#f0f5ff]">
                     @forelse($products as $product)
                     <tr class="hover:bg-[#f4f9ff] transition-colors rounded-xl group">
+                        
                         <td class="px-6 py-4 min-w-[200px] whitespace-normal">
                             <p class="font-black text-[#2b3a67] text-md line-clamp-2 leading-tight">{{ $product->name }}</p>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="bg-[#e0fbfc] text-[#4bc6b9] px-3 py-1.5 rounded-full text-xs font-black border border-white shadow-sm">
+                            <span class="bg-[#e0fbfc] text-[#4bc6b9] px-2 py-0.5 mt-2 rounded-md text-[10px] font-black shadow-sm inline-block">
                                 {{ $product->category->name ?? 'Tanpa Kategori' }}
                             </span>
                         </td>
+                        
+                        <td class="px-6 py-4 text-center">
+                            @if($product->process_type == 'api')
+                                <span class="text-[#8faaf3] font-black text-xs px-3 py-1 bg-[#f0f5ff] rounded-lg inline-block">⚡ API</span>
+                            @elseif($product->process_type == 'account' || $product->process_type == 'number')
+                                <div class="flex flex-col items-center justify-center gap-1.5">
+                                    <a href="{{ route('admin.credentials.index', $product->id) }}" class="inline-flex items-center gap-2 bg-[#ffeef2] text-[#e1306c] hover:bg-[#e1306c] hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-black transition-colors shadow-sm border border-white uppercase tracking-widest" title="Kelola Gudang Data">
+                                        📦 {{ $product->process_type == 'account' ? 'Akun' : 'Nomor' }}
+                                    </a>
+                                    
+                                    <div class="bg-[#f4f9ff] px-2 py-1 rounded-md text-[9px] font-black border border-white shadow-inner flex items-center justify-center gap-1 w-full max-w-[110px] mx-auto uppercase tracking-widest">
+                                        <span class="text-[#8faaf3]">Stok:</span>
+                                        @if($product->available_stock <= $product->stock_reminder)
+                                            <span class="text-[#ff6b6b] animate-pulse drop-shadow-sm">{{ (int)$product->available_stock }}</span>
+                                        @else
+                                            <span class="text-emerald-500">{{ (int)$product->available_stock }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            @else
+                                <span class="text-[#8faaf3] font-black text-xs px-3 py-1 bg-[#f0f5ff] rounded-lg inline-block">✍️ Manual</span>
+                            @endif
+                        </td>
+
                         <td class="px-6 py-4">
                             <p class="font-black text-[#5a76c8] text-sm">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
                         </td>
+                        
                         <td class="px-6 py-4 text-center">
                             <span class="bg-[#f0f5ff] text-[#8faaf3] px-3 py-1.5 rounded-md text-xs font-mono font-black border border-white shadow-inner">
-                                {{ $product->provider_product_id ?? 'Manual' }}
+                                {{ $product->provider_product_id ?? '-' }}
                             </span>
                         </td>
+                        
                         <td class="px-6 py-4 text-center">
                             @if($product->is_active)
                                 <span class="bg-[#e6fff7] text-emerald-500 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm">Aktif</span>
@@ -86,6 +112,7 @@
                                 <span class="bg-[#ffe5e5] text-[#ff6b6b] px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm">Nonaktif</span>
                             @endif
                         </td>
+                        
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('admin.products.edit', $product->id) }}" class="bg-[#fff5eb] text-amber-500 hover:bg-amber-500 hover:text-white p-2.5 rounded-xl transition-colors shadow-sm border-2 border-white" title="Edit">
@@ -103,9 +130,7 @@
                     @empty
                     <tr>
                         <td colspan="6" class="px-6 py-12 text-center">
-                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-[1.5rem] bg-[#f0f5ff] border-4 border-white mb-3 shadow-inner">
-                                <span class="text-3xl">🛍️</span>
-                            </div>
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-[1.5rem] bg-[#f0f5ff] border-4 border-white mb-3 shadow-inner"><span class="text-3xl">🛍️</span></div>
                             <p class="text-[#8faaf3] font-black text-sm">Data produk tidak ditemukan.</p>
                         </td>
                     </tr>
