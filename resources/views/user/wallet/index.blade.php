@@ -9,10 +9,10 @@
     .bg-wiboost-sky { background: linear-gradient(180deg, #bde0fe 0%, #e0fbfc 100%); }
 </style>
 
-<div class="wiboost-font pb-12">
+<div class="wiboost-font pb-12 max-w-7xl mx-auto">
     <div class="mb-8 pl-2">
-        <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Dompet Wiboost</h2>
-        <p class="text-[#8faaf3] font-bold mt-1">Top up saldo untuk transaksi super kilat tanpa ribet transfer berkali-kali.</p>
+        <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Dompet Wiboost 💳</h2>
+        <p class="text-[#8faaf3] font-bold mt-1">Kelola saldo dan pantau setiap mutasi transaksi masuk, keluar, dan refund kamu.</p>
     </div>
 
     @if(session('success'))
@@ -69,44 +69,77 @@
 
         <div class="lg:col-span-2">
             <div class="bg-white rounded-[2rem] shadow-lg shadow-[#bde0fe]/20 border-4 border-white h-full flex flex-col overflow-hidden">
-                <div class="px-8 py-6 border-b-2 border-dashed border-[#f0f5ff]">
-                    <h4 class="font-black text-xl text-[#2b3a67]">Riwayat Tiket Top Up</h4>
+                <div class="px-8 py-6 border-b-2 border-dashed border-[#f0f5ff] flex justify-between items-center bg-[#f4f9ff]">
+                    <h4 class="font-black text-xl text-[#2b3a67]">Mutasi Saldo Terbaru 💰</h4>
+                    <span class="text-[10px] font-black bg-white px-3 py-1 rounded-full text-[#8faaf3] border border-[#f0f5ff]">SEMUA TRANSAKSI</span>
                 </div>
-                <div class="flex-1 p-6 space-y-4">
-                    @forelse($deposits as $deposit)
-                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between p-5 bg-[#f4f9ff] border-2 border-white rounded-[1.5rem] hover:border-[#bde0fe] hover:-translate-y-1 transition-all group">
+                
+                <div class="flex-1 p-6 space-y-4 overflow-y-auto max-h-[600px] hide-scroll">
+                    @php
+                        $walletLogs = App\Models\WalletHistory::where('user_id', Auth::id())->latest()->take(20)->get();
+                    @endphp
+
+                    @forelse($walletLogs as $log)
+                        @php
+                            // LOGIKA DETAIL DESKRIPSI (Agar tidak sekadar "via Midtrans")
+                            $displayDesc = $log->description;
                             
-                            <div class="flex items-center gap-4 mb-4 md:mb-0">
-                                <div class="w-14 h-14 rounded-2xl flex items-center justify-center font-black border-2 border-white shadow-inner {{ $deposit->payment_status == 'paid' ? 'bg-[#e6fff7] text-emerald-500' : ($deposit->payment_status == 'failed' ? 'bg-[#ffe5e5] text-[#ff6b6b]' : 'bg-[#fff5eb] text-amber-500') }}">
-                                    {{ $deposit->payment_status == 'paid' ? '✓' : ($deposit->payment_status == 'failed' ? '✕' : '⏳') }}
+                            if ($log->type === 'topup') {
+                                // Cek data di tabel Deposit untuk mencari payment_method asli
+                                $deposit = \App\Models\Deposit::where('invoice_number', $log->invoice_number)->first();
+                                if ($deposit && $deposit->payment_method) {
+                                    $method = ucwords(str_replace('_', ' ', $deposit->payment_method));
+                                    
+                                    // Rapikan nama-nama e-wallet
+                                    if (strtolower($method) == 'qris') $method = 'QRIS';
+                                    if (strtolower($method) == 'gopay') $method = 'GoPay';
+                                    if (strtolower($method) == 'shopeepay') $method = 'ShopeePay';
+                                    
+                                    $displayDesc = "Top Up Saldo via " . $method;
+                                }
+                            }
+
+                            // Tentukan Icon & Warna
+                            $iconClass = '';
+                            $iconChar = '';
+                            if($log->type == 'refund') {
+                                $iconClass = 'bg-[#e6fff7] text-emerald-500'; $iconChar = '↺';
+                            } elseif ($log->type == 'purchase') {
+                                $iconClass = 'bg-[#ffe5e5] text-[#ff6b6b]'; $iconChar = '−';
+                            } else {
+                                $iconClass = 'bg-[#f0f5ff] text-[#5a76c8]'; $iconChar = '+';
+                            }
+                        @endphp
+
+                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between p-5 bg-white border-2 border-[#f4f9ff] rounded-[1.5rem] hover:border-[#bde0fe] hover:-translate-y-1 transition-all group shadow-sm">
+                            
+                            <div class="flex items-center gap-4 mb-3 md:mb-0">
+                                <div class="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center text-xl font-black border-2 border-white shadow-inner {{ $iconClass }}">
+                                    {{ $iconChar }}
                                 </div>
                                 <div>
-                                    <h5 class="font-black text-[#2b3a67] text-lg">Isi Saldo Wiboost</h5>
-                                    <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mt-0.5">{{ $deposit->invoice_number }} &bull; {{ $deposit->created_at->format('d M') }}</p>
+                                    <h5 class="font-black text-[#2b3a67] text-sm md:text-base group-hover:text-[#5a76c8] transition-colors line-clamp-2 leading-tight">
+                                        {{ $displayDesc }}
+                                    </h5>
+                                    <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mt-1">
+                                        {{ $log->invoice_number ?? '-' }} &bull; {{ $log->created_at->format('d M, H:i') }}
+                                    </p>
                                 </div>
                             </div>
                             
-                            <div class="text-right w-full md:w-auto flex flex-row md:flex-col justify-between md:justify-end items-center md:items-end">
-                                <p class="font-black text-[#5a76c8] text-xl mb-1">+ Rp {{ number_format($deposit->amount, 0, ',', '.') }}</p>
-                                
-                                @if($deposit->payment_status == 'paid')
-                                    <span class="text-emerald-500 bg-white border border-emerald-100 text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-sm">Berhasil</span>
-                                @elseif($deposit->payment_status == 'failed')
-                                    <span class="text-[#ff6b6b] bg-white border border-[#ffe5e5] text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-sm">Batal</span>
-                                @else
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-amber-500 bg-white border border-amber-100 text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-sm">Pending</span>
-                                        <a href="{{ route('user.wallet.pay', $deposit->invoice_number) }}" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white text-[10px] font-black uppercase px-4 py-1.5 rounded-full shadow-md shadow-[#5a76c8]/30 transition-transform active:scale-95 border border-white">
-                                            Bayar
-                                        </a>
-                                    </div>
-                                @endif
+                            <div class="text-left md:text-right w-full md:w-auto pl-16 md:pl-0 flex flex-row md:flex-col justify-between md:justify-end items-center md:items-end">
+                                <p class="font-black text-lg mb-1 {{ $log->type == 'purchase' ? 'text-[#ff6b6b]' : 'text-emerald-500' }}">
+                                    {{ $log->type == 'purchase' ? '-' : '+' }} Rp {{ number_format($log->amount, 0, ',', '.') }}
+                                </p>
+                                <span class="text-[9px] font-black uppercase px-2.5 py-1 rounded-md bg-[#f4f9ff] text-[#8faaf3] border border-white shadow-sm inline-block">
+                                    {{ $log->type }}
+                                </span>
                             </div>
                         </div>
                     @empty
-                        <div class="text-center py-16">
+                        <div class="text-center py-20">
                             <div class="text-6xl mb-4 opacity-30">🪫</div>
-                            <p class="text-[#8faaf3] font-bold text-lg">Kamu belum pernah isi saldo nih.</p>
+                            <p class="text-[#8faaf3] font-bold text-lg">Belum ada mutasi saldo masuk/keluar.</p>
                         </div>
                     @endforelse
                 </div>
@@ -115,6 +148,10 @@
     </div>
 </div>
 
+<style>
+    .hide-scroll::-webkit-scrollbar { display: none; }
+    .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
 <script>
     function setNominal(amount) {
         document.getElementById('amount_input').value = amount;

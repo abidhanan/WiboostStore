@@ -8,7 +8,8 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\ProductCredential;
-use App\Models\User; // <-- Wajib ada untuk proses refund
+use App\Models\User;
+use App\Models\WalletHistory; // <-- Import WalletHistory
 use App\Services\MidtransService;
 use App\Services\OrderSosmedService;
 use Illuminate\Support\Str;
@@ -57,8 +58,10 @@ class OrderController extends Controller
                     return back()->with('error', 'Saldo Wiboost tidak mencukupi. Silakan top up terlebih dahulu.');
                 }
 
+                // 1. Potong Saldo
                 $user->decrement('balance', $product->price);
 
+                // 2. Buat Transaksi
                 $transaction = Transaction::create([
                     'invoice_number' => 'WIB-' . strtoupper(Str::random(12)),
                     'user_id'        => $user->id,
@@ -70,14 +73,23 @@ class OrderController extends Controller
                     'payment_method' => 'wallet',
                 ]);
 
+                // 3. CATAT LOG PEMBELIAN (-)
+                WalletHistory::create([
+                    'user_id' => $user->id,
+                    'type' => 'purchase',
+                    'amount' => $product->price,
+                    'description' => 'Pembelian Produk: ' . $product->name,
+                    'invoice_number' => $transaction->invoice_number,
+                ]);
+
                 $this->processFulfillment($transaction);
 
-                // Mengirim ID Transaksi ke session untuk pemicu Auto-Open Modal
                 return redirect()->route('user.history')
                                  ->with('success', 'Pesanan berhasil diproses!')
                                  ->with('new_trx_id', $transaction->id);
             }
 
+            // Pembayaran via Midtrans (Belum bayar, jadi belum ada WalletHistory)
             $transaction = Transaction::create([
                 'invoice_number' => 'WIB-' . strtoupper(Str::random(12)),
                 'user_id'        => $user->id,
@@ -109,28 +121,31 @@ class OrderController extends Controller
 
         if ($product->process_type === 'api') {
             $orderSosmed = new OrderSosmedService();
-            $quantity = 1000; // Bisa disesuaikan nanti jika ada input quantity
-            $apiResponse = $orderSosmed->placeOrder(
-                $product->provider_product_id, 
-                $transaction->target_data, 
-                $quantity
-            );
+            $quantity = 1000; 
+            $apiResponse = $orderSosmed->placeOrder($product->provider_product_id, $transaction->target_data, $quantity);
             
             if ($apiResponse['success']) {
                 $transaction->update(['order_status' => 'success']);
             } else {
-                // LOGIKA REFUND OTOMATIS JIKA API GAGAL HIT (Provider Error)
+                // LOGIKA REFUND OTOMATIS JIKA API GAGAL HIT
                 $transaction->update([
                     'order_status' => 'failed',
                     'target_notes' => 'Gagal hit API: ' . $apiResponse['message'] . ' (Saldo Otomatis Dikembalikan)'
                 ]);
                 
-                // Pastikan status pembayarannya lunas sebelum merefund
                 if ($transaction->payment_status === 'paid') {
                     $user = User::find($transaction->user_id);
                     if ($user) {
                         $user->increment('balance', $transaction->amount);
-                        Log::info("REFUND API GAGAL: Rp {$transaction->amount} dikembalikan ke Saldo User ID {$user->id} (Invoice: {$transaction->invoice_number})");
+                        
+                        // CATAT LOG REFUND (+)
+                        WalletHistory::create([
+                            'user_id' => $user->id,
+                            'type' => 'refund',
+                            'amount' => $transaction->amount,
+                            'description' => 'Refund Pembelian Gagal: ' . $product->name,
+                            'invoice_number' => $transaction->invoice_number,
+                        ]);
                     }
                 }
             }
@@ -143,8 +158,6 @@ class OrderController extends Controller
 
             if ($credential) {
                 $credential->increment('current_usage');
-                
-                // Merekam data ke dalam brankas JSON
                 $transaction->update([
                     'order_status' => 'success',
                     'credential_data' => json_encode([

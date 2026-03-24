@@ -84,7 +84,7 @@
                         </td>
                         
                         <td class="px-4 py-5 align-top">
-                            <p class="font-black text-[#2b3a67] text-sm truncate max-w-[120px] md:max-w-[150px]" title="{{ $trx->user->name ?? 'Guest' }}">{{ $trx->user->name ?? 'Guest' }}</p>
+                            <p class="font-black text-[#2b3a67] text-sm truncate max-w-[120px] md:max-w-[150px]">{{ $trx->user->name ?? 'Guest' }}</p>
                             <p class="text-[10px] font-bold text-[#8faaf3] truncate max-w-[120px] md:max-w-[150px] mt-1">{{ $trx->user->email ?? '-' }}</p>
                         </td>
                         
@@ -98,9 +98,7 @@
 
                         <td class="px-4 py-5 align-top text-center">
                             @if(in_array($trx->product->process_type ?? '', ['account', 'number']))
-                                <span class="text-[14px] font-black text-[#a3bbfb] bg-[#f0f5ff] inline-block px-4 py-1 rounded-lg border border-white shadow-inner" title="Diproses Otomatis oleh Sistem">
-                                    -
-                                </span>
+                                <span class="text-[14px] font-black text-[#a3bbfb] bg-[#f0f5ff] inline-block px-4 py-1 rounded-lg border border-white shadow-inner">-</span>
                             @else
                                 <span class="text-[11px] font-black text-[#2b3a67] bg-[#f0f5ff] inline-block px-3 py-1.5 rounded-lg border border-white shadow-inner truncate max-w-[120px] md:max-w-[150px]" title="{{ $trx->target_data }}">
                                     {{ $trx->target_data }}
@@ -109,11 +107,47 @@
                         </td>
                         
                         <td class="px-4 py-5 align-top text-center">
-                            @if($trx->payment_method == 'wallet' || $trx->payment_status == 'paid')
-                                <p class="text-[10px] font-black text-[#5a76c8] uppercase tracking-widest bg-[#e0fbfc] px-3 py-1.5 rounded-full border border-white shadow-sm inline-block">Saldo</p>
-                            @else
-                                <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest bg-[#f4f9ff] px-3 py-1.5 rounded-full border border-white shadow-sm inline-block">E-Wallet</p>
-                            @endif
+                            @php
+                                $rawMethod = strtolower($trx->payment_method ?? '');
+                                
+                                if ($rawMethod == 'wallet') {
+                                    $methodDisplay = 'SALDO';
+                                    $colorClass = 'bg-[#e0fbfc] text-[#5a76c8]';
+                                } elseif (($rawMethod == 'manual' || empty($rawMethod)) && $trx->payment_status != 'paid') {
+                                    $methodDisplay = 'BELUM PILIH';
+                                    $colorClass = 'bg-[#fff5eb] text-amber-500';
+                                } else {
+                                    // PEMETAAN MANUAL KODE MIDTRANS KE NAMA CANTIK
+                                    $methodMap = [
+                                        'qris'           => 'QRIS',
+                                        'gopay'          => 'GoPay',
+                                        'shopeepay'      => 'ShopeePay',
+                                        'bank_transfer'  => 'Bank Transfer',
+                                        'cstore'         => 'Indomaret/ALFA',
+                                        'credit_card'    => 'Kartu Kredit',
+                                        'echannel'       => 'Mandiri Bill',
+                                        'permata_va'     => 'Permata VA',
+                                        'bca_va'         => 'BCA Transfer',
+                                        'bni_va'         => 'BNI Transfer',
+                                        'bri_va'         => 'BRI Transfer',
+                                        'cimb_va'        => 'CIMB Transfer',
+                                        'other_va'       => 'ATM Bersama',
+                                        'danamon_online' => 'Danamon Online',
+                                        'akulaku'        => 'Akulaku',
+                                        'kredivo'        => 'Kredivo',
+                                    ];
+
+                                    $methodDisplay = $methodMap[$rawMethod] ?? ucwords(str_replace('_', ' ', $rawMethod));
+                                    
+                                    // Fallback jika masih kata-kata umum
+                                    if ($methodDisplay == 'Manual') $methodDisplay = 'E-WALLET';
+                                    
+                                    $colorClass = 'bg-[#f4f9ff] text-[#8faaf3]';
+                                }
+                            @endphp
+                            <span class="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border border-white shadow-sm inline-block {{ $colorClass }}">
+                                {{ $methodDisplay }}
+                            </span>
                         </td>
                         
                         <td class="px-4 py-5 align-top text-center min-w-[160px]">
@@ -132,15 +166,18 @@
                                     </button>
                                 </form>
                             @else
-                                @if($trx->order_status == 'success')
-                                    <span class="bg-[#e6fff7] text-emerald-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm inline-block w-24 text-center">✅ Sukses</span>
-                                @elseif($trx->order_status == 'processing')
-                                    <span class="bg-[#e0fbfc] text-[#5a76c8] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm inline-block w-24 text-center">⚙️ Proses</span>
-                                @elseif($trx->order_status == 'pending')
-                                    <span class="bg-[#fff5eb] text-amber-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm inline-block w-24 text-center">⏳ Pending</span>
-                                @else
-                                    <span class="bg-[#ffe5e5] text-[#ff6b6b] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm inline-block w-24 text-center">❌ Gagal</span>
-                                @endif
+                                @php
+                                    $statusLabels = [
+                                        'success' => ['bg-[#e6fff7]', 'text-emerald-500', '✅ Sukses'],
+                                        'processing' => ['bg-[#e0fbfc]', 'text-[#5a76c8]', '⚙️ Proses'],
+                                        'pending' => ['bg-[#fff5eb]', 'text-amber-500', '⏳ Pending'],
+                                        'failed' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]', '❌ Gagal'],
+                                    ];
+                                    $st = $statusLabels[$trx->order_status] ?? ['bg-gray-100', 'text-gray-500', $trx->order_status];
+                                @endphp
+                                <span class="{{ $st[0] }} {{ $st[1] }} px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm inline-block w-24 text-center">
+                                    {{ $st[2] }}
+                                </span>
                             @endif
                         </td>
 

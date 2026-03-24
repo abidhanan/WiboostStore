@@ -1,4 +1,4 @@
-@extends(Auth::user()->role_id == 1 || Auth::user()->role_id == 2 ? 'layouts.admin' : 'layouts.user')
+@extends(Auth::user()->role_id == 1 ? 'layouts.admin' : 'layouts.user')
 
 @section('title', 'Pengaturan Akun')
 

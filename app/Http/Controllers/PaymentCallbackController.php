@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Transaction;
 use App\Models\Deposit;
-use App\Models\User; // <-- Wajib ada untuk proses refund
+use App\Models\User;
+use App\Models\WalletHistory;
 use App\Models\ProductCredential;
 use App\Services\OrderSosmedService;
 use Illuminate\Support\Facades\Log;
@@ -18,24 +19,18 @@ class PaymentCallbackController extends Controller
             header('ngrok-skip-browser-warning: true');
         }
 
-        Log::info('Midtrans Webhook Masuk:', $request->all());
         $payload = $request->getContent();
         $notification = json_decode($payload);
-
         if (!$notification) return response()->json(['message' => 'Invalid payload'], 400);
 
         $serverKey = env('MIDTRANS_SERVER_KEY');
         $signatureKey = hash("sha512", $notification->order_id . $notification->status_code . $notification->gross_amount . $serverKey);
-
-        if ($signatureKey !== $notification->signature_key) {
-            Log::error('Midtrans Signature Mismatch. Order ID: ' . $notification->order_id);
-            return response()->json(['message' => 'Invalid signature'], 403);
-        }
+        if ($signatureKey !== $notification->signature_key) return response()->json(['message' => 'Invalid signature'], 403);
 
         $transactionStatus = $notification->transaction_status;
         $orderId = $notification->order_id;
 
-        // TOP UP SALDO
+        // --- PROSES TOP UP SALDO ---
         if (str_starts_with($orderId, 'DEP-')) {
             $deposit = Deposit::where('invoice_number', $orderId)->first();
             if (!$deposit) return response()->json(['message' => 'Deposit not found'], 404);
@@ -44,9 +39,18 @@ class PaymentCallbackController extends Controller
                 if ($deposit->payment_status == 'unpaid') {
                     $deposit->update([
                         'payment_status' => 'paid',
-                        'payment_method' => $notification->payment_type
+                        'payment_method' => $notification->payment_type // Simpan tipe (qris/gopay/dll)
                     ]);
-                    User::find($deposit->user_id)->increment('balance', $deposit->amount);
+                    $user = User::find($deposit->user_id);
+                    $user->increment('balance', $deposit->amount);
+
+                    WalletHistory::create([
+                        'user_id' => $user->id,
+                        'type' => 'topup',
+                        'amount' => $deposit->amount,
+                        'description' => 'Top Up Saldo via ' . strtoupper($notification->payment_type),
+                        'invoice_number' => $deposit->invoice_number,
+                    ]);
                 }
             } elseif (in_array($transactionStatus, ['deny', 'expire', 'cancel'])) {
                 $deposit->update(['payment_status' => 'failed']);
@@ -54,21 +58,21 @@ class PaymentCallbackController extends Controller
             return response()->json(['message' => 'Deposit handled successfully']);
         }
 
-        // TRANSAKSI PRODUK
+        // --- PROSES BELI PRODUK ---
         if (str_starts_with($orderId, 'WIB-')) {
             $transaction = Transaction::where('invoice_number', $orderId)->first();
             if (!$transaction) return response()->json(['message' => 'Transaction not found'], 404);
 
             if ($transactionStatus == 'settlement' || $transactionStatus == 'capture') {
                 if ($transaction->payment_status == 'unpaid') {
-                    $transaction->update(['payment_status' => 'paid']);
+                    $transaction->update([
+                        'payment_status' => 'paid',
+                        'payment_method' => $notification->payment_type // SIMPAN TIPE PEMBAYARAN ASLI (QRIS/DANA/DLL)
+                    ]);
                     $this->processFulfillment($transaction);
                 }
             } elseif (in_array($transactionStatus, ['deny', 'expire', 'cancel'])) {
-                $transaction->update([
-                    'payment_status' => 'failed',
-                    'order_status'   => 'failed'
-                ]);
+                $transaction->update(['payment_status' => 'failed', 'order_status' => 'failed']);
             }
             return response()->json(['message' => 'Transaction callback handled successfully']);
         }
@@ -88,18 +92,23 @@ class PaymentCallbackController extends Controller
             if ($apiResponse['success']) {
                 $transaction->update(['order_status' => 'success']);
             } else {
-                // LOGIKA REFUND OTOMATIS JIKA API GAGAL HIT (Provider Error)
+                // AUTO REFUND JIKA API GAGAL
                 $transaction->update([
                     'order_status' => 'failed',
                     'target_notes' => 'Gagal hit API Pusat: ' . $apiResponse['message'] . ' (Saldo Otomatis Dikembalikan)'
                 ]);
 
-                // Pastikan status pembayarannya lunas sebelum merefund
                 if ($transaction->payment_status === 'paid') {
                     $user = User::find($transaction->user_id);
                     if ($user) {
                         $user->increment('balance', $transaction->amount);
-                        Log::info("REFUND API GAGAL: Rp {$transaction->amount} dikembalikan ke Saldo User ID {$user->id} (Invoice: {$transaction->invoice_number})");
+                        WalletHistory::create([
+                            'user_id' => $user->id,
+                            'type' => 'refund',
+                            'amount' => $transaction->amount,
+                            'description' => 'Refund Pembelian Gagal: ' . $product->name,
+                            'invoice_number' => $transaction->invoice_number,
+                        ]);
                     }
                 }
             }
@@ -112,7 +121,6 @@ class PaymentCallbackController extends Controller
 
             if ($credential) {
                 $credential->increment('current_usage');
-                
                 $transaction->update([
                     'order_status' => 'success',
                     'credential_data' => json_encode([
