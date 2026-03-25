@@ -65,10 +65,19 @@
         <div class="mb-6" id="image_container" style="display: none;">
             <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Logo/Ikon <span class="text-emerald-500">(Sub-Kategori)</span></label>
             @if($category->image)
-                <div class="mb-4 ml-2">
-                    <div class="w-20 h-20 bg-[#f0f5ff] rounded-2xl border-2 border-white shadow-inner flex items-center justify-center p-2 overflow-hidden">
-                        <img src="{{ Storage::url($category->image) }}" alt="Logo" class="max-w-full max-h-full object-contain">
+                <div class="mb-4 ml-2 flex items-center justify-between bg-[#f4f9ff] p-3 rounded-2xl border-2 border-transparent max-w-sm">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 bg-white rounded-[1rem] shadow-sm flex items-center justify-center p-2 overflow-hidden border-2 border-[#bde0fe]">
+                            <img src="{{ Storage::url($category->image) }}" alt="Logo" class="max-w-full max-h-full object-contain">
+                        </div>
+                        <div>
+                            <span class="text-xs font-black text-[#5a76c8] block">Gambar Aktif</span>
+                        </div>
                     </div>
+                    <label class="flex items-center gap-2 cursor-pointer group px-3 py-2 bg-[#ffe5e5] rounded-xl hover:bg-[#ffcccc] transition-colors border-2 border-white">
+                        <input type="checkbox" name="remove_image" value="1" class="w-4 h-4 rounded border-gray-300 text-rose-500 focus:ring-rose-500 cursor-pointer">
+                        <span class="text-[10px] font-black text-rose-500 uppercase">Hapus</span>
+                    </label>
                 </div>
             @endif
             <input type="file" name="image" accept="image/*" class="w-full text-sm font-bold text-[#8faaf3] file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:bg-[#f0f5ff] file:text-[#5a76c8] bg-[#f4f9ff] rounded-[1.5rem] p-2 cursor-pointer hover:file:bg-[#e0ebff] file:transition-colors file:font-black">

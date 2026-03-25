@@ -7,6 +7,7 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Exception;
 
 class TransactionController extends Controller
 {
@@ -17,10 +18,12 @@ class TransactionController extends Controller
 
         // 1. Pencarian
         if ($request->filled('search')) {
-            $query->where('invoice_number', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('user', function($q) use ($request) {
-                      $q->where('name', 'like', '%' . $request->search . '%');
+            $query->where(function($q) use ($request) {
+                $q->where('invoice_number', 'like', '%' . $request->search . '%')
+                  ->orWhereHas('user', function($userQuery) use ($request) {
+                      $userQuery->where('name', 'like', '%' . $request->search . '%');
                   });
+            });
         }
 
         // 2. Filter Bulan & Tahun
@@ -53,33 +56,50 @@ class TransactionController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $month = $request->input('month', date('m'));
-        $year = $request->input('year', date('Y'));
+        try {
+            $month = $request->input('month', date('m'));
+            $year = $request->input('year', date('Y'));
 
-        $transactions = Transaction::with(['user', 'product'])
-            ->where('payment_status', 'paid')
-            ->whereMonth('created_at', $month)
-            ->whereYear('created_at', $year)
-            ->latest()
-            ->get();
+            // Hanya ambil transaksi yang sudah LUNAS ('paid')
+            $transactions = Transaction::with(['user', 'product'])
+                ->where('payment_status', 'paid')
+                ->whereMonth('created_at', $month)
+                ->whereYear('created_at', $year)
+                ->latest()
+                ->get();
 
-        $totalRevenue = $transactions->sum('amount');
+            $totalRevenue = $transactions->sum('amount');
 
-        Carbon::setLocale('id');
-        $monthName = Carbon::createFromDate($year, $month, 1)->translatedFormat('F Y');
+            // Setup bahasa ke Indonesia untuk nama bulan
+            Carbon::setLocale('id');
+            $monthName = Carbon::createFromDate($year, $month, 1)->translatedFormat('F Y');
 
-        $pdf = Pdf::loadView('admin.transactions.pdf', compact('transactions', 'totalRevenue', 'monthName'));
-        $pdf->setPaper('A4', 'landscape');
+            // Load view untuk PDF (Pastikan file resources/views/admin/transactions/pdf.blade.php ADA)
+            $pdf = Pdf::loadView('admin.transactions.pdf', compact('transactions', 'totalRevenue', 'monthName'));
+            
+            // Setel ukuran kertas (A4 Landscape agar muat banyak kolom)
+            $pdf->setPaper('A4', 'landscape');
 
-        return $pdf->download('Laporan_Cuan_Wiboost_'.$monthName.'.pdf');
+            // Format nama file agar rapi
+            $fileName = 'Laporan_Cuan_Wiboost_' . str_replace(' ', '_', $monthName) . '.pdf';
+
+            // UBAH KE STREAM: Ini akan membuka PDF di tab browser, BUKAN mendownload diam-diam
+            return $pdf->stream($fileName);
+
+        } catch (Exception $e) {
+            // HARD STOP: Jika error, paksa munculkan teks error di layar putih
+            dd('HALO ADMIN, ADA ERROR CETAK PDF: ' . $e->getMessage() . ' | DI BARIS: ' . $e->getLine());
+        }
     }
 
     public function reports()
     {
+        // Hitung total pendapatan riil (Hanya yang status bayar Lunas & order Sukses)
         $totalRevenue = Transaction::where('payment_status', 'paid')
                                    ->where('order_status', 'success')
                                    ->sum('amount');
         
+        // Hitung total semua orderan masuk
         $totalOrders = Transaction::count();
 
         return view('admin.transactions.reports', compact('totalRevenue', 'totalOrders'));

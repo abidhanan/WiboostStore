@@ -23,14 +23,14 @@ class PromoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'badge_text' => 'required|string|max:50',
-            'title' => 'required|string|max:255',
+            'badge_text'  => 'required|string|max:50',
+            'title'       => 'required|string|max:255',
             'description' => 'required|string',
-            'emoji' => 'nullable|string|max:10',
-            'theme' => 'required|in:blue,teal,orange,rose',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
-            'link' => 'nullable|url|max:500', // <-- Validasi URL untuk link
-            'is_active' => 'required|boolean',
+            'emoji'       => 'nullable|string|max:10',
+            'theme'       => 'required|in:blue,teal,orange,rose',
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'link'        => 'nullable|url|max:500', 
+            'is_active'   => 'required|boolean',
         ]);
 
         $data = $request->all();
@@ -52,19 +52,30 @@ class PromoController extends Controller
     public function update(Request $request, Promo $promo)
     {
         $request->validate([
-            'badge_text' => 'required|string|max:50',
-            'title' => 'required|string|max:255',
+            'badge_text'  => 'required|string|max:50',
+            'title'       => 'required|string|max:255',
             'description' => 'required|string',
-            'emoji' => 'nullable|string|max:10',
-            'theme' => 'required|in:blue,teal,orange,rose',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
-            'link' => 'nullable|url|max:500', // <-- Validasi URL untuk link
-            'is_active' => 'required|boolean',
+            'emoji'       => 'nullable|string|max:10',
+            'theme'       => 'required|in:blue,teal,orange,rose',
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'link'        => 'nullable|url|max:500',
+            'is_active'   => 'required|boolean',
         ]);
 
-        $data = $request->all();
+        // Gunakan except agar remove_image tidak ikut ter-assign secara otomatis
+        $data = $request->except(['image', 'remove_image']);
 
+        // LOGIKA MENGHAPUS GAMBAR JIKA CHECKBOX "HAPUS" DICENTANG
+        if ($request->has('remove_image') && $request->remove_image == 1) {
+            if ($promo->image) {
+                Storage::disk('public')->delete($promo->image);
+            }
+            $data['image'] = null; // Set image jadi null di database
+        }
+
+        // LOGIKA UPLOAD GAMBAR BARU
         if ($request->hasFile('image')) {
+            // Hapus gambar yang lama agar file server tidak menumpuk
             if ($promo->image) {
                 Storage::disk('public')->delete($promo->image);
             }
@@ -81,7 +92,9 @@ class PromoController extends Controller
         if ($promo->image) {
             Storage::disk('public')->delete($promo->image);
         }
+        
         $promo->delete();
+        
         return back()->with('success', 'Banner Promo berhasil dihapus! 🗑️');
     }
 }

@@ -55,11 +55,22 @@
 
         <div class="mb-8 p-5 bg-[#f0f5ff] rounded-[1.5rem] border-2 border-dashed border-[#bde0fe]">
             <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Ganti Gambar Custom Banner (Opsional)</label>
+            
             @if($promo->image)
-                <div class="mb-4 ml-2">
-                    <img src="{{ Storage::url($promo->image) }}" class="h-32 w-auto object-cover rounded-[1rem] border-2 border-white shadow-sm">
+                <div class="mb-4 ml-2 flex items-center justify-between bg-white p-3 rounded-2xl border-2 border-transparent max-w-md shadow-sm">
+                    <div class="flex items-center gap-4">
+                        <img src="{{ Storage::url($promo->image) }}" class="h-16 w-auto object-cover rounded-lg border-2 border-[#bde0fe] shadow-sm">
+                        <div>
+                            <span class="text-xs font-black text-[#5a76c8] block">Gambar Aktif</span>
+                        </div>
+                    </div>
+                    <label class="flex items-center gap-2 cursor-pointer group px-3 py-2 bg-[#ffe5e5] rounded-xl hover:bg-[#ffcccc] transition-colors border-2 border-white">
+                        <input type="checkbox" name="remove_image" value="1" class="w-4 h-4 rounded border-gray-300 text-rose-500 focus:ring-rose-500 cursor-pointer">
+                        <span class="text-[10px] font-black text-rose-500 uppercase">Hapus</span>
+                    </label>
                 </div>
             @endif
+
             <input type="file" name="image" accept="image/*" class="w-full text-sm font-bold text-[#8faaf3] file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:bg-white file:text-[#5a76c8] cursor-pointer bg-white rounded-[1.5rem] p-2 border-2 border-transparent shadow-sm">
             <p class="text-xs font-bold text-[#8faaf3] mt-3 ml-2">💡 Jika kamu mengunggah gambar, maka desain Emoji & Warna Tema akan diabaikan.</p>
         </div>

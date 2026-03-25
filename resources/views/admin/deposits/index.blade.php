@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Mutasi Saldo Masuk')
+@section('title', 'Mutasi Saldo Global')
 
 @section('content')
 <style>
@@ -9,10 +9,9 @@
 </style>
 
 @php
-    // LOGIKA CERDAS: Mengambil data WalletHistory dan HANYA filter Topup & Refund
+    // LOGIKA CERDAS: Mengambil SEMUA tipe data WalletHistory (Masuk & Keluar)
     $search = request('search');
     $logs = \App\Models\WalletHistory::with('user')
-        ->whereIn('type', ['topup', 'refund']) // Hanya tampilkan Top Up dan Refund
         ->when($search, function($query, $search) {
             $query->where(function($q) use ($search) {
                 $q->where('invoice_number', 'like', "%{$search}%")
@@ -30,7 +29,7 @@
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4 pl-2">
         <div>
             <h3 class="text-3xl font-black text-[#2b3a67] tracking-tight">Mutasi Saldo Global 💸</h3>
-            <p class="text-sm text-[#8faaf3] font-bold mt-1">Pantau seluruh arus kas masuk pelanggan: Top Up dan Pengembalian Dana (Refund).</p>
+            <p class="text-sm text-[#8faaf3] font-bold mt-1">Pantau seluruh arus kas pelanggan: Top Up, Beli, Refund, dan Tukar Poin.</p>
         </div>
         <a href="{{ route('admin.deposits.index') }}" class="bg-white text-[#5a76c8] px-6 py-3 rounded-full font-black hover:bg-[#f0f5ff] hover:-translate-y-1 transition-all flex items-center gap-2 shadow-lg shadow-[#bde0fe]/30 border-4 border-white">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
@@ -101,6 +100,8 @@
                                 $productName = trim(str_replace('Refund Otomatis (Pending > 24 Jam):', '', $desc));
                                 $activityText = "Refund karena: Kehabisan Stok ( " . $productName . " )";
                             }
+                        } elseif ($log->type === 'poin') {
+                            $activityText = "Bonus Penukaran Poin Loyalty";
                         }
                     @endphp
 
@@ -116,9 +117,15 @@
                         </td>
 
                         <td class="px-6 py-4">
-                            <p class="font-black text-sm text-emerald-500 whitespace-nowrap">
-                                + Rp {{ number_format($log->amount, 0, ',', '.') }}
-                            </p>
+                            @if($log->type == 'purchase')
+                                <p class="font-black text-sm text-[#ff6b6b] whitespace-nowrap">
+                                    - Rp {{ number_format($log->amount, 0, ',', '.') }}
+                                </p>
+                            @else
+                                <p class="font-black text-sm text-emerald-500 whitespace-nowrap">
+                                    + Rp {{ number_format($log->amount, 0, ',', '.') }}
+                                </p>
+                            @endif
                         </td>
 
                         <td class="px-6 py-4 whitespace-normal min-w-[200px]">
@@ -127,20 +134,33 @@
 
                         <td class="px-6 py-4 text-center">
                             @php
+                                $displayType = $log->type;
+                                if (str_contains($log->invoice_number, 'POIN')) {
+                                    $displayType = 'poin';
+                                }
+
                                 $logClasses = [
-                                    'refund' => ['bg-[#e6fff7]', 'text-emerald-500', '↺ Refund'],
-                                    'topup' => ['bg-[#f0f5ff]', 'text-[#5a76c8]', '💰 Top Up'],
+                                    'refund'   => ['bg-[#e6fff7]', 'text-emerald-500', '↺ Refund'],
+                                    'topup'    => ['bg-[#f0f5ff]', 'text-[#5a76c8]', '💰 Top Up'],
+                                    'purchase' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]', '🛍️ Beli'],
+                                    'poin'     => ['bg-[#fff5eb]', 'text-amber-500', '🎁 Poin'],
                                 ];
-                                $st = $logClasses[$log->type] ?? ['bg-gray-100', 'text-gray-500', $log->type];
+                                $st = $logClasses[$displayType] ?? ['bg-gray-100', 'text-gray-500', strtoupper($displayType)];
                             @endphp
-                            <span class="{{ $st[0] }} {{ $st[1] }} text-[10px] font-black uppercase px-4 py-1.5 rounded-full border border-white shadow-sm inline-block min-w-[90px]">
+                            <span class="{{ $st[0] }} {{ $st[1] }} text-[10px] font-black uppercase px-4 py-1.5 rounded-full border border-white shadow-sm inline-flex items-center justify-center gap-1.5 min-w-[90px] whitespace-nowrap">
                                 {{ $st[2] }}
                             </span>
                         </td>
 
                         <td class="px-6 py-4 text-center">
-                            <span class="bg-[#e6fff7] text-emerald-500 text-[10px] font-black uppercase px-4 py-1.5 rounded-full border border-white shadow-sm inline-block">
-                                ✅ Sukses
+                            @php
+                                $statusLabels = [
+                                    'success' => ['bg-[#e6fff7]', 'text-emerald-500', '✅ Sukses'],
+                                ];
+                                $stStatus = $statusLabels['success'];
+                            @endphp
+                            <span class="{{ $stStatus[0] }} {{ $stStatus[1] }} px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm inline-flex items-center justify-center gap-1.5 min-w-[96px] whitespace-nowrap">
+                                {{ $stStatus[2] }}
                             </span>
                         </td>
                     </tr>
@@ -150,7 +170,7 @@
                             <div class="inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-[#fff9f0] border-4 border-white mb-4 shadow-inner">
                                 <span class="text-4xl">💤</span>
                             </div>
-                            <p class="text-[#8faaf3] font-black text-lg">Belum ada riwayat mutasi saldo masuk.</p>
+                            <p class="text-[#8faaf3] font-black text-lg">Belum ada riwayat mutasi saldo.</p>
                         </td>
                     </tr>
                     @endforelse

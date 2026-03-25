@@ -86,11 +86,11 @@
                             <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Invoice</th>
                             <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">User</th>
                             <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Nominal</th>
-                            <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Status</th>
+                            <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Metode</th> 
                         </tr>
                     </thead>
                     <tbody class="divide-y-2 divide-dashed divide-[#f0f5ff]">
-                        @forelse($recentTransactions ?? [] as $trx)
+                        @forelse(collect($recentTransactions ?? [])->take(5) as $trx)
                         <tr class="hover:bg-[#f4f9ff] transition-colors rounded-xl group">
                             <td class="px-2 md:px-4 py-4 align-middle w-[30%]">
                                 <p class="font-black text-[#5a76c8] text-[11px] md:text-sm mb-1 leading-tight break-all">{{ $trx->invoice_number }}</p>
@@ -104,20 +104,43 @@
                             </td>
                             <td class="px-2 md:px-4 py-4 align-middle text-center w-[20%] whitespace-nowrap">
                                 @php
-                                    $statusClasses = [
-                                        'success' => 'bg-[#e6fff7] text-emerald-500',
-                                        'processing' => 'bg-[#e0fbfc] text-[#5a76c8]',
-                                        'pending' => 'bg-[#fff5eb] text-amber-500',
-                                        'failed' => 'bg-[#ffe5e5] text-[#ff6b6b]',
-                                    ];
-                                    $currentStatus = $trx->order_status;
+                                    $rawMethod = strtolower($trx->payment_method ?? '');
+                                    
+                                    if ($rawMethod == 'wallet') {
+                                        $methodDisplay = 'SALDO';
+                                        $colorClass = 'bg-[#e0fbfc] text-[#5a76c8]';
+                                    } elseif (($rawMethod == 'manual' || empty($rawMethod)) && $trx->payment_status != 'paid') {
+                                        $methodDisplay = 'MENUNGGU';
+                                        $colorClass = 'bg-[#fff5eb] text-amber-500';
+                                    } else {
+                                        // Pemetaan Manual
+                                        $methodMap = [
+                                            'qris'           => 'QRIS',
+                                            'gopay'          => 'GoPay',
+                                            'shopeepay'      => 'ShopeePay',
+                                            'bank_transfer'  => 'Bank Transfer',
+                                            'cstore'         => 'Indomaret/ALFA',
+                                            'credit_card'    => 'Kartu Kredit',
+                                            'echannel'       => 'Mandiri Bill',
+                                            'permata_va'     => 'Permata VA',
+                                            'bca_va'         => 'BCA Transfer',
+                                            'bni_va'         => 'BNI Transfer',
+                                            'bri_va'         => 'BRI Transfer',
+                                            'cimb_va'        => 'CIMB Transfer',
+                                            'other_va'       => 'ATM Bersama',
+                                            'danamon_online' => 'Danamon Online',
+                                            'akulaku'        => 'Akulaku',
+                                            'kredivo'        => 'Kredivo',
+                                        ];
+
+                                        $methodDisplay = $methodMap[$rawMethod] ?? ucwords(str_replace('_', ' ', $rawMethod));
+                                        if (empty($methodDisplay) || $methodDisplay == 'Manual') $methodDisplay = 'E-WALLET';
+                                        
+                                        $colorClass = 'bg-[#f4f9ff] text-[#8faaf3]';
+                                    }
                                 @endphp
-                                <span class="{{ $statusClasses[$currentStatus] ?? 'bg-gray-100 text-gray-500' }} px-2 md:px-3 py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest border border-white shadow-sm inline-block">
-                                    @if($currentStatus == 'success') ✅
-                                    @elseif($currentStatus == 'processing') ⚙️
-                                    @elseif($currentStatus == 'pending') ⏳
-                                    @else ❌ @endif
-                                    <span class="hidden sm:inline">{{ $currentStatus }}</span>
+                                <span class="text-[8px] md:text-[9px] font-black uppercase tracking-widest px-2 md:px-3 py-1.5 rounded-full border border-white shadow-sm inline-block {{ $colorClass }}">
+                                    {{ $methodDisplay }}
                                 </span>
                             </td>
                         </tr>
@@ -137,7 +160,7 @@
         <div class="bg-white rounded-[2.5rem] shadow-lg shadow-[#bde0fe]/20 border-4 border-white flex flex-col overflow-hidden h-full">
             <div class="px-5 py-5 md:px-8 md:py-6 border-b-2 border-dashed border-[#f0f5ff] flex justify-between items-center bg-[#fffcf0]">
                 <h4 class="font-black text-[#2b3a67] text-lg flex items-center gap-2">
-                    <span class="text-2xl">💸</span> Mutasi Saldo Masuk
+                    <span class="text-2xl">💸</span> Mutasi Saldo Global
                 </h4>
                 <a href="{{ route('admin.deposits.index') }}" class="text-[10px] md:text-xs font-black text-white bg-amber-500 px-4 md:px-5 py-2.5 rounded-full hover:bg-amber-600 transition shadow-md shadow-amber-500/30 border border-white whitespace-nowrap">Lihat Semua &rarr;</a>
             </div>
@@ -149,14 +172,13 @@
                             <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Invoice</th>
                             <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">User</th>
                             <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Nominal</th>
-                            <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Status</th>
+                            <th class="px-2 md:px-4 py-3 text-[9px] md:text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Tipe</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y-2 divide-dashed divide-[#f0f5ff]">
                         @php 
                             if(class_exists('\App\Models\WalletHistory')) {
-                                // Filter hanya tampilkan Top Up dan Refund (uang masuk) agar relevan dengan menu Deposit
-                                $globalLogs = App\Models\WalletHistory::with('user')->whereIn('type', ['topup', 'refund'])->latest()->take(7)->get(); 
+                                $globalLogs = App\Models\WalletHistory::with('user')->latest()->take(5)->get(); 
                             } else {
                                 $globalLogs = collect();
                             }
@@ -171,24 +193,36 @@
                             <td class="px-2 md:px-4 py-4 align-middle w-[25%]">
                                 <p class="font-black text-[#2b3a67] text-xs md:text-sm truncate max-w-[60px] md:max-w-[120px]" title="{{ $log->user->name ?? 'Deleted' }}">{{ $log->user->name ?? 'Deleted' }}</p>
                             </td>
+                            
                             <td class="px-2 md:px-4 py-4 align-middle w-[25%] whitespace-nowrap">
-                                <p class="font-black text-[11px] md:text-xs text-emerald-500">
-                                    + Rp {{ number_format($log->amount, 0, ',', '.') }}
-                                </p>
+                                @if($log->type == 'purchase')
+                                    <p class="font-black text-[11px] md:text-xs text-[#ff6b6b]">
+                                        - Rp {{ number_format($log->amount, 0, ',', '.') }}
+                                    </p>
+                                @else
+                                    <p class="font-black text-[11px] md:text-xs text-emerald-500">
+                                        + Rp {{ number_format($log->amount, 0, ',', '.') }}
+                                    </p>
+                                @endif
                             </td>
+
                             <td class="px-2 md:px-4 py-4 align-middle text-center w-[20%] whitespace-nowrap">
                                 @php
+                                    $displayType = $log->type;
+                                    if (str_contains($log->invoice_number, 'POIN')) {
+                                        $displayType = 'poin';
+                                    }
+
                                     $logClasses = [
-                                        'refund' => 'bg-[#e6fff7] text-emerald-500',
-                                        'topup'  => 'bg-[#e0fbfc] text-[#5a76c8]',
+                                        'refund'   => ['bg-[#e6fff7]', 'text-emerald-500', '↺ Refund'],
+                                        'topup'    => ['bg-[#f0f5ff]', 'text-[#5a76c8]', '💰 Top Up'],
+                                        'purchase' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]', '🛍️ Beli'],
+                                        'poin'     => ['bg-[#fff5eb]', 'text-amber-500', '🎁 Poin'],
                                     ];
-                                    $logTypeClass = $logClasses[$log->type] ?? 'bg-gray-100 text-gray-500';
+                                    $st = $logClasses[$displayType] ?? ['bg-gray-100', 'text-gray-500', strtoupper($displayType)];
                                 @endphp
-                                <span class="{{ $logTypeClass }} px-2 md:px-3 py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest border border-white shadow-sm inline-block" title="{{ $log->description }}">
-                                    @if($log->type == 'refund') ↺ 
-                                    @elseif($log->type == 'topup') 💰 
-                                    @else ✅ @endif
-                                    <span class="hidden sm:inline">{{ $log->type }}</span>
+                                <span class="{{ $st[0] }} {{ $st[1] }} px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white shadow-sm inline-block min-w-[90px] text-center" title="{{ $log->description }}">
+                                    {{ $st[2] }}
                                 </span>
                             </td>
                         </tr>
@@ -196,7 +230,7 @@
                         <tr>
                             <td colspan="4" class="px-4 py-16 text-center">
                                 <div class="inline-flex items-center justify-center w-14 h-14 rounded-[2rem] bg-[#fff9f0] border-4 border-white mb-3 shadow-inner"><span class="text-2xl">💤</span></div>
-                                <p class="text-[#8faaf3] font-black text-xs">Belum ada mutasi masuk.</p>
+                                <p class="text-[#8faaf3] font-black text-xs">Belum ada mutasi saldo.</p>
                             </td>
                         </tr>
                         @endforelse

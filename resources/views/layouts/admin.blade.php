@@ -55,7 +55,7 @@
                 <span class="text-xl drop-shadow-sm">🧾</span> Transaksi
             </a>
             <a href="{{ route('admin.deposits.index') }}" class="flex items-center gap-4 px-5 py-3.5 rounded-[1.5rem] font-black transition-all {{ request()->routeIs('admin.deposits.*') ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white' : 'text-[#5a76c8] hover:bg-[#f0f5ff] hover:border-2 border-2 border-transparent hover:border-white' }}">
-                <span class="text-xl drop-shadow-sm">💰</span> Deposit
+                <span class="text-xl drop-shadow-sm">💰</span> Saldo
             </a>
         </nav>
     </aside>

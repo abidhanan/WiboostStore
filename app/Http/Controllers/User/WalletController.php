@@ -107,7 +107,6 @@ class WalletController extends Controller
         }
     }
 
-    // --- FUNGSI BARU: TUKAR POIN ---
     public function exchangePoints()
     {
         $user = Auth::user();
@@ -121,7 +120,7 @@ class WalletController extends Controller
 
         WalletHistory::create([
             'user_id' => $user->id,
-            'type' => 'topup',
+            'type' => 'poin', // <-- SEKARANG TIPENYA 'POIN', BUKAN 'TOPUP'
             'amount' => 1000,
             'description' => 'Bonus Penukaran 5 Poin Loyalty ⭐',
             'invoice_number' => 'POIN-' . strtoupper(Str::random(8)),
