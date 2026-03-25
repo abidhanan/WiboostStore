@@ -30,7 +30,6 @@ class PaymentCallbackController extends Controller
         $transactionStatus = $notification->transaction_status;
         $orderId = $notification->order_id;
 
-        // --- PROSES TOP UP SALDO ---
         if (str_starts_with($orderId, 'DEP-')) {
             $deposit = Deposit::where('invoice_number', $orderId)->first();
             if (!$deposit) return response()->json(['message' => 'Deposit not found'], 404);
@@ -39,7 +38,7 @@ class PaymentCallbackController extends Controller
                 if ($deposit->payment_status == 'unpaid') {
                     $deposit->update([
                         'payment_status' => 'paid',
-                        'payment_method' => $notification->payment_type // Simpan tipe (qris/gopay/dll)
+                        'payment_method' => $notification->payment_type 
                     ]);
                     $user = User::find($deposit->user_id);
                     $user->increment('balance', $deposit->amount);
@@ -58,7 +57,6 @@ class PaymentCallbackController extends Controller
             return response()->json(['message' => 'Deposit handled successfully']);
         }
 
-        // --- PROSES BELI PRODUK ---
         if (str_starts_with($orderId, 'WIB-')) {
             $transaction = Transaction::where('invoice_number', $orderId)->first();
             if (!$transaction) return response()->json(['message' => 'Transaction not found'], 404);
@@ -67,7 +65,7 @@ class PaymentCallbackController extends Controller
                 if ($transaction->payment_status == 'unpaid') {
                     $transaction->update([
                         'payment_status' => 'paid',
-                        'payment_method' => $notification->payment_type // SIMPAN TIPE PEMBAYARAN ASLI (QRIS/DANA/DLL)
+                        'payment_method' => $notification->payment_type
                     ]);
                     $this->processFulfillment($transaction);
                 }
@@ -91,8 +89,8 @@ class PaymentCallbackController extends Controller
 
             if ($apiResponse['success']) {
                 $transaction->update(['order_status' => 'success']);
+                User::find($transaction->user_id)?->increment('points', 1); // TAMBAH 1 POIN
             } else {
-                // AUTO REFUND JIKA API GAGAL
                 $transaction->update([
                     'order_status' => 'failed',
                     'target_notes' => 'Gagal hit API Pusat: ' . $apiResponse['message'] . ' (Saldo Otomatis Dikembalikan)'
@@ -132,6 +130,7 @@ class PaymentCallbackController extends Controller
                         'type'     => $product->process_type
                     ])
                 ]);
+                User::find($transaction->user_id)?->increment('points', 1); // TAMBAH 1 POIN
             } else {
                 $transaction->update(['order_status' => 'pending']);
             }

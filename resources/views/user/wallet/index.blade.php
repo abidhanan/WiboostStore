@@ -12,7 +12,7 @@
 <div class="wiboost-font pb-12 max-w-7xl mx-auto">
     <div class="mb-8 pl-2">
         <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Dompet Wiboost 💳</h2>
-        <p class="text-[#8faaf3] font-bold mt-1">Kelola saldo dan pantau setiap mutasi transaksi masuk, keluar, dan refund kamu.</p>
+        <p class="text-[#8faaf3] font-bold mt-1">Kelola saldo, tukar poin loyalty, dan pantau mutasi transaksi kamu.</p>
     </div>
 
     @if(session('success'))
@@ -28,6 +28,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-1 space-y-8">
+            
             <div class="bg-gradient-to-br from-[#8faaf3] to-[#5a76c8] rounded-[2.5rem] p-8 shadow-xl shadow-[#5a76c8]/30 text-white relative overflow-hidden border-4 border-white">
                 <div class="relative z-10">
                     <p class="text-[#e0fbfc] text-xs font-black uppercase tracking-widest mb-2">Total Saldo Tersedia</p>
@@ -38,6 +39,30 @@
                     </div>
                 </div>
                 <div class="absolute -right-10 -bottom-10 text-9xl opacity-20 transform -rotate-12">☁️</div>
+            </div>
+
+            <div class="bg-white rounded-[2rem] p-6 shadow-lg shadow-[#bde0fe]/30 border-4 border-white">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <p class="text-[#8faaf3] text-xs font-black uppercase tracking-widest mb-1">Poin Wiboost ⭐</p>
+                        <h3 class="text-3xl font-black text-[#2b3a67] tracking-tight">{{ Auth::user()->points ?? 0 }} <span class="text-sm font-bold text-[#8faaf3]">Pts</span></h3>
+                    </div>
+                    <div class="text-4xl animate-bounce">🎁</div>
+                </div>
+
+                @if((Auth::user()->points ?? 0) >= 5)
+                    <form action="{{ route('user.wallet.exchange') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="w-full bg-[#4bc6b9] hover:bg-[#3ba398] text-white py-3.5 rounded-[1.5rem] font-black transition-transform active:scale-95 shadow-md shadow-[#4bc6b9]/30 border-2 border-white flex items-center justify-center gap-2">
+                            Tukar 5 Poin &rarr; Saldo 1K
+                        </button>
+                    </form>
+                @else
+                    <div class="w-full bg-[#f8faff] border-2 border-dashed border-[#bde0fe] text-[#8faaf3] py-3.5 rounded-[1.5rem] font-black text-center text-sm">
+                        Kumpulkan {{ 5 - (Auth::user()->points ?? 0) }} Poin Lagi!
+                    </div>
+                @endif
+                <p class="text-[9px] font-bold text-[#8faaf3] mt-3 text-center uppercase tracking-widest">1 Poin didapat tiap transaksi sukses.</p>
             </div>
 
             <div class="bg-white rounded-[2rem] p-6 border-4 border-white shadow-lg shadow-[#bde0fe]/30">
@@ -74,32 +99,29 @@
                     <span class="text-[10px] font-black bg-white px-3 py-1 rounded-full text-[#8faaf3] border border-[#f0f5ff]">SEMUA TRANSAKSI</span>
                 </div>
                 
-                <div class="flex-1 p-6 space-y-4 overflow-y-auto max-h-[600px] hide-scroll">
+                <div class="flex-1 p-6 space-y-4 overflow-y-auto max-h-[700px] hide-scroll">
                     @php
                         $walletLogs = App\Models\WalletHistory::where('user_id', Auth::id())->latest()->take(20)->get();
                     @endphp
 
                     @forelse($walletLogs as $log)
                         @php
-                            // LOGIKA DETAIL DESKRIPSI (Agar tidak sekadar "via Midtrans")
                             $displayDesc = $log->description;
                             
                             if ($log->type === 'topup') {
-                                // Cek data di tabel Deposit untuk mencari payment_method asli
-                                $deposit = \App\Models\Deposit::where('invoice_number', $log->invoice_number)->first();
-                                if ($deposit && $deposit->payment_method) {
-                                    $method = ucwords(str_replace('_', ' ', $deposit->payment_method));
-                                    
-                                    // Rapikan nama-nama e-wallet
-                                    if (strtolower($method) == 'qris') $method = 'QRIS';
-                                    if (strtolower($method) == 'gopay') $method = 'GoPay';
-                                    if (strtolower($method) == 'shopeepay') $method = 'ShopeePay';
-                                    
-                                    $displayDesc = "Top Up Saldo via " . $method;
+                                if (class_exists('\App\Models\Deposit')) {
+                                    $deposit = \App\Models\Deposit::where('invoice_number', $log->invoice_number)->first();
+                                    if ($deposit && $deposit->payment_method) {
+                                        $method = ucwords(str_replace('_', ' ', $deposit->payment_method));
+                                        if (strtolower($method) == 'qris') $method = 'QRIS';
+                                        if (strtolower($method) == 'gopay') $method = 'GoPay';
+                                        if (strtolower($method) == 'shopeepay') $method = 'ShopeePay';
+                                        
+                                        $displayDesc = "Top Up Saldo via " . $method;
+                                    }
                                 }
                             }
 
-                            // Tentukan Icon & Warna
                             $iconClass = '';
                             $iconChar = '';
                             if($log->type == 'refund') {

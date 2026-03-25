@@ -16,19 +16,18 @@ class User extends Authenticatable
         'password',
         'role_id',
         'balance',
+        'points', // <-- TAMBAHAN KOLOM POIN
     ];
 
     protected $hidden = [
         'password', 'remember_token',
     ];
 
-    // Cek apakah user adalah Admin (Role 1)
     public function isAdmin()
     {
         return $this->role_id === 1; 
     }
 
-    // Cek apakah user adalah Buyer (Role 2)
     public function isBuyer()
     {
         return $this->role_id === 2; 

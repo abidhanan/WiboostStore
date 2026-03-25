@@ -11,7 +11,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
-use App\Http\Controllers\Admin\CredentialController; // <-- Import Controller Credential
+use App\Http\Controllers\Admin\CredentialController; 
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\ManualOrderController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
@@ -59,10 +59,13 @@ Route::middleware(['auth', 'role:buyer'])->prefix('user')->name('user.')->group(
     Route::get('/order/{slug}', [OrderController::class, 'showCategory'])->name('order.category');
     Route::post('/checkout/process', [OrderController::class, 'processCheckout'])->name('checkout.process');
 
-    // Wallet & Deposit
+    // Wallet, Deposit & Loyalty Points
     Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
     Route::post('/wallet/topup', [WalletController::class, 'store'])->name('wallet.topup');
     Route::get('/wallet/pay/{invoice_number}', [WalletController::class, 'pay'])->name('wallet.pay');
+    
+    // --> ROUTE BARU UNTUK FITUR TUKAR POIN <--
+    Route::post('/wallet/exchange-points', [WalletController::class, 'exchangePoints'])->name('wallet.exchange');
 });
 
 /*

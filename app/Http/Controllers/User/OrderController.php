@@ -9,7 +9,7 @@ use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\ProductCredential;
 use App\Models\User;
-use App\Models\WalletHistory; // <-- Import WalletHistory
+use App\Models\WalletHistory;
 use App\Services\MidtransService;
 use App\Services\OrderSosmedService;
 use Illuminate\Support\Str;
@@ -58,10 +58,8 @@ class OrderController extends Controller
                     return back()->with('error', 'Saldo Wiboost tidak mencukupi. Silakan top up terlebih dahulu.');
                 }
 
-                // 1. Potong Saldo
                 $user->decrement('balance', $product->price);
 
-                // 2. Buat Transaksi
                 $transaction = Transaction::create([
                     'invoice_number' => 'WIB-' . strtoupper(Str::random(12)),
                     'user_id'        => $user->id,
@@ -73,7 +71,6 @@ class OrderController extends Controller
                     'payment_method' => 'wallet',
                 ]);
 
-                // 3. CATAT LOG PEMBELIAN (-)
                 WalletHistory::create([
                     'user_id' => $user->id,
                     'type' => 'purchase',
@@ -89,7 +86,6 @@ class OrderController extends Controller
                                  ->with('new_trx_id', $transaction->id);
             }
 
-            // Pembayaran via Midtrans (Belum bayar, jadi belum ada WalletHistory)
             $transaction = Transaction::create([
                 'invoice_number' => 'WIB-' . strtoupper(Str::random(12)),
                 'user_id'        => $user->id,
@@ -126,8 +122,8 @@ class OrderController extends Controller
             
             if ($apiResponse['success']) {
                 $transaction->update(['order_status' => 'success']);
+                User::find($transaction->user_id)?->increment('points', 1); // TAMBAH 1 POIN
             } else {
-                // LOGIKA REFUND OTOMATIS JIKA API GAGAL HIT
                 $transaction->update([
                     'order_status' => 'failed',
                     'target_notes' => 'Gagal hit API: ' . $apiResponse['message'] . ' (Saldo Otomatis Dikembalikan)'
@@ -137,8 +133,6 @@ class OrderController extends Controller
                     $user = User::find($transaction->user_id);
                     if ($user) {
                         $user->increment('balance', $transaction->amount);
-                        
-                        // CATAT LOG REFUND (+)
                         WalletHistory::create([
                             'user_id' => $user->id,
                             'type' => 'refund',
@@ -169,6 +163,7 @@ class OrderController extends Controller
                         'type'     => $product->process_type
                     ])
                 ]);
+                User::find($transaction->user_id)?->increment('points', 1); // TAMBAH 1 POIN
             } else {
                 $transaction->update(['order_status' => 'pending']);
             }
