@@ -83,9 +83,26 @@
                     @else
                         <div>
                             <label class="block text-xs font-black text-[#8faaf3] mb-2 ml-2">Nomor HP (Wajib)</label>
-                            <input type="text" name="data_1" required class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1rem] px-4 py-3 text-[#2b3a67] font-black outline-none transition text-sm">
+                            <input type="text" name="data_1" required class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1rem] px-4 py-3 text-[#2b3a67] font-black outline-none transition text-sm" placeholder="Contoh: +123456789">
                         </div>
                     @endif
+
+                    <div class="mt-4 pt-4 border-t-2 border-dashed border-[#e0fbfc]">
+                        <label class="block text-xs font-black text-[#8faaf3] mb-2 ml-2">Link Tutorial OTP / Login (Opsional)</label>
+                        <input type="url" name="tutorial_link" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1rem] px-4 py-3 text-[#2b3a67] font-black outline-none transition text-sm placeholder-[#a3bbfb]" placeholder="https://youtube.com/...">
+                        <p class="text-[10px] font-bold text-[#8faaf3] mt-2 ml-1">Isi jika pelanggan bisa cek OTP/Akses sendiri via link.</p>
+                    </div>
+
+                    <div class="mt-4 bg-[#fffcf0] p-4 rounded-xl border-2 border-amber-100 flex items-center justify-between shadow-sm">
+                        <div>
+                            <p class="text-xs font-black text-amber-600 mb-1">Butuh Bantuan Admin?</p>
+                            <p class="text-[10px] font-bold text-amber-500">Pelanggan harus chat Admin untuk meminta OTP/Akses.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer ml-3 shrink-0">
+                            <input type="checkbox" name="needs_otp" class="sr-only peer" value="1">
+                            <div class="w-11 h-6 bg-amber-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                        </label>
+                    </div>
                 </div>
 
                 <button type="submit" class="w-full bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black text-sm py-3.5 rounded-[1rem] transition-transform active:scale-95 shadow-md mt-6">Simpan Data</button>
@@ -119,6 +136,15 @@
                                     @if($cred->data_3) <p class="font-black text-indigo-500 text-xs">👤 Profil: {{ $cred->data_3 }}</p> @endif
                                     @if($cred->data_4) <p class="font-black text-rose-500 text-xs">🔢 PIN: {{ $cred->data_4 }}</p> @endif
                                     @if($cred->data_5) <p class="font-black text-blue-500 text-xs truncate max-w-xs">🔗 {{ $cred->data_5 }}</p> @endif
+                                    
+                                    <div class="flex gap-2 mt-2 flex-wrap">
+                                        @if($cred->tutorial_link)
+                                            <span class="bg-[#e0fbfc] text-[#5a76c8] px-2 py-0.5 rounded text-[9px] font-black uppercase shadow-sm">Ada Tutorial</span>
+                                        @endif
+                                        @if($cred->needs_otp)
+                                            <span class="bg-[#fff5eb] text-amber-500 px-2 py-0.5 rounded text-[9px] font-black uppercase shadow-sm">Butuh OTP Admin</span>
+                                        @endif
+                                    </div>
                                 </div>
                                 <p class="text-[9px] font-bold text-[#8faaf3] mt-2">Ditambahkan: {{ $cred->created_at->format('d M Y') }}</p>
                             </td>

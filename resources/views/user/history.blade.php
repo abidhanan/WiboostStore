@@ -119,7 +119,7 @@
                                     </p>
 
                                     <div class="space-y-3">
-                                        @foreach(['email' => 'Email / Username / Nomor', 'password' => 'Password', 'profile' => 'Profil', 'pin' => 'PIN', 'link' => 'Link Akses'] as $key => $label)
+                                        @foreach(['email' => 'Nomor / Akun', 'password' => 'Password', 'profile' => 'Profil', 'pin' => 'PIN', 'link' => 'Link Akses'] as $key => $label)
                                             @if(!empty($credentials[$key]))
                                                 <div>
                                                     <p class="text-[9px] font-black text-amber-600/70 uppercase tracking-widest mb-1">{{ $label }}</p>
@@ -134,12 +134,24 @@
                                         @endforeach
                                     </div>
 
-                                    @if(isset($credentials['type']) && $credentials['type'] == 'number')
-                                        <div class="mt-5 bg-white p-4 rounded-xl border-2 border-amber-100 flex flex-col gap-2">
-                                            <p class="text-[10px] font-black text-amber-600 leading-tight">💬 Nomor sudah aktif. Untuk mendapatkan kode OTP, silakan hubungi Admin OTP kami.</p>
-                                            <a href="https://wa.me/6285326513324?text=Halo%20Admin,%20saya%20ingin%20meminta%20kode%20OTP%20untuk%20nomor%20{{ $credentials['email'] ?? '' }}%20(Invoice:%20{{ $trx->invoice_number }})" target="_blank" class="mt-1 bg-[#25D366] text-white text-xs font-black py-2.5 rounded-lg text-center hover:bg-[#1eb956] transition-colors flex items-center justify-center gap-2">
-                                                Minta Kode OTP Sekarang
-                                            </a>
+                                    @if(!empty($credentials['tutorial_link']) || (isset($credentials['needs_otp']) && $credentials['needs_otp']))
+                                        <div class="mt-5 space-y-3">
+                                            
+                                            @if(!empty($credentials['tutorial_link']))
+                                                <a href="{{ $credentials['tutorial_link'] }}" target="_blank" class="w-full bg-white border-2 border-[#bde0fe] hover:border-[#5a76c8] text-[#5a76c8] font-black text-xs py-3 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm">
+                                                    <span>📘</span> Cara Menggunakan Akun/Nomor Ini
+                                                </a>
+                                            @endif
+
+                                            @if(isset($credentials['needs_otp']) && $credentials['needs_otp'] == true)
+                                                <div class="bg-white p-4 rounded-xl border-2 border-amber-100 flex flex-col gap-2 shadow-sm">
+                                                    <p class="text-[10px] font-black text-amber-600 leading-tight">💬 Pesanan ini membutuhkan bantuan login. Hubungi admin kami untuk menerima kode OTP/Akses.</p>
+                                                    <a href="https://wa.me/6285326513324?text=Halo%20Admin,%20saya%20membutuhkan%20kode%20OTP/Akses%20untuk%20pesanan%20saya%20{{ $credentials['email'] ?? '' }}%20(Invoice:%20{{ $trx->invoice_number }})" target="_blank" class="mt-1 bg-[#25D366] text-white text-xs font-black py-2.5 rounded-lg text-center hover:bg-[#1eb956] transition-colors flex items-center justify-center gap-2">
+                                                        <span>📱</span> Minta OTP via WhatsApp
+                                                    </a>
+                                                </div>
+                                            @endif
+
                                         </div>
                                     @endif
 
