@@ -136,7 +136,6 @@
 
                                     @if(!empty($credentials['tutorial_link']) || (isset($credentials['needs_otp']) && $credentials['needs_otp']))
                                         <div class="mt-5 space-y-3">
-                                            
                                             @if(!empty($credentials['tutorial_link']))
                                                 <a href="{{ $credentials['tutorial_link'] }}" target="_blank" class="w-full bg-white border-2 border-[#bde0fe] hover:border-[#5a76c8] text-[#5a76c8] font-black text-xs py-3 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm">
                                                     <span>📘</span> Cara Menggunakan Akun/Nomor Ini
@@ -151,10 +150,8 @@
                                                     </a>
                                                 </div>
                                             @endif
-
                                         </div>
                                     @endif
-
                                 </div>
                             </div>
                         @endif
@@ -164,8 +161,42 @@
                             <p class="font-black text-[#5a76c8] text-lg">{{ $trx->invoice_number }}</p>
                         </div>
 
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mb-2">Metode Bayar</p>
+                                @php
+                                    $rawMethod = strtolower($trx->payment_method ?? '');
+                                    if ($rawMethod == 'wallet') {
+                                        $methodDisplay = 'SALDO';
+                                        $colorClass = 'bg-[#e0fbfc] text-[#5a76c8]';
+                                    } elseif (($rawMethod == 'manual' || empty($rawMethod)) && $trx->payment_status != 'paid') {
+                                        $methodDisplay = 'BELUM PILIH';
+                                        $colorClass = 'bg-[#fff5eb] text-amber-500';
+                                    } else {
+                                        $methodMap = [
+                                            'qris' => 'QRIS', 'gopay' => 'GoPay', 'shopeepay' => 'ShopeePay',
+                                            'bank_transfer' => 'Transfer Bank', 'cstore' => 'Alfamart/Indomaret',
+                                            'credit_card' => 'Kartu Kredit', 'echannel' => 'Mandiri Bill',
+                                            'permata_va' => 'Permata VA', 'bca_va' => 'BCA VA', 'bni_va' => 'BNI VA',
+                                            'bri_va' => 'BRI VA', 'cimb_va' => 'CIMB VA', 'other_va' => 'ATM Bersama'
+                                        ];
+                                        $methodDisplay = $methodMap[$rawMethod] ?? ucwords(str_replace('_', ' ', $rawMethod));
+                                        if ($methodDisplay == 'Manual') $methodDisplay = 'E-WALLET';
+                                        $colorClass = 'bg-[#f4f9ff] text-[#8faaf3]';
+                                    }
+                                @endphp
+                                <span class="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border border-white shadow-sm inline-block {{ $colorClass }}">
+                                    {{ $methodDisplay }}
+                                </span>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mb-2">Total Bayar</p>
+                                <p class="font-black text-[#4bc6b9] text-lg leading-none">Rp {{ number_format($trx->amount, 0, ',', '.') }}</p>
+                            </div>
+                        </div>
+
                         <div>
-                            <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mb-1">Layanan</p>
+                            <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mb-1">Produk</p>
                             <p class="font-black text-[#2b3a67] text-base leading-tight">{{ $trx->product->name ?? 'Produk Dihapus' }}</p>
                         </div>
 
@@ -178,15 +209,9 @@
                             </div>
                         @endif
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mb-1">Total</p>
-                                <p class="font-black text-[#4bc6b9] text-lg">Rp {{ number_format($trx->amount, 0, ',', '.') }}</p>
-                            </div>
-                            <div>
-                                <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mb-1">Tanggal</p>
-                                <p class="font-bold text-[#2b3a67] text-sm">{{ $trx->created_at->format('d/m/Y, H:i') }}</p>
-                            </div>
+                        <div>
+                            <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mb-1">Waktu Transaksi</p>
+                            <p class="font-bold text-[#2b3a67] text-sm">{{ $trx->created_at->format('d M Y, H:i') }} WIB</p>
                         </div>
 
                         <div>
@@ -237,18 +262,13 @@
         const modals = document.querySelectorAll('[id^="modal-"]');
         modals.forEach(modal => document.body.appendChild(modal));
 
-        // LOGIKA AUTO-OPEN MODAL TRANSAKSI
         @if(session('new_trx_id'))
-            setTimeout(() => {
-                openModal('modal-{{ session('new_trx_id') }}');
-            }, 300);
+            setTimeout(() => { openModal('modal-{{ session('new_trx_id') }}'); }, 300);
         @endif
 
         const urlParams = new URLSearchParams(window.location.search);
         if(urlParams.has('auto_open')) {
-            setTimeout(() => {
-                openModal('modal-' + urlParams.get('auto_open'));
-            }, 300);
+            setTimeout(() => { openModal('modal-' + urlParams.get('auto_open')); }, 300);
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     });
