@@ -10,6 +10,8 @@ use App\Models\WalletHistory;
 use App\Models\ProductCredential;
 use App\Services\OrderSosmedService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail; // <-- WAJIB IMPORT INI
+use App\Mail\OrderSuccessMail;       // <-- WAJIB IMPORT INI
 
 class PaymentCallbackController extends Controller
 {
@@ -115,6 +117,12 @@ class PaymentCallbackController extends Controller
             if ($apiResponse['success']) {
                 $transaction->update(['order_status' => 'success']);
                 User::find($transaction->user_id)?->increment('points', 1); // TAMBAH 1 POIN
+                
+                // NOTIFIKASI EMAIL ORDER SUKSES
+                if ($transaction->user && $transaction->user->email) {
+                    Mail::to($transaction->user->email)->send(new OrderSuccessMail($transaction));
+                }
+                
             } else {
                 $transaction->update([
                     'order_status' => 'failed',
@@ -154,12 +162,18 @@ class PaymentCallbackController extends Controller
                         'profile'       => $credential->data_3,
                         'pin'           => $credential->data_4,
                         'link'          => $credential->data_5,
-                        'tutorial_link' => $credential->tutorial_link ?? null, // <-- Penyesuaian fitur Tutorial
-                        'needs_otp'     => $credential->needs_otp ?? false,    // <-- Penyesuaian fitur OTP Admin
+                        'tutorial_link' => $credential->tutorial_link ?? null,
+                        'needs_otp'     => $credential->needs_otp ?? false,
                         'type'          => $product->process_type
                     ])
                 ]);
                 User::find($transaction->user_id)?->increment('points', 1); // TAMBAH 1 POIN
+                
+                // NOTIFIKASI EMAIL ORDER SUKSES
+                if ($transaction->user && $transaction->user->email) {
+                    Mail::to($transaction->user->email)->send(new OrderSuccessMail($transaction));
+                }
+                
             } else {
                 $transaction->update(['order_status' => 'pending']);
             }
@@ -168,6 +182,7 @@ class PaymentCallbackController extends Controller
         // --- TIPE 3: MANUAL (JASA LAINNYA) ---
         elseif ($product->process_type === 'manual') {
             $transaction->update(['order_status' => 'processing']);
+            // Untuk pesanan manual, biasanya email sukses dikirim saat Admin menyelesaikan pesanan di Panel Admin, jadi di sini diabaikan dulu.
         }
     }
 }
