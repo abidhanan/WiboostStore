@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\ManualOrderController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
 use App\Http\Controllers\Admin\DepositController as AdminDepositController;
 use App\Http\Controllers\Admin\PromoController;
+use App\Http\Controllers\Admin\TutorialController; // <-- IMPORT BARU UNTUK TUTORIAL
 
 // User / Customer Controllers
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
@@ -63,8 +64,6 @@ Route::middleware(['auth', 'role:buyer'])->prefix('user')->name('user.')->group(
     Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
     Route::post('/wallet/topup', [WalletController::class, 'store'])->name('wallet.topup');
     Route::get('/wallet/pay/{invoice_number}', [WalletController::class, 'pay'])->name('wallet.pay');
-    
-    // --> ROUTE BARU UNTUK FITUR TUKAR POIN <--
     Route::post('/wallet/exchange-points', [WalletController::class, 'exchangePoints'])->name('wallet.exchange');
 });
 
@@ -87,8 +86,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/products/{product}/credentials', [CredentialController::class, 'store'])->name('credentials.store');
     Route::delete('/credentials/{credential}', [CredentialController::class, 'destroy'])->name('credentials.destroy');
 
+    // Promos, Stocks, & TUTORIAL
     Route::resource('promos', PromoController::class);
     Route::resource('stocks', StockController::class);
+    Route::resource('tutorials', TutorialController::class); // <-- ROUTE BARU TUTORIAL
 
     // Transaksi & Laporan
     Route::get('/transactions', [AdminTransactionController::class, 'index'])->name('transactions.index');

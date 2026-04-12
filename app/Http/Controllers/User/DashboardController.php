@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\Promo;
+use App\Models\Tutorial;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -15,33 +16,39 @@ class DashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
+        $currentMonth = Carbon::now()->month;
+        $currentYear = Carbon::now()->year;
 
-        // 1. Mengambil HANYA kategori utama (parent_id = null)
-        // Sekalian hitung jumlah sub-kategori (children) dan produk langsungnya
         $categories = Category::whereNull('parent_id')
                                 ->withCount(['children', 'products'])
                                 ->get();
 
-        // 2. Mengambil semua banner promo yang statusnya aktif
         $promos = Promo::where('is_active', true)->latest()->get();
-
-        // 3. Menghitung statistik transaksi sukses milik user ini
-        $totalAllTime = Transaction::where('user_id', $user->id)
-                            ->where('payment_status', 'paid')
-                            ->count();
 
         $totalThisMonth = Transaction::where('user_id', $user->id)
                             ->where('payment_status', 'paid')
-                            ->whereMonth('created_at', Carbon::now()->month)
-                            ->whereYear('created_at', Carbon::now()->year)
+                            ->whereMonth('created_at', $currentMonth)
+                            ->whereYear('created_at', $currentYear)
                             ->count();
 
-        // 4. Menghitung total uang yang sudah dihabiskan user
         $totalSpent = Transaction::where('user_id', $user->id)
                             ->where('payment_status', 'paid')
+                            ->whereMonth('created_at', $currentMonth)
+                            ->whereYear('created_at', $currentYear)
                             ->sum('amount');
 
-        // Lempar semua data ke view
-        return view('user.dashboard', compact('categories', 'promos', 'totalAllTime', 'totalThisMonth', 'totalSpent'));
+        $tutorials = Tutorial::where('is_active', true)->latest()->get();
+        
+        // Ambil daftar kategori unik untuk menu Filter di Dashboard User
+        $tutorialCategories = Tutorial::where('is_active', true)->select('category')->distinct()->pluck('category');
+
+        return view('user.dashboard', compact(
+            'categories', 
+            'promos', 
+            'totalThisMonth', 
+            'totalSpent', 
+            'tutorials',
+            'tutorialCategories'
+        ));
     }
 }
