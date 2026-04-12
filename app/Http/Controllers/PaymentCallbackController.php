@@ -29,25 +29,36 @@ class PaymentCallbackController extends Controller
 
         $transactionStatus = $notification->transaction_status;
         $orderId = $notification->order_id;
+        
+        // MENGAMBIL NOMINAL ASLI (REAL) DARI MIDTRANS
+        // Midtrans biasanya mengirimkan nominal dengan desimal ".00", jadi kita bulatkan ke integer
+        $realAmount = (int) round($notification->gross_amount);
 
+        // ==========================================
+        // 1. PENANGANAN DEPOSIT (TOP UP SALDO)
+        // ==========================================
         if (str_starts_with($orderId, 'DEP-')) {
             $deposit = Deposit::where('invoice_number', $orderId)->first();
             if (!$deposit) return response()->json(['message' => 'Deposit not found'], 404);
 
             if ($transactionStatus == 'settlement' || $transactionStatus == 'capture') {
                 if ($deposit->payment_status == 'unpaid') {
+                    
+                    // Update status dan timpa 'amount' dengan nominal asli dari Midtrans
                     $deposit->update([
                         'payment_status' => 'paid',
-                        'payment_method' => $notification->payment_type 
+                        'payment_method' => $notification->payment_type,
+                        'amount'         => $realAmount 
                     ]);
+                    
                     $user = User::find($deposit->user_id);
-                    $user->increment('balance', $deposit->amount);
+                    $user->increment('balance', $realAmount);
 
                     WalletHistory::create([
-                        'user_id' => $user->id,
-                        'type' => 'topup',
-                        'amount' => $deposit->amount,
-                        'description' => 'Top Up Saldo via ' . strtoupper($notification->payment_type),
+                        'user_id'        => $user->id,
+                        'type'           => 'topup',
+                        'amount'         => $realAmount,
+                        'description'    => 'Top Up Saldo via ' . strtoupper($notification->payment_type),
                         'invoice_number' => $deposit->invoice_number,
                     ]);
                 }
@@ -57,16 +68,26 @@ class PaymentCallbackController extends Controller
             return response()->json(['message' => 'Deposit handled successfully']);
         }
 
+        // ==========================================
+        // 2. PENANGANAN TRANSAKSI (PEMBELIAN PRODUK)
+        // ==========================================
         if (str_starts_with($orderId, 'WIB-')) {
             $transaction = Transaction::where('invoice_number', $orderId)->first();
             if (!$transaction) return response()->json(['message' => 'Transaction not found'], 404);
 
             if ($transactionStatus == 'settlement' || $transactionStatus == 'capture') {
                 if ($transaction->payment_status == 'unpaid') {
+                    
+                    // Update status dan timpa 'amount' dengan nominal asli dari Midtrans
                     $transaction->update([
                         'payment_status' => 'paid',
-                        'payment_method' => $notification->payment_type
+                        'payment_method' => $notification->payment_type,
+                        'amount'         => $realAmount
                     ]);
+                    
+                    // Refresh data model agar processFulfillment membaca harga yang baru (Penting untuk nominal Refund)
+                    $transaction->refresh();
+                    
                     $this->processFulfillment($transaction);
                 }
             } elseif (in_array($transactionStatus, ['deny', 'expire', 'cancel'])) {
@@ -78,10 +99,14 @@ class PaymentCallbackController extends Controller
         return response()->json(['message' => 'Unknown Order ID format'], 400);
     }
 
+    // ==========================================
+    // FUNGSI PEMROSESAN PESANAN (FULFILLMENT)
+    // ==========================================
     private function processFulfillment($transaction)
     {
         $product = $transaction->product;
 
+        // --- TIPE 1: API SUNTIK SOSMED ---
         if ($product->process_type === 'api') {
             $transaction->update(['order_status' => 'processing']);
             $orderSosmed = new OrderSosmedService();
@@ -101,16 +126,18 @@ class PaymentCallbackController extends Controller
                     if ($user) {
                         $user->increment('balance', $transaction->amount);
                         WalletHistory::create([
-                            'user_id' => $user->id,
-                            'type' => 'refund',
-                            'amount' => $transaction->amount,
-                            'description' => 'Refund Pembelian Gagal: ' . $product->name,
+                            'user_id'        => $user->id,
+                            'type'           => 'refund',
+                            'amount'         => $transaction->amount,
+                            'description'    => 'Refund Pembelian Gagal: ' . $product->name,
                             'invoice_number' => $transaction->invoice_number,
                         ]);
                     }
                 }
             }
         } 
+        
+        // --- TIPE 2: AKUN PREMIUM ATAU NOMOR LUAR ---
         elseif ($product->process_type === 'account' || $product->process_type === 'number') {
             $credential = ProductCredential::where('product_id', $product->id)
                 ->where('is_active', true)
@@ -120,14 +147,16 @@ class PaymentCallbackController extends Controller
             if ($credential) {
                 $credential->increment('current_usage');
                 $transaction->update([
-                    'order_status' => 'success',
+                    'order_status'    => 'success',
                     'credential_data' => json_encode([
-                        'email'    => ($credential->data_1 !== '-' && $credential->data_1 !== null) ? $credential->data_1 : null,
-                        'password' => $credential->data_2,
-                        'profile'  => $credential->data_3,
-                        'pin'      => $credential->data_4,
-                        'link'     => $credential->data_5,
-                        'type'     => $product->process_type
+                        'email'         => ($credential->data_1 !== '-' && $credential->data_1 !== null) ? $credential->data_1 : null,
+                        'password'      => $credential->data_2,
+                        'profile'       => $credential->data_3,
+                        'pin'           => $credential->data_4,
+                        'link'          => $credential->data_5,
+                        'tutorial_link' => $credential->tutorial_link ?? null, // <-- Penyesuaian fitur Tutorial
+                        'needs_otp'     => $credential->needs_otp ?? false,    // <-- Penyesuaian fitur OTP Admin
+                        'type'          => $product->process_type
                     ])
                 ]);
                 User::find($transaction->user_id)?->increment('points', 1); // TAMBAH 1 POIN
@@ -135,6 +164,8 @@ class PaymentCallbackController extends Controller
                 $transaction->update(['order_status' => 'pending']);
             }
         } 
+        
+        // --- TIPE 3: MANUAL (JASA LAINNYA) ---
         elseif ($product->process_type === 'manual') {
             $transaction->update(['order_status' => 'processing']);
         }
