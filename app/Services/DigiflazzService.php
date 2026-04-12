@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class DigiflazzService
 {
@@ -12,51 +13,70 @@ class DigiflazzService
 
     public function __construct()
     {
-        // Pakai trim biar spasi ga sengaja di .env hilang
-        $this->username = trim(env('DIGIFLAZZ_USERNAME'));
-        $this->key      = trim(env('DIGIFLAZZ_KEY'));
+        // Menggunakan config() lebih stabil daripada env() langsung
+        $this->username = trim(config('services.digiflazz.username'));
+        $this->key      = trim(config('services.digiflazz.key'));
         $this->baseUrl  = 'https://api.digiflazz.com/v1';
     }
 
+    /**
+     * Cek Saldo Digiflazz
+     */
     public function getBalance()
     {
-        // Signature untuk cek saldo: md5(username + apikey + "depo")
         $sign = md5($this->username . $this->key . 'depo');
         
-        $response = Http::post($this->baseUrl . '/cek-saldo', [
-            'username' => $this->username,
-            'sign'     => $sign
-        ]);
-
-        return $response->json();
+        try {
+            $response = Http::post($this->baseUrl . '/cek-saldo', [
+                'username' => $this->username,
+                'sign'     => $sign
+            ]);
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error('Digiflazz GetBalance Error: ' . $e->getMessage());
+            return ['data' => ['rc' => '99', 'message' => 'Koneksi API Gagal']];
+        }
     }
 
+    /**
+     * Tarik Daftar Harga (Semua Produk Prepaid)
+     */
     public function getPriceList()
     {
-        // Signature untuk pricelist: md5(username + apikey + "pricelist")
         $sign = md5($this->username . $this->key . 'pricelist');
         
-        $response = Http::post($this->baseUrl . '/price-list', [
-            'username' => $this->username,
-            'sign'     => $sign
-        ]);
-
-        return $response->json();
+        try {
+            $response = Http::post($this->baseUrl . '/price-list', [
+                'username' => $this->username,
+                'sign'     => $sign,
+                'cmd'      => 'prepaid' // Menarik semua list produk prabayar
+            ]);
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error('Digiflazz GetPriceList Error: ' . $e->getMessage());
+            return ['data' => ['rc' => '99', 'message' => 'Koneksi API Gagal']];
+        }
     }
 
+    /**
+     * Melakukan Pemesanan / Transaksi
+     */
     public function placeOrder($sku, $target, $refId)
     {
-        // Signature untuk transaksi: md5(username + apikey + ref_id)
         $sign = md5($this->username . $this->key . $refId);
         
-        $response = Http::post($this->baseUrl . '/transaction', [
-            'username'       => $this->username,
-            'buyer_sku_code' => $sku,
-            'customer_no'    => $target,
-            'ref_id'         => $refId,
-            'sign'           => $sign
-        ]);
-
-        return $response->json();
+        try {
+            $response = Http::post($this->baseUrl . '/transaction', [
+                'username'       => $this->username,
+                'buyer_sku_code' => $sku,
+                'customer_no'    => $target,
+                'ref_id'         => $refId,
+                'sign'           => $sign
+            ]);
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error("Digiflazz PlaceOrder Error [$refId]: " . $e->getMessage());
+            return ['data' => ['rc' => '99', 'status' => 'Gagal', 'message' => 'Koneksi API Gagal']];
+        }
     }
 }
