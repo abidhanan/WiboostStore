@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Digiflazz H2H Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Credential untuk integrasi API Digiflazz (PPOB & Top Up Game).
+    | Pastikan variabel ini sudah terdaftar di file .env Anda.
+    |
+    */
+
+    'digiflazz' => [
+        'username' => env('DIGIFLAZZ_USERNAME'),
+        'key'      => env('DIGIFLAZZ_KEY'),
+    ],
+
 ];
