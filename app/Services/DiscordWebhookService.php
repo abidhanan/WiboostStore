@@ -69,6 +69,11 @@ class DiscordWebhookService
         ], 16433050);
     }
 
+    public function sendSystemAlert(string $title, ?string $description = null, array $fields = [], int $color = 16433050): void
+    {
+        $this->sendEmbed($title, $description, $fields, $color);
+    }
+
     protected function sendEmbed(string $title, ?string $description, array $fields, int $color): void
     {
         if (! $this->isEnabled()) {

@@ -198,8 +198,9 @@ class OrderFulfillmentService
         );
     }
 
-    protected function markAsFailed(Transaction $transaction, string $message, array $responseData = []): void
+    public function markAsFailed(Transaction $transaction, string $message, array $responseData = []): void
     {
+        $transaction->loadMissing('product', 'user');
         $previousStatus = $transaction->order_status;
 
         $transaction->update([

@@ -7,6 +7,55 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Wiboost Store Ops
+
+### Integrasi yang dipakai
+
+- Midtrans untuk pembayaran checkout dan top up saldo.
+- Digiflazz untuk produk API seperti PPOB dan top up game.
+- OrderSosmed untuk layanan social media order.
+- Discord webhook untuk notifikasi order, stok menipis, deposit, auto-refund, dan maintenance report.
+
+### Scheduler penting
+
+Project ini memakai Laravel scheduler. Pastikan server menjalankan:
+
+```bash
+php artisan schedule:run
+```
+
+Command terjadwal yang aktif:
+
+- `wiboost:auto-refund` setiap 1 jam untuk refund otomatis order lunas yang tetap `pending` lebih dari 24 jam.
+- `wiboost:maintenance-report` setiap 2 jam untuk kirim ringkasan operasional ke Discord webhook.
+
+### Command operasional
+
+```bash
+php artisan sync:digiflazz
+php artisan wiboost:auto-refund
+php artisan wiboost:maintenance-report --force
+```
+
+### Environment minimum
+
+Isi variabel berikut di `.env`:
+
+- `MIDTRANS_SERVER_KEY`
+- `MIDTRANS_CLIENT_KEY`
+- `DIGIFLAZZ_USERNAME`
+- `DIGIFLAZZ_KEY`
+- `ORDERSOSMED_API_URL`
+- `ORDERSOSMED_API_ID`
+- `ORDERSOSMED_API_KEY`
+- `DISCORD_WEBHOOK_URL`
+
+Tambahan tuning maintenance:
+
+- `WIBOOST_PENDING_ALERT_MINUTES`
+- `WIBOOST_PROCESSING_ALERT_MINUTES`
+- `WIBOOST_MAINTENANCE_MAX_ITEMS`
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

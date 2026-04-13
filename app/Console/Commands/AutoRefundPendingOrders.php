@@ -2,45 +2,46 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Transaction;
-use App\Models\User;
-use App\Models\WalletHistory; // <-- Import
+use App\Services\OrderFulfillmentService;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
 class AutoRefundPendingOrders extends Command
 {
     protected $signature = 'wiboost:auto-refund';
-    protected $description = 'Refund otomatis untuk pesanan LUNAS namun PENDING lebih dari 1x24 Jam';
 
-    public function handle()
+    protected $description = 'Refund otomatis untuk pesanan lunas namun pending lebih dari 24 jam';
+
+    public function handle(OrderFulfillmentService $orderFulfillmentService): int
     {
         $transactions = Transaction::where('payment_status', 'paid')
             ->where('order_status', 'pending')
             ->where('updated_at', '<=', Carbon::now()->subHours(24))
+            ->with('product', 'user')
             ->get();
 
-        foreach ($transactions as $trx) {
-            $user = User::find($trx->user_id);
-            if ($user) {
-                $user->increment('balance', $trx->amount);
-                $trx->update([
-                    'order_status' => 'failed',
-                    'target_notes' => 'Otomatis Refund: Stok kosong melebihi 1x24 Jam. Saldo telah dikembalikan ke akun Anda.'
-                ]);
+        if ($transactions->isEmpty()) {
+            $this->info('Tidak ada transaksi yang perlu auto-refund.');
 
-                // CATAT LOG REFUND (+)
-                WalletHistory::create([
-                    'user_id' => $user->id,
-                    'type' => 'refund',
-                    'amount' => $trx->amount,
-                    'description' => 'Refund Otomatis (Pending > 24 Jam): ' . $trx->product->name,
-                    'invoice_number' => $trx->invoice_number,
-                ]);
-
-                Log::info("AUTO-REFUND: Invoice {$trx->invoice_number} berhasil direfund.");
-            }
+            return self::SUCCESS;
         }
+
+        $refundedCount = 0;
+
+        foreach ($transactions as $transaction) {
+            $orderFulfillmentService->markAsFailed(
+                $transaction,
+                'Otomatis refund: pesanan masih pending lebih dari 24 jam. Saldo telah dikembalikan ke akun pelanggan.'
+            );
+
+            $refundedCount++;
+            Log::info("AUTO-REFUND: Invoice {$transaction->invoice_number} berhasil diproses.");
+        }
+
+        $this->info("Auto-refund selesai. {$refundedCount} transaksi dipindahkan ke status gagal dan direfund.");
+
+        return self::SUCCESS;
     }
 }
