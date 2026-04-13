@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -38,12 +39,14 @@ class RegisteredUserController extends Controller
         ]);
 
         // 2. Simpan user baru ke database (Paksa Role 2 / Buyer)
+        $buyerRoleId = Role::query()->firstOrCreate(['id' => 2], ['name' => 'Buyer'])->id;
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'whatsapp' => $request->whatsapp,
             'password' => Hash::make($request->password),
-            'role_id' => 2, // <-- Diatur permanen menjadi 2 (Buyer)
+            'role_id' => $buyerRoleId,
         ]);
 
         // 3. Memicu event Registered
@@ -52,7 +55,7 @@ class RegisteredUserController extends Controller
         // 4. Langsung login otomatis setelah berhasil mendaftar
         Auth::login($user);
 
-        // 5. Arahkan ke Dasbor khusus pelanggan
-        return redirect()->intended(route('user.dashboard', absolute: false));
+        // 5. Arahkan ke Dasbor user yang sudah dinormalisasi
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 }

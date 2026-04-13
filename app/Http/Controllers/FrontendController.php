@@ -16,7 +16,7 @@ class FrontendController extends Controller
     public function index()
     {
         // 1. Mengambil data untuk statistik metrik real-time
-        $totalUsers = User::where('role_id', 5)->count();
+        $totalUsers = User::where('role_id', 2)->count();
         $totalTransactions = Transaction::where('payment_status', 'paid')->count();
         $activeProducts = Product::where('is_active', true)->count();
         

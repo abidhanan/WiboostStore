@@ -2,187 +2,113 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Transaction;
 use App\Models\Deposit;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Models\WalletHistory;
-use App\Models\ProductCredential;
-use App\Services\OrderSosmedService;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail; // <-- WAJIB IMPORT INI
-use App\Mail\OrderSuccessMail;       // <-- WAJIB IMPORT INI
+use App\Services\DiscordWebhookService;
+use App\Services\OrderFulfillmentService;
+use Illuminate\Http\Request;
 
 class PaymentCallbackController extends Controller
 {
-    public function handleNotification(Request $request)
-    {
-        if ($request->header('User-Agent') == 'Midtrans') {
-            header('ngrok-skip-browser-warning: true');
+    public function handleNotification(
+        Request $request,
+        OrderFulfillmentService $orderFulfillmentService,
+        DiscordWebhookService $discordWebhookService
+    ) {
+        $notification = json_decode($request->getContent());
+
+        if (! $notification) {
+            return response()->json(['message' => 'Invalid payload'], 400);
         }
 
-        $payload = $request->getContent();
-        $notification = json_decode($payload);
-        if (!$notification) return response()->json(['message' => 'Invalid payload'], 400);
+        $serverKey = (string) config('midtrans.server_key');
+        $signatureKey = hash(
+            'sha512',
+            $notification->order_id . $notification->status_code . $notification->gross_amount . $serverKey
+        );
 
-        $serverKey = env('MIDTRANS_SERVER_KEY');
-        $signatureKey = hash("sha512", $notification->order_id . $notification->status_code . $notification->gross_amount . $serverKey);
-        if ($signatureKey !== $notification->signature_key) return response()->json(['message' => 'Invalid signature'], 403);
+        if ($signatureKey !== $notification->signature_key) {
+            return response()->json(['message' => 'Invalid signature'], 403);
+        }
 
         $transactionStatus = $notification->transaction_status;
         $orderId = $notification->order_id;
-        
-        // MENGAMBIL NOMINAL ASLI (REAL) DARI MIDTRANS
-        // Midtrans biasanya mengirimkan nominal dengan desimal ".00", jadi kita bulatkan ke integer
-        $realAmount = (int) round($notification->gross_amount);
+        $realAmount = (int) round((float) $notification->gross_amount);
 
-        // ==========================================
-        // 1. PENANGANAN DEPOSIT (TOP UP SALDO)
-        // ==========================================
         if (str_starts_with($orderId, 'DEP-')) {
             $deposit = Deposit::where('invoice_number', $orderId)->first();
-            if (!$deposit) return response()->json(['message' => 'Deposit not found'], 404);
 
-            if ($transactionStatus == 'settlement' || $transactionStatus == 'capture') {
-                if ($deposit->payment_status == 'unpaid') {
-                    
-                    // Update status dan timpa 'amount' dengan nominal asli dari Midtrans
-                    $deposit->update([
-                        'payment_status' => 'paid',
-                        'payment_method' => $notification->payment_type,
-                        'amount'         => $realAmount 
-                    ]);
-                    
-                    $user = User::find($deposit->user_id);
+            if (! $deposit) {
+                return response()->json(['message' => 'Deposit not found'], 404);
+            }
+
+            if (in_array($transactionStatus, ['settlement', 'capture'], true) && $deposit->payment_status === 'unpaid') {
+                $deposit->update([
+                    'payment_status' => 'paid',
+                    'payment_method' => $notification->payment_type,
+                    'amount' => $realAmount,
+                ]);
+
+                $user = User::find($deposit->user_id);
+
+                if ($user) {
                     $user->increment('balance', $realAmount);
+                }
 
+                $historyExists = WalletHistory::where('invoice_number', $deposit->invoice_number)
+                    ->where('type', 'topup')
+                    ->exists();
+
+                if (! $historyExists) {
                     WalletHistory::create([
-                        'user_id'        => $user->id,
-                        'type'           => 'topup',
-                        'amount'         => $realAmount,
-                        'description'    => 'Top Up Saldo via ' . strtoupper($notification->payment_type),
+                        'user_id' => $deposit->user_id,
+                        'type' => 'topup',
+                        'amount' => $realAmount,
+                        'description' => 'Top Up Saldo via ' . strtoupper($notification->payment_type),
                         'invoice_number' => $deposit->invoice_number,
                     ]);
                 }
-            } elseif (in_array($transactionStatus, ['deny', 'expire', 'cancel'])) {
+
+                $discordWebhookService->sendDepositAlert(
+                    $deposit->fresh('user'),
+                    'Deposit berhasil dibayar',
+                    'Saldo user sudah otomatis ditambahkan.'
+                );
+            } elseif (in_array($transactionStatus, ['deny', 'expire', 'cancel'], true)) {
                 $deposit->update(['payment_status' => 'failed']);
             }
+
             return response()->json(['message' => 'Deposit handled successfully']);
         }
 
-        // ==========================================
-        // 2. PENANGANAN TRANSAKSI (PEMBELIAN PRODUK)
-        // ==========================================
         if (str_starts_with($orderId, 'WIB-')) {
             $transaction = Transaction::where('invoice_number', $orderId)->first();
-            if (!$transaction) return response()->json(['message' => 'Transaction not found'], 404);
 
-            if ($transactionStatus == 'settlement' || $transactionStatus == 'capture') {
-                if ($transaction->payment_status == 'unpaid') {
-                    
-                    // Update status dan timpa 'amount' dengan nominal asli dari Midtrans
-                    $transaction->update([
-                        'payment_status' => 'paid',
-                        'payment_method' => $notification->payment_type,
-                        'amount'         => $realAmount
-                    ]);
-                    
-                    // Refresh data model agar processFulfillment membaca harga yang baru (Penting untuk nominal Refund)
-                    $transaction->refresh();
-                    
-                    $this->processFulfillment($transaction);
-                }
-            } elseif (in_array($transactionStatus, ['deny', 'expire', 'cancel'])) {
-                $transaction->update(['payment_status' => 'failed', 'order_status' => 'failed']);
+            if (! $transaction) {
+                return response()->json(['message' => 'Transaction not found'], 404);
             }
+
+            if (in_array($transactionStatus, ['settlement', 'capture'], true) && $transaction->payment_status === 'unpaid') {
+                $transaction->update([
+                    'payment_status' => 'paid',
+                    'payment_method' => $notification->payment_type,
+                    'amount' => $realAmount,
+                ]);
+
+                $orderFulfillmentService->handlePaidTransaction($transaction->fresh(['product', 'user']));
+            } elseif (in_array($transactionStatus, ['deny', 'expire', 'cancel'], true)) {
+                $transaction->update([
+                    'payment_status' => 'failed',
+                    'order_status' => 'failed',
+                    'target_notes' => 'Pembayaran dibatalkan atau kedaluwarsa di Midtrans.',
+                ]);
+            }
+
             return response()->json(['message' => 'Transaction callback handled successfully']);
         }
 
         return response()->json(['message' => 'Unknown Order ID format'], 400);
-    }
-
-    // ==========================================
-    // FUNGSI PEMROSESAN PESANAN (FULFILLMENT)
-    // ==========================================
-    private function processFulfillment($transaction)
-    {
-        $product = $transaction->product;
-
-        // --- TIPE 1: API SUNTIK SOSMED ---
-        if ($product->process_type === 'api') {
-            $transaction->update(['order_status' => 'processing']);
-            $orderSosmed = new OrderSosmedService();
-            $apiResponse = $orderSosmed->placeOrder($product->provider_product_id, $transaction->target_data, 1000);
-
-            if ($apiResponse['success']) {
-                $transaction->update(['order_status' => 'success']);
-                User::find($transaction->user_id)?->increment('points', 1); // TAMBAH 1 POIN
-                
-                // NOTIFIKASI EMAIL ORDER SUKSES
-                if ($transaction->user && $transaction->user->email) {
-                    Mail::to($transaction->user->email)->send(new OrderSuccessMail($transaction));
-                }
-                
-            } else {
-                $transaction->update([
-                    'order_status' => 'failed',
-                    'target_notes' => 'Gagal hit API Pusat: ' . $apiResponse['message'] . ' (Saldo Otomatis Dikembalikan)'
-                ]);
-
-                if ($transaction->payment_status === 'paid') {
-                    $user = User::find($transaction->user_id);
-                    if ($user) {
-                        $user->increment('balance', $transaction->amount);
-                        WalletHistory::create([
-                            'user_id'        => $user->id,
-                            'type'           => 'refund',
-                            'amount'         => $transaction->amount,
-                            'description'    => 'Refund Pembelian Gagal: ' . $product->name,
-                            'invoice_number' => $transaction->invoice_number,
-                        ]);
-                    }
-                }
-            }
-        } 
-        
-        // --- TIPE 2: AKUN PREMIUM ATAU NOMOR LUAR ---
-        elseif ($product->process_type === 'account' || $product->process_type === 'number') {
-            $credential = ProductCredential::where('product_id', $product->id)
-                ->where('is_active', true)
-                ->whereColumn('current_usage', '<', 'max_usage')
-                ->first();
-
-            if ($credential) {
-                $credential->increment('current_usage');
-                $transaction->update([
-                    'order_status'    => 'success',
-                    'credential_data' => json_encode([
-                        'email'         => ($credential->data_1 !== '-' && $credential->data_1 !== null) ? $credential->data_1 : null,
-                        'password'      => $credential->data_2,
-                        'profile'       => $credential->data_3,
-                        'pin'           => $credential->data_4,
-                        'link'          => $credential->data_5,
-                        'tutorial_link' => $credential->tutorial_link ?? null,
-                        'needs_otp'     => $credential->needs_otp ?? false,
-                        'type'          => $product->process_type
-                    ])
-                ]);
-                User::find($transaction->user_id)?->increment('points', 1); // TAMBAH 1 POIN
-                
-                // NOTIFIKASI EMAIL ORDER SUKSES
-                if ($transaction->user && $transaction->user->email) {
-                    Mail::to($transaction->user->email)->send(new OrderSuccessMail($transaction));
-                }
-                
-            } else {
-                $transaction->update(['order_status' => 'pending']);
-            }
-        } 
-        
-        // --- TIPE 3: MANUAL (JASA LAINNYA) ---
-        elseif ($product->process_type === 'manual') {
-            $transaction->update(['order_status' => 'processing']);
-            // Untuk pesanan manual, biasanya email sukses dikirim saat Admin menyelesaikan pesanan di Panel Admin, jadi di sini diabaikan dulu.
-        }
     }
 }

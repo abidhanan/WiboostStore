@@ -66,9 +66,17 @@
                     $isOutOfStock = in_array($product->process_type, ['account', 'number']) && $product->available_stock <= 0;
                 @endphp
 
-                <button type="button" 
+                <button type="button"
+                    data-id="{{ $product->id }}"
+                    data-name="{{ $product->name }}"
+                    data-price="{{ $product->price }}"
+                    data-process-type="{{ $product->process_type }}"
+                    data-target-required="{{ $product->requires_target_input ? '1' : '0' }}"
+                    data-target-label="{{ $product->resolved_target_label }}"
+                    data-target-placeholder="{{ $product->resolved_target_placeholder }}"
+                    data-target-hint="{{ $product->resolved_target_hint }}"
                     @if(!$isOutOfStock)
-                        onclick="goToCheckout({{ $product->id }}, '{{ addslashes($product->name) }}', {{ $product->price }}, '{{ $product->process_type }}')" 
+                        onclick="goToCheckout(this)"
                         class="w-full bg-white rounded-[1.5rem] p-4 md:p-5 border-4 border-white hover:border-[#bde0fe] shadow-lg shadow-[#bde0fe]/20 flex items-center gap-4 transition-all active:scale-95 text-left group"
                     @else
                         disabled
@@ -149,15 +157,12 @@
                 
                 <div>
                     <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2" id="label_target_data">
-                        @if(Str::contains(Str::lower($category->name), 'game'))
-                            Target Pesanan (User ID & Zone ID)
-                        @else
-                            Target Pesanan (Username / Link Profile)
-                        @endif
+                        Target Pesanan
                     </label>
                     <input type="text" name="target_data" id="input_target_data" required 
                            class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" 
                            placeholder="Ketik target tujuan di sini...">
+                    <p id="target_data_hint" class="mt-3 ml-2 text-xs font-bold text-[#8faaf3]"></p>
                 </div>
             </div>
             
@@ -214,13 +219,20 @@
     const inputTarget = document.getElementById('input_target_data');
     const noTargetMsg = document.getElementById('no_target_msg');
     const stepNumber2 = document.getElementById('step_number_2');
+    const targetLabel = document.getElementById('label_target_data');
+    const targetHint = document.getElementById('target_data_hint');
 
-    function goToCheckout(id, name, price, processType) {
+    function goToCheckout(button) {
+        const { id, name, price, processType, targetRequired, targetLabel: label, targetPlaceholder, targetHint: hint } = button.dataset;
+
         document.getElementById('checkout_product_id').value = id;
         document.getElementById('checkout_product_name').innerText = name;
         document.getElementById('checkout_product_price').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(price);
+        targetLabel.innerText = label || 'Target Pesanan';
+        inputTarget.placeholder = targetPlaceholder || 'Ketik target tujuan di sini...';
+        targetHint.innerText = hint || '';
 
-        if(processType === 'account' || processType === 'number') {
+        if(targetRequired === '0') {
             targetContainer.classList.add('hidden');
             inputTarget.removeAttribute('required');
             inputTarget.value = ''; 
@@ -246,6 +258,7 @@
         pageCheckout.classList.add('hidden');
         pageProductList.classList.remove('hidden');
         pageProductList.classList.add('fade-in');
+        document.getElementById('checkoutForm').reset();
         
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }

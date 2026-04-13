@@ -13,7 +13,7 @@
         }
     </style>
     
-    <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ env('MIDTRANS_CLIENT_KEY') }}"></script>
+    <script type="text/javascript" src="{{ config('midtrans.snap_url') }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
 </head>
 <body class="min-h-screen flex items-center justify-center py-10 px-4 relative overflow-hidden">
     

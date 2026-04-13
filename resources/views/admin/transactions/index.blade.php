@@ -151,7 +151,7 @@
                         </td>
                         
                         <td class="px-4 py-5 align-top text-center min-w-[160px]">
-                            @if($trx->product && $trx->product->category && (str_contains(strtolower($trx->product->category->slug), 'buzzer') || str_contains(strtolower($trx->product->category->slug), 'manual')))
+                            @if($trx->product && $trx->product->process_type === 'manual')
                                 <form action="{{ route('admin.transactions.update', $trx->id) }}" method="POST" class="flex items-center gap-1.5 justify-center">
                                     @csrf
                                     @method('PATCH')

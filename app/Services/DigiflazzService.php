@@ -4,79 +4,136 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class DigiflazzService
 {
-    protected $username;
-    protected $key;
-    protected $baseUrl;
+    protected string $username;
+    protected string $key;
+    protected string $baseUrl;
 
     public function __construct()
     {
-        // Menggunakan config() lebih stabil daripada env() langsung
-        $this->username = trim(config('services.digiflazz.username'));
-        $this->key      = trim(config('services.digiflazz.key'));
-        $this->baseUrl  = 'https://api.digiflazz.com/v1';
+        $this->username = trim((string) config('services.digiflazz.username'));
+        $this->key = trim((string) config('services.digiflazz.key'));
+        $this->baseUrl = rtrim((string) config('services.digiflazz.base_url', 'https://api.digiflazz.com/v1'), '/');
     }
 
-    /**
-     * Cek Saldo Digiflazz
-     */
-    public function getBalance()
+    public function isConfigured(): bool
     {
+        return $this->username !== '' && $this->key !== '';
+    }
+
+    public function getBalance(): array
+    {
+        if (! $this->isConfigured()) {
+            return ['success' => false, 'message' => 'Kredensial Digiflazz belum diatur.'];
+        }
+
         $sign = md5($this->username . $this->key . 'depo');
-        
+
         try {
-            $response = Http::post($this->baseUrl . '/cek-saldo', [
+            $response = Http::timeout(30)->acceptJson()->post($this->baseUrl . '/cek-saldo', [
                 'username' => $this->username,
-                'sign'     => $sign
+                'sign' => $sign,
             ]);
-            return $response->json();
-        } catch (\Exception $e) {
-            Log::error('Digiflazz GetBalance Error: ' . $e->getMessage());
-            return ['data' => ['rc' => '99', 'message' => 'Koneksi API Gagal']];
+
+            $body = $response->json() ?? [];
+
+            return [
+                'success' => $response->successful(),
+                'message' => $body['data']['message'] ?? $body['message'] ?? null,
+                'raw' => $body,
+            ];
+        } catch (Throwable $e) {
+            Log::error('Digiflazz getBalance error: ' . $e->getMessage());
+
+            return ['success' => false, 'message' => 'Koneksi ke Digiflazz gagal.'];
         }
     }
 
-    /**
-     * Tarik Daftar Harga (Semua Produk Prepaid)
-     */
-    public function getPriceList()
+    public function getPriceList(): array
     {
+        if (! $this->isConfigured()) {
+            return ['success' => false, 'message' => 'Kredensial Digiflazz belum diatur.'];
+        }
+
         $sign = md5($this->username . $this->key . 'pricelist');
-        
+
         try {
-            $response = Http::post($this->baseUrl . '/price-list', [
+            $response = Http::timeout(30)->acceptJson()->post($this->baseUrl . '/price-list', [
                 'username' => $this->username,
-                'sign'     => $sign,
-                'cmd'      => 'prepaid' // Menarik semua list produk prabayar
+                'sign' => $sign,
+                'cmd' => 'prepaid',
             ]);
-            return $response->json();
-        } catch (\Exception $e) {
-            Log::error('Digiflazz GetPriceList Error: ' . $e->getMessage());
-            return ['data' => ['rc' => '99', 'message' => 'Koneksi API Gagal']];
+
+            $body = $response->json() ?? [];
+
+            return [
+                'success' => $response->successful(),
+                'message' => $body['data']['message'] ?? $body['message'] ?? null,
+                'raw' => $body,
+            ];
+        } catch (Throwable $e) {
+            Log::error('Digiflazz getPriceList error: ' . $e->getMessage());
+
+            return ['success' => false, 'message' => 'Koneksi ke Digiflazz gagal.'];
         }
     }
 
-    /**
-     * Melakukan Pemesanan / Transaksi
-     */
-    public function placeOrder($sku, $target, $refId)
+    public function placeOrder(string $sku, string $target, string $refId): array
     {
+        if (! $this->isConfigured()) {
+            return [
+                'success' => false,
+                'message' => 'Kredensial Digiflazz belum diatur.',
+                'order_status' => 'failed',
+            ];
+        }
+
         $sign = md5($this->username . $this->key . $refId);
-        
+
         try {
-            $response = Http::post($this->baseUrl . '/transaction', [
-                'username'       => $this->username,
+            $response = Http::timeout(30)->acceptJson()->post($this->baseUrl . '/transaction', [
+                'username' => $this->username,
                 'buyer_sku_code' => $sku,
-                'customer_no'    => $target,
-                'ref_id'         => $refId,
-                'sign'           => $sign
+                'customer_no' => $target,
+                'ref_id' => $refId,
+                'sign' => $sign,
             ]);
-            return $response->json();
-        } catch (\Exception $e) {
-            Log::error("Digiflazz PlaceOrder Error [$refId]: " . $e->getMessage());
-            return ['data' => ['rc' => '99', 'status' => 'Gagal', 'message' => 'Koneksi API Gagal']];
+
+            $body = $response->json() ?? [];
+            $data = $body['data'] ?? [];
+            $statusText = strtolower((string) ($data['status'] ?? $body['status'] ?? ''));
+            $responseCode = (string) ($data['rc'] ?? $body['rc'] ?? '');
+            $providerOrderId = $data['ref_id'] ?? $data['sn'] ?? $refId;
+            $message = $data['message'] ?? $body['message'] ?? 'Digiflazz merespons tanpa pesan.';
+
+            $success = $response->successful()
+                && in_array($responseCode, ['00', '0', ''], true)
+                && ! in_array($statusText, ['gagal', 'failed', 'error'], true);
+
+            $orderStatus = match (true) {
+                str_contains($statusText, 'sukses'), str_contains($statusText, 'success') => 'success',
+                str_contains($statusText, 'pending'), $success => 'processing',
+                default => 'failed',
+            };
+
+            return [
+                'success' => $success,
+                'message' => $message,
+                'provider_order_id' => $providerOrderId,
+                'order_status' => $orderStatus,
+                'raw' => $body,
+            ];
+        } catch (Throwable $e) {
+            Log::error("Digiflazz placeOrder error [{$refId}]: " . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Koneksi ke Digiflazz gagal.',
+                'order_status' => 'failed',
+            ];
         }
     }
 }

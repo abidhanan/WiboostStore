@@ -11,19 +11,17 @@ class UserSeeder extends Seeder
     public function run()
     {
         // Akun Super Admin Anda
-        User::create([
+        User::updateOrCreate(['email' => 'admin@wiboost.store'], [
             'name' => 'Super Admin Wiboost',
-            'email' => 'admin@wiboost.store',
             'password' => Hash::make('password123'), // Silakan ganti passwordnya nanti
-            'role_id' => 1, // 1 adalah ID untuk Super Admin
+            'role_id' => 1,
         ]);
 
         // Akun Dummy User untuk testing
-        User::create([
+        User::updateOrCreate(['email' => 'user@wiboost.store'], [
             'name' => 'Pembeli Dummy',
-            'email' => 'user@wiboost.store',
             'password' => Hash::make('password123'),
-            'role_id' => 5, // 5 adalah ID untuk User biasa
+            'role_id' => 2,
         ]);
     }
 }

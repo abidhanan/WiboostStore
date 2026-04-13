@@ -10,7 +10,22 @@ class ProductCredential extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_id', 'data_1', 'data_2', 'data_3', 'data_4', 'data_5', 'max_usage', 'current_usage', 'is_active'
+        'product_id',
+        'data_1',
+        'data_2',
+        'data_3',
+        'data_4',
+        'data_5',
+        'tutorial_link',
+        'needs_otp',
+        'max_usage',
+        'current_usage',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'needs_otp' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     public function product()

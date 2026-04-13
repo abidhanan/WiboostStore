@@ -48,6 +48,19 @@ return [
     'digiflazz' => [
         'username' => env('DIGIFLAZZ_USERNAME'),
         'key'      => env('DIGIFLAZZ_KEY'),
+        'base_url' => env('DIGIFLAZZ_BASE_URL', 'https://api.digiflazz.com/v1'),
+    ],
+
+    'ordersosmed' => [
+        'api_url' => env('ORDERSOSMED_API_URL'),
+        'api_id'  => env('ORDERSOSMED_API_ID'),
+        'api_key' => env('ORDERSOSMED_API_KEY'),
+    ],
+
+    'discord' => [
+        'webhook_url' => env('DISCORD_WEBHOOK_URL'),
+        'username'    => env('DISCORD_BOT_NAME', 'Wiboost Bot'),
+        'avatar_url'  => env('DISCORD_BOT_AVATAR_URL'),
     ],
 
 ];

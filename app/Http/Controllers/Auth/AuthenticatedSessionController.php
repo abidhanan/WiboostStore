@@ -31,13 +31,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         // 3. LOGIKA REDIRECT BERDASARKAN ROLE BARU (Hanya 2 Role)
-        if ($request->user()->isAdmin()) {
-            // Jika dia adalah Admin (Role 1), arahkan ke Panel Admin
-            return redirect()->intended(route('admin.dashboard', absolute: false));
-        }
-
-        // Jika dia adalah Buyer (Role 2), arahkan ke Dashboard Pelanggan
-        return redirect()->intended(route('user.dashboard', absolute: false));
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 
     /**

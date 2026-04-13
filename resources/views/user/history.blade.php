@@ -51,7 +51,7 @@
                         $statusLabel = 'Sukses';
                         $statusClass = 'bg-[#e6fff7] text-emerald-500 border-emerald-200';
                         if(!empty($trx->credential_data)) {
-                            $credentials = json_decode($trx->credential_data, true);
+                            $credentials = is_array($trx->credential_data) ? $trx->credential_data : json_decode($trx->credential_data, true);
                         }
                     } elseif ($trx->order_status == 'processing') {
                         $statusLabel = 'Proses';
@@ -256,7 +256,7 @@
     @endif
 </div>
 
-<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
+<script src="{{ config('midtrans.snap_url') }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const modals = document.querySelectorAll('[id^="modal-"]');

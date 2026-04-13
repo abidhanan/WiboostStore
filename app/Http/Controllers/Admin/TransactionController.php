@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\Transaction;
+use App\Services\OrderFulfillmentService;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -39,17 +41,21 @@ class TransactionController extends Controller
         return view('admin.transactions.index', compact('transactions', 'selectedMonth', 'selectedYear'));
     }
 
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, $id, OrderFulfillmentService $orderFulfillmentService)
     {
         $request->validate([
             'order_status' => 'required|in:pending,processing,success,failed'
         ]);
 
-        $transaction = Transaction::findOrFail($id);
-        
-        $transaction->update([
-            'order_status' => $request->order_status
-        ]);
+        $transaction = Transaction::with(['product', 'user'])->findOrFail($id);
+
+        if ($request->order_status === 'success' && $transaction->product?->process_type === 'manual') {
+            $orderFulfillmentService->markManualOrderCompleted($transaction);
+        } else {
+            $transaction->update([
+                'order_status' => $request->order_status,
+            ]);
+        }
 
         return back()->with('success', 'Status pesanan ' . $transaction->invoice_number . ' berhasil diperbarui!');
     }
@@ -94,14 +100,30 @@ class TransactionController extends Controller
 
     public function reports()
     {
-        // Hitung total pendapatan riil (Hanya yang status bayar Lunas & order Sukses)
-        $totalRevenue = Transaction::where('payment_status', 'paid')
-                                   ->where('order_status', 'success')
-                                   ->sum('amount');
-        
-        // Hitung total semua orderan masuk
-        $totalOrders = Transaction::count();
+        $paidTransactions = Transaction::where('payment_status', 'paid');
+        $successfulTransactions = Transaction::where('payment_status', 'paid')->where('order_status', 'success');
+        $manualOrders = Transaction::whereHas('product', fn ($query) => $query->where('process_type', 'manual'));
+        $lowStockProducts = Product::whereIn('process_type', ['account', 'number'])
+            ->get()
+            ->filter(fn ($product) => $product->stock_reminder > 0 && ($product->available_stock ?? 0) <= $product->stock_reminder);
 
-        return view('admin.transactions.reports', compact('totalRevenue', 'totalOrders'));
+        $totalRevenue = $successfulTransactions->sum('amount');
+        $totalOrders = Transaction::count();
+        $paidOrders = $paidTransactions->count();
+        $successfulOrders = $successfulTransactions->count();
+        $pendingManualOrders = (clone $manualOrders)->whereIn('order_status', ['pending', 'processing'])->count();
+        $averageOrderValue = $successfulOrders > 0 ? $totalRevenue / $successfulOrders : 0;
+        $successRate = $paidOrders > 0 ? ($successfulOrders / $paidOrders) * 100 : 0;
+
+        return view('admin.transactions.reports', compact(
+            'totalRevenue',
+            'totalOrders',
+            'paidOrders',
+            'successfulOrders',
+            'pendingManualOrders',
+            'averageOrderValue',
+            'successRate',
+            'lowStockProducts'
+        ));
     }
 }

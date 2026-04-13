@@ -4,53 +4,85 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class OrderSosmedService
 {
-    protected $apiUrl;
-    protected $apiId;
-    protected $apiKey;
+    protected string $apiUrl;
+    protected string $apiId;
+    protected string $apiKey;
 
     public function __construct()
     {
-        $this->apiUrl = env('ORDERSOSMED_API_URL');
-        $this->apiId = env('ORDERSOSMED_API_ID');
-        $this->apiKey = env('ORDERSOSMED_API_KEY');
+        $this->apiUrl = trim((string) config('services.ordersosmed.api_url'));
+        $this->apiId = trim((string) config('services.ordersosmed.api_id'));
+        $this->apiKey = trim((string) config('services.ordersosmed.api_key'));
     }
 
-    /**
-     * Mengirim pesanan ke OrderSosmed
-     */
-    public function placeOrder($providerServiceId, $target, $quantity = 1000)
+    public function isConfigured(): bool
     {
-        // Standar payload SMM Panel Indonesia pada umumnya
+        return $this->apiUrl !== '' && $this->apiId !== '' && $this->apiKey !== '';
+    }
+
+    public function placeOrder(string $providerServiceId, string $target, int $quantity = 1): array
+    {
+        if (! $this->isConfigured()) {
+            return [
+                'success' => false,
+                'message' => 'Kredensial OrderSosmed belum diatur.',
+                'order_status' => 'failed',
+            ];
+        }
+
         $payload = [
             'api_id' => $this->apiId,
             'api_key' => $this->apiKey,
             'service' => $providerServiceId,
             'target' => $target,
-            'quantity' => $quantity,
+            'quantity' => max(1, $quantity),
         ];
 
         try {
-            // Mengirim request POST ke API OrderSosmed
-            $response = Http::post($this->apiUrl, $payload);
-            $result = $response->json();
+            $response = Http::asForm()->timeout(30)->acceptJson()->post($this->apiUrl, $payload);
+            $result = $response->json() ?? [];
+            $providerOrderId = $result['data']['id'] ?? $result['order_id'] ?? $result['id'] ?? null;
+            $accepted = $response->successful()
+                && (
+                    ($result['status'] ?? false) === true
+                    || $providerOrderId !== null
+                );
 
-            // Cek apakah response dari provider sukses
-            if (isset($result['status']) && $result['status'] == true) {
-                Log::info('OrderSosmed Sukses: ' . json_encode($result));
-                return [
-                    'success' => true,
-                    'provider_order_id' => $result['data']['id'] ?? null // Menyimpan ID struk dari pusat
-                ];
+            $message = $result['data']['message']
+                ?? $result['message']
+                ?? ($accepted ? 'Pesanan berhasil dikirim ke provider.' : 'Provider menolak pesanan.');
+
+            if ($accepted) {
+                Log::info('OrderSosmed accepted order', [
+                    'provider_order_id' => $providerOrderId,
+                    'service' => $providerServiceId,
+                ]);
             } else {
-                Log::error('OrderSosmed Gagal: ' . json_encode($result));
-                return ['success' => false, 'message' => $result['data'] ?? 'Gagal dari provider'];
+                Log::warning('OrderSosmed rejected order', [
+                    'response' => $result,
+                    'service' => $providerServiceId,
+                ]);
             }
-        } catch (\Exception $e) {
-            Log::error('OrderSosmed Exception: ' . $e->getMessage());
-            return ['success' => false, 'message' => 'Koneksi ke API terputus.'];
+
+            return [
+                'success' => $accepted,
+                'message' => $message,
+                'provider_order_id' => $providerOrderId,
+                'order_status' => $accepted ? 'processing' : 'failed',
+                'raw' => $result,
+            ];
+        } catch (Throwable $e) {
+            Log::error('OrderSosmed placeOrder error: ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Koneksi ke OrderSosmed gagal.',
+                'order_status' => 'failed',
+            ];
         }
     }
 }

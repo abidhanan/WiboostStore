@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
@@ -16,105 +17,132 @@ class ProductController extends Controller
         $query = Product::with('category')->latest();
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('provider_product_id', 'like', '%' . $request->search . '%');
+            $query->where(function ($innerQuery) use ($request) {
+                $innerQuery->where('name', 'like', '%' . $request->search . '%')
+                    ->orWhere('provider_product_id', 'like', '%' . $request->search . '%');
+            });
         }
 
         $products = $query->paginate(20);
-        
+
         return view('admin.products.index', compact('products'));
     }
 
     public function create()
     {
         $categories = Category::whereNotNull('parent_id')->orDoesntHave('children')->get();
+
         return view('admin.products.create', compact('categories'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name'                => 'required|string|max:255',
-            'category_id'         => 'required|exists:categories,id',
-            'price'               => 'required|numeric|min:0',
-            'provider_product_id' => 'nullable|string|max:255',
-            'process_type'        => 'required|in:api,account,number,manual',
-            'stock_reminder'      => 'nullable|integer|min:0',
-            'is_active'           => 'required|in:0,1',
-            'image'               => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'emote'               => 'nullable|string|max:50', 
-        ]);
-
+        $validated = $this->validateProduct($request);
         $imagePath = null;
+
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('products', 'public');
         }
 
-        Product::create([
-            'name'                => $request->name,
-            'slug'                => Str::slug($request->name) . '-' . Str::random(5),
-            'category_id'         => $request->category_id,
-            'price'               => $request->price,
-            'provider_product_id' => $request->provider_product_id,
-            'process_type'        => $request->process_type,
-            'stock_reminder'      => $request->stock_reminder ?? 0,
-            'image'               => $imagePath,
-            'emote'               => $request->emote, 
-            'is_active'           => $request->is_active,
-        ]);
+        Product::create($this->buildPayload($validated, $request, $imagePath));
 
-        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan! 🚀');
+        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan.');
     }
 
     public function edit(Product $product)
     {
         $categories = Category::whereNotNull('parent_id')->orDoesntHave('children')->get();
+
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
     public function update(Request $request, Product $product)
     {
-        $request->validate([
-            'name'                => 'required|string|max:255',
-            'category_id'         => 'required|exists:categories,id',
-            'price'               => 'required|numeric|min:0',
-            'provider_product_id' => 'nullable|string|max:255',
-            'process_type'        => 'required|in:api,account,number,manual',
-            'stock_reminder'      => 'nullable|integer|min:0',
-            'is_active'           => 'required|in:0,1',
-            'image'               => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'emote'               => 'nullable|string|max:50',
-        ]);
+        $validated = $this->validateProduct($request, $product->id);
+        $imagePath = $product->image;
 
-        $data = $request->only(['name', 'category_id', 'price', 'provider_product_id', 'process_type', 'stock_reminder', 'is_active', 'emote']);
-        
-        if (!in_array($request->process_type, ['account', 'number'])) {
-            $data['stock_reminder'] = 0;
+        if ($request->boolean('remove_image') && $product->image) {
+            Storage::disk('public')->delete($product->image);
+            $imagePath = null;
         }
 
-        // LOGIKA HAPUS GAMBAR
-        if ($request->has('remove_image')) {
+        if ($request->hasFile('image')) {
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
-                $data['image'] = null;
             }
-        } 
-        // LOGIKA UPDATE GAMBAR (Hanya jika tidak sedang menghapus & ada file baru)
-        elseif ($request->hasFile('image')) {
-            if ($product->image) Storage::disk('public')->delete($product->image);
-            $data['image'] = $request->file('image')->store('products', 'public');
+
+            $imagePath = $request->file('image')->store('products', 'public');
         }
 
-        $data['slug'] = Str::slug($request->name) . '-' . Str::random(5);
-        $product->update($data);
+        $product->update($this->buildPayload($validated, $request, $imagePath, $product));
 
-        return redirect()->route('admin.products.index')->with('success', 'Perubahan produk berhasil disimpan! ✨');
+        return redirect()->route('admin.products.index')->with('success', 'Perubahan produk berhasil disimpan.');
     }
 
     public function destroy(Product $product)
     {
-        if ($product->image) Storage::disk('public')->delete($product->image);
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
+
         $product->delete();
-        return back()->with('success', 'Produk berhasil dihapus! 🗑️');
+
+        return back()->with('success', 'Produk berhasil dihapus.');
+    }
+
+    protected function validateProduct(Request $request, ?int $productId = null): array
+    {
+        return $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'price' => 'required|numeric|min:0',
+            'provider_product_id' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::requiredIf(fn () => $request->process_type === 'api'),
+            ],
+            'provider_source' => [
+                'nullable',
+                'string',
+                'in:ordersosmed,digiflazz',
+                Rule::requiredIf(fn () => $request->process_type === 'api'),
+            ],
+            'provider_quantity' => 'nullable|integer|min:1|max:1000000',
+            'process_type' => 'required|in:api,account,number,manual',
+            'target_label' => 'nullable|string|max:255',
+            'target_placeholder' => 'nullable|string|max:255',
+            'target_hint' => 'nullable|string|max:1000',
+            'stock_reminder' => 'nullable|integer|min:0',
+            'is_active' => 'required|in:0,1',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'emote' => 'nullable|string|max:50',
+        ]);
+    }
+
+    protected function buildPayload(array $validated, Request $request, ?string $imagePath, ?Product $product = null): array
+    {
+        $requiresTargetInput = in_array($validated['process_type'], ['api', 'manual'], true);
+        $usesInventory = in_array($validated['process_type'], ['account', 'number'], true);
+
+        return [
+            'name' => $validated['name'],
+            'slug' => Str::slug($validated['name']) . '-' . Str::random(5),
+            'category_id' => $validated['category_id'],
+            'price' => $validated['price'],
+            'provider_product_id' => $validated['process_type'] === 'api' ? $validated['provider_product_id'] : null,
+            'provider_source' => $validated['process_type'] === 'api' ? ($validated['provider_source'] ?? null) : null,
+            'provider_id' => $validated['process_type'] === 'api' ? ($validated['provider_source'] ?? null) : null,
+            'provider_quantity' => $validated['process_type'] === 'api' ? max(1, (int) ($validated['provider_quantity'] ?? 1)) : 1,
+            'process_type' => $validated['process_type'],
+            'target_label' => $requiresTargetInput ? ($validated['target_label'] ?? null) : null,
+            'target_placeholder' => $requiresTargetInput ? ($validated['target_placeholder'] ?? null) : null,
+            'target_hint' => $requiresTargetInput ? ($validated['target_hint'] ?? null) : null,
+            'stock_reminder' => $usesInventory ? ($validated['stock_reminder'] ?? 0) : 0,
+            'image' => $imagePath,
+            'emote' => $validated['emote'] ?? null,
+            'is_active' => $validated['is_active'],
+            'status' => ((int) $validated['is_active']) === 1 ? 'active' : 'inactive',
+        ];
     }
 }

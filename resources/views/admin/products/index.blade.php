@@ -56,7 +56,7 @@
                         <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Produk & Kategori</th>
                         <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Tipe Proses</th>
                         <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Harga Jual</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">SKU</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Provider</th>
                         <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Stok</th>
                         <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest text-center">Aksi</th>
                     </tr>
@@ -101,9 +101,17 @@
                         </td>
                         
                         <td class="px-6 py-4 text-center">
-                            <span class="bg-[#f0f5ff] text-[#8faaf3] px-3 py-1.5 rounded-md text-xs font-mono font-black border border-white shadow-inner">
-                                {{ $product->provider_product_id ?? '-' }}
-                            </span>
+                            <div class="space-y-2">
+                                <span class="inline-block rounded-md border border-white bg-[#f0f5ff] px-3 py-1.5 font-mono text-xs font-black text-[#8faaf3] shadow-inner">
+                                    {{ $product->provider_product_id ?? '-' }}
+                                </span>
+                                <div class="text-[10px] font-black uppercase tracking-widest text-[#5a76c8]">
+                                    {{ $product->provider_source ?? '-' }}
+                                    @if(($product->provider_source ?? '') === 'ordersosmed')
+                                        <span class="ml-1 text-[#8faaf3]">x{{ $product->provider_quantity ?? 1 }}</span>
+                                    @endif
+                                </div>
+                            </div>
                         </td>
                         
                         <td class="px-6 py-4 text-center">

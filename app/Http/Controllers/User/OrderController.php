@@ -3,26 +3,25 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Transaction;
-use App\Models\ProductCredential;
 use App\Models\User;
 use App\Models\WalletHistory;
 use App\Services\MidtransService;
-use App\Services\OrderSosmedService;
-use Illuminate\Support\Str;
+use App\Services\OrderFulfillmentService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Exception;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Throwable;
 
 class OrderController extends Controller
 {
     public function showCategory($slug)
     {
-        $category = Category::with(['children', 'products' => function($q) {
-            $q->where('is_active', true)->orderBy('price', 'asc');
+        $category = Category::with(['children', 'products' => function ($query) {
+            $query->where('is_active', true)->orderBy('price', 'asc');
         }])->where('slug', $slug)->firstOrFail();
 
         if ($category->children->count() > 0) {
@@ -30,146 +29,94 @@ class OrderController extends Controller
         }
 
         $products = $category->products;
+
         return view('user.order', compact('category', 'products'));
     }
 
-    public function processCheckout(Request $request)
-    {
+    public function processCheckout(
+        Request $request,
+        MidtransService $midtransService,
+        OrderFulfillmentService $orderFulfillmentService
+    ) {
+        $product = Product::findOrFail($request->product_id);
+        $user = Auth::user();
+
+        $rules = [
+            'product_id' => 'required|exists:products,id',
+            'payment_method' => 'required|string|in:wallet,manual',
+        ];
+
+        $rules['target_data'] = $product->requires_target_input
+            ? 'required|string|min:3'
+            : 'nullable|string';
+
+        $validated = $request->validate($rules);
+        $targetData = $product->requires_target_input
+            ? trim((string) ($validated['target_data'] ?? ''))
+            : '- (Tidak membutuhkan target tambahan)';
+
         try {
-            $product = Product::findOrFail($request->product_id);
-            $user = Auth::user();
+            if ($validated['payment_method'] === 'wallet') {
+                $transaction = DB::transaction(function () use ($user, $product, $targetData) {
+                    $freshUser = User::query()->lockForUpdate()->findOrFail($user->id);
 
-            $rules = [
-                'product_id'     => 'required|exists:products,id',
-                'payment_method' => 'required|string|in:wallet,manual', 
-            ];
+                    if ((float) $freshUser->balance < (float) $product->price) {
+                        throw new \RuntimeException('Saldo Wiboost tidak mencukupi. Silakan top up terlebih dahulu.');
+                    }
 
-            if (in_array($product->process_type, ['api', 'manual'])) {
-                $rules['target_data'] = 'required|string|min:3';
-            } else {
-                $rules['target_data'] = 'nullable|string';
-            }
+                    $freshUser->decrement('balance', (float) $product->price);
 
-            $request->validate($rules);
-            $targetData = $request->target_data ?? '- (Menunggu Akun/Nomor Dikirim)';
+                    $transaction = Transaction::create([
+                        'invoice_number' => 'WIB-' . strtoupper(Str::random(12)),
+                        'user_id' => $freshUser->id,
+                        'product_id' => $product->id,
+                        'amount' => $product->price,
+                        'target_data' => $targetData,
+                        'payment_status' => 'paid',
+                        'order_status' => 'pending',
+                        'payment_method' => 'wallet',
+                    ]);
 
-            if ($request->payment_method === 'wallet') {
-                if ($user->balance < $product->price) {
-                    return back()->with('error', 'Saldo Wiboost tidak mencukupi. Silakan top up terlebih dahulu.');
-                }
+                    WalletHistory::create([
+                        'user_id' => $freshUser->id,
+                        'type' => 'purchase',
+                        'amount' => $product->price,
+                        'description' => 'Pembelian Produk: ' . $product->name,
+                        'invoice_number' => $transaction->invoice_number,
+                    ]);
 
-                $user->decrement('balance', $product->price);
+                    return $transaction;
+                });
 
-                $transaction = Transaction::create([
-                    'invoice_number' => 'WIB-' . strtoupper(Str::random(12)),
-                    'user_id'        => $user->id,
-                    'product_id'     => $product->id,
-                    'amount'         => $product->price,
-                    'target_data'    => $targetData,
-                    'payment_status' => 'paid',
-                    'order_status'   => 'processing',
-                    'payment_method' => 'wallet',
-                ]);
-
-                WalletHistory::create([
-                    'user_id' => $user->id,
-                    'type' => 'purchase',
-                    'amount' => $product->price,
-                    'description' => 'Pembelian Produk: ' . $product->name,
-                    'invoice_number' => $transaction->invoice_number,
-                ]);
-
-                $this->processFulfillment($transaction);
+                $orderFulfillmentService->handlePaidTransaction($transaction->fresh(['product', 'user']));
 
                 return redirect()->route('user.history')
-                                 ->with('success', 'Pesanan berhasil diproses!')
-                                 ->with('new_trx_id', $transaction->id);
+                    ->with('success', 'Pesanan berhasil dibuat dan langsung diproses.')
+                    ->with('new_trx_id', $transaction->id);
             }
 
             $transaction = Transaction::create([
                 'invoice_number' => 'WIB-' . strtoupper(Str::random(12)),
-                'user_id'        => $user->id,
-                'product_id'     => $product->id,
-                'amount'         => $product->price,
-                'target_data'    => $targetData,
+                'user_id' => $user->id,
+                'product_id' => $product->id,
+                'amount' => $product->price,
+                'target_data' => $targetData,
                 'payment_status' => 'unpaid',
-                'order_status'   => 'pending',
+                'order_status' => 'pending',
                 'payment_method' => 'manual',
             ]);
 
-            $midtransService = new MidtransService();
-            $snapToken = $midtransService->getSnapToken($transaction);
+            $snapToken = $midtransService->getTransactionSnapToken($transaction->fresh(['product', 'user']), $user);
             $transaction->update(['snap_token' => $snapToken]);
 
             return view('user.checkout', [
-                'transaction' => $transaction,
-                'snapToken'   => $snapToken
+                'transaction' => $transaction->fresh(['product', 'user']),
+                'snapToken' => $snapToken,
             ]);
-
-        } catch (Exception $e) {
-            return back()->with('error', 'Gagal memproses pesanan: ' . $e->getMessage());
-        }
-    }
-
-    private function processFulfillment($transaction)
-    {
-        $product = $transaction->product;
-
-        if ($product->process_type === 'api') {
-            $orderSosmed = new OrderSosmedService();
-            $quantity = 1000; 
-            $apiResponse = $orderSosmed->placeOrder($product->provider_product_id, $transaction->target_data, $quantity);
-            
-            if ($apiResponse['success']) {
-                $transaction->update(['order_status' => 'success']);
-                User::find($transaction->user_id)?->increment('points', 1); // TAMBAH 1 POIN
-            } else {
-                $transaction->update([
-                    'order_status' => 'failed',
-                    'target_notes' => 'Gagal hit API: ' . $apiResponse['message'] . ' (Saldo Otomatis Dikembalikan)'
-                ]);
-                
-                if ($transaction->payment_status === 'paid') {
-                    $user = User::find($transaction->user_id);
-                    if ($user) {
-                        $user->increment('balance', $transaction->amount);
-                        WalletHistory::create([
-                            'user_id' => $user->id,
-                            'type' => 'refund',
-                            'amount' => $transaction->amount,
-                            'description' => 'Refund Pembelian Gagal: ' . $product->name,
-                            'invoice_number' => $transaction->invoice_number,
-                        ]);
-                    }
-                }
-            }
-        } 
-        elseif ($product->process_type === 'account' || $product->process_type === 'number') {
-            $credential = ProductCredential::where('product_id', $product->id)
-                ->where('is_active', true)
-                ->whereColumn('current_usage', '<', 'max_usage')
-                ->first();
-
-            if ($credential) {
-                $credential->increment('current_usage');
-                $transaction->update([
-                    'order_status' => 'success',
-                    'credential_data' => json_encode([
-                        'email'    => ($credential->data_1 !== '-' && $credential->data_1 !== null) ? $credential->data_1 : null,
-                        'password' => $credential->data_2,
-                        'profile'  => $credential->data_3,
-                        'pin'      => $credential->data_4,
-                        'link'     => $credential->data_5,
-                        'type'     => $product->process_type
-                    ])
-                ]);
-                User::find($transaction->user_id)?->increment('points', 1); // TAMBAH 1 POIN
-            } else {
-                $transaction->update(['order_status' => 'pending']);
-            }
-        } 
-        elseif ($product->process_type === 'manual') {
-            $transaction->update(['order_status' => 'processing']);
+        } catch (Throwable $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Gagal memproses pesanan: ' . $e->getMessage());
         }
     }
 }

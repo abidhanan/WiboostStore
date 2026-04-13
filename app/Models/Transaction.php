@@ -21,6 +21,12 @@ class Transaction extends Model
         'credential_data', // <-- TAMBAHAN VITAL: Untuk menyimpan data akun/nomor luar ✨
     ];
 
+    protected $casts = [
+        'amount' => 'decimal:2',
+        'response_data' => 'array',
+        'credential_data' => 'array',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
