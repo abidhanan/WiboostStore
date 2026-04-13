@@ -87,6 +87,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('categories', CategoryController::class);
     
     // Produk & Manajemen Stok Kredensial (Akun Premium/Nomor Luar)
+    Route::post('/products/sync/digiflazz', [ProductController::class, 'syncDigiflazz'])->name('products.sync.digiflazz');
+    Route::post('/products/sync/ordersosmed', [ProductController::class, 'syncOrderSosmed'])->name('products.sync.ordersosmed');
     Route::resource('products', ProductController::class);
     Route::get('/products/{product}/credentials', [CredentialController::class, 'index'])->name('credentials.index');
     Route::post('/products/{product}/credentials', [CredentialController::class, 'store'])->name('credentials.store');

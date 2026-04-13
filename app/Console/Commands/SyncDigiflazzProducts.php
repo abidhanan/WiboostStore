@@ -111,22 +111,52 @@ class SyncDigiflazzProducts extends Command
     {
         $brand = strtolower((string) ($item['brand'] ?? ''));
         $category = strtolower((string) ($item['category'] ?? ''));
-        $preferredCategoryId = $defaultCategoryId;
+        $utilityKeywords = ['pulsa', 'data', 'kuota', 'paket', 'internet', 'e-money'];
+        $utilityBrands = ['dana', 'gopay', 'ovo', 'shopeepay', 'linkaja', 'axis', 'telkomsel', 'by.u', 'tri', 'indosat', 'smartfren', 'xl'];
+        $gameKeywords = ['games', 'game', 'voucher'];
+        $gameBrands = ['pubg', 'valorant', 'steam', 'point blank', 'arena of valor', 'call of duty', 'genshin'];
 
-        if (str_contains($brand, 'mobile legends')) {
-            $preferredCategoryId = 8;
-        } elseif (str_contains($brand, 'free fire')) {
-            $preferredCategoryId = 9;
-        } elseif (str_contains($brand, 'pubg')) {
-            $preferredCategoryId = 10;
-        } elseif (str_contains($category, 'pulsa')) {
-            $preferredCategoryId = 2;
-        } elseif (str_contains($category, 'e-money') || str_contains($brand, 'dana') || str_contains($brand, 'gopay')) {
-            $preferredCategoryId = 3;
+        if (str_contains($brand, 'mobile legends') || str_contains($brand, 'mobilelegend')) {
+            return $this->categoryIdBySlug('mobile-legends', $defaultCategoryId);
         }
 
-        return Category::query()->whereKey($preferredCategoryId)->exists()
-            ? $preferredCategoryId
-            : $defaultCategoryId;
+        if (str_contains($brand, 'free fire') || str_contains($brand, 'freefire')) {
+            return $this->categoryIdBySlug('free-fire', $defaultCategoryId);
+        }
+
+        if (str_contains($brand, 'netflix')) {
+            return $this->categoryIdBySlug('netflix', $defaultCategoryId);
+        }
+
+        foreach ($utilityKeywords as $keyword) {
+            if (str_contains($category, $keyword)) {
+                return $this->categoryIdBySlug('kuota-murah', $defaultCategoryId);
+            }
+        }
+
+        foreach ($utilityBrands as $keyword) {
+            if (str_contains($brand, $keyword)) {
+                return $this->categoryIdBySlug('kuota-murah', $defaultCategoryId);
+            }
+        }
+
+        foreach ($gameKeywords as $keyword) {
+            if (str_contains($category, $keyword)) {
+                return $this->categoryIdBySlug('top-up-game', $defaultCategoryId);
+            }
+        }
+
+        foreach ($gameBrands as $keyword) {
+            if (str_contains($brand, $keyword)) {
+                return $this->categoryIdBySlug('top-up-game', $defaultCategoryId);
+            }
+        }
+
+        return $defaultCategoryId;
+    }
+
+    protected function categoryIdBySlug(string $slug, int $fallbackId): int
+    {
+        return Category::query()->where('slug', $slug)->value('id') ?? $fallbackId;
     }
 }

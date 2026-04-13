@@ -68,10 +68,16 @@ class DigiflazzService
             ]);
 
             $body = $response->json() ?? [];
+            $data = $body['data'] ?? [];
+            $success = $response->successful()
+                && (
+                    (is_array($data) && array_is_list($data))
+                    || in_array((string) ($data['rc'] ?? $body['rc'] ?? ''), ['00', '0'], true)
+                );
 
             return [
-                'success' => $response->successful(),
-                'message' => $body['data']['message'] ?? $body['message'] ?? null,
+                'success' => $success,
+                'message' => $data['message'] ?? $body['message'] ?? null,
                 'raw' => $body,
             ];
         } catch (Throwable $e) {

@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\DigiflazzService;
+use App\Services\OrderSosmedService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -161,6 +162,75 @@ class WiboostOperationsCommandTest extends TestCase
         $this->assertSame('digiflazz', $existingProduct->provider_source);
         $this->assertSame('Mobile Legends 86 Diamonds', $existingProduct->name);
         $this->assertSame(11000.0, (float) $existingProduct->price);
+    }
+
+    public function test_sync_ordersosmed_command_imports_services_into_products(): void
+    {
+        $this->seedCategory(1, 'suntik-sosmed');
+
+        $this->mock(OrderSosmedService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('getServices')
+                ->once()
+                ->andReturn([
+                    'success' => true,
+                    'message' => 'OK',
+                    'data' => [[
+                        'id' => 1234,
+                        'name' => 'Instagram Followers Indonesia',
+                        'category' => 'Instagram',
+                        'rate' => 25000,
+                        'min' => 100,
+                        'max' => 10000,
+                        'description' => 'Fast refill',
+                    ]],
+                ]);
+        });
+
+        $this->artisan('sync:ordersosmed')
+            ->assertExitCode(0);
+
+        $product = Product::where('provider_product_id', '1234')->first();
+
+        $this->assertNotNull($product);
+        $this->assertSame('ordersosmed', $product->provider_source);
+        $this->assertSame(1, $product->category_id);
+        $this->assertSame(100, $product->provider_quantity);
+        $this->assertSame(2800.0, (float) $product->price);
+    }
+
+    public function test_sync_digiflazz_command_maps_utility_products_to_kuota_category_when_slug_exists(): void
+    {
+        $this->seedCategory(1, 'default-category');
+        $this->seedCategory(3, 'kuota-murah');
+
+        $this->mock(DigiflazzService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('getPriceList')
+                ->once()
+                ->andReturn([
+                    'success' => true,
+                    'message' => 'OK',
+                    'raw' => [
+                        'data' => [[
+                            'buyer_sku_code' => 'ax-data',
+                            'product_name' => 'Axis Data 2 GB',
+                            'desc' => 'Paket data Axis',
+                            'price' => 10000,
+                            'buyer_product_status' => true,
+                            'seller_product_status' => true,
+                            'brand' => 'AXIS',
+                            'category' => 'Data',
+                        ]],
+                    ],
+                ]);
+        });
+
+        $this->artisan('sync:digiflazz')
+            ->assertExitCode(0);
+
+        $product = Product::where('provider_product_id', 'ax-data')->first();
+
+        $this->assertNotNull($product);
+        $this->assertSame(3, $product->category_id);
     }
 
     protected function seedCategory(int $id, string $slug, ?string $name = null): void

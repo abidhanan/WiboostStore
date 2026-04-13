@@ -24,6 +24,46 @@ class OrderSosmedService
         return $this->apiUrl !== '' && $this->apiId !== '' && $this->apiKey !== '';
     }
 
+    public function getServices(): array
+    {
+        if (! $this->isConfigured()) {
+            return [
+                'success' => false,
+                'message' => 'Kredensial OrderSosmed belum diatur.',
+                'data' => [],
+            ];
+        }
+
+        try {
+            $response = Http::asForm()->timeout(30)->acceptJson()->post($this->apiUrl, [
+                'api_id' => $this->apiId,
+                'api_key' => $this->apiKey,
+                'action' => 'services',
+            ]);
+
+            $body = $response->json() ?? [];
+            $data = $body['data'] ?? $body['services'] ?? $body;
+            $services = is_array($data) && array_is_list($data) ? $data : [];
+            $success = $response->successful() && $services !== [];
+            $message = $body['message'] ?? ($success ? 'Daftar layanan berhasil diambil.' : 'Provider tidak mengembalikan daftar layanan.');
+
+            return [
+                'success' => $success,
+                'message' => $message,
+                'data' => $services,
+                'raw' => $body,
+            ];
+        } catch (Throwable $e) {
+            Log::error('OrderSosmed getServices error: ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Koneksi ke OrderSosmed gagal.',
+                'data' => [],
+            ];
+        }
+    }
+
     public function placeOrder(string $providerServiceId, string $target, int $quantity = 1): array
     {
         if (! $this->isConfigured()) {

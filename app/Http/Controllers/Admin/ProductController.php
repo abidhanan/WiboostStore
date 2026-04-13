@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -90,6 +91,16 @@ class ProductController extends Controller
         return back()->with('success', 'Produk berhasil dihapus.');
     }
 
+    public function syncDigiflazz()
+    {
+        return $this->runSyncCommand('sync:digiflazz', 'Digiflazz');
+    }
+
+    public function syncOrderSosmed()
+    {
+        return $this->runSyncCommand('sync:ordersosmed', 'OrderSosmed');
+    }
+
     protected function validateProduct(Request $request, ?int $productId = null): array
     {
         return $request->validate([
@@ -144,5 +155,38 @@ class ProductController extends Controller
             'is_active' => $validated['is_active'],
             'status' => ((int) $validated['is_active']) === 1 ? 'active' : 'inactive',
         ];
+    }
+
+    protected function runSyncCommand(string $command, string $providerLabel)
+    {
+        try {
+            $exitCode = Artisan::call($command);
+            $output = trim((string) Artisan::output());
+            $message = $this->shortenOutput($output);
+
+            if ($exitCode === 0) {
+                return redirect()->route('admin.products.index')
+                    ->with('success', trim("{$providerLabel} berhasil disinkronkan. {$message}"));
+            }
+
+            return redirect()->route('admin.products.index')
+                ->with('error', trim("{$providerLabel} gagal disinkronkan. {$message}"));
+        } catch (\Throwable $e) {
+            return redirect()->route('admin.products.index')
+                ->with('error', "{$providerLabel} gagal dijalankan: {$e->getMessage()}");
+        }
+    }
+
+    protected function shortenOutput(string $output): string
+    {
+        if ($output === '') {
+            return '';
+        }
+
+        return Str::of($output)
+            ->replaceMatches('/\s+/', ' ')
+            ->trim()
+            ->limit(220, '...')
+            ->value();
     }
 }
