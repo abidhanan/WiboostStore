@@ -135,16 +135,32 @@ class ProductController extends Controller
     {
         $requiresTargetInput = in_array($validated['process_type'], ['api', 'manual'], true);
         $usesInventory = in_array($validated['process_type'], ['account', 'number'], true);
+        $shouldPreserveProvider = $validated['process_type'] !== 'api'
+            && $product
+            && filled($product->provider_source)
+            && filled($product->provider_product_id);
+
+        $providerSource = $validated['process_type'] === 'api'
+            ? ($validated['provider_source'] ?? null)
+            : ($shouldPreserveProvider ? $product->provider_source : null);
+
+        $providerProductId = $validated['process_type'] === 'api'
+            ? $validated['provider_product_id']
+            : ($shouldPreserveProvider ? $product->provider_product_id : null);
+
+        $providerQuantity = $validated['process_type'] === 'api'
+            ? max(1, (int) ($validated['provider_quantity'] ?? 1))
+            : ($shouldPreserveProvider ? max(1, (int) ($product->provider_quantity ?? 1)) : 1);
 
         return [
             'name' => $validated['name'],
             'slug' => Str::slug($validated['name']) . '-' . Str::random(5),
             'category_id' => $validated['category_id'],
             'price' => $validated['price'],
-            'provider_product_id' => $validated['process_type'] === 'api' ? $validated['provider_product_id'] : null,
-            'provider_source' => $validated['process_type'] === 'api' ? ($validated['provider_source'] ?? null) : null,
-            'provider_id' => $validated['process_type'] === 'api' ? ($validated['provider_source'] ?? null) : null,
-            'provider_quantity' => $validated['process_type'] === 'api' ? max(1, (int) ($validated['provider_quantity'] ?? 1)) : 1,
+            'provider_product_id' => $providerProductId,
+            'provider_source' => $providerSource,
+            'provider_id' => $providerSource,
+            'provider_quantity' => $providerQuantity,
             'process_type' => $validated['process_type'],
             'target_label' => $requiresTargetInput ? ($validated['target_label'] ?? null) : null,
             'target_placeholder' => $requiresTargetInput ? ($validated['target_placeholder'] ?? null) : null,

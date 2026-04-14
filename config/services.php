@@ -55,6 +55,7 @@ return [
         'api_url' => env('ORDERSOSMED_API_URL'),
         'api_id'  => env('ORDERSOSMED_API_ID'),
         'api_key' => env('ORDERSOSMED_API_KEY'),
+        'secret_key' => env('ORDERSOSMED_SECRET_KEY'),
     ],
 
     'discord' => [

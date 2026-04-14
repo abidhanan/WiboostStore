@@ -60,6 +60,7 @@ class SyncDigiflazzProducts extends Command
                 $categoryId = $this->resolveCategoryId($item, $defaultCategoryId);
 
                 $product = Product::firstOrNew([
+                    'provider_source' => 'digiflazz',
                     'provider_product_id' => (string) $item['buyer_sku_code'],
                 ]);
 

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\OrderSosmedGuestCatalogService;
 use App\Services\OrderSosmedService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -15,7 +16,10 @@ class SyncOrderSosmedServices extends Command
 
     protected $description = 'Sync layanan dari OrderSosmed ke database Wiboost';
 
-    public function handle(OrderSosmedService $orderSosmedService): int
+    public function handle(
+        OrderSosmedService $orderSosmedService,
+        OrderSosmedGuestCatalogService $guestCatalogService
+    ): int
     {
         $defaultCategoryId = Category::query()
             ->where('slug', 'suntik-sosmed')
@@ -29,12 +33,24 @@ class SyncOrderSosmedServices extends Command
 
         $this->info('Mengambil daftar layanan dari OrderSosmed...');
         $response = $orderSosmedService->getServices();
+        $syncMode = 'api';
+
+        if (! ($response['success'] ?? false) || empty($response['data'])) {
+            $this->warn('Endpoint API private OrderSosmed belum merespons daftar layanan. Beralih ke katalog publik...');
+            $response = $guestCatalogService->getServices();
+            $syncMode = 'guest';
+        }
+
         $services = collect($response['data'] ?? []);
 
         if (! ($response['success'] ?? false) || $services->isEmpty()) {
             $this->error('Gagal ambil layanan OrderSosmed: ' . ($response['message'] ?? 'Unknown error'));
 
             return self::FAILURE;
+        }
+
+        if ($syncMode === 'guest') {
+            $this->warn('Mode fallback aktif: katalog publik berhasil diimpor. Produk OrderSosmed akan disiapkan sebagai pesanan manual sampai endpoint API private dikonfirmasi.');
         }
 
         $total = $services->count();
@@ -47,7 +63,9 @@ class SyncOrderSosmedServices extends Command
         foreach ($services as $service) {
             try {
                 $providerProductId = $this->resolveProviderProductId($service);
-                $name = trim((string) ($service['name'] ?? $service['service_name'] ?? $service['service'] ?? ''));
+                $name = $this->normalizeProductName(
+                    (string) ($service['name'] ?? $service['service_name'] ?? $service['service'] ?? '')
+                );
 
                 if ($providerProductId === null || $name === '') {
                     $failed++;
@@ -61,11 +79,11 @@ class SyncOrderSosmedServices extends Command
                     ? ceil(($basePrice * 1.10) / 100) * 100
                     : 0;
 
-                $categoryId = $this->resolveCategoryId((string) ($service['category'] ?? $service['type'] ?? ''), $defaultCategoryId);
+                $categoryId = $this->resolveCategoryId($service, $defaultCategoryId);
+                $targetMeta = $this->resolveTargetMeta($service, $syncMode);
+                $processType = $syncMode === 'api' ? 'api' : 'manual';
 
-                $product = Product::firstOrNew([
-                    'provider_product_id' => $providerProductId,
-                ]);
+                $product = $this->findExistingProduct($providerProductId, $name, $syncMode);
 
                 if (! $product->exists && blank($product->slug)) {
                     $product->slug = Str::slug($name) . '-' . Str::random(5);
@@ -76,14 +94,14 @@ class SyncOrderSosmedServices extends Command
                     'provider_id' => 'ordersosmed',
                     'provider_source' => 'ordersosmed',
                     'provider_quantity' => $providerQuantity,
-                    'process_type' => 'api',
+                    'process_type' => $processType,
                     'name' => $name,
-                    'description' => $this->buildDescription($service),
+                    'description' => $this->buildDescription($service, $syncMode),
                     'price' => $sellingPrice,
                     'provider_product_id' => $providerProductId,
-                    'target_label' => 'Link atau username target',
-                    'target_placeholder' => 'Contoh: https://instagram.com/username',
-                    'target_hint' => 'Gunakan username atau link publik yang aktif agar pesanan tidak gagal.',
+                    'target_label' => $targetMeta['label'],
+                    'target_placeholder' => $targetMeta['placeholder'],
+                    'target_hint' => $targetMeta['hint'],
                     'is_active' => $sellingPrice > 0,
                     'status' => $sellingPrice > 0 ? 'active' : 'inactive',
                     'stock_reminder' => 0,
@@ -104,6 +122,7 @@ class SyncOrderSosmedServices extends Command
         $bar->finish();
         $this->info("\n\nLayanan OrderSosmed selesai disinkronkan.");
         $this->info("Berhasil: {$success}");
+        $this->info('Mode sync: ' . ($syncMode === 'api' ? 'API private' : 'Katalog publik (manual order)'));
 
         if ($failed > 0) {
             $this->warn("Gagal: {$failed}");
@@ -116,7 +135,17 @@ class SyncOrderSosmedServices extends Command
     {
         $id = $service['id'] ?? $service['service'] ?? $service['service_id'] ?? null;
 
-        return filled($id) ? (string) $id : null;
+        if (! filled($id)) {
+            return null;
+        }
+
+        $catalogType = $service['_ordersosmed_catalog_type'] ?? null;
+
+        if (filled($catalogType)) {
+            return $catalogType . ':' . $id;
+        }
+
+        return (string) $id;
     }
 
     protected function resolveProviderQuantity(array $service): int
@@ -128,6 +157,12 @@ class SyncOrderSosmedServices extends Command
 
     protected function resolveBasePrice(array $service, int $providerQuantity): float
     {
+        if (($service['_ordersosmed_pricing_mode'] ?? null) === 'per_1000') {
+            $rate = (float) ($service['rate'] ?? 0);
+
+            return $rate > 0 ? max(0, ($rate / 1000) * $providerQuantity) : 0;
+        }
+
         if (isset($service['price']) && is_numeric($service['price'])) {
             return (float) $service['price'];
         }
@@ -141,26 +176,140 @@ class SyncOrderSosmedServices extends Command
         return max(0, ($rate / 1000) * $providerQuantity);
     }
 
-    protected function resolveCategoryId(string $providerCategory, int $defaultCategoryId): int
+    protected function resolveCategoryId(array $service, int $defaultCategoryId): int
     {
-        $category = strtolower($providerCategory);
+        $catalogType = strtolower((string) ($service['_ordersosmed_catalog_type'] ?? 'sosmed'));
+        $category = strtolower((string) ($service['category'] ?? $service['type'] ?? ''));
+        $name = strtolower((string) ($service['name'] ?? $service['service_name'] ?? ''));
 
-        if (str_contains($category, 'buzzer')) {
+        if ($catalogType === 'games') {
+            if (str_contains($name, 'mobile legends') || str_contains($name, 'mobilelegend')) {
+                return Category::query()->where('slug', 'mobile-legends')->value('id') ?? $this->categoryIdBySlug('top-up-game', $defaultCategoryId);
+            }
+
+            if (str_contains($name, 'free fire') || str_contains($name, 'freefire')) {
+                return Category::query()->where('slug', 'free-fire')->value('id') ?? $this->categoryIdBySlug('top-up-game', $defaultCategoryId);
+            }
+
+            if (str_contains($name, 'netflix')) {
+                return $this->categoryIdBySlug('netflix', $defaultCategoryId);
+            }
+
+            return $this->categoryIdBySlug('top-up-game', $defaultCategoryId);
+        }
+
+        if ($catalogType === 'prepaid') {
+            if (str_contains($name, 'netflix')) {
+                return $this->categoryIdBySlug('netflix', $defaultCategoryId);
+            }
+
+            return $this->categoryIdBySlug('kuota-murah', $defaultCategoryId);
+        }
+
+        if (str_contains($category, 'buzzer') || str_contains($name, 'buzzer')) {
             return Category::query()->where('slug', 'buzzer')->value('id') ?? $defaultCategoryId;
         }
 
         return Category::query()->where('slug', 'suntik-sosmed')->value('id') ?? $defaultCategoryId;
     }
 
-    protected function buildDescription(array $service): string
+    protected function buildDescription(array $service, string $syncMode): string
     {
         $chunks = array_filter([
             $service['description'] ?? null,
             $service['note'] ?? null,
+            isset($service['category']) ? 'Kategori provider: ' . $service['category'] : null,
             isset($service['min']) ? 'Minimum order: ' . $service['min'] : null,
             isset($service['max']) ? 'Maximum order: ' . $service['max'] : null,
+            $syncMode === 'guest'
+                ? 'Sinkron dari katalog publik OrderSosmed. Pemrosesan pesanan sementara dilakukan manual oleh admin.'
+                : null,
         ]);
 
         return $chunks !== [] ? implode("\n", $chunks) : 'Layanan otomatis dari provider OrderSosmed.';
+    }
+
+    protected function resolveTargetMeta(array $service, string $syncMode): array
+    {
+        $catalogType = strtolower((string) ($service['_ordersosmed_catalog_type'] ?? 'sosmed'));
+
+        $meta = match ($catalogType) {
+            'games' => [
+                'label' => 'User ID / server / nomor tujuan',
+                'placeholder' => 'Contoh: 12345678(1234) atau nomor tujuan',
+                'hint' => 'Masukkan user ID, server, atau nomor tujuan sesuai kebutuhan layanan game yang dipilih.',
+            ],
+            'prepaid' => [
+                'label' => 'Nomor tujuan / customer ID',
+                'placeholder' => 'Contoh: 081234567890 atau customer ID PLN',
+                'hint' => 'Masukkan nomor tujuan atau customer ID yang benar agar pesanan tidak gagal.',
+            ],
+            default => [
+                'label' => 'Link atau username target',
+                'placeholder' => 'Contoh: https://instagram.com/username',
+                'hint' => 'Gunakan username atau link publik yang aktif agar pesanan tidak gagal.',
+            ],
+        };
+
+        if ($syncMode === 'guest') {
+            $meta['hint'] .= ' Saat ini pesanan OrderSosmed diproses manual oleh admin sambil menunggu endpoint API private provider dikonfirmasi.';
+        }
+
+        return $meta;
+    }
+
+    protected function categoryIdBySlug(string $slug, int $fallbackId): int
+    {
+        return Category::query()->where('slug', $slug)->value('id') ?? $fallbackId;
+    }
+
+    protected function normalizeProductName(string $name): string
+    {
+        $name = trim($name);
+
+        if ($name === '') {
+            return '';
+        }
+
+        return trim(Str::substr($name, 0, 255));
+    }
+
+    protected function findExistingProduct(string $providerProductId, string $name, string $syncMode): Product
+    {
+        $exactMatch = Product::query()
+            ->where('provider_source', 'ordersosmed')
+            ->where('provider_product_id', $providerProductId)
+            ->first();
+
+        if ($exactMatch) {
+            return $exactMatch;
+        }
+
+        if ($syncMode === 'api') {
+            $suffixMatches = Product::query()
+                ->where('provider_source', 'ordersosmed')
+                ->where('provider_product_id', 'like', '%:' . $providerProductId)
+                ->get();
+
+            if ($suffixMatches->count() === 1) {
+                return $suffixMatches->first();
+            }
+
+            $nameMatch = Product::query()
+                ->where('provider_source', 'ordersosmed')
+                ->where('process_type', 'manual')
+                ->where('name', $name)
+                ->orderByDesc('updated_at')
+                ->first();
+
+            if ($nameMatch) {
+                return $nameMatch;
+            }
+        }
+
+        return new Product([
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => $providerProductId,
+        ]);
     }
 }
