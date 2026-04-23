@@ -21,6 +21,7 @@ class ManualOrderController extends Controller
             $query->where(function ($innerQuery) use ($request) {
                 $innerQuery->where('invoice_number', 'like', '%' . $request->search . '%')
                     ->orWhere('target_data', 'like', '%' . $request->search . '%')
+                    ->orWhere('order_input_data', 'like', '%' . $request->search . '%')
                     ->orWhereHas('user', function ($userQuery) use ($request) {
                         $userQuery->where('name', 'like', '%' . $request->search . '%');
                     });

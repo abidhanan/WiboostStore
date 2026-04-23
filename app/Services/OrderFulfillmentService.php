@@ -57,7 +57,7 @@ class OrderFulfillmentService
                 'type' => $product?->process_type,
             ],
             'target_notes' => $credential->needs_otp
-                ? 'Silakan hubungi admin untuk meminta OTP atau akses tambahan.'
+                ? 'Pesanan ini membutuhkan bantuan admin atau link tutorial tambahan untuk OTP / akses login.'
                 : 'Data pesanan berhasil dikirim ke akun kamu.',
         ]);
 

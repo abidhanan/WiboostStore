@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Console;
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\User;
@@ -11,6 +12,7 @@ use App\Services\OrderSosmedService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
@@ -83,7 +85,34 @@ class WiboostOperationsCommandTest extends TestCase
             'services.ordersosmed.api_key' => 'demo-key',
             'midtrans.server_key' => 'midtrans-server',
             'midtrans.client_key' => 'midtrans-client',
+            'wiboost.public_url' => 'https://demo.ngrok-free.app',
         ]);
+
+        $this->mock(DigiflazzService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('isConfigured')->andReturn(true);
+            $mock->shouldReceive('getBalance')
+                ->once()
+                ->andReturn([
+                    'success' => true,
+                    'raw' => [
+                        'data' => [
+                            'deposit' => 150000,
+                        ],
+                    ],
+                ]);
+        });
+
+        $this->mock(OrderSosmedService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('isConfigured')->andReturn(true);
+            $mock->shouldReceive('getProfile')
+                ->once()
+                ->andReturn([
+                    'success' => true,
+                    'data' => [
+                        'balance' => 200000,
+                    ],
+                ]);
+        });
 
         Http::fake([
             'https://discord.test/*' => Http::response(['ok' => true], 204),
@@ -109,7 +138,8 @@ class WiboostOperationsCommandTest extends TestCase
             $payload = $request->data();
 
             return $request->url() === 'https://discord.test/webhook'
-                && ($payload['embeds'][0]['title'] ?? null) === 'Laporan maintenance Wiboost';
+                && ($payload['embeds'][0]['title'] ?? null) === 'Laporan maintenance Wiboost'
+                && str_contains(($payload['embeds'][0]['fields'][6]['value'] ?? ''), 'Midtrans');
         });
     }
 
@@ -123,6 +153,9 @@ class WiboostOperationsCommandTest extends TestCase
         ]);
 
         Http::fake([
+            'https://ordersosmed.id/api-1' => Http::response([
+                'message' => 'Not found',
+            ], 404),
             'https://ordersosmed.id/api-1/service' => Http::response([
                 'data' => [[
                     'id' => 1234,
@@ -137,6 +170,40 @@ class WiboostOperationsCommandTest extends TestCase
 
         Http::assertSent(function ($request) {
             return $request->url() === 'https://ordersosmed.id/api-1/service'
+                && ($request['api_id'] ?? null) === 'demo-id'
+                && ($request['api_key'] ?? null) === 'demo-key'
+                && ($request['secret_key'] ?? null) === 'demo-secret';
+        });
+    }
+
+    public function test_ordersosmed_service_uses_api_1_profile_endpoint_with_secret_key(): void
+    {
+        config([
+            'services.ordersosmed.api_url' => 'https://ordersosmed.id/api-1',
+            'services.ordersosmed.api_id' => 'demo-id',
+            'services.ordersosmed.api_key' => 'demo-key',
+            'services.ordersosmed.secret_key' => 'demo-secret',
+        ]);
+
+        Http::fake([
+            'https://ordersosmed.id/api-1' => Http::response([
+                'message' => 'Not found',
+            ], 404),
+            'https://ordersosmed.id/api-1/profile' => Http::response([
+                'data' => [
+                    'balance' => 200000,
+                    'username' => 'demo-user',
+                ],
+            ], 200),
+        ]);
+
+        $response = app(OrderSosmedService::class)->getProfile();
+
+        $this->assertTrue($response['success']);
+        $this->assertSame(200000, $response['data']['balance']);
+
+        Http::assertSent(function ($request) {
+            return $request->url() === 'https://ordersosmed.id/api-1/profile'
                 && ($request['api_id'] ?? null) === 'demo-id'
                 && ($request['api_key'] ?? null) === 'demo-key'
                 && ($request['secret_key'] ?? null) === 'demo-secret';
@@ -336,10 +403,45 @@ class WiboostOperationsCommandTest extends TestCase
         $this->assertSame(3, $product->category_id);
     }
 
-    public function test_sync_ordersosmed_command_falls_back_to_public_catalog_and_marks_products_manual(): void
+    public function test_sync_digiflazz_command_skips_unsupported_products_outside_game_and_quota_catalog(): void
+    {
+        $this->seedCategory(1, 'default-category');
+        $this->seedCategory(2, 'top-up-game');
+        $this->seedCategory(3, 'kuota-murah');
+
+        $this->mock(DigiflazzService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('getPriceList')
+                ->once()
+                ->andReturn([
+                    'success' => true,
+                    'message' => 'OK',
+                    'raw' => [
+                        'data' => [[
+                            'buyer_sku_code' => 'pln100',
+                            'product_name' => 'PLN 100.000',
+                            'desc' => 'Masukkan nomor meter',
+                            'price' => 100000,
+                            'buyer_product_status' => true,
+                            'seller_product_status' => true,
+                            'brand' => 'PLN',
+                            'category' => 'PLN',
+                        ]],
+                    ],
+                ]);
+        });
+
+        $this->artisan('sync:digiflazz')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseMissing('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'pln100',
+        ]);
+    }
+
+    public function test_sync_ordersosmed_command_falls_back_to_public_catalog_and_marks_sosmed_products_manual(): void
     {
         $this->seedCategory(1, 'suntik-sosmed');
-        $this->seedCategory(2, 'kuota-murah');
 
         $this->mock(OrderSosmedService::class, function (MockInterface $mock) {
             $mock->shouldReceive('getServices')
@@ -354,19 +456,20 @@ class WiboostOperationsCommandTest extends TestCase
         $this->mock(OrderSosmedGuestCatalogService::class, function (MockInterface $mock) {
             $mock->shouldReceive('getServices')
                 ->once()
+                ->with(['sosmed'])
                 ->andReturn([
                     'success' => true,
                     'message' => 'OK',
                     'data' => [[
                         'id' => 406,
-                        'name' => 'Tri Data 100 MB 30 Hari',
-                        'category' => 'Pulsa',
-                        'price' => 845,
-                        'min' => 1,
-                        'max' => 1,
-                        'description' => 'Kategori OrderSosmed: Pulsa',
-                        '_ordersosmed_catalog_type' => 'prepaid',
-                        '_ordersosmed_pricing_mode' => 'flat',
+                        'name' => 'Instagram Followers Lokal',
+                        'category' => 'Instagram',
+                        'rate' => 25000,
+                        'min' => 100,
+                        'max' => 5000,
+                        'description' => 'Kategori OrderSosmed: Instagram',
+                        '_ordersosmed_catalog_type' => 'sosmed',
+                        '_ordersosmed_pricing_mode' => 'per_1000',
                     ]],
                 ]);
         });
@@ -376,14 +479,14 @@ class WiboostOperationsCommandTest extends TestCase
 
         $product = Product::query()
             ->where('provider_source', 'ordersosmed')
-            ->where('provider_product_id', 'prepaid:406')
+            ->where('provider_product_id', 'sosmed:406')
             ->first();
 
         $this->assertNotNull($product);
         $this->assertSame('manual', $product->process_type);
-        $this->assertSame(2, $product->category_id);
-        $this->assertSame('Nomor tujuan / customer ID', $product->target_label);
-        $this->assertSame(1000.0, (float) $product->price);
+        $this->assertSame(1, $product->category_id);
+        $this->assertSame('Username akun / link postingan', $product->target_label);
+        $this->assertSame(2800.0, (float) $product->price);
     }
 
     public function test_sync_ordersosmed_command_upgrades_matching_fallback_product_to_api_mode(): void
@@ -431,6 +534,105 @@ class WiboostOperationsCommandTest extends TestCase
         $this->assertSame('api', $fallbackProduct->process_type);
         $this->assertSame('1234', $fallbackProduct->provider_product_id);
         $this->assertSame(1, Product::where('provider_source', 'ordersosmed')->count());
+    }
+
+    public function test_sync_ordersosmed_command_skips_buzzer_services(): void
+    {
+        $this->seedCategory(1, 'suntik-sosmed');
+
+        $this->mock(OrderSosmedService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('getServices')
+                ->once()
+                ->andReturn([
+                    'success' => true,
+                    'message' => 'OK',
+                    'data' => [[
+                        'id' => 9090,
+                        'name' => 'Buzzer Twitter Campaign',
+                        'category' => 'Buzzer',
+                        'rate' => 100000,
+                        'min' => 1,
+                        'max' => 1,
+                    ]],
+                ]);
+        });
+
+        $this->artisan('sync:ordersosmed')
+            ->assertExitCode(1);
+
+        $this->assertDatabaseMissing('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => '9090',
+        ]);
+    }
+
+    public function test_setup_catalog_command_creates_subcategories_with_logos_and_assigns_products(): void
+    {
+        Storage::fake('public');
+
+        $this->seedCategory(1, 'suntik-sosmed', 'Suntik Sosmed', 'auto_api');
+        $this->seedCategory(2, 'top-up-game', 'Top Up Game', 'auto_api');
+        $this->seedCategory(3, 'kuota-murah', 'Kuota Murah', 'auto_api');
+        $this->seedCategory(4, 'aplikasi-premium', 'Aplikasi Premium', 'stock_based');
+        $this->seedCategory(5, 'nomor-luar', 'Nomor Luar', 'stock_based');
+        $this->seedCategory(6, 'buzzer', 'Buzzer', 'manual_action');
+
+        $ordersosmedProduct = Product::create([
+            'category_id' => 1,
+            'provider_id' => 'ordersosmed',
+            'provider_source' => 'ordersosmed',
+            'process_type' => 'api',
+            'name' => 'Instagram Followers Indonesia',
+            'slug' => 'instagram-followers-indonesia',
+            'description' => 'Kategori provider: Instagram',
+            'price' => 2800,
+            'provider_product_id' => '1234',
+            'provider_quantity' => 100,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        $digiflazzProduct = Product::create([
+            'category_id' => 2,
+            'provider_id' => 'digiflazz',
+            'provider_source' => 'digiflazz',
+            'process_type' => 'api',
+            'name' => 'Free Fire 70 Diamond',
+            'slug' => 'free-fire-70-diamond',
+            'description' => 'Top up FF',
+            'price' => 12000,
+            'provider_product_id' => 'ff70',
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        $this->artisan('wiboost:setup-catalog')
+            ->assertExitCode(0);
+
+        $ordersosmedLeafCategory = Category::where('slug', 'sosmed-instagram-followers-indonesia')->first();
+        $freeFireCategory = Category::where('slug', 'game-free-fire')->first();
+        $premiumCategory = Category::where('slug', 'premium-netflix')->first();
+
+        $this->assertNotNull($ordersosmedLeafCategory);
+        $this->assertNotNull($freeFireCategory);
+        $this->assertNotNull($premiumCategory);
+        Storage::disk('public')->assertExists($ordersosmedLeafCategory->image);
+        Storage::disk('public')->assertExists($freeFireCategory->image);
+
+        $ordersosmedProduct->refresh();
+        $digiflazzProduct->refresh();
+
+        $this->assertSame($ordersosmedLeafCategory->id, $ordersosmedProduct->category_id);
+        $this->assertSame($freeFireCategory->id, $digiflazzProduct->category_id);
+
+        $this->assertDatabaseHas('products', [
+            'category_id' => $premiumCategory->id,
+            'name' => 'Netflix Premium Sharing',
+            'process_type' => 'account',
+            'is_active' => false,
+        ]);
     }
 
     public function test_sync_ordersosmed_command_does_not_overwrite_products_from_other_providers(): void
@@ -537,13 +739,13 @@ class WiboostOperationsCommandTest extends TestCase
         ]);
     }
 
-    protected function seedCategory(int $id, string $slug, ?string $name = null): void
+    protected function seedCategory(int $id, string $slug, ?string $name = null, string $fulfillmentType = 'manual_action'): void
     {
         DB::table('categories')->insert([
             'id' => $id,
             'name' => $name ?? ucfirst(str_replace('-', ' ', $slug)),
             'slug' => $slug,
-            'fulfillment_type' => 'manual_action',
+            'fulfillment_type' => $fulfillmentType,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

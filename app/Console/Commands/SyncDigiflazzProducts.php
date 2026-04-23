@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\DigiflazzService;
+use App\Support\WiboostCatalog;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -50,14 +51,42 @@ class SyncDigiflazzProducts extends Command
 
         $success = 0;
         $failed = 0;
+        $skipped = 0;
 
         foreach ($products as $item) {
             try {
+                $topCategorySlug = WiboostCatalog::resolveDigiflazzTopCategorySlug(
+                    (string) ($item['product_name'] ?? ''),
+                    (string) ($item['brand'] ?? ''),
+                    (string) ($item['category'] ?? ''),
+                    (string) ($item['desc'] ?? ''),
+                );
+
+                if ($topCategorySlug === null) {
+                    $skipped++;
+                    $bar->advance();
+                    continue;
+                }
+
                 $hargaModal = (float) ($item['price'] ?? 0);
                 $markup = 1.10;
                 $hargaJual = ceil(($hargaModal * $markup) / 100) * 100;
 
-                $categoryId = $this->resolveCategoryId($item, $defaultCategoryId);
+                $subcategorySlug = WiboostCatalog::resolveDigiflazzSubcategorySlug(
+                    $topCategorySlug,
+                    (string) ($item['product_name'] ?? ''),
+                    (string) ($item['brand'] ?? ''),
+                    (string) ($item['desc'] ?? ''),
+                );
+                $categoryId = $subcategorySlug
+                    ? (Category::query()->where('slug', $subcategorySlug)->value('id')
+                        ?? $this->categoryIdBySlug($topCategorySlug, $defaultCategoryId))
+                    : $this->categoryIdBySlug($topCategorySlug, $defaultCategoryId);
+                $targetMeta = WiboostCatalog::targetMetaForTopCategory($topCategorySlug) ?? [
+                    'label' => null,
+                    'placeholder' => null,
+                    'hint' => null,
+                ];
 
                 $product = Product::firstOrNew([
                     'provider_source' => 'digiflazz',
@@ -79,6 +108,10 @@ class SyncDigiflazzProducts extends Command
                     'description' => (string) ($item['desc'] ?? '-'),
                     'price' => $hargaJual,
                     'provider_product_id' => (string) $item['buyer_sku_code'],
+                    'provider_quantity' => 1,
+                    'target_label' => $targetMeta['label'],
+                    'target_placeholder' => $targetMeta['placeholder'],
+                    'target_hint' => $targetMeta['hint'],
                     'is_active' => $isActive,
                     'status' => $isActive ? 'active' : 'inactive',
                     'stock_reminder' => $product->stock_reminder ?? 0,
@@ -98,6 +131,7 @@ class SyncDigiflazzProducts extends Command
         $this->info("\n\n--- HASIL SINKRONISASI ---");
         $this->info("Total Produk: {$total}");
         $this->info("Berhasil   : {$success}");
+        $this->info("Dilewati   : {$skipped}");
 
         if ($failed > 0) {
             $this->warn("Gagal      : {$failed} (Cek storage/logs/laravel.log untuk detail)");
@@ -106,54 +140,6 @@ class SyncDigiflazzProducts extends Command
         $this->info('--- SELESAI ---');
 
         return $failed > 0 ? self::FAILURE : self::SUCCESS;
-    }
-
-    protected function resolveCategoryId(array $item, int $defaultCategoryId): int
-    {
-        $brand = strtolower((string) ($item['brand'] ?? ''));
-        $category = strtolower((string) ($item['category'] ?? ''));
-        $utilityKeywords = ['pulsa', 'data', 'kuota', 'paket', 'internet', 'e-money'];
-        $utilityBrands = ['dana', 'gopay', 'ovo', 'shopeepay', 'linkaja', 'axis', 'telkomsel', 'by.u', 'tri', 'indosat', 'smartfren', 'xl'];
-        $gameKeywords = ['games', 'game', 'voucher'];
-        $gameBrands = ['pubg', 'valorant', 'steam', 'point blank', 'arena of valor', 'call of duty', 'genshin'];
-
-        if (str_contains($brand, 'mobile legends') || str_contains($brand, 'mobilelegend')) {
-            return $this->categoryIdBySlug('mobile-legends', $defaultCategoryId);
-        }
-
-        if (str_contains($brand, 'free fire') || str_contains($brand, 'freefire')) {
-            return $this->categoryIdBySlug('free-fire', $defaultCategoryId);
-        }
-
-        if (str_contains($brand, 'netflix')) {
-            return $this->categoryIdBySlug('netflix', $defaultCategoryId);
-        }
-
-        foreach ($utilityKeywords as $keyword) {
-            if (str_contains($category, $keyword)) {
-                return $this->categoryIdBySlug('kuota-murah', $defaultCategoryId);
-            }
-        }
-
-        foreach ($utilityBrands as $keyword) {
-            if (str_contains($brand, $keyword)) {
-                return $this->categoryIdBySlug('kuota-murah', $defaultCategoryId);
-            }
-        }
-
-        foreach ($gameKeywords as $keyword) {
-            if (str_contains($category, $keyword)) {
-                return $this->categoryIdBySlug('top-up-game', $defaultCategoryId);
-            }
-        }
-
-        foreach ($gameBrands as $keyword) {
-            if (str_contains($brand, $keyword)) {
-                return $this->categoryIdBySlug('top-up-game', $defaultCategoryId);
-            }
-        }
-
-        return $defaultCategoryId;
     }
 
     protected function categoryIdBySlug(string $slug, int $fallbackId): int

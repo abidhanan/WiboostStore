@@ -97,12 +97,12 @@
                         </td>
 
                         <td class="px-4 py-5 align-top text-center">
-                            @if(in_array($trx->product->process_type ?? '', ['account', 'number']))
-                                <span class="text-[14px] font-black text-[#a3bbfb] bg-[#f0f5ff] inline-block px-4 py-1 rounded-lg border border-white shadow-inner">-</span>
-                            @else
-                                <span class="text-[11px] font-black text-[#2b3a67] bg-[#f0f5ff] inline-block px-3 py-1.5 rounded-lg border border-white shadow-inner truncate max-w-[120px] md:max-w-[150px]" title="{{ $trx->target_data }}">
-                                    {{ $trx->target_data }}
+                            @if($trx->has_order_input && filled($trx->order_input_summary))
+                                <span class="text-[11px] font-black text-[#2b3a67] bg-[#f0f5ff] inline-block px-3 py-1.5 rounded-lg border border-white shadow-inner truncate max-w-[120px] md:max-w-[150px]" title="{{ $trx->order_input_text }}">
+                                    {{ $trx->order_input_summary }}
                                 </span>
+                            @else
+                                <span class="text-[14px] font-black text-[#a3bbfb] bg-[#f0f5ff] inline-block px-4 py-1 rounded-lg border border-white shadow-inner">-</span>
                             @endif
                         </td>
                         

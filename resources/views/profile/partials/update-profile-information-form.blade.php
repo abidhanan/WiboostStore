@@ -1,7 +1,7 @@
 <section>
     <header class="mb-6">
         <h3 class="text-xl font-black text-[#2b3a67]">Informasi Profil 👤</h3>
-        <p class="text-sm font-bold text-[#8faaf3] mt-1">Perbarui nama panggilan, alamat email, dan nomor WhatsApp akunmu.</p>
+        <p class="text-sm font-bold text-[#8faaf3] mt-1">Perbarui nama panggilan, alamat email, dan nomor kontak akunmu.</p>
     </header>
 
     <form id="send-verification" method="post" action="{{ route('verification.send') }}">
@@ -43,7 +43,7 @@
         </div>
 
         <div>
-            <label for="whatsapp" class="block text-sm font-black text-[#8faaf3] mb-2 pl-2">Nomor WhatsApp</label>
+            <label for="whatsapp" class="block text-sm font-black text-[#8faaf3] mb-2 pl-2">Nomor Kontak</label>
             <input id="whatsapp" name="whatsapp" type="text" value="{{ old('whatsapp', $user->whatsapp) }}" required
                    class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]"
                    placeholder="Contoh: 081234567890">

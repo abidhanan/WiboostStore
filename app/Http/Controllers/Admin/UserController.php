@@ -28,6 +28,12 @@ class UserController extends Controller
             'whatsapp' => 'required|string|max:20',
             'password' => 'required|string|min:8',
             'role_id' => 'required|in:1,2',
+        ], [], [
+            'name' => 'nama lengkap',
+            'email' => 'email',
+            'whatsapp' => 'nomor kontak',
+            'password' => 'kata sandi',
+            'role_id' => 'role akses',
         ]);
 
         User::create([

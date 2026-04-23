@@ -6,205 +6,200 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
     .wiboost-font { font-family: 'Nunito', sans-serif; }
-    
-    .fade-in { animation: fadeIn 0.4s ease-in-out forwards; }
+    .fade-in { animation: fadeIn 0.35s ease-in-out forwards; }
+
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
     }
 </style>
 
-<div class="wiboost-font pb-24 max-w-4xl mx-auto mt-4 px-4 overflow-hidden relative">
-
+<div class="wiboost-font relative mx-auto mt-4 max-w-4xl overflow-hidden px-4 pb-24">
     @if(session('error'))
-        <div class="bg-[#ffe5e5] border-4 border-white text-[#ff6b6b] px-6 py-4 rounded-[2rem] mb-8 font-black flex items-center gap-3 shadow-sm">
-            <span class="text-2xl">⚠️</span> {{ session('error') }}
+        <div class="mb-8 flex items-center gap-3 rounded-[2rem] border-4 border-white bg-[#ffe5e5] px-6 py-4 font-black text-[#ff6b6b] shadow-sm">
+            <span class="text-2xl">!</span>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="mb-8 rounded-[2rem] border-4 border-white bg-[#ffe5e5] px-6 py-4 font-black text-[#ff6b6b] shadow-sm">
+            <p class="mb-3">Periksa lagi data pesananmu:</p>
+            <ul class="list-disc pl-6 text-sm font-bold">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
 
     <div id="page-product-list" class="transition-all duration-300">
-        
-        <div class="bg-white rounded-[2.5rem] p-6 md:p-10 shadow-lg shadow-[#bde0fe]/30 border-4 border-white mb-10 relative overflow-hidden flex flex-col md:flex-row items-center gap-6 md:gap-10">
-            <div class="absolute -right-10 -bottom-10 text-8xl opacity-10 pointer-events-none">✨</div>
-            <div class="absolute top-5 right-1/4 text-4xl opacity-20 pointer-events-none">☁️</div>
+        <div class="relative mb-10 flex flex-col items-center gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white bg-white p-6 shadow-lg shadow-[#bde0fe]/30 md:flex-row md:gap-10 md:p-10">
+            <div class="absolute -bottom-10 -right-10 text-8xl opacity-10 pointer-events-none">CAT</div>
 
-            <div class="flex items-center gap-6 w-full md:w-auto relative z-10">
-                <a href="{{ $category->parent_id ? route('user.order.category', $category->parent->slug) : route('user.dashboard') }}" class="w-12 h-12 bg-[#f0f5ff] rounded-2xl flex items-center justify-center text-[#5a76c8] hover:bg-[#e0fbfc] hover:-translate-y-1 transition-all border-2 border-white shadow-inner shrink-0">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+            <div class="relative z-10 flex w-full items-center gap-6 md:w-auto">
+                <a href="{{ $category->parent_id ? route('user.order.category', $category->parent->slug) : route('user.dashboard') }}" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-white bg-[#f0f5ff] text-[#5a76c8] shadow-inner transition-all hover:-translate-y-1 hover:bg-[#e0fbfc]">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
                 </a>
-                
-                <div class="w-24 h-24 bg-gradient-to-br from-[#f0f5ff] to-[#e0ebff] rounded-[1.5rem] border-4 border-white shadow-md flex items-center justify-center text-[#5a76c8] shrink-0 overflow-hidden">
+
+                <div class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white bg-gradient-to-br from-[#f0f5ff] to-[#e0ebff] text-[#5a76c8] shadow-md">
                     @if($category->image)
-                        <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="w-full h-full object-cover">
+                        <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="h-full w-full object-cover">
                     @else
-                        <span class="text-5xl">{{ $category->emote ?? '✨' }}</span>
+                        <span class="text-xl font-black">{{ $category->emote ?? 'CAT' }}</span>
                     @endif
                 </div>
             </div>
 
-            <div class="flex-1 text-center md:text-left relative z-10">
-                <h2 class="text-3xl md:text-4xl font-black text-[#2b3a67] tracking-tight mb-2">{{ $category->name }}</h2>
+            <div class="relative z-10 flex-1 text-center md:text-left">
+                <h2 class="mb-2 text-3xl font-black tracking-tight text-[#2b3a67] md:text-4xl">{{ $category->name }}</h2>
                 @if($category->description)
-                    <p class="text-[#4a5f96] font-bold text-sm md:text-base leading-relaxed bg-[#f4f9ff] p-4 rounded-2xl border-2 border-white shadow-inner inline-block text-left">
+                    <p class="inline-block rounded-2xl border-2 border-white bg-[#f4f9ff] p-4 text-left text-sm font-bold leading-relaxed text-[#4a5f96] md:text-base">
                         {!! nl2br(e($category->description)) !!}
                     </p>
                 @else
-                    <p class="text-[#8faaf3] font-bold">Pilih layanan di bawah ini dan selesaikan pesananmu.</p>
+                    <p class="font-bold text-[#8faaf3]">Pilih layanan di bawah ini lalu lanjutkan ke checkout.</p>
                 @endif
             </div>
         </div>
 
-        <div class="flex items-center gap-3 mb-6 pl-2">
-            <span class="text-2xl">🛍️</span>
+        <div class="mb-6 flex items-center gap-3 pl-2">
+            <span class="text-2xl">LIST</span>
             <h3 class="text-2xl font-black text-[#2b3a67]">Daftar Layanan</h3>
         </div>
 
         <div class="flex flex-col gap-3">
             @forelse($products as $product)
                 @php
-                    // Logika deteksi stok habis (Hanya untuk tipe Account & Number)
-                    $isOutOfStock = in_array($product->process_type, ['account', 'number']) && $product->available_stock <= 0;
+                    $isOutOfStock = in_array($product->process_type, ['account', 'number'], true) && ($product->available_stock ?? 0) <= 0;
+                    $plainDescription = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $product->description)));
                 @endphp
 
-                <button type="button"
+                <button
+                    type="button"
                     data-id="{{ $product->id }}"
                     data-name="{{ $product->name }}"
                     data-price="{{ $product->price }}"
-                    data-process-type="{{ $product->process_type }}"
-                    data-target-required="{{ $product->requires_target_input ? '1' : '0' }}"
-                    data-target-label="{{ $product->resolved_target_label }}"
-                    data-target-placeholder="{{ $product->resolved_target_placeholder }}"
-                    data-target-hint="{{ $product->resolved_target_hint }}"
+                    data-description="{{ $plainDescription }}"
+                    data-checkout-fields='{{ json_encode($product->checkout_fields, JSON_UNESCAPED_UNICODE) }}'
                     @if(!$isOutOfStock)
                         onclick="goToCheckout(this)"
-                        class="w-full bg-white rounded-[1.5rem] p-4 md:p-5 border-4 border-white hover:border-[#bde0fe] shadow-lg shadow-[#bde0fe]/20 flex items-center gap-4 transition-all active:scale-95 text-left group"
+                        class="group flex w-full items-center gap-4 rounded-[1.5rem] border-4 border-white bg-white p-4 text-left shadow-lg shadow-[#bde0fe]/20 transition-all active:scale-95 hover:border-[#bde0fe] md:p-5"
                     @else
                         disabled
-                        class="w-full bg-gray-50 rounded-[1.5rem] p-4 md:p-5 border-4 border-white shadow-sm flex items-center gap-4 text-left opacity-60 cursor-not-allowed grayscale relative overflow-hidden"
+                        class="relative flex w-full cursor-not-allowed items-center gap-4 overflow-hidden rounded-[1.5rem] border-4 border-white bg-gray-50 p-4 text-left opacity-60 grayscale shadow-sm md:p-5"
                     @endif
                 >
-                    
                     @if($product->image)
-                        <div class="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-xl overflow-hidden border-2 border-[#f0f5ff] shadow-sm bg-[#f4f9ff]">
-                            <img src="{{ Storage::url($product->image) }}" alt="Logo" class="w-full h-full object-cover">
+                        <div class="h-10 w-10 shrink-0 overflow-hidden rounded-xl border-2 border-[#f0f5ff] bg-[#f4f9ff] shadow-sm md:h-12 md:w-12">
+                            <img src="{{ Storage::url($product->image) }}" alt="Logo" class="h-full w-full object-cover">
                         </div>
                     @elseif($product->emote)
-                        <div class="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-xl bg-[#f0f5ff] text-[#5a76c8] flex items-center justify-center border-2 border-white shadow-inner text-2xl md:text-3xl">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-[#f0f5ff] text-2xl text-[#5a76c8] shadow-inner md:h-12 md:w-12 md:text-3xl">
                             {{ $product->emote }}
                         </div>
                     @else
-                        <div class="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-xl bg-[#f0f5ff] text-[#8faaf3] flex items-center justify-center border-2 border-white shadow-inner text-xl">
-                            @if($product->process_type == 'number') 📱 
-                            @elseif($product->process_type == 'account') 📦
-                            @elseif($product->process_type == 'api') ⚡
-                            @else 🛍️ @endif
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-[#f0f5ff] text-sm font-black text-[#8faaf3] shadow-inner md:h-12 md:w-12">
+                            {{ strtoupper($product->process_type) }}
                         </div>
                     @endif
 
-                    <span class="font-black text-[#2b3a67] text-sm md:text-lg {{ !$isOutOfStock ? 'group-hover:text-[#5a76c8]' : '' }} pr-2 flex-1 leading-tight">{{ $product->name }}</span>
-                    
+                    <div class="min-w-0 flex-1 pr-2">
+                        <span class="block text-sm font-black leading-tight text-[#2b3a67] transition-colors group-hover:text-[#5a76c8] md:text-lg">{{ $product->name }}</span>
+                        @if($plainDescription !== '')
+                            <p class="mt-1 line-clamp-2 text-xs font-bold text-[#8faaf3]">{{ $plainDescription }}</p>
+                        @endif
+                    </div>
+
                     @if($isOutOfStock)
-                        <span class="font-black text-[#ff6b6b] text-xs md:text-sm shrink-0 bg-[#ffe5e5] px-3 py-1.5 rounded-lg border border-white shadow-sm flex items-center gap-1">
-                            ⚠️ HABIS
-                        </span>
+                        <span class="shrink-0 rounded-lg border border-white bg-[#ffe5e5] px-3 py-1.5 text-xs font-black text-[#ff6b6b] shadow-sm">HABIS</span>
                     @else
-                        <span class="font-black text-[#4bc6b9] text-base md:text-xl shrink-0">Rp {{ number_format($product->price, 0, ',', '.') }}</span>
+                        <span class="shrink-0 text-base font-black text-[#4bc6b9] md:text-xl">Rp {{ number_format($product->price, 0, ',', '.') }}</span>
                     @endif
                 </button>
             @empty
-                <div class="text-center py-16 bg-white rounded-[2.5rem] border-4 border-dashed border-[#bde0fe]">
-                    <div class="text-6xl mb-4">📭</div>
-                    <p class="text-[#5a76c8] font-black text-xl">Layanan sedang kosong.</p>
+                <div class="rounded-[2.5rem] border-4 border-dashed border-[#bde0fe] bg-white py-16 text-center">
+                    <p class="text-xl font-black text-[#5a76c8]">Layanan sedang kosong.</p>
                 </div>
             @endforelse
         </div>
     </div>
 
-
     <div id="page-checkout" class="hidden transition-all duration-300">
-        
-        <button type="button" onclick="goBackToProducts()" class="mb-8 inline-flex items-center gap-2 text-[#5a76c8] font-black hover:text-[#4760a9] transition-colors bg-white px-5 py-3 rounded-full shadow-sm border-2 border-white hover:-translate-x-1 hover:shadow-md">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+        <button type="button" onclick="goBackToProducts()" class="mb-8 inline-flex items-center gap-2 rounded-full border-2 border-white bg-white px-5 py-3 font-black text-[#5a76c8] shadow-sm transition hover:-translate-x-1 hover:shadow-md">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
             Kembali ke Daftar Layanan
         </button>
 
         <div class="mb-8 pl-2">
-            <h2 class="text-3xl md:text-4xl font-black text-[#2b3a67] tracking-tight">Checkout Pesanan 🛒</h2>
-            <p class="text-[#8faaf3] font-bold mt-1">Lengkapi data tujuan dan pilih metode pembayaran.</p>
+            <h2 class="text-3xl font-black tracking-tight text-[#2b3a67] md:text-4xl">Checkout Pesanan</h2>
+            <p class="mt-1 font-bold text-[#8faaf3]">Lengkapi data buyer sesuai layanan yang dipilih lalu pilih metode pembayaran.</p>
         </div>
 
         <form action="{{ route('user.checkout.process') }}" method="POST" id="checkoutForm" onsubmit="showLoadingBtn()">
             @csrf
             <input type="hidden" name="product_id" id="checkout_product_id">
 
-            <div class="bg-gradient-to-br from-[#8faaf3] to-[#5a76c8] rounded-[2rem] p-6 md:p-8 border-4 border-white shadow-lg shadow-[#bde0fe]/40 mb-8 relative overflow-hidden text-white flex flex-col md:flex-row justify-between md:items-center gap-4">
-                <div class="absolute -right-4 -bottom-4 text-7xl opacity-20 transform rotate-12 pointer-events-none">📦</div>
-                
+            <div class="relative mb-8 flex flex-col justify-between gap-4 overflow-hidden rounded-[2rem] border-4 border-white bg-gradient-to-br from-[#8faaf3] to-[#5a76c8] p-6 text-white shadow-lg shadow-[#bde0fe]/40 md:flex-row md:items-center md:p-8">
+                <div class="absolute -bottom-4 -right-4 text-7xl opacity-20 pointer-events-none">BOX</div>
+
                 <div class="relative z-10">
-                    <span class="bg-[#e0fbfc] text-[#5a76c8] text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 inline-block shadow-sm">Layanan Terpilih</span>
-                    <h3 class="font-black text-2xl md:text-3xl drop-shadow-sm" id="checkout_product_name">Nama Produk</h3>
+                    <span class="mb-3 inline-block rounded-full bg-[#e0fbfc] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#5a76c8] shadow-sm">Layanan Terpilih</span>
+                    <h3 class="text-2xl font-black drop-shadow-sm md:text-3xl" id="checkout_product_name">Nama Produk</h3>
+                    <p id="checkout_product_description" class="mt-3 hidden max-w-2xl rounded-2xl bg-white/15 px-4 py-3 text-sm font-bold leading-relaxed text-white/90 backdrop-blur-sm"></p>
                 </div>
-                
-                <div class="relative z-10 bg-white/20 backdrop-blur-md px-6 py-4 rounded-[1.5rem] border-2 border-white/50 text-left md:text-right shrink-0">
-                    <p class="text-xs font-bold text-[#e0fbfc] uppercase tracking-widest mb-1">Total Harga</p>
-                    <p class="font-black text-2xl md:text-3xl drop-shadow-sm" id="checkout_product_price">Rp 0</p>
+
+                <div class="relative z-10 shrink-0 rounded-[1.5rem] border-2 border-white/50 bg-white/20 px-6 py-4 text-left backdrop-blur-md md:text-right">
+                    <p class="mb-1 text-xs font-bold uppercase tracking-widest text-[#e0fbfc]">Total Harga</p>
+                    <p class="text-2xl font-black drop-shadow-sm md:text-3xl" id="checkout_product_price">Rp 0</p>
                 </div>
             </div>
 
-            <div id="target_data_container" class="bg-white rounded-[2rem] shadow-lg shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-8 mb-8 relative">
-                <div class="absolute -left-3 -top-3 w-12 h-12 bg-[#5a76c8] text-white rounded-full flex items-center justify-center font-black text-xl border-4 border-[#f4f9ff] shadow-sm">1</div>
-                <h4 class="text-xl font-black text-[#2b3a67] mb-6 ml-6">Informasi Target</h4>
-                
+            <div id="checkout_fields_section" class="relative mb-8 rounded-[2rem] border-4 border-white bg-white p-6 shadow-lg shadow-[#bde0fe]/30 md:p-8">
+                <div class="absolute -left-3 -top-3 flex h-12 w-12 items-center justify-center rounded-full border-4 border-[#f4f9ff] bg-[#5a76c8] text-xl font-black text-white shadow-sm">1</div>
+                <h4 class="mb-6 ml-6 text-xl font-black text-[#2b3a67]">Informasi Buyer</h4>
+                <div id="checkout_fields_wrapper" class="space-y-5"></div>
+            </div>
+
+            <div id="no_target_msg" class="relative mb-8 hidden items-center gap-4 rounded-[2rem] border-4 border-white bg-[#e6fff7] p-6 shadow-lg shadow-[#bde0fe]/30 md:p-8">
+                <div class="shrink-0 text-5xl">OK</div>
                 <div>
-                    <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2" id="label_target_data">
-                        Target Pesanan
-                    </label>
-                    <input type="text" name="target_data" id="input_target_data" required 
-                           class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" 
-                           placeholder="Ketik target tujuan di sini...">
-                    <p id="target_data_hint" class="mt-3 ml-2 text-xs font-bold text-[#8faaf3]"></p>
-                </div>
-            </div>
-            
-            <div id="no_target_msg" class="hidden bg-[#e6fff7] rounded-[2rem] shadow-lg shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-8 mb-8 relative flex items-center gap-4">
-                <div class="text-5xl drop-shadow-sm shrink-0">🎁</div>
-                <div>
-                    <h4 class="font-black text-emerald-500 text-lg">Kamu Tidak Perlu Mengisi Apapun!</h4>
-                    <p class="font-bold text-[#8faaf3] text-sm leading-tight mt-1">Data akun atau nomor akan otomatis dikirimkan ke halaman riwayat pesananmu setelah pembayaran lunas.</p>
+                    <h4 class="text-lg font-black text-emerald-500">Kamu Tidak Perlu Mengisi Apapun</h4>
+                    <p class="mt-1 text-sm font-bold leading-tight text-[#8faaf3]">Untuk layanan ini, buyer tidak perlu mengisi data tambahan. Detail nomor atau akun akan diproses otomatis oleh sistem atau admin.</p>
                 </div>
             </div>
 
-            <div class="bg-white rounded-[2rem] shadow-lg shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-8 mb-8 relative">
-                <div id="step_number_2" class="absolute -left-3 -top-3 w-12 h-12 bg-[#5a76c8] text-white rounded-full flex items-center justify-center font-black text-xl border-4 border-[#f4f9ff] shadow-sm">2</div>
-                <h4 class="text-xl font-black text-[#2b3a67] mb-6 ml-6">Metode Pembayaran</h4>
+            <div class="relative mb-8 rounded-[2rem] border-4 border-white bg-white p-6 shadow-lg shadow-[#bde0fe]/30 md:p-8">
+                <div id="step_number_2" class="absolute -left-3 -top-3 flex h-12 w-12 items-center justify-center rounded-full border-4 border-[#f4f9ff] bg-[#5a76c8] text-xl font-black text-white shadow-sm">2</div>
+                <h4 class="mb-6 ml-6 text-xl font-black text-[#2b3a67]">Metode Pembayaran</h4>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <label class="relative bg-gradient-to-r from-[#e0fbfc] to-[#f4f9ff] rounded-[1.5rem] p-5 flex items-center gap-4 cursor-pointer border-4 border-white hover:border-[#bde0fe] shadow-sm transition-all group">
-                        <input type="radio" name="payment_method" value="wallet" class="sr-only peer" required>
-                        <div class="w-6 h-6 rounded-full border-2 border-[#8faaf3] peer-checked:border-[#5a76c8] peer-checked:border-[7px] transition-all bg-white shrink-0"></div>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <label class="group relative flex cursor-pointer items-center gap-4 rounded-[1.5rem] border-4 border-white bg-gradient-to-r from-[#e0fbfc] to-[#f4f9ff] p-5 shadow-sm transition-all hover:border-[#bde0fe]">
+                        <input type="radio" name="payment_method" value="wallet" class="peer sr-only" required>
+                        <div class="h-6 w-6 shrink-0 rounded-full border-2 border-[#8faaf3] bg-white transition-all peer-checked:border-[7px] peer-checked:border-[#5a76c8]"></div>
                         <div class="flex-1">
-                            <p class="font-black text-[#2b3a67] text-lg">Saldo Wiboost</p>
-                            <p class="text-sm font-bold text-[#5a76c8] mt-1">Sisa: Rp {{ number_format(Auth::user()->balance ?? 0, 0, ',', '.') }}</p>
+                            <p class="text-lg font-black text-[#2b3a67]">Saldo Wiboost</p>
+                            <p class="mt-1 text-sm font-bold text-[#5a76c8]">Sisa: Rp {{ number_format(Auth::user()->balance ?? 0, 0, ',', '.') }}</p>
                         </div>
-                        <div class="text-3xl drop-shadow-sm group-hover:scale-110 transition-transform">💰</div>
-                        <div class="absolute inset-0 border-4 border-transparent peer-checked:border-[#5a76c8] rounded-[1.5rem] pointer-events-none transition-colors"></div>
+                        <div class="text-3xl transition-transform group-hover:scale-110">BAL</div>
+                        <div class="pointer-events-none absolute inset-0 rounded-[1.5rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
                     </label>
 
-                    <label class="relative bg-[#f4f9ff] rounded-[1.5rem] p-5 flex items-center gap-4 cursor-pointer border-4 border-white hover:border-[#bde0fe] shadow-sm transition-all group">
-                        <input type="radio" name="payment_method" value="manual" class="sr-only peer" required>
-                        <div class="w-6 h-6 rounded-full border-2 border-[#8faaf3] peer-checked:border-[#5a76c8] peer-checked:border-[7px] transition-all bg-white shrink-0"></div>
+                    <label class="group relative flex cursor-pointer items-center gap-4 rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] p-5 shadow-sm transition-all hover:border-[#bde0fe]">
+                        <input type="radio" name="payment_method" value="manual" class="peer sr-only" required>
+                        <div class="h-6 w-6 shrink-0 rounded-full border-2 border-[#8faaf3] bg-white transition-all peer-checked:border-[7px] peer-checked:border-[#5a76c8]"></div>
                         <div class="flex-1">
-                            <p class="font-black text-[#2b3a67] text-lg">E-Wallet & QRIS</p>
-                            <p class="text-xs font-bold text-[#8faaf3] mt-1">Otomatis via Payment Gateway</p>
+                            <p class="text-lg font-black text-[#2b3a67]">E-Wallet & QRIS</p>
+                            <p class="mt-1 text-xs font-bold text-[#8faaf3]">Otomatis via Payment Gateway</p>
                         </div>
-                        <div class="text-3xl drop-shadow-sm group-hover:scale-110 transition-transform">📱</div>
-                        <div class="absolute inset-0 border-4 border-transparent peer-checked:border-[#5a76c8] rounded-[1.5rem] pointer-events-none transition-colors"></div>
+                        <div class="text-3xl transition-transform group-hover:scale-110">PAY</div>
+                        <div class="pointer-events-none absolute inset-0 rounded-[1.5rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
                     </label>
                 </div>
             </div>
 
-            <button type="submit" id="btnCheckout" class="w-full bg-[#4bc6b9] hover:bg-[#3ba398] text-white font-black text-2xl py-5 rounded-[2rem] transition-transform active:scale-95 shadow-xl shadow-[#4bc6b9]/40 border-4 border-white flex justify-center items-center gap-3">
-                Bayar Pesanan 🚀
+            <button type="submit" id="btnCheckout" class="flex w-full items-center justify-center gap-3 rounded-[2rem] border-4 border-white bg-[#4bc6b9] py-5 text-2xl font-black text-white shadow-xl shadow-[#4bc6b9]/40 transition-transform hover:bg-[#3ba398] active:scale-95">
+                Bayar Pesanan
             </button>
         </form>
     </div>
@@ -213,36 +208,90 @@
 <script>
     const pageProductList = document.getElementById('page-product-list');
     const pageCheckout = document.getElementById('page-checkout');
-    
-    // Element Kontrol Target Data
-    const targetContainer = document.getElementById('target_data_container');
-    const inputTarget = document.getElementById('input_target_data');
+    const checkoutFieldsSection = document.getElementById('checkout_fields_section');
+    const checkoutFieldsWrapper = document.getElementById('checkout_fields_wrapper');
     const noTargetMsg = document.getElementById('no_target_msg');
     const stepNumber2 = document.getElementById('step_number_2');
-    const targetLabel = document.getElementById('label_target_data');
-    const targetHint = document.getElementById('target_data_hint');
+    const oldCheckoutInput = @json(old());
+    const oldProductId = @json(old('product_id'));
 
-    function goToCheckout(button) {
-        const { id, name, price, processType, targetRequired, targetLabel: label, targetPlaceholder, targetHint: hint } = button.dataset;
+    function checkoutInputClass() {
+        return 'w-full rounded-[1.5rem] border-2 border-transparent bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] outline-none transition placeholder-[#a3bbfb] focus:border-[#5a76c8]';
+    }
+
+    function renderCheckoutFields(fields, values = {}) {
+        checkoutFieldsWrapper.innerHTML = '';
+
+        fields.forEach((field) => {
+            const fieldWrapper = document.createElement('div');
+
+            const label = document.createElement('label');
+            label.className = 'mb-3 ml-2 block text-sm font-black text-[#8faaf3]';
+            label.textContent = field.label;
+
+            let input;
+            if (field.type === 'textarea') {
+                input = document.createElement('textarea');
+                input.rows = 5;
+            } else {
+                input = document.createElement('input');
+                input.type = field.type || 'text';
+            }
+
+            input.name = field.name;
+            input.id = 'checkout_' + field.name;
+            input.className = checkoutInputClass();
+            input.placeholder = field.placeholder || '';
+            input.value = values[field.name] || '';
+
+            if (field.type === 'tel') {
+                input.inputMode = 'tel';
+            }
+
+            if (field.required !== false) {
+                input.required = true;
+            }
+
+            const hint = document.createElement('p');
+            hint.className = 'mt-3 ml-2 text-xs font-bold text-[#8faaf3]';
+            hint.textContent = field.hint || '';
+
+            fieldWrapper.appendChild(label);
+            fieldWrapper.appendChild(input);
+
+            if (field.hint) {
+                fieldWrapper.appendChild(hint);
+            }
+
+            checkoutFieldsWrapper.appendChild(fieldWrapper);
+        });
+    }
+
+    function goToCheckout(button, restoreValues = {}) {
+        const { id, name, price, description } = button.dataset;
+        const fields = JSON.parse(button.dataset.checkoutFields || '[]');
+        const descriptionNode = document.getElementById('checkout_product_description');
 
         document.getElementById('checkout_product_id').value = id;
         document.getElementById('checkout_product_name').innerText = name;
         document.getElementById('checkout_product_price').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(price);
-        targetLabel.innerText = label || 'Target Pesanan';
-        inputTarget.placeholder = targetPlaceholder || 'Ketik target tujuan di sini...';
-        targetHint.innerText = hint || '';
 
-        if(targetRequired === '0') {
-            targetContainer.classList.add('hidden');
-            inputTarget.removeAttribute('required');
-            inputTarget.value = ''; 
-            
+        if (description && description.trim() !== '') {
+            descriptionNode.innerText = description;
+            descriptionNode.classList.remove('hidden');
+        } else {
+            descriptionNode.innerText = '';
+            descriptionNode.classList.add('hidden');
+        }
+
+        if (fields.length === 0) {
+            checkoutFieldsSection.classList.add('hidden');
+            checkoutFieldsWrapper.innerHTML = '';
             noTargetMsg.classList.remove('hidden');
             stepNumber2.innerText = '1';
         } else {
-            targetContainer.classList.remove('hidden');
-            inputTarget.setAttribute('required', 'required');
-            
+            renderCheckoutFields(fields, restoreValues);
+            checkoutFieldsSection.classList.remove('hidden');
             noTargetMsg.classList.add('hidden');
             stepNumber2.innerText = '2';
         }
@@ -250,7 +299,7 @@
         pageProductList.classList.add('hidden');
         pageCheckout.classList.remove('hidden');
         pageCheckout.classList.add('fade-in');
-        
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -259,15 +308,26 @@
         pageProductList.classList.remove('hidden');
         pageProductList.classList.add('fade-in');
         document.getElementById('checkoutForm').reset();
-        
+        checkoutFieldsWrapper.innerHTML = '';
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function showLoadingBtn() {
         const btn = document.getElementById('btnCheckout');
-        btn.innerHTML = 'Sedang Memproses... ⏳';
-        btn.classList.add('opacity-70', 'cursor-not-allowed');
+        btn.innerHTML = 'Sedang Memproses...';
+        btn.classList.add('cursor-not-allowed', 'opacity-70');
     }
-</script>
 
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!oldProductId) {
+            return;
+        }
+
+        const productButton = document.querySelector(`[data-id="${oldProductId}"]`);
+        if (productButton) {
+            goToCheckout(productButton, oldCheckoutInput || {});
+        }
+    });
+</script>
 @endsection

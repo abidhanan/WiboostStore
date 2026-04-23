@@ -37,7 +37,7 @@
             </div>
 
             <div>
-                <label for="whatsapp" class="mb-2 block text-sm font-black text-[#5a76c8]">Nomor WhatsApp</label>
+                <label for="whatsapp" class="mb-2 block text-sm font-black text-[#5a76c8]">Nomor Kontak</label>
                 <input id="whatsapp" type="text" name="whatsapp" value="{{ old('whatsapp') }}" required
                     class="w-full rounded-[1.4rem] border-2 border-[#e0ebff] bg-[#f8fbff] px-5 py-4 text-sm font-bold text-[#2b3a67] outline-none transition focus:border-[#5a76c8] focus:bg-white"
                     placeholder="Contoh: 081234567890">

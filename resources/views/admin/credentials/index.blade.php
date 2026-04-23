@@ -82,7 +82,7 @@
                         </div>
                     @else
                         <div>
-                            <label class="block text-xs font-black text-[#8faaf3] mb-2 ml-2">Nomor HP (Wajib)</label>
+                            <label class="block text-xs font-black text-[#8faaf3] mb-2 ml-2">Nomor Luar / Nomor HP (Wajib)</label>
                             <input type="text" name="data_1" required class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1rem] px-4 py-3 text-[#2b3a67] font-black outline-none transition text-sm" placeholder="Contoh: +123456789">
                         </div>
                     @endif
@@ -90,7 +90,7 @@
                     <div class="mt-4 pt-4 border-t-2 border-dashed border-[#e0fbfc]">
                         <label class="block text-xs font-black text-[#8faaf3] mb-2 ml-2">Link Tutorial OTP / Login (Opsional)</label>
                         <input type="url" name="tutorial_link" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1rem] px-4 py-3 text-[#2b3a67] font-black outline-none transition text-sm placeholder-[#a3bbfb]" placeholder="https://youtube.com/...">
-                        <p class="text-[10px] font-bold text-[#8faaf3] mt-2 ml-1">Isi jika pelanggan bisa cek OTP/Akses sendiri via link.</p>
+                        <p class="text-[10px] font-bold text-[#8faaf3] mt-2 ml-1">Isi jika pelanggan bisa cek OTP, tutorial login, atau akses penggunaan sendiri via link.</p>
                     </div>
 
                     <div class="mt-4 bg-[#fffcf0] p-4 rounded-xl border-2 border-amber-100 flex items-center justify-between shadow-sm">

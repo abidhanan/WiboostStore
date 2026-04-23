@@ -22,6 +22,8 @@ class TransactionController extends Controller
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
                 $q->where('invoice_number', 'like', '%' . $request->search . '%')
+                  ->orWhere('target_data', 'like', '%' . $request->search . '%')
+                  ->orWhere('order_input_data', 'like', '%' . $request->search . '%')
                   ->orWhereHas('user', function($userQuery) use ($request) {
                       $userQuery->where('name', 'like', '%' . $request->search . '%');
                   });

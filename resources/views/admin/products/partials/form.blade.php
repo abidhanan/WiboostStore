@@ -2,6 +2,7 @@
     $currentProduct = $product ?? null;
     $currentType = old('process_type', $currentProduct->process_type ?? 'manual');
     $currentProvider = old('provider_source', $currentProduct->provider_source ?? $currentProduct->provider_id ?? '');
+    $requiresBuyerEmail = old('requires_buyer_email', $currentProduct->requires_buyer_email ?? false);
 @endphp
 
 @if ($errors->any())
@@ -39,13 +40,20 @@
                         placeholder="Contoh: 1000 Followers Instagram HQ / Netflix Premium 1 Bulan">
                 </div>
 
+                <div class="md:col-span-2">
+                    <label class="mb-3 ml-2 block text-sm font-black text-[#8faaf3]">Deskripsi Layanan</label>
+                    <textarea name="description" rows="5"
+                        class="w-full rounded-[1.5rem] border-2 border-transparent bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] outline-none transition focus:border-[#5a76c8]"
+                        placeholder="Jelaskan detail layanan, ketentuan, manfaat, atau instruksi penting yang perlu dibaca pembeli.">{{ old('description', $currentProduct->description ?? '') }}</textarea>
+                </div>
+
                 <div>
                     <label class="mb-3 ml-2 block text-sm font-black text-[#8faaf3]">Kategori</label>
                     <select name="category_id" required class="w-full appearance-none rounded-[1.5rem] border-2 border-transparent bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] outline-none transition focus:border-[#5a76c8]">
                         <option value="" disabled {{ old('category_id', $currentProduct->category_id ?? '') === '' ? 'selected' : '' }}>-- Pilih Kategori --</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}" {{ (string) old('category_id', $currentProduct->category_id ?? '') === (string) $category->id ? 'selected' : '' }}>
-                                {{ $category->name }}
+                                {{ collect([$category->parent?->parent?->name, $category->parent?->name, $category->name])->filter()->implode(' / ') }}
                             </option>
                         @endforeach
                     </select>
@@ -161,6 +169,24 @@
             </div>
         </section>
 
+        <section id="premium_checkout_section" class="space-y-6 rounded-[2rem] border-2 border-white bg-[#fff7fb] p-5 shadow-inner md:p-6">
+            <div>
+                <p class="mb-1 text-xs font-black uppercase tracking-[0.3em] text-pink-500">Aplikasi Premium</p>
+                <h4 class="text-2xl font-black text-[#2b3a67]">Kebutuhan Input Buyer</h4>
+                <p class="mt-2 max-w-2xl text-sm font-bold text-[#a35b85]">Aktifkan hanya jika produk premium ini memang perlu buyer memasukkan email khusus aplikasi saat checkout.</p>
+            </div>
+
+            <label class="flex items-start gap-4 rounded-[1.5rem] border-2 border-white bg-white px-5 py-4 shadow-sm">
+                <input type="hidden" name="requires_buyer_email" value="0">
+                <input type="checkbox" name="requires_buyer_email" value="1" {{ (string) $requiresBuyerEmail === '1' || $requiresBuyerEmail === true ? 'checked' : '' }}
+                    class="mt-1 h-5 w-5 rounded border-pink-200 text-pink-500 focus:ring-pink-400">
+                <div>
+                    <p class="font-black text-[#2b3a67]">Buyer wajib mengisi email khusus aplikasi</p>
+                    <p class="mt-1 text-sm font-bold text-[#8faaf3]">Kalau dimatikan, checkout produk ini langsung lanjut tanpa field email tambahan.</p>
+                </div>
+            </label>
+        </section>
+
         <section class="space-y-6">
             <div>
                 <p class="mb-1 text-xs font-black uppercase tracking-[0.3em] text-[#8faaf3]">Branding</p>
@@ -209,11 +235,13 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const processTypeSelect = document.getElementById('process_type');
+        const categorySelect = document.querySelector('select[name="category_id"]');
         const providerSourceSelect = document.getElementById('provider_source');
         const providerSection = document.getElementById('provider_section');
         const providerQuantityGroup = document.getElementById('provider_quantity_group');
         const targetSection = document.getElementById('target_section');
         const inventorySection = document.getElementById('inventory_section');
+        const premiumCheckoutSection = document.getElementById('premium_checkout_section');
 
         function syncSections() {
             const type = processTypeSelect.value;
@@ -222,11 +250,13 @@
             providerSection.style.display = type === 'api' ? 'block' : 'none';
             targetSection.style.display = (type === 'api' || type === 'manual') ? 'block' : 'none';
             inventorySection.style.display = (type === 'account' || type === 'number') ? 'block' : 'none';
+            premiumCheckoutSection.style.display = type === 'account' ? 'block' : 'none';
             providerQuantityGroup.style.display = (type === 'api' && providerSource === 'ordersosmed') ? 'block' : 'none';
         }
 
         processTypeSelect.addEventListener('change', syncSections);
         providerSourceSelect.addEventListener('change', syncSections);
+        categorySelect.addEventListener('change', syncSections);
         syncSections();
     });
 </script>

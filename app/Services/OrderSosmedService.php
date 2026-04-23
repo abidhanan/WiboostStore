@@ -94,6 +94,62 @@ class OrderSosmedService
         }
     }
 
+    public function getProfile(): array
+    {
+        if (! $this->hasBaseCredentials()) {
+            return [
+                'success' => false,
+                'message' => 'Kredensial OrderSosmed belum diatur.',
+                'data' => [],
+            ];
+        }
+
+        if ($this->usesRouteBasedApi() && $this->secretKey === '') {
+            return [
+                'success' => false,
+                'message' => 'Secret Key OrderSosmed belum diatur.',
+                'data' => [],
+            ];
+        }
+
+        try {
+            $attempt = $this->attemptRequest([
+                [],
+                ['action' => 'profile'],
+            ], 'profile', false, fn (array $body) => $this->extractProfile($body) !== []);
+
+            $response = $attempt['response'] ?? null;
+            $body = $attempt['body'] ?? [];
+            $profile = $this->extractProfile($body);
+            $success = $response instanceof Response && $response->successful() && $profile !== [];
+            $message = $this->resolveMessage($body, $success ? 'Profil provider berhasil diambil.' : 'Provider tidak mengembalikan data profil.');
+
+            if (! $success) {
+                Log::warning('OrderSosmed getProfile unexpected response', [
+                    'url' => $attempt['url'] ?? $this->apiUrl,
+                    'status' => $response?->status(),
+                    'message' => $message,
+                    'body' => $this->stringifyBody($body),
+                ]);
+            }
+
+            return [
+                'success' => $success,
+                'message' => $message,
+                'data' => $profile,
+                'raw' => $body,
+            ];
+        } catch (Throwable $e) {
+            Log::error('OrderSosmed getProfile error: ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Koneksi ke OrderSosmed gagal.',
+                'data' => [],
+            ];
+        }
+    }
+
     public function placeOrder(string $providerServiceId, string $target, int $quantity = 1): array
     {
         if (! $this->hasBaseCredentials()) {
@@ -184,7 +240,12 @@ class OrderSosmedService
         }
     }
 
-    protected function attemptRequest(array $payloadVariants, ?string $resource = null, bool $stopOnOrderAccepted = false): array
+    protected function attemptRequest(
+        array $payloadVariants,
+        ?string $resource = null,
+        bool $stopOnOrderAccepted = false,
+        ?callable $acceptanceResolver = null
+    ): array
     {
         $lastResponse = null;
         $lastBody = [];
@@ -207,6 +268,7 @@ class OrderSosmedService
                             || ($body['status'] ?? false) === true
                             || ($body['success'] ?? false) === true
                             || $orderId !== null
+                            || ($acceptanceResolver ? (bool) $acceptanceResolver($body) : false)
                         );
 
                     if ($accepted || (! $stopOnOrderAccepted && $services !== [])) {
@@ -350,6 +412,24 @@ class OrderSosmedService
 
         foreach ($candidates as $candidate) {
             if (is_array($candidate) && array_is_list($candidate) && $candidate !== []) {
+                return $candidate;
+            }
+        }
+
+        return [];
+    }
+
+    protected function extractProfile(array $body): array
+    {
+        $candidates = [
+            $body['data'] ?? null,
+            $body['profile'] ?? null,
+            $body['result'] ?? null,
+            $body,
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (is_array($candidate) && ! array_is_list($candidate) && $candidate !== []) {
                 return $candidate;
             }
         }

@@ -15,7 +15,7 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with('category')->latest();
+        $query = Product::with('category.parent.parent')->latest();
 
         if ($request->filled('search')) {
             $query->where(function ($innerQuery) use ($request) {
@@ -31,7 +31,14 @@ class ProductController extends Controller
 
     public function create()
     {
-        $categories = Category::whereNotNull('parent_id')->orDoesntHave('children')->get();
+        $categories = Category::with('parent.parent')
+            ->where(function ($query) {
+                $query->whereNotNull('parent_id')
+                    ->orDoesntHave('children');
+            })
+            ->orderBy('parent_id')
+            ->orderBy('name')
+            ->get();
 
         return view('admin.products.create', compact('categories'));
     }
@@ -52,7 +59,14 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        $categories = Category::whereNotNull('parent_id')->orDoesntHave('children')->get();
+        $categories = Category::with('parent.parent')
+            ->where(function ($query) {
+                $query->whereNotNull('parent_id')
+                    ->orDoesntHave('children');
+            })
+            ->orderBy('parent_id')
+            ->orderBy('name')
+            ->get();
 
         return view('admin.products.edit', compact('product', 'categories'));
     }
@@ -105,6 +119,7 @@ class ProductController extends Controller
     {
         return $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:10000',
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',
             'provider_product_id' => [
@@ -124,6 +139,7 @@ class ProductController extends Controller
             'target_label' => 'nullable|string|max:255',
             'target_placeholder' => 'nullable|string|max:255',
             'target_hint' => 'nullable|string|max:1000',
+            'requires_buyer_email' => 'nullable|boolean',
             'stock_reminder' => 'nullable|integer|min:0',
             'is_active' => 'required|in:0,1',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
@@ -154,8 +170,9 @@ class ProductController extends Controller
 
         return [
             'name' => $validated['name'],
-            'slug' => Str::slug($validated['name']) . '-' . Str::random(5),
+            'slug' => $product?->slug ?: (Str::slug($validated['name']) . '-' . Str::random(5)),
             'category_id' => $validated['category_id'],
+            'description' => $validated['description'] ?? null,
             'price' => $validated['price'],
             'provider_product_id' => $providerProductId,
             'provider_source' => $providerSource,
@@ -165,6 +182,7 @@ class ProductController extends Controller
             'target_label' => $requiresTargetInput ? ($validated['target_label'] ?? null) : null,
             'target_placeholder' => $requiresTargetInput ? ($validated['target_placeholder'] ?? null) : null,
             'target_hint' => $requiresTargetInput ? ($validated['target_hint'] ?? null) : null,
+            'requires_buyer_email' => $validated['process_type'] === 'account' ? $request->boolean('requires_buyer_email') : false,
             'stock_reminder' => $usesInventory ? ($validated['stock_reminder'] ?? 0) : 0,
             'image' => $imagePath,
             'emote' => $validated['emote'] ?? null,

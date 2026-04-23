@@ -39,6 +39,11 @@ class MidtransService
                     'name' => $transaction->product->name,
                 ],
             ],
+            'callbacks' => [
+                'finish' => $this->publicUrl('/user/history?source=midtrans'),
+                'pending' => $this->publicUrl('/user/history?source=midtrans'),
+                'error' => $this->publicUrl('/user/history?source=midtrans'),
+            ],
         ]);
     }
 
@@ -63,6 +68,18 @@ class MidtransService
                 'first_name' => $user?->name ?? 'Pelanggan Wiboost',
                 'email' => $user?->email,
             ],
+            'callbacks' => [
+                'finish' => $this->publicUrl('/user/wallet?source=midtrans'),
+                'pending' => $this->publicUrl('/user/wallet?source=midtrans'),
+                'error' => $this->publicUrl('/user/wallet?source=midtrans'),
+            ],
         ]);
+    }
+
+    protected function publicUrl(string $path): string
+    {
+        $baseUrl = rtrim((string) config('wiboost.public_url', config('app.url')), '/');
+
+        return $baseUrl . '/' . ltrim($path, '/');
     }
 }

@@ -29,7 +29,7 @@
                 <input type="email" name="email" required value="{{ old('email') }}" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">
             </div>
             <div>
-                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">WhatsApp</label>
+                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Nomor Kontak</label>
                 <input type="text" name="whatsapp" required value="{{ old('whatsapp') }}" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition" placeholder="Cth: 08123456789">
             </div>
             <div>

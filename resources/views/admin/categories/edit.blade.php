@@ -45,8 +45,8 @@
                 <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Kategori Induk</label>
                 <select name="parent_id" id="parent_id_select" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition cursor-pointer appearance-none">
                     <option value="">⭐ Jadikan Kategori Utama</option>
-                    @foreach($mainCategories as $main)
-                        <option value="{{ $main->id }}" {{ old('parent_id', $category->parent_id) == $main->id ? 'selected' : '' }}>Sub-Kategori dari: {{ $main->name }}</option>
+                    @foreach($parentOptions as $option)
+                        <option value="{{ $option['id'] }}" {{ (string) old('parent_id', $category->parent_id) === (string) $option['id'] ? 'selected' : '' }}>{{ $option['label'] }}</option>
                     @endforeach
                 </select>
             </div>
@@ -55,6 +55,16 @@
         <div class="mb-6">
             <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Slug (URL Kategori)</label>
             <input type="text" name="slug" required value="{{ old('slug', $category->slug) }}" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition">
+        </div>
+
+        <div class="mb-6" id="fulfillment_container">
+            <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Tipe Fulfillment <span class="text-amber-500">(Kategori Utama)</span></label>
+            <select name="fulfillment_type" id="fulfillment_type_select" class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition cursor-pointer appearance-none">
+                <option value="auto_api" {{ old('fulfillment_type', $category->fulfillment_type) === 'auto_api' ? 'selected' : '' }}>API Otomatis</option>
+                <option value="stock_based" {{ old('fulfillment_type', $category->fulfillment_type) === 'stock_based' ? 'selected' : '' }}>Stok / Gudang Kredensial</option>
+                <option value="manual_action" {{ old('fulfillment_type', $category->fulfillment_type) === 'manual_action' ? 'selected' : '' }}>Manual Admin</option>
+            </select>
+            <p class="text-[10px] font-bold text-amber-500 mt-2 ml-2">Jika kategori ini menjadi sub-kategori, tipe fulfillment akan mengikuti kategori induk.</p>
         </div>
 
         <div class="mb-6" id="emote_container">
@@ -97,16 +107,19 @@
     const descContainer = document.getElementById('description_container');
     const imageContainer = document.getElementById('image_container');
     const emoteContainer = document.getElementById('emote_container');
+    const fulfillmentContainer = document.getElementById('fulfillment_container');
     
     function toggleCategoryType() {
         if(parentSelect.value === "") {
             descContainer.style.display = "none";
             imageContainer.style.display = "none";
             emoteContainer.style.display = "block";
+            fulfillmentContainer.style.display = "block";
         } else {
             descContainer.style.display = "block";
             imageContainer.style.display = "block";
             emoteContainer.style.display = "none";
+            fulfillmentContainer.style.display = "none";
         }
     }
 

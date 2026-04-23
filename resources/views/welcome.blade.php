@@ -179,15 +179,17 @@
     </footer>
 
     <script>
-        const fakeNames = ["Ganjar", "Gibran", "Prabowo", "Jokowi", "Mulyono", "Fuad", "Gatot", "Fufufafa"];
-        const fakeProducts = ["86 Diamond MLBB", "1000 Followers IG", "Netflix Premium", "Spotify Family", "PUBG 250 UC"];
+        const fomoPurchases = @json($recentFomoPurchases ?? []);
         const fomoToast = document.getElementById('fomo-toast');
         const fomoName = document.getElementById('fomo-name');
         const fomoProduct = document.getElementById('fomo-product');
 
         function showFomo() {
-            fomoName.innerText = fakeNames[Math.floor(Math.random() * fakeNames.length)];
-            fomoProduct.innerText = fakeProducts[Math.floor(Math.random() * fakeProducts.length)];
+            if (!fomoToast || !fomoName || !fomoProduct || fomoPurchases.length === 0) return;
+
+            const purchase = fomoPurchases[Math.floor(Math.random() * fomoPurchases.length)];
+            fomoName.innerText = purchase.name || 'Member Wiboost';
+            fomoProduct.innerText = purchase.product || 'Produk Wiboost';
             fomoToast.classList.remove('popup-leave');
             fomoToast.classList.add('popup-enter');
             setTimeout(() => {
@@ -196,10 +198,14 @@
             }, 4000);
         }
 
-        setTimeout(() => {
-            showFomo();
-            setInterval(showFomo, Math.floor(Math.random() * (20000 - 10000 + 1) + 10000));
-        }, 3000);
+        if (fomoPurchases.length > 0) {
+            setTimeout(() => {
+                showFomo();
+                setInterval(showFomo, Math.floor(Math.random() * (20000 - 10000 + 1) + 10000));
+            }, 3000);
+        }
     </script>
+
+    @include('partials.floating-admin-report')
 </body>
 </html>

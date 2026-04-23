@@ -34,8 +34,13 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'whatsapp' => ['required', 'string', 'max:20'], 
+            'whatsapp' => ['required', 'string', 'max:20'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [], [
+            'name' => 'nama panggilan',
+            'email' => 'alamat email',
+            'whatsapp' => 'nomor kontak',
+            'password' => 'kata sandi',
         ]);
 
         // 2. Simpan user baru ke database (Paksa Role 2 / Buyer)

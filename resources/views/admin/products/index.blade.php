@@ -98,7 +98,7 @@
                                         <div>
                                             <p class="line-clamp-1 text-md font-black leading-tight text-[#2b3a67]">{{ $product->name }}</p>
                                             <span class="mt-1 inline-block rounded-md bg-[#e0fbfc] px-2 py-0.5 text-[9px] font-black uppercase text-[#4bc6b9] shadow-sm">
-                                                {{ $product->category->name ?? 'N/A' }}
+                                                {{ $product->category?->breadcrumb_name ?? 'N/A' }}
                                             </span>
                                             @if(! $product->is_active)
                                                 <span class="ml-1 text-[9px] font-black uppercase text-rose-400">[Nonaktif]</span>

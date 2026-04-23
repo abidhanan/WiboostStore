@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Services\OrderSosmedGuestCatalogService;
 use App\Services\OrderSosmedService;
+use App\Support\WiboostCatalog;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -37,11 +38,13 @@ class SyncOrderSosmedServices extends Command
 
         if (! ($response['success'] ?? false) || empty($response['data'])) {
             $this->warn('Endpoint API private OrderSosmed belum merespons daftar layanan. Beralih ke katalog publik...');
-            $response = $guestCatalogService->getServices();
+            $response = $guestCatalogService->getServices(['sosmed']);
             $syncMode = 'guest';
         }
 
-        $services = collect($response['data'] ?? []);
+        $services = collect($response['data'] ?? [])
+            ->filter(fn (array $service) => $this->shouldImportService($service))
+            ->values();
 
         if (! ($response['success'] ?? false) || $services->isEmpty()) {
             $this->error('Gagal ambil layanan OrderSosmed: ' . ($response['message'] ?? 'Unknown error'));
@@ -178,39 +181,15 @@ class SyncOrderSosmedServices extends Command
 
     protected function resolveCategoryId(array $service, int $defaultCategoryId): int
     {
-        $catalogType = strtolower((string) ($service['_ordersosmed_catalog_type'] ?? 'sosmed'));
-        $category = strtolower((string) ($service['category'] ?? $service['type'] ?? ''));
-        $name = strtolower((string) ($service['name'] ?? $service['service_name'] ?? ''));
+        $subcategorySlug = WiboostCatalog::resolveOrdersosmedSubcategorySlug(
+            (string) ($service['name'] ?? $service['service_name'] ?? ''),
+            (string) ($service['category'] ?? $service['type'] ?? ''),
+            (string) ($service['description'] ?? $service['note'] ?? ''),
+        );
 
-        if ($catalogType === 'games') {
-            if (str_contains($name, 'mobile legends') || str_contains($name, 'mobilelegend')) {
-                return Category::query()->where('slug', 'mobile-legends')->value('id') ?? $this->categoryIdBySlug('top-up-game', $defaultCategoryId);
-            }
-
-            if (str_contains($name, 'free fire') || str_contains($name, 'freefire')) {
-                return Category::query()->where('slug', 'free-fire')->value('id') ?? $this->categoryIdBySlug('top-up-game', $defaultCategoryId);
-            }
-
-            if (str_contains($name, 'netflix')) {
-                return $this->categoryIdBySlug('netflix', $defaultCategoryId);
-            }
-
-            return $this->categoryIdBySlug('top-up-game', $defaultCategoryId);
-        }
-
-        if ($catalogType === 'prepaid') {
-            if (str_contains($name, 'netflix')) {
-                return $this->categoryIdBySlug('netflix', $defaultCategoryId);
-            }
-
-            return $this->categoryIdBySlug('kuota-murah', $defaultCategoryId);
-        }
-
-        if (str_contains($category, 'buzzer') || str_contains($name, 'buzzer')) {
-            return Category::query()->where('slug', 'buzzer')->value('id') ?? $defaultCategoryId;
-        }
-
-        return Category::query()->where('slug', 'suntik-sosmed')->value('id') ?? $defaultCategoryId;
+        return Category::query()->where('slug', $subcategorySlug)->value('id')
+            ?? Category::query()->where('slug', 'suntik-sosmed')->value('id')
+            ?? $defaultCategoryId;
     }
 
     protected function buildDescription(array $service, string $syncMode): string
@@ -231,31 +210,34 @@ class SyncOrderSosmedServices extends Command
 
     protected function resolveTargetMeta(array $service, string $syncMode): array
     {
-        $catalogType = strtolower((string) ($service['_ordersosmed_catalog_type'] ?? 'sosmed'));
-
-        $meta = match ($catalogType) {
-            'games' => [
-                'label' => 'User ID / server / nomor tujuan',
-                'placeholder' => 'Contoh: 12345678(1234) atau nomor tujuan',
-                'hint' => 'Masukkan user ID, server, atau nomor tujuan sesuai kebutuhan layanan game yang dipilih.',
-            ],
-            'prepaid' => [
-                'label' => 'Nomor tujuan / customer ID',
-                'placeholder' => 'Contoh: 081234567890 atau customer ID PLN',
-                'hint' => 'Masukkan nomor tujuan atau customer ID yang benar agar pesanan tidak gagal.',
-            ],
-            default => [
-                'label' => 'Link atau username target',
-                'placeholder' => 'Contoh: https://instagram.com/username',
-                'hint' => 'Gunakan username atau link publik yang aktif agar pesanan tidak gagal.',
-            ],
-        };
+        $meta = WiboostCatalog::targetMetaForTopCategory('suntik-sosmed') ?? [
+            'label' => 'Username akun / link postingan',
+            'placeholder' => 'Contoh: @username atau https://instagram.com/p/abc123',
+            'hint' => 'Masukkan username akun atau link postingan yang aktif sesuai layanan suntik sosmed yang dipilih.',
+        ];
 
         if ($syncMode === 'guest') {
-            $meta['hint'] .= ' Saat ini pesanan OrderSosmed diproses manual oleh admin sambil menunggu endpoint API private provider dikonfirmasi.';
+            $meta['hint'] .= ' Saat ini pesanan OrderSosmed diproses manual oleh admin sambil menunggu API private provider pulih.';
         }
 
         return $meta;
+    }
+
+    protected function shouldImportService(array $service): bool
+    {
+        $catalogType = strtolower((string) ($service['_ordersosmed_catalog_type'] ?? 'sosmed'));
+        $category = strtolower((string) ($service['category'] ?? $service['type'] ?? ''));
+        $name = strtolower((string) ($service['name'] ?? $service['service_name'] ?? ''));
+
+        if ($catalogType !== 'sosmed') {
+            return false;
+        }
+
+        if (str_contains($category, 'buzzer') || str_contains($name, 'buzzer')) {
+            return false;
+        }
+
+        return true;
     }
 
     protected function categoryIdBySlug(string $slug, int $fallbackId): int

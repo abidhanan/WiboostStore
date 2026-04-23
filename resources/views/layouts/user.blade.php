@@ -135,5 +135,7 @@
             @endforeach
         </div>
     </nav>
+
+    @include('partials.floating-admin-report', ['floatingOffsetClass' => 'bottom-24 md:bottom-6'])
 </body>
 </html>

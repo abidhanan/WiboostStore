@@ -48,6 +48,7 @@ Isi variabel berikut di `.env`:
 - `ORDERSOSMED_API_URL`
 - `ORDERSOSMED_API_ID`
 - `ORDERSOSMED_API_KEY`
+- `ORDERSOSMED_SECRET_KEY`
 - `DISCORD_WEBHOOK_URL`
 
 Tambahan tuning maintenance:
@@ -55,6 +56,43 @@ Tambahan tuning maintenance:
 - `WIBOOST_PENDING_ALERT_MINUTES`
 - `WIBOOST_PROCESSING_ALERT_MINUTES`
 - `WIBOOST_MAINTENANCE_MAX_ITEMS`
+- `WIBOOST_ADMIN_WHATSAPP`
+
+URL publik untuk callback provider:
+
+- `WIBOOST_PUBLIC_URL`
+
+Jika website masih jalan di localhost tetapi diakses dari internet via ngrok atau tunnel lain, isi `WIBOOST_PUBLIC_URL` dengan URL publik tersebut. Contoh callback Midtrans:
+
+```txt
+https://nama-ngrok-kamu.ngrok-free.app/api/midtrans/callback
+```
+
+Jika `WIBOOST_PUBLIC_URL` dikosongkan, project sekarang otomatis fallback ke `APP_URL`.
+
+### Checklist menuju live
+
+- Isi produk manual yang masih draft: `Aplikasi Premium`, `Nomor Luar`, dan `Buzzer`.
+- Isi harga final, deskripsi final, gambar/logo subkategori, tutorial, dan stok kredensial/nomor.
+- Jalankan sync provider sebelum launching:
+
+```bash
+php artisan wiboost:setup-catalog
+php artisan sync:digiflazz
+php artisan sync:ordersosmed
+```
+
+- Uji checkout saldo untuk tiap tipe produk: OrderSosmed, Digiflazz, akun premium, nomor luar, dan buzzer manual.
+- Uji Midtrans sandbox/live dari checkout sampai callback sukses.
+- Saat deploy produksi, ubah environment ke production: `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://domain-kamu`.
+- Pastikan server menjalankan queue worker untuk `QUEUE_CONNECTION=database` dan scheduler `php artisan schedule:run`.
+- Jalankan cache produksi setelah `.env` final:
+
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
 
 ## About Laravel
 

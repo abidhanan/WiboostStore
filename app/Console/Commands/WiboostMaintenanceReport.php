@@ -70,19 +70,21 @@ class WiboostMaintenanceReport extends Command
             ->take($maxItems)
             ->get();
 
-        $providerStatus = [
-            'Digiflazz' => $digiflazzService->isConfigured(),
-            'OrderSosmed' => $orderSosmedService->isConfigured(),
-            'Midtrans' => filled(config('midtrans.server_key')) && filled(config('midtrans.client_key')),
-            'Discord Webhook' => $discordWebhookService->isEnabled(),
-        ];
+        $providerDiagnostics = $this->buildProviderDiagnostics(
+            $discordWebhookService,
+            $digiflazzService,
+            $orderSosmedService
+        );
+        $providerStatus = collect($providerDiagnostics)->mapWithKeys(
+            fn (array $diagnostic, string $name) => [$name => $diagnostic['status'] === 'ok']
+        )->all();
 
         $issueCount = $lowStockProducts->count()
             + $stalePendingTransactions->count()
             + $staleProcessingTransactions->count()
             + $manualQueue->count()
             + $misconfiguredApiProducts->count()
-            + collect($providerStatus)->filter(fn ($isReady) => ! $isReady)->count();
+            + collect($providerDiagnostics)->filter(fn (array $diagnostic) => $diagnostic['status'] === 'issue')->count();
 
         if ($issueCount === 0 && ! $this->option('force')) {
             $this->info('Maintenance report dilewati karena tidak ada temuan baru.');
@@ -99,6 +101,13 @@ class WiboostMaintenanceReport extends Command
             [
                 'name' => 'Provider siap',
                 'value' => collect($providerStatus)->map(fn ($ready, $name) => ($ready ? 'OK' : 'ISSUE') . ' ' . $name)->implode("\n"),
+                'inline' => false,
+            ],
+            [
+                'name' => 'Diagnostik provider',
+                'value' => collect($providerDiagnostics)
+                    ->map(fn (array $diagnostic, string $name) => strtoupper($diagnostic['status']) . " {$name}: {$diagnostic['message']}")
+                    ->implode("\n"),
                 'inline' => false,
             ],
         ];
@@ -157,5 +166,134 @@ class WiboostMaintenanceReport extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    protected function buildProviderDiagnostics(
+        DiscordWebhookService $discordWebhookService,
+        DigiflazzService $digiflazzService,
+        OrderSosmedService $orderSosmedService
+    ): array {
+        $diagnostics = [];
+
+        if (! $digiflazzService->isConfigured()) {
+            $diagnostics['Digiflazz'] = [
+                'status' => 'issue',
+                'message' => 'Kredensial belum diatur.',
+            ];
+        } else {
+            $balance = $digiflazzService->getBalance();
+            $deposit = (float) data_get($balance, 'raw.data.deposit', 0);
+            $message = trim((string) ($balance['message'] ?? ''));
+
+            if (! ($balance['success'] ?? false)) {
+                $diagnostics['Digiflazz'] = [
+                    'status' => 'issue',
+                    'message' => $message !== '' ? $message : 'Gagal terhubung ke provider.',
+                ];
+            } elseif ($deposit <= 0) {
+                $diagnostics['Digiflazz'] = [
+                    'status' => 'issue',
+                    'message' => 'Saldo provider kosong atau belum terbaca.',
+                ];
+            } else {
+                $diagnostics['Digiflazz'] = [
+                    'status' => 'ok',
+                    'message' => 'Saldo provider Rp ' . number_format($deposit, 0, ',', '.'),
+                ];
+            }
+        }
+
+        if (! $orderSosmedService->isConfigured()) {
+            $diagnostics['OrderSosmed'] = [
+                'status' => 'issue',
+                'message' => 'Kredensial belum lengkap.',
+            ];
+        } else {
+            $profile = $orderSosmedService->getProfile();
+
+            if (! ($profile['success'] ?? false)) {
+                $diagnostics['OrderSosmed'] = [
+                    'status' => 'issue',
+                    'message' => (string) ($profile['message'] ?? 'Gagal terhubung ke provider.'),
+                ];
+            } else {
+                $balance = $this->resolveProviderBalance($profile['data'] ?? []);
+                $diagnostics['OrderSosmed'] = [
+                    'status' => 'ok',
+                    'message' => $balance !== null
+                        ? 'Profil aktif. Saldo provider Rp ' . number_format($balance, 0, ',', '.')
+                        : 'Profil API aktif dan bisa diakses.',
+                ];
+            }
+        }
+
+        $publicUrl = rtrim((string) config('wiboost.public_url', config('app.url')), '/');
+        $callbackUrl = $publicUrl . '/api/midtrans/callback';
+        $midtransConfigured = filled(config('midtrans.server_key')) && filled(config('midtrans.client_key'));
+
+        if (! $midtransConfigured) {
+            $diagnostics['Midtrans'] = [
+                'status' => 'issue',
+                'message' => 'Server key atau client key belum diatur.',
+            ];
+        } elseif ($this->looksLikeLocalUrl($publicUrl)) {
+            $diagnostics['Midtrans'] = [
+                'status' => 'issue',
+                'message' => "Public URL masih lokal ({$publicUrl}). Callback eksternal belum siap.",
+            ];
+        } else {
+            $mode = config('midtrans.is_production') ? 'production' : 'sandbox';
+            $diagnostics['Midtrans'] = [
+                'status' => 'ok',
+                'message' => "Mode {$mode}. Callback {$callbackUrl}",
+            ];
+        }
+
+        $diagnostics['Discord Webhook'] = [
+            'status' => $discordWebhookService->isEnabled() ? 'ok' : 'issue',
+            'message' => $discordWebhookService->isEnabled()
+                ? 'Webhook aktif.'
+                : 'Webhook belum diatur.',
+        ];
+
+        return $diagnostics;
+    }
+
+    protected function resolveProviderBalance(array $profile): ?float
+    {
+        foreach (['balance', 'saldo', 'deposit'] as $key) {
+            $value = data_get($profile, $key);
+
+            if (is_numeric($value)) {
+                return (float) $value;
+            }
+        }
+
+        return null;
+    }
+
+    protected function looksLikeLocalUrl(string $url): bool
+    {
+        $host = parse_url($url, PHP_URL_HOST);
+
+        if (! is_string($host) || $host === '') {
+            return true;
+        }
+
+        $host = strtolower($host);
+
+        if (in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
+            return true;
+        }
+
+        if (str_ends_with($host, '.test') || str_ends_with($host, '.local') || str_ends_with($host, '.localhost')) {
+            return true;
+        }
+
+        if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
+            return filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false;
+        }
+
+        return false;
     }
 }

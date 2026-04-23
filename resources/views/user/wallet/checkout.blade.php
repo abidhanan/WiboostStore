@@ -74,5 +74,7 @@
             });
         });
     </script>
+
+    @include('partials.floating-admin-report')
 </body>
 </html>

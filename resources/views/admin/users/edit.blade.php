@@ -30,7 +30,7 @@
                 <input type="email" value="{{ $user->email }}" disabled class="w-full bg-[#f0f5ff] border-2 border-transparent rounded-[1.5rem] px-6 py-4 text-[#8faaf3] font-black outline-none cursor-not-allowed">
             </div>
             <div>
-                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">WhatsApp (Terkunci)</label>
+                <label class="block text-sm font-black text-[#8faaf3] mb-3 ml-2">Nomor Kontak (Terkunci)</label>
                 <input type="text" value="{{ $user->whatsapp }}" disabled class="w-full bg-[#f0f5ff] border-2 border-transparent rounded-[1.5rem] px-6 py-4 text-[#8faaf3] font-black outline-none cursor-not-allowed">
             </div>
             <div>

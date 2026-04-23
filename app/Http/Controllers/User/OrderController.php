@@ -20,9 +20,22 @@ class OrderController extends Controller
 {
     public function showCategory($slug)
     {
-        $category = Category::with(['children', 'products' => function ($query) {
-            $query->where('is_active', true)->orderBy('price', 'asc');
-        }])->where('slug', $slug)->firstOrFail();
+        $category = Category::with([
+            'parent',
+            'children' => function ($query) {
+                $query->withCount([
+                    'children',
+                    'products as active_products_count' => function ($productQuery) {
+                        $productQuery->where('is_active', true);
+                    },
+                ])->orderBy('name');
+            },
+            'products' => function ($query) {
+                $query->where('is_active', true)
+                    ->with('category.parent')
+                    ->orderBy('price', 'asc');
+            },
+        ])->where('slug', $slug)->firstOrFail();
 
         if ($category->children->count() > 0) {
             return view('user.order_sub', compact('category'));
@@ -40,24 +53,30 @@ class OrderController extends Controller
     ) {
         $product = Product::findOrFail($request->product_id);
         $user = Auth::user();
+        $checkoutFields = $product->checkout_fields;
 
         $rules = [
             'product_id' => 'required|exists:products,id',
             'payment_method' => 'required|string|in:wallet,manual',
         ];
 
-        $rules['target_data'] = $product->requires_target_input
-            ? 'required|string|min:3'
-            : 'nullable|string';
+        $attributes = [
+            'product_id' => 'produk',
+            'payment_method' => 'metode pembayaran',
+        ];
 
-        $validated = $request->validate($rules);
-        $targetData = $product->requires_target_input
-            ? trim((string) ($validated['target_data'] ?? ''))
-            : '- (Tidak membutuhkan target tambahan)';
+        foreach ($checkoutFields as $field) {
+            $rules[$field['name']] = $field['rules'] ?? ['required', 'string', 'min:3', 'max:255'];
+            $attributes[$field['name']] = strtolower($field['label']);
+        }
+
+        $validated = $request->validate($rules, [], $attributes);
+        $targetData = $product->summarizeOrderInput($validated);
+        $orderInputData = $product->buildOrderInputData($validated);
 
         try {
             if ($validated['payment_method'] === 'wallet') {
-                $transaction = DB::transaction(function () use ($user, $product, $targetData) {
+                $transaction = DB::transaction(function () use ($user, $product, $targetData, $orderInputData) {
                     $freshUser = User::query()->lockForUpdate()->findOrFail($user->id);
 
                     if ((float) $freshUser->balance < (float) $product->price) {
@@ -72,6 +91,7 @@ class OrderController extends Controller
                         'product_id' => $product->id,
                         'amount' => $product->price,
                         'target_data' => $targetData,
+                        'order_input_data' => $orderInputData,
                         'payment_status' => 'paid',
                         'order_status' => 'pending',
                         'payment_method' => 'wallet',
@@ -101,6 +121,7 @@ class OrderController extends Controller
                 'product_id' => $product->id,
                 'amount' => $product->price,
                 'target_data' => $targetData,
+                'order_input_data' => $orderInputData,
                 'payment_status' => 'unpaid',
                 'order_status' => 'pending',
                 'payment_method' => 'manual',

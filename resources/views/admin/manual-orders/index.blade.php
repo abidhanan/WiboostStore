@@ -57,9 +57,20 @@
                                 <p class="mt-1 text-xs font-bold text-[#8faaf3]">Rp {{ number_format((float) $order->amount, 0, ',', '.') }}</p>
                             </td>
                             <td class="px-6 py-5">
-                                <div class="max-w-xs rounded-2xl border border-white bg-[#f4f9ff] px-4 py-3 text-sm font-black text-[#2b3a67] shadow-inner">
-                                    {{ $order->target_data }}
-                                </div>
+                                @if($order->has_order_input)
+                                    <div class="max-w-xs space-y-2">
+                                        @foreach($order->order_input_fields as $inputField)
+                                            <div class="rounded-2xl border border-white bg-[#f4f9ff] px-4 py-3 shadow-inner">
+                                                <p class="mb-1 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">{{ $inputField['label'] }}</p>
+                                                <p class="text-sm font-black text-[#2b3a67] break-all">{{ $inputField['value'] }}</p>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="max-w-xs rounded-2xl border border-white bg-[#f4f9ff] px-4 py-3 text-sm font-black text-[#2b3a67] shadow-inner">
+                                        {{ $order->target_data }}
+                                    </div>
+                                @endif
                                 @if($order->target_notes)
                                     <p class="mt-2 max-w-xs text-xs font-bold text-[#8faaf3]">{{ $order->target_notes }}</p>
                                 @endif

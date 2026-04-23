@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\Promo;
 use App\Models\Tutorial;
+use App\Support\WiboostCatalog;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -18,10 +19,14 @@ class DashboardController extends Controller
         $user = Auth::user();
         $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
+        $catalogSlugs = WiboostCatalog::coreCategorySlugs();
+        $categoryOrderSql = WiboostCatalog::categoryOrderSql();
 
         $categories = Category::whereNull('parent_id')
-                                ->withCount(['children', 'products'])
-                                ->get();
+            ->whereIn('slug', $catalogSlugs)
+            ->withCount(['children', 'products'])
+            ->orderByRaw($categoryOrderSql)
+            ->get();
 
         $promos = Promo::where('is_active', true)->latest()->get();
 
@@ -42,13 +47,26 @@ class DashboardController extends Controller
         // Ambil daftar kategori unik untuk menu Filter di Dashboard User
         $tutorialCategories = Tutorial::where('is_active', true)->select('category')->distinct()->pluck('category');
 
+        $recentFomoPurchases = Transaction::with('product')
+            ->where('payment_status', 'paid')
+            ->whereIn('order_status', ['processing', 'success'])
+            ->latest()
+            ->limit(10)
+            ->get()
+            ->map(fn (Transaction $transaction) => [
+                'name' => 'Member Wiboost',
+                'product' => $transaction->product?->name ?? 'Produk Wiboost',
+            ])
+            ->values();
+
         return view('user.dashboard', compact(
             'categories', 
             'promos', 
             'totalThisMonth', 
             'totalSpent', 
             'tutorials',
-            'tutorialCategories'
+            'tutorialCategories',
+            'recentFomoPurchases'
         ));
     }
 }

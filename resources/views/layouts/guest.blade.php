@@ -61,5 +61,7 @@
             </div>
         </div>
     </div>
+
+    @include('partials.floating-admin-report')
 </body>
 </html>

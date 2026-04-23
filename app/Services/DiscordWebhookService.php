@@ -29,10 +29,10 @@ class DiscordWebhookService
             ['name' => 'Pembayaran', 'value' => strtoupper((string) ($transaction->payment_method ?? '-')), 'inline' => true],
         ];
 
-        if (filled($transaction->target_data) && ($transaction->product?->requires_target_input ?? false)) {
+        if ($transaction->has_order_input && filled($transaction->order_input_text)) {
             $fields[] = [
-                'name' => 'Target',
-                'value' => mb_strimwidth((string) $transaction->target_data, 0, 1000, '...'),
+                'name' => 'Input Buyer',
+                'value' => mb_strimwidth((string) $transaction->order_input_text, 0, 1000, '...'),
                 'inline' => false,
             ];
         }
