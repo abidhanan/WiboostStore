@@ -1,7 +1,6 @@
 <section>
     <header class="mb-6">
-        <h3 class="text-xl font-black text-[#2b3a67]">Informasi Profil 👤</h3>
-        <p class="text-sm font-bold text-[#8faaf3] mt-1">Perbarui nama panggilan, alamat email, dan nomor kontak akunmu.</p>
+        <h3 class="text-xl font-black text-[#2b3a67]">Informasi Profil</h3>
     </header>
 
     <form id="send-verification" method="post" action="{{ route('verification.send') }}">
@@ -13,7 +12,7 @@
         @method('patch')
 
         <div>
-            <label for="name" class="block text-sm font-black text-[#8faaf3] mb-2 pl-2">Nama Panggilan</label>
+            <label for="name" class="block text-sm font-black text-[#8faaf3] mb-2 pl-2">Nama Lengkap</label>
             <input id="name" name="name" type="text" value="{{ old('name', $user->name) }}" required autofocus autocomplete="name"
                    class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]">
             <x-input-error class="mt-2 text-[#ff6b6b] text-xs font-bold pl-2" :messages="$errors->get('name')" />
@@ -43,7 +42,7 @@
         </div>
 
         <div>
-            <label for="whatsapp" class="block text-sm font-black text-[#8faaf3] mb-2 pl-2">Nomor Kontak</label>
+            <label for="whatsapp" class="block text-sm font-black text-[#8faaf3] mb-2 pl-2">Nomor WhatsApp</label>
             <input id="whatsapp" name="whatsapp" type="text" value="{{ old('whatsapp', $user->whatsapp) }}" required
                    class="w-full bg-[#f4f9ff] border-2 border-transparent focus:border-[#5a76c8] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]"
                    placeholder="Contoh: 081234567890">
@@ -57,7 +56,7 @@
 
             @if (session('status') === 'profile-updated')
                 <p x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 2500)" class="text-sm font-black text-emerald-500 bg-[#e6fff7] px-4 py-2 rounded-full border border-white">
-                    Tersimpan! ✅
+                    Tersimpan!
                 </p>
             @endif
         </div>

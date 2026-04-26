@@ -1,6 +1,6 @@
 <section class="space-y-6">
     <header class="mb-6">
-        <h3 class="text-xl font-black text-[#ff6b6b]">Zona Berbahaya: Hapus Akun ⚠️</h3>
+        <h3 class="text-xl font-black text-[#ff6b6b]">Zona Berbahaya: Hapus Akun</h3>
         <p class="text-sm font-bold text-[#ff9999] mt-1">Sekali akun dihapus, semua data riwayat pesanan dan saldo tidak dapat dikembalikan.</p>
     </header>
 
@@ -18,7 +18,7 @@
             @method('delete')
 
             <h2 class="text-2xl font-black text-[#2b3a67] mb-2">
-                Yakin ingin menghapus akun? 🥺
+                Yakin ingin menghapus akun?
             </h2>
 
             <p class="text-sm font-bold text-[#8faaf3] mb-6">

@@ -10,8 +10,7 @@
 
 <div class="wiboost-font pb-12 max-w-4xl mx-auto mt-4">
     <div class="mb-10 pl-2">
-        <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pengaturan Akun ⚙️</h2>
-        <p class="text-[#8faaf3] font-bold text-sm mt-1">Kelola informasi profil dan keamanan akunmu di sini.</p>
+        <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pengaturan Akun</h2>
     </div>
 
     <div class="space-y-8">

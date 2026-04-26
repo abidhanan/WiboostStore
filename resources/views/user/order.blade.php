@@ -178,7 +178,6 @@
             </form>
         @else
         <div class="mb-6 flex items-center gap-3 pl-2">
-            <span class="text-2xl">LIST</span>
             <h3 class="text-2xl font-black text-[#2b3a67]">Daftar Layanan</h3>
         </div>
 

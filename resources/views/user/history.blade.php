@@ -22,7 +22,6 @@
 <div class="wiboost-font pb-12 max-w-4xl mx-auto mt-4">
     <div class="mb-10 pl-2">
         <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Riwayat Pesanan</h2>
-        <p class="text-[#8faaf3] font-bold text-sm mt-1">Klik tiket pesanan untuk melihat detail atau melanjutkan pembayaran.</p>
     </div>
 
     @if(session('success'))
@@ -246,9 +245,8 @@
             </div>
         @empty
             <div class="text-center py-24 bg-white rounded-[2.5rem] border-4 border-dashed border-[#bde0fe] shadow-sm">
-                <div class="text-7xl mb-4 opacity-50 inline-block w-24 h-24 bg-[#f0f5ff] rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-inner">LIST</div>
                 <h3 class="text-xl font-black text-[#5a76c8] mb-2 mt-4">Belum Ada Pesanan</h3>
-                <p class="text-[#8faaf3] font-bold max-w-sm mx-auto px-4">Kamu belum pernah jajan di sini. Yuk, mulai buat pesanan pertamamu!</p>
+                <p class="text-[#8faaf3] font-bold max-w-sm mx-auto px-4">Yuk, mulai buat pesanan pertamamu!</p>
                 <a href="{{ route('user.dashboard') }}" class="inline-block mt-8 bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black px-8 py-4 rounded-full transition-transform active:scale-95 shadow-lg shadow-[#5a76c8]/30 border-2 border-white">
                     Lihat Katalog Layanan
                 </a>

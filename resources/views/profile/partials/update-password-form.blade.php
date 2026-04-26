@@ -1,7 +1,6 @@
 <section>
     <header class="mb-6">
-        <h3 class="text-xl font-black text-[#2b3a67]">Ubah Kata Sandi 🔐</h3>
-        <p class="text-sm font-bold text-[#8faaf3] mt-1">Pastikan akunmu menggunakan kata sandi yang panjang dan acak agar tetap aman.</p>
+        <h3 class="text-xl font-black text-[#2b3a67]">Ubah Kata Sandi</h3>
     </header>
 
     <form method="post" action="{{ route('password.update') }}" class="space-y-6">
@@ -36,7 +35,7 @@
 
             @if (session('status') === 'password-updated')
                 <p x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 2500)" class="text-sm font-black text-emerald-500 bg-[#e6fff7] px-4 py-2 rounded-full border border-white">
-                    Sandi Diubah! ✅
+                    Sandi Diubah!
                 </p>
             @endif
         </div>
