@@ -32,7 +32,7 @@ class OrderController extends Controller
             },
             'products' => function ($query) {
                 $query->where('is_active', true)
-                    ->with('category.parent')
+                    ->with('category.parent.parent.parent')
                     ->orderBy('price', 'asc');
             },
         ])->where('slug', $slug)->firstOrFail();
@@ -42,8 +42,10 @@ class OrderController extends Controller
         }
 
         $products = $category->products;
+        $isSuntikSosmedOrder = $this->resolveRootCategorySlug($category) === 'suntik-sosmed'
+            && $products->contains(fn (Product $product) => $product->is_ordersosmed_service);
 
-        return view('user.order', compact('category', 'products'));
+        return view('user.order', compact('category', 'products', 'isSuntikSosmedOrder'));
     }
 
     public function processCheckout(
@@ -73,23 +75,24 @@ class OrderController extends Controller
         $validated = $request->validate($rules, [], $attributes);
         $targetData = $product->summarizeOrderInput($validated);
         $orderInputData = $product->buildOrderInputData($validated);
+        $checkoutAmount = $product->calculateCheckoutAmount($validated);
 
         try {
             if ($validated['payment_method'] === 'wallet') {
-                $transaction = DB::transaction(function () use ($user, $product, $targetData, $orderInputData) {
+                $transaction = DB::transaction(function () use ($user, $product, $targetData, $orderInputData, $checkoutAmount) {
                     $freshUser = User::query()->lockForUpdate()->findOrFail($user->id);
 
-                    if ((float) $freshUser->balance < (float) $product->price) {
+                    if ((float) $freshUser->balance < (float) $checkoutAmount) {
                         throw new \RuntimeException('Saldo Wiboost tidak mencukupi. Silakan top up terlebih dahulu.');
                     }
 
-                    $freshUser->decrement('balance', (float) $product->price);
+                    $freshUser->decrement('balance', (float) $checkoutAmount);
 
                     $transaction = Transaction::create([
                         'invoice_number' => 'WIB-' . strtoupper(Str::random(12)),
                         'user_id' => $freshUser->id,
                         'product_id' => $product->id,
-                        'amount' => $product->price,
+                        'amount' => $checkoutAmount,
                         'target_data' => $targetData,
                         'order_input_data' => $orderInputData,
                         'payment_status' => 'paid',
@@ -100,7 +103,7 @@ class OrderController extends Controller
                     WalletHistory::create([
                         'user_id' => $freshUser->id,
                         'type' => 'purchase',
-                        'amount' => $product->price,
+                        'amount' => $checkoutAmount,
                         'description' => 'Pembelian Produk: ' . $product->name,
                         'invoice_number' => $transaction->invoice_number,
                     ]);
@@ -119,7 +122,7 @@ class OrderController extends Controller
                 'invoice_number' => 'WIB-' . strtoupper(Str::random(12)),
                 'user_id' => $user->id,
                 'product_id' => $product->id,
-                'amount' => $product->price,
+                'amount' => $checkoutAmount,
                 'target_data' => $targetData,
                 'order_input_data' => $orderInputData,
                 'payment_status' => 'unpaid',
@@ -139,5 +142,16 @@ class OrderController extends Controller
                 ->withInput()
                 ->with('error', 'Gagal memproses pesanan: ' . $e->getMessage());
         }
+    }
+
+    protected function resolveRootCategorySlug(Category $category): ?string
+    {
+        $category->loadMissing('parent.parent.parent');
+
+        while ($category->parent) {
+            $category = $category->parent;
+        }
+
+        return $category->slug;
     }
 }

@@ -19,8 +19,9 @@
 
             <div>
                 <label for="email" class="mb-2 block text-sm font-black text-[#5a76c8]">Alamat Email</label>
-                <input id="email" type="email" name="email" value="{{ old('email', $request->email) }}" required readonly
-                    class="w-full cursor-not-allowed rounded-[1.4rem] border-2 border-transparent bg-[#f0f5ff] px-5 py-4 text-sm font-bold text-[#8faaf3] outline-none">
+                <input id="email" type="email" name="email" value="{{ old('email', $request->email) }}" required autocomplete="username"
+                    class="w-full rounded-[1.4rem] border-2 border-[#e0ebff] bg-[#f8fbff] px-5 py-4 text-sm font-bold text-[#2b3a67] outline-none transition focus:border-[#5a76c8] focus:bg-white"
+                    placeholder="nama@email.com">
                 @error('email')
                     <p class="mt-2 text-xs font-bold text-[#ff6b6b]">{{ $message }}</p>
                 @enderror

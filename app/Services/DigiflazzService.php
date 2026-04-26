@@ -109,29 +109,8 @@ class DigiflazzService
             ]);
 
             $body = $response->json() ?? [];
-            $data = $body['data'] ?? [];
-            $statusText = strtolower((string) ($data['status'] ?? $body['status'] ?? ''));
-            $responseCode = (string) ($data['rc'] ?? $body['rc'] ?? '');
-            $providerOrderId = $data['ref_id'] ?? $data['sn'] ?? $refId;
-            $message = $data['message'] ?? $body['message'] ?? 'Digiflazz merespons tanpa pesan.';
 
-            $success = $response->successful()
-                && in_array($responseCode, ['00', '0', ''], true)
-                && ! in_array($statusText, ['gagal', 'failed', 'error'], true);
-
-            $orderStatus = match (true) {
-                str_contains($statusText, 'sukses'), str_contains($statusText, 'success') => 'success',
-                str_contains($statusText, 'pending'), $success => 'processing',
-                default => 'failed',
-            };
-
-            return [
-                'success' => $success,
-                'message' => $message,
-                'provider_order_id' => $providerOrderId,
-                'order_status' => $orderStatus,
-                'raw' => $body,
-            ];
+            return $this->normalizeTransactionResponse($response->successful(), $body, $refId);
         } catch (Throwable $e) {
             Log::error("Digiflazz placeOrder error [{$refId}]: " . $e->getMessage());
 
@@ -141,5 +120,67 @@ class DigiflazzService
                 'order_status' => 'failed',
             ];
         }
+    }
+
+    public function checkOrderStatus(string $sku, string $target, string $refId): array
+    {
+        if (! $this->isConfigured()) {
+            return [
+                'success' => false,
+                'message' => 'Kredensial Digiflazz belum diatur.',
+                'order_status' => 'processing',
+            ];
+        }
+
+        $sign = md5($this->username . $this->key . $refId);
+
+        try {
+            $response = Http::timeout(30)->acceptJson()->post($this->baseUrl . '/transaction', [
+                'username' => $this->username,
+                'buyer_sku_code' => $sku,
+                'customer_no' => $target,
+                'ref_id' => $refId,
+                'sign' => $sign,
+            ]);
+
+            return $this->normalizeTransactionResponse($response->successful(), $response->json() ?? [], $refId);
+        } catch (Throwable $e) {
+            Log::error("Digiflazz checkOrderStatus error [{$refId}]: " . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Koneksi cek status Digiflazz gagal.',
+                'order_status' => 'processing',
+            ];
+        }
+    }
+
+    protected function normalizeTransactionResponse(bool $httpSuccess, array $body, string $refId): array
+    {
+        $data = $body['data'] ?? [];
+        $statusText = strtolower((string) ($data['status'] ?? $body['status'] ?? ''));
+        $responseCode = (string) ($data['rc'] ?? $body['rc'] ?? '');
+        $providerOrderId = $data['ref_id'] ?? $data['sn'] ?? $refId;
+        $message = $data['message'] ?? $body['message'] ?? 'Digiflazz merespons tanpa pesan.';
+
+        $accepted = $httpSuccess
+            && in_array($responseCode, ['00', '0', '', '03'], true)
+            && ! in_array($statusText, ['gagal', 'failed', 'error'], true);
+
+        $orderStatus = match (true) {
+            str_contains($statusText, 'sukses'), str_contains($statusText, 'success') => 'success',
+            str_contains($statusText, 'gagal'), str_contains($statusText, 'failed'), str_contains($statusText, 'error') => 'failed',
+            in_array($responseCode, ['01', '02'], true) => 'failed',
+            str_contains($statusText, 'pending'), $accepted => 'processing',
+            default => 'failed',
+        };
+
+        return [
+            'success' => $accepted || $orderStatus === 'success',
+            'message' => $message,
+            'provider_order_id' => $providerOrderId,
+            'order_status' => $orderStatus,
+            'raw' => $body,
+        ];
     }
 }

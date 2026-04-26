@@ -88,6 +88,22 @@ class Product extends Model
 
         $checkoutFields = WiboostCatalog::checkoutFieldsForTopCategory($topCategorySlug);
 
+        if ($topCategorySlug === 'suntik-sosmed' && $this->is_ordersosmed_service) {
+            $checkoutFields[] = [
+                'name' => 'order_quantity',
+                'label' => 'Jumlah Pesanan',
+                'type' => 'number',
+                'placeholder' => 'Masukkan jumlah pesanan',
+                'hint' => 'Jumlah harus sesuai minimal dan maksimal pesanan layanan.',
+                'rules' => [
+                    'required',
+                    'integer',
+                    'min:' . $this->ordersosmed_min_quantity,
+                    'max:' . $this->ordersosmed_max_quantity,
+                ],
+            ];
+        }
+
         if ($checkoutFields !== []) {
             return $checkoutFields;
         }
@@ -222,6 +238,81 @@ class Product extends Model
         };
     }
 
+    public function getIsOrdersosmedServiceAttribute(): bool
+    {
+        return ($this->provider_source ?: $this->provider_id) === 'ordersosmed';
+    }
+
+    public function getOrdersosmedMinQuantityAttribute(): int
+    {
+        $descriptionMin = $this->extractDescriptionInteger('/Minimum order:\s*([\d.,]+)/i');
+
+        return max(1, $descriptionMin ?: (int) ($this->provider_quantity ?: 1));
+    }
+
+    public function getOrdersosmedMaxQuantityAttribute(): int
+    {
+        $descriptionMax = $this->extractDescriptionInteger('/Maximum order:\s*([\d.,]+)/i');
+
+        return max($this->ordersosmed_min_quantity, $descriptionMax ?: 1000000);
+    }
+
+    public function getOrdersosmedAverageTimeAttribute(): string
+    {
+        $text = trim((string) $this->description . "\n" . (string) $this->name);
+        $pattern = '/(?:Waktu\s*rata[-\s]*rata|Average\s*time|Avg\.?\s*time|Estimasi(?:\s*waktu)?|Kecepatan|Speed|Start\s*time|Completion\s*time|Waktu\s*proses)\s*[:：-]\s*(.+)$/mi';
+
+        if (preg_match($pattern, $text, $matches) === 1) {
+            return trim($matches[1]);
+        }
+
+        if (preg_match('/\bStart\s*[:：-]\s*([^\]\n|]+)/i', $text, $matches) === 1) {
+            return 'Mulai: ' . trim($matches[1]);
+        }
+
+        if (preg_match('/\b(instant|instan|fast\s*start)\b/i', $text, $matches) === 1) {
+            return Str::headline($matches[1]);
+        }
+
+        if (preg_match('/\b(\d+(?:[.,]\d+)?\s*[kKmM]?\s*\/\s*(?:day|days|hari|jam|hour|hours))\b/i', $text, $matches) === 1) {
+            return 'Kecepatan: ' . trim($matches[1]);
+        }
+
+        return 'Tidak tersedia dari provider';
+    }
+
+    public function getOrdersosmedUnitPriceAttribute(): float
+    {
+        return (float) $this->price / max(1, $this->ordersosmed_min_quantity);
+    }
+
+    public function getOrdersosmedPricePerThousandAttribute(): float
+    {
+        return $this->ordersosmed_unit_price * 1000;
+    }
+
+    public function calculateCheckoutAmount(array $validated): float
+    {
+        if ($this->is_ordersosmed_service && filled($validated['order_quantity'] ?? null)) {
+            $quantity = max(1, (int) $validated['order_quantity']);
+
+            return (float) (ceil(($quantity * $this->ordersosmed_unit_price) / 100) * 100);
+        }
+
+        return (float) $this->price;
+    }
+
+    protected function extractDescriptionInteger(string $pattern): ?int
+    {
+        if (preg_match($pattern, (string) $this->description, $matches) !== 1) {
+            return null;
+        }
+
+        $digits = preg_replace('/\D+/', '', $matches[1]);
+
+        return filled($digits) ? (int) $digits : null;
+    }
+
     /**
      * Boot function untuk generate slug otomatis jika belum ada
      */
@@ -265,6 +356,15 @@ class Product extends Model
 
     public function summarizeOrderInput(array $validated): string
     {
+        if ($this->resolvePrimaryCategorySlug() === 'top-up-game') {
+            $userId = trim((string) ($validated['game_user_id'] ?? ''));
+            $zoneId = trim((string) ($validated['game_zone_id'] ?? ''));
+
+            if ($userId !== '' && $zoneId !== '') {
+                return $userId . ' (' . $zoneId . ')';
+            }
+        }
+
         $fields = data_get($this->buildOrderInputData($validated), 'fields', []);
 
         if ($fields === []) {

@@ -173,6 +173,12 @@
             </div>
 
             <div class="border-t-2 border-[#f0f5ff] pt-8 text-center">
+                <div class="mb-5 flex flex-wrap items-center justify-center gap-3 text-xs font-black text-[#5a76c8]">
+                    <a href="{{ route('legal.show', 'terms') }}" class="rounded-full bg-[#f4f9ff] px-4 py-2 transition hover:bg-[#e0fbfc]">Syarat & Ketentuan</a>
+                    <a href="{{ route('legal.show', 'privacy-policy') }}" class="rounded-full bg-[#f4f9ff] px-4 py-2 transition hover:bg-[#e0fbfc]">Privasi</a>
+                    <a href="{{ route('legal.show', 'refund-policy') }}" class="rounded-full bg-[#f4f9ff] px-4 py-2 transition hover:bg-[#e0fbfc]">Refund</a>
+                    <a href="{{ route('legal.show', 'contact') }}" class="rounded-full bg-[#f4f9ff] px-4 py-2 transition hover:bg-[#e0fbfc]">Kontak Admin</a>
+                </div>
                 <p class="text-[10px] font-black text-[#a3bbfb] uppercase tracking-widest">&copy; {{ date('Y') }} Wiboost Store. Hak Cipta Dilindungi.</p>
             </div>
         </div>

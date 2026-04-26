@@ -194,18 +194,55 @@ class SyncOrderSosmedServices extends Command
 
     protected function buildDescription(array $service, string $syncMode): string
     {
+        $averageTime = $this->resolveAverageTime($service);
+
         $chunks = array_filter([
             $service['description'] ?? null,
             $service['note'] ?? null,
             isset($service['category']) ? 'Kategori provider: ' . $service['category'] : null,
             isset($service['min']) ? 'Minimum order: ' . $service['min'] : null,
             isset($service['max']) ? 'Maximum order: ' . $service['max'] : null,
+            $averageTime ? 'Waktu rata-rata: ' . $averageTime : null,
             $syncMode === 'guest'
                 ? 'Sinkron dari katalog publik OrderSosmed. Pemrosesan pesanan sementara dilakukan manual oleh admin.'
                 : null,
         ]);
 
         return $chunks !== [] ? implode("\n", $chunks) : 'Layanan otomatis dari provider OrderSosmed.';
+    }
+
+    protected function resolveAverageTime(array $service): ?string
+    {
+        $keys = [
+            'average_time',
+            'avg_time',
+            'average',
+            'time',
+            'speed',
+            'estimated_time',
+            'estimate',
+            'estimasi',
+            'waktu_rata_rata',
+            'start_time',
+            'completion_time',
+        ];
+
+        foreach ($keys as $key) {
+            $value = trim((string) ($service[$key] ?? ''));
+
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        $text = trim((string) ($service['description'] ?? '') . "\n" . (string) ($service['note'] ?? ''));
+        $pattern = '/(?:Waktu\s*rata[-\s]*rata|Average\s*time|Avg\.?\s*time|Estimasi(?:\s*waktu)?|Kecepatan|Speed|Start\s*time|Completion\s*time|Waktu\s*proses)\s*[:：-]\s*(.+)$/mi';
+
+        if (preg_match($pattern, $text, $matches) === 1) {
+            return trim($matches[1]);
+        }
+
+        return null;
     }
 
     protected function resolveTargetMeta(array $service, string $syncMode): array

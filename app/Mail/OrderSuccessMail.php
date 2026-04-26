@@ -13,7 +13,7 @@ class OrderSuccessMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $transaction;
+    public Transaction $transaction;
 
     public function __construct(Transaction $transaction)
     {
@@ -23,14 +23,14 @@ class OrderSuccessMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Hore! Pesanan Wiboost Kamu Berhasil 🚀',
+            subject: 'Pesanan Wiboost Kamu Berhasil',
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.order_success', // Kita akan buat view ini di langkah berikutnya
+            view: 'emails.order_success',
         );
     }
 }

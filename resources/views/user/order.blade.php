@@ -33,6 +33,26 @@
         </div>
     @endif
 
+    @php
+        $showSuntikSosmedForm = $isSuntikSosmedOrder ?? false;
+        $socialProductsPayload = $showSuntikSosmedForm
+            ? $products->map(function ($product) {
+                $plainDescription = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $product->description)));
+
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'description' => $plainDescription !== '' ? $plainDescription : '-',
+                    'min' => $product->ordersosmed_min_quantity,
+                    'max' => $product->ordersosmed_max_quantity,
+                    'unit_price' => $product->ordersosmed_unit_price,
+                    'price_per_1000' => $product->ordersosmed_price_per_thousand,
+                    'average_time' => $product->ordersosmed_average_time,
+                ];
+            })->values()
+            : collect();
+    @endphp
+
     <div id="page-product-list" class="transition-all duration-300">
         <div class="relative mb-10 flex flex-col items-center gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white bg-white p-6 shadow-lg shadow-[#bde0fe]/30 md:flex-row md:gap-10 md:p-10">
             <div class="absolute -bottom-10 -right-10 text-8xl opacity-10 pointer-events-none">CAT</div>
@@ -63,6 +83,100 @@
             </div>
         </div>
 
+        @if($showSuntikSosmedForm)
+            <form action="{{ route('user.checkout.process') }}" method="POST" id="socialCheckoutForm" onsubmit="showSocialLoadingBtn()" class="rounded-[2rem] border-4 border-white bg-white p-5 shadow-lg shadow-[#bde0fe]/25 md:p-8">
+                @csrf
+                <input type="hidden" name="product_id" id="social_product_id" value="{{ old('product_id') }}">
+
+                <div class="mb-5">
+                    <label class="mb-3 ml-1 block text-sm font-black text-[#2b3a67]">Layanan <span class="text-[#ff6b6b]">*</span></label>
+                    <select id="social_service_select" required class="w-full appearance-none rounded-xl border border-[#cbd7ea] bg-white px-4 py-3 font-bold text-[#2b3a67] outline-none focus:border-[#5a76c8]">
+                        <option value="">Pilih layanan...</option>
+                        @foreach($products as $product)
+                            <option value="{{ $product->id }}" {{ (string) old('product_id') === (string) $product->id ? 'selected' : '' }}>{{ $product->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-5">
+                    <label class="mb-3 ml-1 block text-sm font-black text-[#2b3a67]">Deskripsi</label>
+                    <textarea id="social_description" rows="3" readonly class="w-full resize-none rounded-xl border border-[#cbd7ea] bg-[#eef2f7] px-4 py-3 font-bold text-[#2b3a67] outline-none">-</textarea>
+                </div>
+
+                <div class="mb-5 grid grid-cols-1 gap-5 md:grid-cols-3">
+                    <div>
+                        <label class="mb-3 ml-1 block text-sm font-black text-[#2b3a67]">Minimal Pesanan</label>
+                        <input type="text" id="social_min" readonly value="0" class="w-full rounded-xl border border-[#cbd7ea] bg-[#eef2f7] px-4 py-3 font-bold text-[#2b3a67] outline-none">
+                    </div>
+
+                    <div>
+                        <label class="mb-3 ml-1 block text-sm font-black text-[#2b3a67]">Maksimal Pesanan</label>
+                        <input type="text" id="social_max" readonly value="0" class="w-full rounded-xl border border-[#cbd7ea] bg-[#eef2f7] px-4 py-3 font-bold text-[#2b3a67] outline-none">
+                    </div>
+
+                    <div>
+                        <label class="mb-3 ml-1 block text-sm font-black text-[#2b3a67]">Harga / 1000</label>
+                        <div class="flex overflow-hidden rounded-xl border border-[#cbd7ea] bg-[#eef2f7]">
+                            <span class="border-r border-[#cbd7ea] px-4 py-3 font-bold text-[#2b3a67]">Rp</span>
+                            <input type="text" id="social_price_per_1000" readonly value="0" class="min-w-0 flex-1 bg-transparent px-4 py-3 font-bold text-[#2b3a67] outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <label class="mb-3 ml-1 block text-sm font-black text-[#2b3a67]">Jumlah Pesanan <span class="text-[#ff6b6b]">*</span></label>
+                    <input type="number" name="order_quantity" id="social_order_quantity" min="1" value="{{ old('order_quantity') }}" required class="w-full rounded-xl border border-[#cbd7ea] bg-white px-4 py-3 font-bold text-[#2b3a67] outline-none focus:border-[#5a76c8]">
+                </div>
+
+                <div class="mb-5">
+                    <label class="mb-3 ml-1 block text-sm font-black text-[#2b3a67]">Target/Link/Username <span class="text-[#ff6b6b]">*</span></label>
+                    <input type="text" name="target_data" value="{{ old('target_data') }}" required class="w-full rounded-xl border border-[#cbd7ea] bg-white px-4 py-3 font-bold text-[#2b3a67] outline-none focus:border-[#5a76c8]">
+                </div>
+
+                <div class="mb-5">
+                    <label class="mb-3 ml-1 block text-sm font-black text-[#2b3a67]">Waktu Rata-Rata</label>
+                    <input type="text" id="social_average_time" readonly value="Pilih layanan dulu" class="w-full rounded-xl border border-[#cbd7ea] bg-[#eef2f7] px-4 py-3 font-bold text-[#2b3a67] outline-none">
+                </div>
+
+                <div class="mb-8">
+                    <label class="mb-3 ml-1 block text-sm font-black text-[#2b3a67]">Total Harga</label>
+                    <div class="flex overflow-hidden rounded-xl border border-[#cbd7ea] bg-[#eef2f7]">
+                        <span class="border-r border-[#cbd7ea] px-4 py-3 font-bold text-[#2b3a67]">Rp</span>
+                        <input type="text" id="social_total_price" readonly value="0" class="min-w-0 flex-1 bg-transparent px-4 py-3 font-bold text-[#2b3a67] outline-none">
+                    </div>
+                </div>
+
+                <div class="relative mb-8 rounded-[1.5rem] border-2 border-[#e0fbfc] bg-[#f8fbff] p-5">
+                    <h4 class="mb-4 text-lg font-black text-[#2b3a67]">Metode Pembayaran</h4>
+
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <label class="group relative flex cursor-pointer items-center gap-4 rounded-[1.25rem] border-2 border-white bg-white p-5 shadow-sm transition-all hover:border-[#bde0fe]">
+                            <input type="radio" name="payment_method" value="wallet" class="peer sr-only" required>
+                            <div class="h-6 w-6 shrink-0 rounded-full border-2 border-[#8faaf3] bg-white transition-all peer-checked:border-[7px] peer-checked:border-[#5a76c8]"></div>
+                            <div class="flex-1">
+                                <p class="text-base font-black text-[#2b3a67]">Saldo Wiboost</p>
+                                <p class="mt-1 text-sm font-bold text-[#5a76c8]">Sisa: Rp {{ number_format(Auth::user()->balance ?? 0, 0, ',', '.') }}</p>
+                            </div>
+                            <div class="pointer-events-none absolute inset-0 rounded-[1.25rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
+                        </label>
+
+                        <label class="group relative flex cursor-pointer items-center gap-4 rounded-[1.25rem] border-2 border-white bg-white p-5 shadow-sm transition-all hover:border-[#bde0fe]">
+                            <input type="radio" name="payment_method" value="manual" class="peer sr-only" required>
+                            <div class="h-6 w-6 shrink-0 rounded-full border-2 border-[#8faaf3] bg-white transition-all peer-checked:border-[7px] peer-checked:border-[#5a76c8]"></div>
+                            <div class="flex-1">
+                                <p class="text-base font-black text-[#2b3a67]">E-Wallet & QRIS</p>
+                                <p class="mt-1 text-xs font-bold text-[#8faaf3]">Otomatis via Payment Gateway</p>
+                            </div>
+                            <div class="pointer-events-none absolute inset-0 rounded-[1.25rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" id="btnSocialCheckout" class="flex w-full items-center justify-center rounded-[1.5rem] border-4 border-white bg-[#4bc6b9] py-4 text-xl font-black text-white shadow-xl shadow-[#4bc6b9]/30 transition hover:bg-[#3ba398] active:scale-95">
+                    Bayar Pesanan
+                </button>
+            </form>
+        @else
         <div class="mb-6 flex items-center gap-3 pl-2">
             <span class="text-2xl">LIST</span>
             <h3 class="text-2xl font-black text-[#2b3a67]">Daftar Layanan</h3>
@@ -123,6 +237,7 @@
                 </div>
             @endforelse
         </div>
+        @endif
     </div>
 
     <div id="page-checkout" class="hidden transition-all duration-300">
@@ -214,6 +329,65 @@
     const stepNumber2 = document.getElementById('step_number_2');
     const oldCheckoutInput = @json(old());
     const oldProductId = @json(old('product_id'));
+    const socialServices = @json($socialProductsPayload);
+    const socialServiceSelect = document.getElementById('social_service_select');
+    const socialQuantityInput = document.getElementById('social_order_quantity');
+    const rupiahFormatter = new Intl.NumberFormat('id-ID');
+
+    function findSocialService() {
+        if (!socialServiceSelect) {
+            return null;
+        }
+
+        return socialServices.find((service) => String(service.id) === String(socialServiceSelect.value)) || null;
+    }
+
+    function syncSocialService() {
+        const service = findSocialService();
+        const productInput = document.getElementById('social_product_id');
+
+        if (productInput) {
+            productInput.value = service ? service.id : '';
+        }
+
+        document.getElementById('social_description').value = service ? service.description : '-';
+        document.getElementById('social_min').value = service ? rupiahFormatter.format(service.min) : '0';
+        document.getElementById('social_max').value = service ? rupiahFormatter.format(service.max) : '0';
+        document.getElementById('social_price_per_1000').value = service ? rupiahFormatter.format(Math.ceil(service.price_per_1000)) : '0';
+        document.getElementById('social_average_time').value = service ? service.average_time : 'Pilih layanan dulu';
+
+        if (socialQuantityInput && service) {
+            socialQuantityInput.min = service.min;
+            socialQuantityInput.max = service.max;
+            socialQuantityInput.placeholder = `${service.min} - ${service.max}`;
+        }
+
+        updateSocialTotal();
+    }
+
+    function updateSocialTotal() {
+        const service = findSocialService();
+        const quantity = parseInt(socialQuantityInput?.value || '0', 10);
+        const total = service && quantity > 0
+            ? Math.ceil((quantity * service.unit_price) / 100) * 100
+            : 0;
+
+        const totalInput = document.getElementById('social_total_price');
+        if (totalInput) {
+            totalInput.value = rupiahFormatter.format(total);
+        }
+    }
+
+    function showSocialLoadingBtn() {
+        const btn = document.getElementById('btnSocialCheckout');
+
+        if (!btn) {
+            return;
+        }
+
+        btn.innerHTML = 'Sedang Memproses...';
+        btn.classList.add('cursor-not-allowed', 'opacity-70');
+    }
 
     function checkoutInputClass() {
         return 'w-full rounded-[1.5rem] border-2 border-transparent bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] outline-none transition placeholder-[#a3bbfb] focus:border-[#5a76c8]';
@@ -320,6 +494,12 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        if (socialServiceSelect) {
+            socialServiceSelect.addEventListener('change', syncSocialService);
+            socialQuantityInput?.addEventListener('input', updateSocialTotal);
+            syncSocialService();
+        }
+
         if (!oldProductId) {
             return;
         }

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Console;
 
 use App\Models\Category;
+use App\Mail\OrderSuccessMail;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\User;
@@ -12,6 +13,7 @@ use App\Services\OrderSosmedService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Mockery\MockInterface;
 use Tests\TestCase;
@@ -141,6 +143,143 @@ class WiboostOperationsCommandTest extends TestCase
                 && ($payload['embeds'][0]['title'] ?? null) === 'Laporan maintenance Wiboost'
                 && str_contains(($payload['embeds'][0]['fields'][6]['value'] ?? ''), 'Midtrans');
         });
+    }
+
+    public function test_check_provider_orders_marks_digiflazz_processing_order_success(): void
+    {
+        Mail::fake();
+        $this->seedCategory(1, 'top-up-game');
+
+        $user = User::factory()->create();
+        $product = Product::create([
+            'category_id' => 1,
+            'provider_id' => 'digiflazz',
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'ML86',
+            'process_type' => 'api',
+            'name' => 'Mobile Legends 86 Diamonds',
+            'slug' => 'mobile-legends-86-diamonds-status',
+            'description' => 'Produk game',
+            'price' => 12000,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        $transaction = Transaction::create([
+            'invoice_number' => 'WIB-CHECK-DIGI',
+            'user_id' => $user->id,
+            'product_id' => $product->id,
+            'amount' => 12000,
+            'target_data' => '123456789 (1234)',
+            'order_input_data' => ['fields' => [
+                ['name' => 'game_user_id', 'label' => 'User ID game', 'value' => '123456789'],
+                ['name' => 'game_zone_id', 'label' => 'Zone ID / Server ID', 'value' => '1234'],
+            ]],
+            'payment_status' => 'paid',
+            'order_status' => 'processing',
+            'payment_method' => 'wallet',
+        ]);
+
+        $this->mock(DigiflazzService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('checkOrderStatus')
+                ->once()
+                ->with('ML86', '1234567891234', 'WIB-CHECK-DIGI')
+                ->andReturn([
+                    'success' => true,
+                    'message' => 'Transaksi sukses',
+                    'provider_order_id' => 'SN-1',
+                    'order_status' => 'success',
+                    'raw' => ['data' => ['status' => 'Sukses']],
+                ]);
+        });
+
+        $this->artisan('wiboost:check-provider-orders')
+            ->assertExitCode(0);
+
+        $this->assertSame('success', $transaction->fresh()->order_status);
+        Mail::assertSent(OrderSuccessMail::class);
+    }
+
+    public function test_check_provider_orders_refunds_failed_ordersosmed_processing_order(): void
+    {
+        $this->seedCategory(1, 'suntik-sosmed');
+
+        $user = User::factory()->create(['balance' => 0]);
+        $product = Product::create([
+            'category_id' => 1,
+            'provider_id' => 'ordersosmed',
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => 'svc-1',
+            'provider_quantity' => 100,
+            'process_type' => 'api',
+            'name' => 'Instagram Like Indonesia',
+            'slug' => 'instagram-like-indonesia-status',
+            'description' => 'Produk sosmed',
+            'price' => 10000,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        $transaction = Transaction::create([
+            'invoice_number' => 'WIB-CHECK-OS',
+            'user_id' => $user->id,
+            'product_id' => $product->id,
+            'amount' => 10000,
+            'target_data' => '@target',
+            'response_data' => ['provider_order_id' => 'OS-1'],
+            'payment_status' => 'paid',
+            'order_status' => 'processing',
+            'payment_method' => 'wallet',
+        ]);
+
+        $this->mock(OrderSosmedService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('checkOrderStatus')
+                ->once()
+                ->with('OS-1')
+                ->andReturn([
+                    'success' => false,
+                    'message' => 'Order canceled provider.',
+                    'provider_order_id' => 'OS-1',
+                    'order_status' => 'failed',
+                    'raw' => ['status' => 'Canceled'],
+                ]);
+        });
+
+        $this->artisan('wiboost:check-provider-orders')
+            ->assertExitCode(0);
+
+        $this->assertSame('failed', $transaction->fresh()->order_status);
+        $this->assertSame(10000.0, (float) $user->fresh()->balance);
+        $this->assertDatabaseHas('wallet_histories', [
+            'invoice_number' => 'WIB-CHECK-OS',
+            'type' => 'refund',
+        ]);
+    }
+
+    public function test_readiness_check_passes_when_production_requirements_are_configured(): void
+    {
+        config([
+            'app.env' => 'production',
+            'app.debug' => false,
+            'wiboost.public_url' => 'https://wiboost.example',
+            'midtrans.server_key' => 'mid-server',
+            'midtrans.client_key' => 'mid-client',
+            'mail.default' => 'smtp',
+            'mail.from.address' => 'support@wiboost.example',
+            'mail.mailers.smtp.host' => 'smtp.example',
+            'services.digiflazz.username' => 'digiflazz-user',
+            'services.digiflazz.key' => 'digiflazz-key',
+            'services.ordersosmed.api_url' => 'https://ordersosmed.id/api-1',
+            'services.ordersosmed.api_id' => 'os-id',
+            'services.ordersosmed.api_key' => 'os-key',
+            'services.discord.webhook_url' => 'https://discord.test/webhook',
+            'queue.default' => 'database',
+        ]);
+
+        $this->artisan('wiboost:readiness-check --strict')
+            ->assertExitCode(0);
     }
 
     public function test_ordersosmed_service_uses_api_1_service_endpoint_with_secret_key(): void
@@ -311,6 +450,7 @@ class WiboostOperationsCommandTest extends TestCase
                         'min' => 100,
                         'max' => 10000,
                         'description' => 'Fast refill',
+                        'avg_time' => '6 jam 20 menit',
                     ]],
                 ]);
         });
@@ -328,6 +468,7 @@ class WiboostOperationsCommandTest extends TestCase
         $this->assertSame(1, $product->category_id);
         $this->assertSame(100, $product->provider_quantity);
         $this->assertSame(2800.0, (float) $product->price);
+        $this->assertSame('6 jam 20 menit', $product->ordersosmed_average_time);
     }
 
     public function test_ordersosmed_guest_catalog_service_parses_public_ajax_rows(): void

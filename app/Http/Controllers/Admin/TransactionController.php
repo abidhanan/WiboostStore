@@ -51,8 +51,12 @@ class TransactionController extends Controller
 
         $transaction = Transaction::with(['product', 'user'])->findOrFail($id);
 
-        if ($request->order_status === 'success' && $transaction->product?->process_type === 'manual') {
-            $orderFulfillmentService->markManualOrderCompleted($transaction);
+        if ($request->order_status === 'success') {
+            if ($transaction->product?->process_type === 'manual') {
+                $orderFulfillmentService->markManualOrderCompleted($transaction);
+            } else {
+                $orderFulfillmentService->markOrderSuccessful($transaction);
+            }
         } else {
             $transaction->update([
                 'order_status' => $request->order_status,

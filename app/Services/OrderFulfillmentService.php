@@ -7,6 +7,7 @@ use App\Models\ProductCredential;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\WalletHistory;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class OrderFulfillmentService
@@ -99,6 +100,81 @@ class OrderFulfillmentService
         );
     }
 
+    public function markOrderSuccessful(Transaction $transaction, ?string $notes = null): void
+    {
+        $previousStatus = $transaction->order_status;
+
+        $transaction->loadMissing('product', 'user');
+        $transaction->update([
+            'order_status' => 'success',
+            'target_notes' => $notes ?: ($transaction->target_notes ?: 'Pesanan telah selesai diproses.'),
+        ]);
+
+        $this->rewardUserIfNeeded($transaction, $previousStatus, 'success');
+        $this->sendSuccessEmail($transaction, $previousStatus);
+        $this->discordWebhookService->sendOrderAlert(
+            $transaction,
+            'Pesanan ditandai sukses',
+            'Pesanan telah selesai diproses dan email sukses dikirim ke pelanggan.',
+            4968121
+        );
+    }
+
+    public function syncProviderStatus(Transaction $transaction): string
+    {
+        $transaction->loadMissing('product', 'user');
+        $product = $transaction->product;
+
+        if (! $product || $product->process_type !== 'api') {
+            return 'skipped';
+        }
+
+        $providerSource = $product->provider_source ?: $product->provider_id;
+
+        if ($providerSource === 'digiflazz') {
+            $response = $this->digiflazzService->checkOrderStatus(
+                (string) $product->provider_product_id,
+                (string) $transaction->provider_customer_no,
+                (string) $transaction->invoice_number
+            );
+        } elseif ($providerSource === 'ordersosmed') {
+            $providerOrderId = $transaction->provider_order_id;
+
+            if (! $providerOrderId) {
+                return 'missing_provider_order_id';
+            }
+
+            $response = $this->orderSosmedService->checkOrderStatus($providerOrderId);
+        } else {
+            return 'unsupported_provider';
+        }
+
+        $transaction->update([
+            'response_data' => [
+                'provider_order_id' => $response['provider_order_id'] ?? $transaction->provider_order_id,
+                'raw' => $response['raw'] ?? $response,
+                'last_status_check_at' => now()->toDateTimeString(),
+            ],
+            'target_notes' => $response['message'] ?? $transaction->target_notes,
+        ]);
+
+        $nextStatus = $response['order_status'] ?? 'processing';
+
+        if ($nextStatus === 'success') {
+            $this->markOrderSuccessful($transaction->fresh(['product', 'user']), $response['message'] ?? null);
+
+            return 'success';
+        }
+
+        if ($nextStatus === 'failed') {
+            $this->markAsFailed($transaction->fresh(['product', 'user']), $response['message'] ?? 'Provider menandai pesanan gagal.', $response['raw'] ?? $response);
+
+            return 'failed';
+        }
+
+        return 'processing';
+    }
+
     protected function handleApiOrder(Transaction $transaction): void
     {
         $product = $transaction->product;
@@ -113,18 +189,21 @@ class OrderFulfillmentService
         $response = $providerSource === 'digiflazz'
             ? $this->digiflazzService->placeOrder(
                 (string) $product->provider_product_id,
-                (string) $transaction->target_data,
+                (string) $transaction->provider_customer_no,
                 (string) $transaction->invoice_number
             )
             : $this->orderSosmedService->placeOrder(
                 (string) $product->provider_product_id,
                 (string) $transaction->target_data,
-                max(1, (int) ($product->provider_quantity ?: 1))
+                max(1, (int) ($transaction->provider_order_quantity ?: $product->provider_quantity ?: 1))
             );
 
         $previousStatus = $transaction->order_status;
         $transaction->update([
-            'response_data' => $response['raw'] ?? $response,
+            'response_data' => [
+                'provider_order_id' => $response['provider_order_id'] ?? null,
+                'raw' => $response['raw'] ?? $response,
+            ],
             'target_notes' => $response['message'] ?? $transaction->target_notes,
         ]);
 
@@ -276,8 +355,19 @@ class OrderFulfillmentService
             return;
         }
 
-        if ($transaction->user?->email) {
+        if (! $transaction->user?->email) {
+            return;
+        }
+
+        try {
             Mail::to($transaction->user->email)->send(new OrderSuccessMail($transaction->fresh(['product', 'user'])));
+        } catch (\Throwable $e) {
+            Log::warning('Gagal mengirim email sukses pesanan.', [
+                'transaction_id' => $transaction->id,
+                'invoice_number' => $transaction->invoice_number,
+                'email' => $transaction->user->email,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }

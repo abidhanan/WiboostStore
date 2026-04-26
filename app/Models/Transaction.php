@@ -92,4 +92,42 @@ class Transaction extends Model
             ->map(fn ($field) => ($field['label'] ?? 'Input') . ': ' . ($field['value'] ?? '-'))
             ->implode("\n");
     }
+
+    public function getProviderOrderQuantityAttribute(): ?int
+    {
+        $field = collect($this->order_input_fields)
+            ->firstWhere('name', 'order_quantity');
+
+        if (! $field || ! filled($field['value'] ?? null)) {
+            return null;
+        }
+
+        return max(1, (int) $field['value']);
+    }
+
+    public function getProviderCustomerNoAttribute(): string
+    {
+        $fields = collect($this->order_input_fields);
+        $gameUserId = trim((string) ($fields->firstWhere('name', 'game_user_id')['value'] ?? ''));
+        $gameZoneId = trim((string) ($fields->firstWhere('name', 'game_zone_id')['value'] ?? ''));
+
+        if ($gameUserId !== '' && $gameZoneId !== '') {
+            return $gameUserId . $gameZoneId;
+        }
+
+        return (string) $this->target_data;
+    }
+
+    public function getProviderOrderIdAttribute(): ?string
+    {
+        $orderId = data_get($this->response_data, 'provider_order_id')
+            ?? data_get($this->response_data, 'data.id')
+            ?? data_get($this->response_data, 'data.order_id')
+            ?? data_get($this->response_data, 'data.order')
+            ?? data_get($this->response_data, 'order_id')
+            ?? data_get($this->response_data, 'order')
+            ?? data_get($this->response_data, 'id');
+
+        return filled($orderId) ? (string) $orderId : null;
+    }
 }

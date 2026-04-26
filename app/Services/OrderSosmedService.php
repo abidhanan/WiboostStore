@@ -240,6 +240,46 @@ class OrderSosmedService
         }
     }
 
+    public function checkOrderStatus(string $providerOrderId): array
+    {
+        if (! $this->hasBaseCredentials()) {
+            return [
+                'success' => false,
+                'message' => 'Kredensial OrderSosmed belum diatur.',
+                'order_status' => 'processing',
+            ];
+        }
+
+        if ($this->usesRouteBasedApi() && $this->secretKey === '') {
+            return [
+                'success' => false,
+                'message' => 'Secret Key OrderSosmed belum diatur.',
+                'order_status' => 'processing',
+            ];
+        }
+
+        try {
+            $attempt = $this->attemptRequest([
+                ['action' => 'status', 'order' => $providerOrderId],
+                ['action' => 'status', 'id' => $providerOrderId],
+                ['action' => 'status', 'order_id' => $providerOrderId],
+                ['order' => $providerOrderId],
+                ['id' => $providerOrderId],
+                ['order_id' => $providerOrderId],
+            ], 'status', false, fn (array $body) => $this->extractProviderStatusText($body) !== null || $this->resolveProviderOrderId($body) !== null);
+
+            return $this->normalizeStatusResponse($attempt['body'] ?? [], $providerOrderId);
+        } catch (Throwable $e) {
+            Log::error('OrderSosmed checkOrderStatus error: ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Koneksi cek status OrderSosmed gagal.',
+                'order_status' => 'processing',
+            ];
+        }
+    }
+
     protected function attemptRequest(
         array $payloadVariants,
         ?string $resource = null,
@@ -448,6 +488,47 @@ class OrderSosmedService
             ?? null;
 
         return filled($orderId) ? (string) $orderId : null;
+    }
+
+    protected function normalizeStatusResponse(array $body, string $providerOrderId): array
+    {
+        $statusText = strtolower((string) ($this->extractProviderStatusText($body) ?? ''));
+        $orderStatus = match (true) {
+            str_contains($statusText, 'complete'),
+            str_contains($statusText, 'completed'),
+            str_contains($statusText, 'success'),
+            str_contains($statusText, 'sukses'),
+            str_contains($statusText, 'partial') => 'success',
+            str_contains($statusText, 'cancel'),
+            str_contains($statusText, 'canceled'),
+            str_contains($statusText, 'cancelled'),
+            str_contains($statusText, 'error'),
+            str_contains($statusText, 'failed'),
+            str_contains($statusText, 'gagal') => 'failed',
+            default => 'processing',
+        };
+
+        return [
+            'success' => $orderStatus !== 'failed',
+            'message' => $this->resolveMessage($body, $orderStatus === 'processing' ? 'Pesanan masih diproses provider.' : 'Status pesanan berhasil diperbarui.'),
+            'provider_order_id' => $this->resolveProviderOrderId($body) ?? $providerOrderId,
+            'order_status' => $orderStatus,
+            'raw' => $body,
+        ];
+    }
+
+    protected function extractProviderStatusText(array $body): ?string
+    {
+        $status = $body['data']['status']
+            ?? $body['data']['order_status']
+            ?? $body['data']['status_text']
+            ?? $body['status']
+            ?? $body['order_status']
+            ?? $body['status_text']
+            ?? $body['result']['status']
+            ?? null;
+
+        return filled($status) ? (string) $status : null;
     }
 
     protected function resolveMessage(array $body, string $fallback): string

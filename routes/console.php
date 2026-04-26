@@ -9,4 +9,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote')->hourly();
 
 Schedule::command('wiboost:auto-refund')->hourly()->withoutOverlapping();
+Schedule::command('wiboost:check-provider-orders')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('wiboost:maintenance-report')->everyTwoHours()->withoutOverlapping();

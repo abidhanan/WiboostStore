@@ -34,6 +34,9 @@ use App\Http\Controllers\PaymentCallbackController;
 |--------------------------------------------------------------------------
 */
 Route::get('/', [FrontendController::class, 'index'])->name('home');
+Route::get('/legal/{page}', [FrontendController::class, 'legal'])
+    ->whereIn('page', ['terms', 'privacy-policy', 'refund-policy', 'contact'])
+    ->name('legal.show');
 
 /*
 |--------------------------------------------------------------------------

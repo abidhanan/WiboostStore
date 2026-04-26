@@ -122,6 +122,12 @@
             <div class="text-center md:text-right">
                 <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#2b3a67]">Pusat Bantuan</p>
                 <p class="mt-2 text-sm font-bold text-[#8faaf3]">Jika pesanan butuh bantuan tambahan, gunakan menu riwayat atau hubungi admin dari halaman dashboard.</p>
+                <div class="mt-4 flex flex-wrap justify-center gap-2 text-[11px] font-black text-[#5a76c8] md:justify-end">
+                    <a href="{{ route('legal.show', 'terms') }}" class="rounded-full bg-[#f4f9ff] px-3 py-2 transition hover:bg-[#e0fbfc]">S&K</a>
+                    <a href="{{ route('legal.show', 'privacy-policy') }}" class="rounded-full bg-[#f4f9ff] px-3 py-2 transition hover:bg-[#e0fbfc]">Privasi</a>
+                    <a href="{{ route('legal.show', 'refund-policy') }}" class="rounded-full bg-[#f4f9ff] px-3 py-2 transition hover:bg-[#e0fbfc]">Refund</a>
+                    <a href="{{ route('legal.show', 'contact') }}" class="rounded-full bg-[#f4f9ff] px-3 py-2 transition hover:bg-[#e0fbfc]">Kontak</a>
+                </div>
             </div>
         </div>
     </footer>

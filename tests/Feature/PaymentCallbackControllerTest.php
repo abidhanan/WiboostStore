@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Mail\OrderSuccessMail;
 use App\Models\Deposit;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class PaymentCallbackControllerTest extends TestCase
@@ -106,6 +108,59 @@ class PaymentCallbackControllerTest extends TestCase
         $this->postJson(route('midtrans.callback'), $payload)
             ->assertForbidden()
             ->assertJson(['message' => 'Invalid signature']);
+    }
+
+    public function test_admin_marking_non_manual_order_success_sends_success_email(): void
+    {
+        Mail::fake();
+
+        $this->seedCategory(1, 'top-up-game');
+        DB::table('roles')->insertOrIgnore([
+            'id' => 1,
+            'name' => 'Admin',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $admin = User::factory()->create(['role_id' => 1]);
+        $buyer = User::factory()->create();
+
+        $product = Product::create([
+            'category_id' => 1,
+            'provider_id' => 'digiflazz',
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'ML86',
+            'process_type' => 'api',
+            'name' => 'Mobile Legends 86 Diamonds',
+            'slug' => 'mobile-legends-86-diamonds',
+            'description' => 'Produk game',
+            'price' => 12000,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        $transaction = Transaction::create([
+            'invoice_number' => 'WIB-ADMIN-SUCCESS',
+            'user_id' => $buyer->id,
+            'product_id' => $product->id,
+            'amount' => 12000,
+            'target_data' => '123456789 (1234)',
+            'payment_status' => 'paid',
+            'order_status' => 'processing',
+            'payment_method' => 'wallet',
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.transactions.update', $transaction->id), [
+                'order_status' => 'success',
+            ])
+            ->assertRedirect();
+
+        $transaction->refresh();
+
+        $this->assertSame('success', $transaction->order_status);
+        Mail::assertSent(OrderSuccessMail::class, fn (OrderSuccessMail $mail) => $mail->transaction->is($transaction));
     }
 
     protected function midtransPayload(string $orderId, string $grossAmount, string $transactionStatus, string $paymentType): array

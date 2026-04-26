@@ -196,13 +196,20 @@ class WiboostCatalog
             ],
             'top-up-game' => [
                 self::checkoutField(
-                    'game_id',
-                    'ID game',
+                    'game_user_id',
+                    'User ID game',
                     'text',
                     'Contoh: 123456789',
-                    'Masukkan ID game dengan benar agar top up tidak gagal diproses.',
-                    ['required', 'string', 'min:3', 'max:255'],
-                    targetSummary: true
+                    'Masukkan User ID game dengan benar.',
+                    ['required', 'string', 'min:2', 'max:100']
+                ),
+                self::checkoutField(
+                    'game_zone_id',
+                    'Zone ID / Server ID',
+                    'text',
+                    'Contoh: 1234',
+                    'Masukkan Zone ID atau Server ID yang tertera di akun game.',
+                    ['required', 'string', 'min:1', 'max:50']
                 ),
             ],
             'kuota-murah' => [
