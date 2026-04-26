@@ -29,8 +29,8 @@
         <div class="max-w-7xl mx-auto pointer-events-auto">
             <div class="bg-white/90 backdrop-blur-md border-4 border-white shadow-xl shadow-[#bde0fe]/50 rounded-[2rem] flex justify-between items-center h-20 px-6 sm:px-8">
                 <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 bg-gradient-to-br from-[#8faaf3] to-[#7189d8] rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-inner border-2 border-white">W</div>
-                    <span class="font-extrabold text-2xl tracking-tight text-[#5a76c8]">Wiboost<span class="text-[#8faaf3]">Store</span></span>
+                    <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm sm:h-14 sm:w-14">
+                    <span class="font-extrabold text-2xl tracking-tight text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></span>
                 </div>
                 <div class="flex items-center gap-3">
                     @auth
@@ -56,19 +56,18 @@
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
             <div class="inline-block bg-white/80 backdrop-blur-sm text-[#5a76c8] font-black text-sm px-5 py-2 rounded-full mb-6 border-2 border-white shadow-sm">
-                🎉 Platform Top Up & Digital Favoritmu
+                Solusi Kebutuhan Digitalmu!
             </div>
             <h1 class="text-5xl md:text-7xl font-black tracking-tight mb-6 text-[#2b3a67] drop-shadow-sm">
-                Semua Kebutuhan Digital<br>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Dalam Satu Klik.</span>
+                Wiboost <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Store</span>
             </h1>
             <p class="mt-6 text-lg md:text-xl text-[#4a5f96] max-w-2xl mx-auto font-bold leading-relaxed">
-                Proses otomatis 24/7, super cepat, dan dijamin bergaransi!
+                Murah, Cepat, Aman, Terpercaya, Bergaransi
             </p>
             
             <div class="mt-12 flex flex-col sm:flex-row justify-center gap-4">
                 <a href="#kategori" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white font-extrabold text-lg px-10 py-4 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex items-center justify-center gap-3">
-                    Mulai Belanja 🚀
+                    Beli Sekarang 🚀
                 </a>
             </div>
         </div>
@@ -84,18 +83,18 @@
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="bg-white rounded-[2rem] shadow-xl shadow-[#bde0fe]/40 border-4 border-white p-6 md:p-8 flex flex-col md:flex-row justify-around items-center gap-8 animate-float">
                 <div class="text-center">
-                    <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Pengguna Aktif</p>
-                    <p class="mt-1 text-4xl font-black text-[#5a76c8]">{{ number_format($totalUsers, 0, ',', '.') }}<span class="text-2xl text-[#a3bbfb]">+</span></p>
+                    <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Total Pengguna</p>
+                    <p class="mt-1 text-4xl font-black text-[#5a76c8]">{{ number_format($totalUsers, 0, ',', '.') }}<span class="text-2xl text-[#a3bbfb]"></span></p>
                 </div>
                 <div class="hidden md:block w-1 h-12 bg-[#f0f5ff] rounded-full"></div>
                 <div class="text-center">
-                    <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Layanan</p>
+                    <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Total Layanan</p>
                     <p class="mt-1 text-4xl font-black text-[#9a8ce5]">{{ number_format($activeProducts, 0, ',', '.') }}</p>
                 </div>
                 <div class="hidden md:block w-1 h-12 bg-[#f0f5ff] rounded-full"></div>
                 <div class="text-center">
-                    <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Transaksi</p>
-                    <p class="mt-1 text-4xl font-black text-[#4bc6b9]">{{ number_format($totalTransactions, 0, ',', '.') }}<span class="text-2xl text-[#8ce0d7]">+</span></p>
+                    <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Total Transaksi</p>
+                    <p class="mt-1 text-4xl font-black text-[#4bc6b9]">{{ number_format($totalTransactions, 0, ',', '.') }}<span class="text-2xl text-[#8ce0d7]"></span></p>
                 </div>
             </div>
         </div>
@@ -105,7 +104,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
                 <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-xs border-2 border-white">Katalog Utama</div>
-                <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pilih Kategori Jajan</h2>
+                <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pilih Kategori</h2>
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-5">
@@ -147,10 +146,10 @@
                 
                 <div class="text-center md:text-left">
                     <div class="flex items-center justify-center md:justify-start gap-2 mb-3">
-                        <div class="w-8 h-8 bg-[#5a76c8] rounded-lg flex items-center justify-center text-white font-black text-sm shadow-inner border-2 border-[#bde0fe]">W</div>
-                        <span class="font-black text-xl text-[#2b3a67]">Wiboost<span class="text-[#5a76c8]">Store</span></span>
-                    </div>
-                    <p class="text-xs font-bold text-[#8faaf3] max-w-xs">Penyedia layanan sosial media dan top up game termurah & tercepat di Indonesia.</p>
+                        <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-9 w-9 shrink-0 object-contain drop-shadow-sm">
+                        <span class="font-black text-xl text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></span>
+                     </div>
+                    <p class="text-xs font-bold text-[#8faaf3] max-w-xs">Platform penyedia layanan sosial media, dan top up game terlengkap di Indonesia.</p>
                 </div>
 
                 <div class="flex flex-col items-center md:items-end gap-3">
