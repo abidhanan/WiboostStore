@@ -149,7 +149,7 @@
                         <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-9 w-9 shrink-0 object-contain drop-shadow-sm">
                         <span class="font-black text-xl text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></span>
                      </div>
-                    <p class="text-xs font-bold text-[#8faaf3] max-w-xs">Platform penyedia layanan sosial media, dan top up game terlengkap di Indonesia.</p>
+                    <p class="text-xs font-bold text-[#8faaf3] max-w-xs">Penyedia layanan sosial media dan top up game termurah & tercepat di Indonesia.</p>
                 </div>
 
                 <div class="flex flex-col items-center md:items-end gap-3">
