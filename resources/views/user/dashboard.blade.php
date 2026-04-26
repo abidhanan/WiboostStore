@@ -18,9 +18,8 @@
 <div class="wiboost-font relative">
     <div class="relative overflow-hidden bg-wiboost-sky rounded-[2.5rem] p-8 md:p-10 mb-8 shadow-xl shadow-[#bde0fe]/50 border-4 border-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div class="relative z-10">
-            <p class="text-[#5a76c8] font-black tracking-wide mb-1 uppercase text-sm">Dashboard Pelanggan</p>
             <h1 class="text-3xl md:text-4xl font-black text-[#2b3a67] mb-2">Halo, {{ Auth::user()->name }}!</h1>
-            <p class="text-[#4a5f96] max-w-md font-bold">Siap buat sosmed dan game kamu makin aktif hari ini? Yuk, lanjut belanja.</p>
+            <p class="text-[#4a5f96] max-w-md font-bold">Siap percepat pertumbuhan sosial media & game kamu?</p>
         </div>
 
         <div class="relative z-10 bg-white/80 backdrop-blur-md px-8 py-6 rounded-[2rem] border-2 border-white w-full md:w-auto text-center md:text-right shadow-sm hover:border-[#bde0fe] transition-colors">
@@ -108,7 +107,6 @@
     </div>
 
     <div class="flex items-center gap-3 mb-6 pl-2">
-        <span class="text-2xl">Katalog</span>
         <h3 class="text-2xl font-black text-[#2b3a67]">Pilih Kategori</h3>
     </div>
 
@@ -129,7 +127,6 @@
 
     <div class="flex items-center justify-between mb-6 pl-2">
         <div class="flex items-center gap-3">
-            <span class="text-2xl">Bantuan</span>
             <h3 class="text-2xl font-black text-[#2b3a67]">Pusat Tutorial</h3>
         </div>
     </div>

@@ -139,8 +139,6 @@
     </div>
 
     <footer class="bg-white pt-12 pb-8 border-t-[6px] border-[#f0f5ff] relative overflow-hidden mt-auto">
-        <div class="absolute -top-10 -right-10 text-8xl opacity-10">☁️</div>
-        
         <div class="max-w-6xl mx-auto px-6 sm:px-8 relative z-10">
             <div class="flex flex-col md:flex-row justify-between items-center gap-8 mb-10">
                 
