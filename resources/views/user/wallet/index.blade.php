@@ -11,8 +11,7 @@
 
 <div class="wiboost-font pb-12 max-w-7xl mx-auto">
     <div class="mb-8 pl-2">
-        <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Dompet Wiboost 💳</h2>
-        <p class="text-[#8faaf3] font-bold mt-1">Kelola saldo, tukar poin loyalty, dan pantau mutasi transaksi kamu.</p>
+        <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Dompet Anda</h2>
     </div>
 
     @if(session('success'))
@@ -81,7 +80,7 @@
                             <span class="absolute inset-y-0 left-0 flex items-center pl-5 font-black text-[#5a76c8]">Rp</span>
                             <input type="number" name="amount" id="amount_input" min="10000" required
                                    class="w-full pl-12 pr-5 py-4 bg-[#f4f9ff] rounded-[1.5rem] border-2 border-[#e0fbfc] focus:border-[#5a76c8] outline-none font-black text-lg text-[#2b3a67] transition placeholder-[#a3bbfb]" 
-                                   placeholder="Atau ketik sendiri...">
+                                   placeholder="ketik nominal">
                         </div>
                         <p class="text-xs font-bold text-amber-500 mt-2 ml-2">*Min. isi Rp 10.000</p>
                     </div>
