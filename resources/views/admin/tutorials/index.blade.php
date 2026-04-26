@@ -1,5 +1,12 @@
 @extends('layouts.admin')
 @section('title', 'Manajemen Tutorial')
+@section('admin_header_subtitle', 'Kelola panduan artikel dan video YouTube untuk pelanggan.')
+@section('admin_header_actions')
+    <a href="{{ route('admin.tutorials.create') }}" class="flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-[#5a76c8] px-8 py-3.5 font-black text-white shadow-lg shadow-[#5a76c8]/30 transition-transform hover:bg-[#4760a9] active:scale-95 sm:w-auto">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+        Tambah Tutorial
+    </a>
+@endsection
 @section('content')
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
@@ -7,7 +14,7 @@
 </style>
 
 <div class="wiboost-font pb-12 max-w-6xl mx-auto">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 pl-2">
+    <div class="hidden">
         <div>
             <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pusat Tutorial & Bantuan 📚</h2>
             <p class="text-[#8faaf3] font-bold text-sm mt-1">Kelola panduan artikel dan video YouTube untuk pelanggan.</p>
@@ -16,6 +23,27 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
             Tambah Tutorial
         </a>
+    </div>
+
+    <div class="mb-8 rounded-[2rem] border-4 border-white bg-white p-5 shadow-lg shadow-[#bde0fe]/20">
+        <form action="{{ route('admin.tutorials.index') }}" method="GET" class="flex flex-col gap-4 md:flex-row">
+            <div class="relative flex-1">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-5 text-[#8faaf3]">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </span>
+                <input type="text" name="search" value="{{ request('search') }}"
+                    class="w-full rounded-[1.5rem] border-2 border-[#e0fbfc] bg-[#f4f9ff] py-4 pl-14 pr-5 font-black text-[#2b3a67] outline-none transition placeholder-[#a3bbfb] focus:border-[#5a76c8]"
+                    placeholder="Cari judul, kategori, deskripsi, atau isi tutorial...">
+            </div>
+            <button type="submit" class="rounded-[1.5rem] border-2 border-white bg-[#5a76c8] px-10 py-4 font-black text-white shadow-lg shadow-[#5a76c8]/30 transition hover:bg-[#4760a9]">
+                Cari Tutorial
+            </button>
+            @if(request('search'))
+                <a href="{{ route('admin.tutorials.index') }}" class="flex items-center justify-center rounded-[1.5rem] border-2 border-white bg-[#ffe5e5] px-8 py-4 font-black text-[#ff6b6b] transition hover:bg-[#ffcccc]">
+                    Reset
+                </a>
+            @endif
+        </form>
     </div>
 
     @if(session('success'))

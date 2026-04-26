@@ -9,9 +9,22 @@ use Illuminate\Support\Facades\Storage;
 
 class TutorialController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tutorials = Tutorial::latest()->get();
+        $search = trim((string) $request->query('search', ''));
+
+        $tutorials = Tutorial::query()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($innerQuery) use ($search) {
+                    $innerQuery->where('title', 'like', "%{$search}%")
+                        ->orWhere('category', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('content', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->get();
+
         return view('admin.tutorials.index', compact('tutorials'));
     }
 

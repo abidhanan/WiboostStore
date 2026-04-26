@@ -9,9 +9,22 @@ use Illuminate\Support\Facades\Storage;
 
 class PromoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $promos = Promo::latest()->get();
+        $search = trim((string) $request->query('search', ''));
+
+        $promos = Promo::query()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($innerQuery) use ($search) {
+                    $innerQuery->where('title', 'like', "%{$search}%")
+                        ->orWhere('badge_text', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('theme', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->get();
+
         return view('admin.promos.index', compact('promos'));
     }
 

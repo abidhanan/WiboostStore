@@ -1,6 +1,13 @@
 @extends('layouts.admin')
 
 @section('title', 'Manajemen Kategori')
+@section('admin_header_subtitle', 'Kelola struktur kategori utama dan turunan sampai level 3.')
+@section('admin_header_actions')
+    <a href="{{ route('admin.categories.create') }}" class="flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-[#5a76c8] px-8 py-3.5 font-black text-white shadow-lg shadow-[#5a76c8]/30 transition hover:bg-[#4760a9] active:scale-95 sm:w-auto">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+        Tambah Kategori
+    </a>
+@endsection
 
 @section('content')
 <style>
@@ -46,18 +53,6 @@
 @endphp
 
 <div class="wiboost-font mx-auto max-w-7xl pb-12">
-    <div class="mb-10 flex flex-col gap-4 pl-2 md:flex-row md:items-center md:justify-between">
-        <div>
-            <h2 class="text-3xl font-black tracking-tight text-[#2b3a67]">Kategori Layanan</h2>
-            <p class="mt-1 text-sm font-bold text-[#8faaf3]">Kelola struktur kategori utama dan turunan sampai level 3.</p>
-        </div>
-
-        <a href="{{ route('admin.categories.create') }}" class="flex items-center gap-2 rounded-full border-4 border-white bg-[#5a76c8] px-8 py-3.5 font-black text-white shadow-lg shadow-[#5a76c8]/30 transition hover:bg-[#4760a9] active:scale-95">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
-            Tambah Kategori
-        </a>
-    </div>
-
     @if(session('success'))
         <div class="mb-8 flex items-start gap-3 rounded-[2rem] border-4 border-white bg-[#e6fff7] px-6 py-4 font-black text-emerald-500 shadow-sm">
             <span class="mt-0.5 text-xl">OK</span>

@@ -1,14 +1,10 @@
 @extends('layouts.admin')
 
 @section('title', 'Laporan')
+@section('admin_header_subtitle', 'Pantau performa order, keberhasilan fulfillment, dan antrean kerja yang masih perlu diselesaikan.')
 
 @section('content')
 <div class="pb-12" style="font-family: 'Nunito', sans-serif;">
-    <div class="mb-8">
-        <h3 class="text-3xl font-black tracking-tight text-[#2b3a67]">Ringkasan Operasional</h3>
-        <p class="mt-1 text-sm font-bold text-[#8faaf3]">Pantau performa order, keberhasilan fulfillment, dan antrean kerja yang masih perlu diselesaikan.</p>
-    </div>
-
     <div class="mb-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
         <div class="rounded-[2rem] border-4 border-white bg-white p-6 shadow-lg shadow-[#bde0fe]/20">
             <p class="text-xs font-black uppercase tracking-[0.3em] text-[#8faaf3]">Total Order</p>

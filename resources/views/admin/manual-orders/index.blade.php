@@ -1,22 +1,28 @@
 @extends('layouts.admin')
 
 @section('title', 'Manual Order')
+@section('admin_header_subtitle', 'Pantau pesanan yang butuh campur tangan admin dan selesaikan langsung dari panel ini.')
 
 @section('content')
 <div class="pb-12" style="font-family: 'Nunito', sans-serif;">
-    <div class="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-            <h3 class="text-3xl font-black tracking-tight text-[#2b3a67]">Manual Order Queue</h3>
-            <p class="mt-1 text-sm font-bold text-[#8faaf3]">Pantau pesanan yang butuh campur tangan admin dan selesaikan langsung dari panel ini.</p>
-        </div>
-
-        <form action="{{ route('admin.manual-orders.index') }}" method="GET" class="flex w-full max-w-xl flex-col gap-3 sm:flex-row">
-            <input type="text" name="search" value="{{ request('search') }}"
-                class="flex-1 rounded-[1.5rem] border-2 border-white bg-white px-5 py-3 font-black text-[#2b3a67] shadow-sm outline-none transition focus:border-[#5a76c8]"
-                placeholder="Cari invoice, nama pelanggan, atau target...">
-            <button type="submit" class="rounded-[1.5rem] border-2 border-white bg-[#5a76c8] px-6 py-3 font-black text-white shadow-lg shadow-[#5a76c8]/20 transition hover:bg-[#4760a9]">
-                Cari
+    <div class="mb-8 rounded-[2rem] border-4 border-white bg-white p-5 shadow-lg shadow-[#bde0fe]/20">
+        <form action="{{ route('admin.manual-orders.index') }}" method="GET" class="flex flex-col gap-4 md:flex-row">
+            <div class="relative flex-1">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-5 text-[#8faaf3]">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </span>
+                <input type="text" name="search" value="{{ request('search') }}"
+                    class="w-full rounded-[1.5rem] border-2 border-[#e0fbfc] bg-[#f4f9ff] py-4 pl-14 pr-5 font-black text-[#2b3a67] outline-none transition placeholder-[#a3bbfb] focus:border-[#5a76c8]"
+                    placeholder="Cari invoice, nama pelanggan, atau target...">
+            </div>
+            <button type="submit" class="rounded-[1.5rem] border-2 border-white bg-[#5a76c8] px-10 py-4 font-black text-white shadow-lg shadow-[#5a76c8]/30 transition hover:bg-[#4760a9]">
+                Cari Order
             </button>
+            @if(request('search'))
+                <a href="{{ route('admin.manual-orders.index') }}" class="flex items-center justify-center rounded-[1.5rem] border-2 border-white bg-[#ffe5e5] px-8 py-4 font-black text-[#ff6b6b] transition hover:bg-[#ffcccc]">
+                    Reset
+                </a>
+            @endif
         </form>
     </div>
 

@@ -1,6 +1,13 @@
 @extends('layouts.admin')
 
 @section('title', 'Mutasi Saldo Global')
+@section('admin_header_subtitle', 'Pantau seluruh arus kas pelanggan: Top Up, Beli, Refund, dan Tukar Poin.')
+@section('admin_header_actions')
+    <a href="{{ route('admin.deposits.index') }}" class="flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-white px-6 py-3 font-black text-[#5a76c8] shadow-lg shadow-[#bde0fe]/30 transition-all hover:-translate-y-1 hover:bg-[#f0f5ff] sm:w-auto">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+        Segarkan Data
+    </a>
+@endsection
 
 @section('content')
 <style>
@@ -26,7 +33,7 @@
 @endphp
 
 <div class="wiboost-font pb-12">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4 pl-2">
+    <div class="hidden">
         <div>
             <h3 class="text-3xl font-black text-[#2b3a67] tracking-tight">Mutasi Saldo Global 💸</h3>
             <p class="text-sm text-[#8faaf3] font-bold mt-1">Pantau seluruh arus kas pelanggan: Top Up, Beli, Refund, dan Tukar Poin.</p>

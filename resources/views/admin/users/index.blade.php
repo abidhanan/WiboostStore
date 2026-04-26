@@ -1,6 +1,12 @@
 @extends('layouts.admin')
 
 @section('title', 'Manajemen Pengguna')
+@section('admin_header_subtitle', 'Atur data admin dan pelanggan Wiboost Store.')
+@section('admin_header_actions')
+    <a href="{{ route('admin.users.create') }}" class="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-white bg-[#5a76c8] px-6 py-3 text-sm font-extrabold text-white shadow-lg shadow-[#5a76c8]/30 transition-colors hover:bg-[#4760a9] sm:w-auto">
+        + Tambah Pengguna
+    </a>
+@endsection
 
 @section('content')
 <style>
@@ -13,14 +19,25 @@
 </style>
 
 <div class="wiboost-font pb-12">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pl-2">
-        <div>
-            <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Manajemen Pengguna</h2>
-            <p class="text-sm font-bold text-[#8faaf3] mt-1">Atur data admin dan pelanggan Wiboost Store.</p>
-        </div>
-        <a href="{{ route('admin.users.create') }}" class="inline-flex items-center justify-center gap-2 bg-[#5a76c8] text-white px-6 py-3 rounded-full text-sm font-extrabold hover:bg-[#4760a9] hover:-translate-y-1 transition-all shadow-lg shadow-[#5a76c8]/30 border-2 border-white w-full md:w-auto">
-            + Tambah Pengguna
-        </a>
+    <div class="mb-8 rounded-[2rem] border-4 border-white bg-white p-5 shadow-lg shadow-[#bde0fe]/20">
+        <form action="{{ route('admin.users.index') }}" method="GET" class="flex flex-col gap-4 md:flex-row">
+            <div class="relative flex-1">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-5 text-[#8faaf3]">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </span>
+                <input type="text" name="search" value="{{ request('search') }}"
+                    class="w-full rounded-[1.5rem] border-2 border-[#e0fbfc] bg-[#f4f9ff] py-4 pl-14 pr-5 font-black text-[#2b3a67] outline-none transition placeholder-[#a3bbfb] focus:border-[#5a76c8]"
+                    placeholder="Cari nama, email, nomor kontak, admin, atau pelanggan...">
+            </div>
+            <button type="submit" class="rounded-[1.5rem] border-2 border-white bg-[#5a76c8] px-10 py-4 font-black text-white shadow-lg shadow-[#5a76c8]/30 transition hover:bg-[#4760a9]">
+                Cari Pengguna
+            </button>
+            @if(request('search'))
+                <a href="{{ route('admin.users.index') }}" class="flex items-center justify-center rounded-[1.5rem] border-2 border-white bg-[#ffe5e5] px-8 py-4 font-black text-[#ff6b6b] transition hover:bg-[#ffcccc]">
+                    Reset
+                </a>
+            @endif
+        </form>
     </div>
 
     @if (session('success'))

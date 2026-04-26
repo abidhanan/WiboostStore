@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Dashboard Wiboost')
+@section('title', 'Dashboard Admin')
+@section('admin_header_subtitle', 'Pantau ringkasan transaksi, saldo, stok, dan aktivitas terbaru Wiboost Store.')
 
 @section('content')
     @php
@@ -64,24 +65,7 @@
         <section class="overflow-hidden rounded-[2.5rem] border-4 border-white bg-gradient-to-r from-[#f8fbff] via-white to-[#eef7ff] p-6 shadow-xl shadow-[#bde0fe]/25 md:p-8">
             <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                    <p class="text-xs font-black uppercase tracking-[0.35em] text-[#8faaf3]">Admin dashboard</p>
-                    <h2 class="mt-3 text-3xl font-black tracking-tight text-[#2b3a67] md:text-4xl">Selamat datang, {{ Auth::user()->name }}.</h2>
-                    <p class="mt-3 max-w-2xl text-sm font-bold text-slate-500 md:text-base">Ringkasan Wiboost Store bulan ini, termasuk transaksi terbaru, performa pendapatan, dan mutasi saldo global.</p>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    <div class="rounded-[1.5rem] border-2 border-white bg-white/80 px-4 py-3 shadow-sm">
-                        <p class="text-[11px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">Bulan</p>
-                        <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ now()->translatedFormat('F Y') }}</p>
-                    </div>
-                    <div class="rounded-[1.5rem] border-2 border-white bg-white/80 px-4 py-3 shadow-sm">
-                        <p class="text-[11px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">Order</p>
-                        <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ number_format($totalTransactionsMonth ?? 0, 0, ',', '.') }}</p>
-                    </div>
-                    <div class="col-span-2 rounded-[1.5rem] border-2 border-white bg-white/80 px-4 py-3 shadow-sm sm:col-span-1">
-                        <p class="text-[11px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">User</p>
-                        <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ number_format($totalUsers ?? 0, 0, ',', '.') }}</p>
-                    </div>
+                    <h2 class="mt-3 text-3xl font-black tracking-tight text-[#2b3a67] md:text-4xl">Selamat datang, {{ Auth::user()->name }}!</h2>
                 </div>
             </div>
         </section>
@@ -117,7 +101,6 @@
                 </div>
                 <p class="mt-5 text-xs font-black uppercase tracking-[0.3em] text-[#8faaf3]">Transaksi bulan ini</p>
                 <p class="mt-2 text-3xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalTransactionsMonth ?? 0, 0, ',', '.') }}</p>
-                <p class="mt-2 text-sm font-bold text-slate-500">Jumlah pesanan yang masuk selama periode berjalan.</p>
             </article>
 
             <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-gradient-to-br from-[#8faaf3] to-[#5a76c8] p-6 text-white shadow-lg shadow-[#5a76c8]/30 transition hover:-translate-y-1">
@@ -126,7 +109,6 @@
                 </div>
                 <p class="mt-5 text-xs font-black uppercase tracking-[0.3em] text-white/80">Pendapatan bulan ini</p>
                 <p class="mt-2 text-3xl font-black tracking-tight">Rp {{ number_format($revenueMonth ?? 0, 0, ',', '.') }}</p>
-                <p class="mt-2 text-sm font-bold text-white/85">Menghitung transaksi yang sudah berstatus lunas.</p>
             </article>
 
             <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-lg shadow-[#bde0fe]/20 transition hover:-translate-y-1">
@@ -135,7 +117,6 @@
                 </div>
                 <p class="mt-5 text-xs font-black uppercase tracking-[0.3em] text-[#8faaf3]">Total pelanggan</p>
                 <p class="mt-2 text-3xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalUsers ?? 0, 0, ',', '.') }}</p>
-                <p class="mt-2 text-sm font-bold text-slate-500">Pelanggan terdaftar dengan role buyer.</p>
             </article>
         </section>
 

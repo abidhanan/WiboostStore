@@ -1,39 +1,32 @@
 @extends('layouts.admin')
 
 @section('title', 'Manajemen Produk')
+@section('admin_header_subtitle', 'Kelola harga, stok otomatis, dan sinkronisasi layanan provider ke website.')
+@section('admin_header_actions')
+    <form action="{{ route('admin.products.sync.digiflazz') }}" method="POST" class="w-full sm:w-auto">
+        @csrf
+        <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-[#4bc6b9] px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-[#4bc6b9]/25 transition hover:bg-[#3ba398] sm:w-auto">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m14.836 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-14.837-2m14.837 2H15"></path></svg>
+            Sync Digiflazz
+        </button>
+    </form>
+
+    <form action="{{ route('admin.products.sync.ordersosmed') }}" method="POST" class="w-full sm:w-auto">
+        @csrf
+        <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-[#8faaf3] px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-[#8faaf3]/25 transition hover:bg-[#6f8ddc] sm:w-auto">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m14.836 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-14.837-2m14.837 2H15"></path></svg>
+            Sync OrderSosmed
+        </button>
+    </form>
+
+    <a href="{{ route('admin.products.create') }}" class="flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-[#5a76c8] px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-[#5a76c8]/30 transition hover:bg-[#4760a9] sm:w-auto">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+        Tambah Produk
+    </a>
+@endsection
 
 @section('content')
     <div class="pb-12" style="font-family: 'Nunito', sans-serif;">
-        <div class="mb-10 flex flex-col gap-4 pl-2 md:flex-row md:items-center md:justify-between">
-            <div>
-                <h3 class="text-3xl font-black tracking-tight text-[#2b3a67]">Katalog Produk</h3>
-                <p class="mt-1 text-sm font-bold text-[#8faaf3]">Kelola harga, stok otomatis, dan sinkronisasi layanan provider ke website.</p>
-            </div>
-
-            <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row">
-                <form action="{{ route('admin.products.sync.digiflazz') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-[#4bc6b9] px-6 py-3 font-black text-white shadow-lg shadow-[#4bc6b9]/25 transition hover:bg-[#3ba398] md:w-auto">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m14.836 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-14.837-2m14.837 2H15"></path></svg>
-                        Sync Digiflazz
-                    </button>
-                </form>
-
-                <form action="{{ route('admin.products.sync.ordersosmed') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-[#8faaf3] px-6 py-3 font-black text-white shadow-lg shadow-[#8faaf3]/25 transition hover:bg-[#6f8ddc] md:w-auto">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m14.836 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-14.837-2m14.837 2H15"></path></svg>
-                        Sync OrderSosmed
-                    </button>
-                </form>
-
-                <a href="{{ route('admin.products.create') }}" class="flex items-center justify-center gap-2 rounded-full border-4 border-white bg-[#5a76c8] px-6 py-3 font-black text-white shadow-lg shadow-[#5a76c8]/30 transition hover:bg-[#4760a9]">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
-                    Tambah Produk
-                </a>
-            </div>
-        </div>
-
         @if(session('success'))
             <div class="mb-8 flex items-start gap-3 rounded-[2rem] border-4 border-white bg-[#e6fff7] px-6 py-4 font-black text-emerald-500 shadow-sm">
                 <span class="mt-0.5 text-xl">OK</span>

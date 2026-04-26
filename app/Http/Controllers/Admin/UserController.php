@@ -9,9 +9,29 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::latest()->get();
+        $search = trim((string) $request->query('search', ''));
+
+        $users = User::query()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($innerQuery) use ($search) {
+                    $innerQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('whatsapp', 'like', "%{$search}%");
+
+                    if (str_contains(strtolower($search), 'admin')) {
+                        $innerQuery->orWhere('role_id', 1);
+                    }
+
+                    if (str_contains(strtolower($search), 'buyer') || str_contains(strtolower($search), 'pelanggan')) {
+                        $innerQuery->orWhere('role_id', 2);
+                    }
+                });
+            })
+            ->latest()
+            ->get();
+
         return view('admin.users.index', compact('users'));
     }
 
