@@ -1,23 +1,12 @@
 @extends('layouts.guest')
 
 @section('title', 'Masuk - Wiboost Store')
-@section('hero_badge', 'Akses pelanggan')
-@section('hero_title', 'Masuk untuk cek pesanan, saldo, dan riwayat transaksi kapan saja.')
-@section('hero_copy', 'Halaman login sekarang mengikuti layout guest yang sama dengan flow lain, jadi tampilannya lebih stabil di mobile dan lebih mudah dirawat.')
 
 @section('content')
     <div class="mx-auto w-full max-w-md">
         <div class="mb-8">
-            <a href="{{ route('home') }}" class="inline-flex items-center gap-3 rounded-full border-2 border-white bg-[#f4f9ff] px-4 py-2 text-sm font-black text-[#5a76c8] shadow-sm transition hover:bg-[#eaf4ff]">
-                <span class="flex h-10 w-10 items-center justify-center rounded-[1rem] bg-gradient-to-br from-[#8faaf3] to-[#5a76c8] text-base text-white shadow-inner">W</span>
-                <span>Kembali ke homepage</span>
-            </a>
-        </div>
-
-        <div class="mb-8">
-            <p class="text-xs font-black uppercase tracking-[0.3em] text-[#8faaf3]">Masuk</p>
-            <h2 class="mt-2 text-3xl font-black tracking-tight text-[#2b3a67]">Selamat datang kembali</h2>
-            <p class="mt-2 text-sm font-bold text-slate-500">Masuk untuk lanjut checkout layanan digital, lihat history, dan kelola saldo akunmu.</p>
+            <p class="inline-flex rounded-full border-2 border-white bg-[#f4f9ff] px-4 py-2 text-xs font-black uppercase tracking-[0.3em] text-[#8faaf3] shadow-sm">Masuk</p>
+            <h2 class="mt-2 text-3xl font-black tracking-tight text-[#2b3a67]">Selamat Datang Kembali!</h2>
         </div>
 
         @if (session('status'))
