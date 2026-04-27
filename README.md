@@ -65,7 +65,7 @@ URL publik untuk callback provider:
 Jika website masih jalan di localhost tetapi diakses dari internet via ngrok atau tunnel lain, isi `WIBOOST_PUBLIC_URL` dengan URL publik tersebut. Contoh callback Midtrans:
 
 ```txt
-https://nama-ngrok-kamu.ngrok-free.app/api/midtrans/callback
+https://nama-ngrok-kamu.ngrok-free.app/midtrans/callback
 ```
 
 Jika `WIBOOST_PUBLIC_URL` dikosongkan, project sekarang otomatis fallback ke `APP_URL`.

@@ -65,7 +65,7 @@
                     <p class="mt-2 text-xs font-bold text-[#8faaf3] leading-relaxed line-clamp-2">{{ $child->description }}</p>
                 @endif
                 <span class="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[9px] font-black uppercase tracking-widest border border-white shadow-sm {{ $isBrowsable ? 'bg-[#e6fff7] text-emerald-500' : 'bg-[#fff5eb] text-amber-500' }}">
-                    {{ $hasNestedChildren ? 'Pilih Subkategori' : ($hasActiveProducts ? ($child->active_products_count . ' Layanan') : 'Segera Hadir') }}
+                    {{ $hasNestedChildren ? 'Lihat subkategori' : ($hasActiveProducts ? ($child->active_products_count . ' layanan aktif') : 'Segera Hadir') }}
                 </span>
 
             @if($isBrowsable)
