@@ -454,9 +454,35 @@ class OrderSosmedService
             if (is_array($candidate) && array_is_list($candidate) && $candidate !== []) {
                 return $candidate;
             }
+
+            if (is_array($candidate) && $this->looksLikeServiceMap($candidate)) {
+                return array_values($candidate);
+            }
         }
 
         return [];
+    }
+
+    protected function looksLikeServiceMap(array $candidate): bool
+    {
+        if ($candidate === [] || array_is_list($candidate)) {
+            return false;
+        }
+
+        $rows = array_values($candidate);
+        $sample = array_slice($rows, 0, 10);
+
+        return collect($sample)->contains(function ($row) {
+            if (! is_array($row)) {
+                return false;
+            }
+
+            return filled($row['id'] ?? null)
+                || filled($row['service'] ?? null)
+                || filled($row['service_id'] ?? null)
+                || filled($row['name'] ?? null)
+                || filled($row['service_name'] ?? null);
+        });
     }
 
     protected function extractProfile(array $body): array

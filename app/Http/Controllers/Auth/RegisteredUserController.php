@@ -43,15 +43,16 @@ class RegisteredUserController extends Controller
             'password' => 'kata sandi',
         ]);
 
-        // 2. Simpan user baru ke database (Paksa Role 2 / Buyer)
-        $buyerRoleId = Role::query()->firstOrCreate(['id' => 2], ['name' => 'Buyer'])->id;
+        // 2. Pastikan role bawaan selalu memakai ID yang dipakai middleware.
+        Role::query()->updateOrCreate(['id' => 1], ['name' => 'Admin']);
+        Role::query()->updateOrCreate(['id' => 2], ['name' => 'Buyer']);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'whatsapp' => $request->whatsapp,
             'password' => Hash::make($request->password),
-            'role_id' => $buyerRoleId,
+            'role_id' => 2,
         ]);
 
         // 3. Memicu event Registered
