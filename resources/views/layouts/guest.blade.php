@@ -2,17 +2,19 @@
     $pageTitle = trim($__env->yieldContent('title', config('app.name', 'Wiboost Store')));
     $isCompactAuth = request()->routeIs('login', 'register', 'password.confirm', 'password.request', 'password.reset', 'verification.notice');
 @endphp
-
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth {{ $isCompactAuth ? 'overflow-hidden' : '' }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <title>{{ $pageTitle }}</title>
     <link rel="icon" type="image/png" href="{{ asset('images/wiboost-logo.png') }}?v=20260426-full">
+
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
     <style>
         body { font-family: 'Nunito', sans-serif; }
         .bg-wiboost-sky { background: linear-gradient(180deg, #bde0fe 0%, #e0fbfc 100%); }
@@ -25,8 +27,8 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white {{ $isCompactAuth ? 'overflow-hidden' : '' }}">
-    <div class="relative overflow-hidden bg-wiboost-sky px-4 sm:px-6 lg:px-8 {{ $isCompactAuth ? 'h-screen py-3 sm:py-4' : 'min-h-screen py-5' }}">
+<body class="min-h-screen bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white">
+    <div class="relative overflow-hidden bg-wiboost-sky px-4 sm:px-6 lg:px-8 {{ $isCompactAuth ? 'min-h-screen py-10 flex flex-col justify-center' : 'min-h-screen py-5' }}">
         
         <div class="pointer-events-none absolute top-16 left-10 text-5xl animate-float opacity-70">☁️</div>
         <div class="pointer-events-none absolute top-24 right-16 text-3xl animate-float-delayed opacity-70">✨</div>
@@ -34,13 +36,12 @@
         <div class="pointer-events-none absolute bottom-10 right-[5%] text-6xl animate-float opacity-80">☁️</div>
 
         @unless($isCompactAuth)
-            <nav class="relative z-20 mx-auto max-w-6xl mt-2">
+            <nav class="relative z-20 mx-auto max-w-6xl mt-2 w-full">
                 <div class="flex h-20 items-center justify-between rounded-[2rem] border-4 border-white bg-white/90 px-5 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-8">
                     <a href="{{ route('home') }}" class="flex items-center gap-3">
                         <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm sm:h-14 sm:w-14">
                         <span class="text-xl font-extrabold tracking-tight text-[#2b3a67] sm:text-2xl">Wiboost <span class="text-[#5a76c8]">Store</span></span>
                     </a>
-
                     <div class="flex items-center gap-2">
                         @auth
                             <a href="{{ Auth::user()->isAdmin() ? route('admin.dashboard') : route('user.dashboard') }}" class="rounded-full border-2 border-white bg-[#5a76c8] px-6 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-[#8faaf3]/40 transition hover:bg-[#4760a9] active:scale-95">
@@ -59,8 +60,8 @@
             </nav>
         @endunless
 
-        <main class="relative z-10 mx-auto flex w-full max-w-xl items-center {{ $isCompactAuth ? 'h-full py-0' : 'min-h-[calc(100vh-7rem)] py-12 lg:py-16' }}">
-            <section class="w-full rounded-[2.5rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/50 backdrop-blur {{ $isCompactAuth ? 'max-h-[calc(100vh-1.5rem)] overflow-hidden p-5 sm:p-6 md:p-8' : 'p-6 md:p-8' }}">
+        <main class="relative z-10 mx-auto flex w-full max-w-xl items-center justify-center {{ $isCompactAuth ? 'flex-1 py-0' : 'min-h-[calc(100vh-7rem)] py-12 lg:py-16' }}">
+            <section class="w-full rounded-[2.5rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/50 backdrop-blur p-6 md:p-8">
                 @hasSection('content')
                     @yield('content')
                 @else
