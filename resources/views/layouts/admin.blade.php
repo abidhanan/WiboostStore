@@ -9,11 +9,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Nunito', sans-serif; overflow-x: hidden; }
+        
+        /* Custom Scrollbar Global */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f4f9ff; }
         ::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
         
+        /* Hide Scrollbar khusus untuk Sidebar Navigasi agar lebih bersih */
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Floating Animations */
         .animate-float { animation: float 6s ease-in-out infinite; }
         .animate-float-delayed { animation: float 6s ease-in-out 3s infinite; }
         @keyframes float {
@@ -54,24 +61,24 @@
 
     @php
         $adminNav = [
-            ['route' => 'admin.dashboard', 'pattern' => 'admin.dashboard', 'label' => 'Dashboard'],
-            ['route' => 'admin.users.index', 'pattern' => 'admin.users.*', 'label' => 'Pengguna'],
-            ['route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'label' => 'Kategori'],
-            ['route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Produk'],
-            ['route' => 'admin.promos.index', 'pattern' => 'admin.promos.*', 'label' => 'Banner'],
-            ['route' => 'admin.tutorials.index', 'pattern' => 'admin.tutorials.*', 'label' => 'Tutorial'],
-            ['route' => 'admin.transactions.index', 'pattern' => 'admin.transactions.*', 'label' => 'Transaksi'],
-            ['route' => 'admin.manual-orders.index', 'pattern' => 'admin.manual-orders.*', 'label' => 'Manual Order'],
-            ['route' => 'admin.deposits.index', 'pattern' => 'admin.deposits.*', 'label' => 'Deposit'],
-            ['route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Laporan'],
-            ['route' => 'profile.edit', 'pattern' => 'profile.edit', 'label' => 'Profil'],
+            ['route' => 'admin.dashboard', 'pattern' => 'admin.dashboard', 'label' => 'Dashboard', 'icon' => '📊'],
+            ['route' => 'admin.users.index', 'pattern' => 'admin.users.*', 'label' => 'Pengguna', 'icon' => '👥'],
+            ['route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'label' => 'Kategori', 'icon' => '📂'],
+            ['route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Produk', 'icon' => '📦'],
+            ['route' => 'admin.promos.index', 'pattern' => 'admin.promos.*', 'label' => 'Banner', 'icon' => '📢'],
+            ['route' => 'admin.tutorials.index', 'pattern' => 'admin.tutorials.*', 'label' => 'Tutorial', 'icon' => '📖'],
+            ['route' => 'admin.transactions.index', 'pattern' => 'admin.transactions.*', 'label' => 'Transaksi', 'icon' => '💳'],
+            ['route' => 'admin.manual-orders.index', 'pattern' => 'admin.manual-orders.*', 'label' => 'Manual Order', 'icon' => '✍️'],
+            ['route' => 'admin.deposits.index', 'pattern' => 'admin.deposits.*', 'label' => 'Deposit', 'icon' => '💰'],
+            ['route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Laporan', 'icon' => '📈'],
+            ['route' => 'profile.edit', 'pattern' => 'profile.edit', 'label' => 'Profil', 'icon' => '👤'],
         ];
     @endphp
 
     <!-- Sidebar Desktop -->
     <aside class="sticky top-0 hidden h-screen w-80 shrink-0 p-5 xl:block z-40">
         <div class="flex h-full flex-col rounded-[2.5rem] border-4 border-white bg-white/80 shadow-2xl shadow-[#bde0fe]/30 backdrop-blur-xl">
-            <div class="border-b-4 border-dashed border-[#f4f9ff] px-6 py-6">
+            <div class="shrink-0 border-b-4 border-dashed border-[#f4f9ff] px-6 py-6">
                 <a href="{{ route('home') }}" class="flex items-center gap-3 group">
                     <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm group-hover:scale-110 transition-transform">
                     <div class="min-w-0 flex-1">
@@ -82,13 +89,13 @@
             <nav x-ref="adminSidebarNav" @scroll.debounce.150ms="saveSidebarScroll()" class="flex-1 space-y-2 overflow-y-auto overscroll-contain px-5 py-6 hide-scroll">
                 <p class="px-3 mb-2 text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">Menu Utama</p>
                 @foreach($adminNav as $item)
-                    <a href="{{ route($item['route']) }}" @click="saveSidebarScroll()" class="flex items-center justify-between rounded-full px-6 py-3.5 text-sm font-black transition-all duration-300 {{ request()->routeIs($item['pattern']) ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 scale-[1.02]' : 'border-2 border-transparent text-[#5a76c8] hover:border-white hover:bg-[#f4f9ff] hover:scale-[1.02]' }}">
+                    <a href="{{ route($item['route']) }}" @click="saveSidebarScroll()" class="flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-black transition-all duration-300 {{ request()->routeIs($item['pattern']) ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 scale-[1.02]' : 'border-2 border-transparent text-[#5a76c8] hover:border-white hover:bg-[#f4f9ff] hover:scale-[1.02]' }}">
+                        <span class="text-lg">{{ $item['icon'] }}</span>
                         <span>{{ $item['label'] }}</span>
-                        <span>&rarr;</span>
                     </a>
                 @endforeach
             </nav>
-            <div class="border-t-4 border-dashed border-[#f4f9ff] p-5">
+            <div class="shrink-0 border-t-4 border-dashed border-[#f4f9ff] p-5">
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="flex w-full items-center justify-center rounded-full border-4 border-white bg-[#ffe5e5] px-6 py-3.5 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 transition-all hover:bg-[#ffcccc] active:scale-95 gap-2">
@@ -135,6 +142,8 @@
     <div x-cloak x-show="sidebarOpen" class="fixed inset-0 z-[70] xl:hidden" aria-modal="true" role="dialog">
         <!-- Backdrop bisa diklik untuk menutup sidebar tanpa tombol close -->
         <div x-show="sidebarOpen" x-transition.opacity class="absolute inset-0 bg-[#2b3a67]/60 backdrop-blur-md" @click="sidebarOpen = false"></div>
+        
+        <!-- Sidebar Container (Tanpa scroll di parent) -->
         <aside x-show="sidebarOpen"
                 x-transition:enter="transition ease-out duration-300"
                 x-transition:enter-start="-translate-x-full"
@@ -142,25 +151,28 @@
                 x-transition:leave="transition ease-in duration-200"
                 x-transition:leave-start="translate-x-0"
                 x-transition:leave-end="-translate-x-full"
-                class="absolute inset-y-4 left-4 max-h-[calc(100vh-2rem)] w-[min(20rem,calc(100vw-2.5rem))] overflow-y-auto overscroll-contain rounded-[2.5rem] border-4 border-white bg-white p-5 shadow-2xl flex flex-col">
+                class="absolute inset-y-4 left-4 max-h-[calc(100vh-2rem)] w-[min(20rem,calc(100vw-2.5rem))] rounded-[2.5rem] border-4 border-white bg-white p-5 shadow-2xl flex flex-col">
             
-            <div class="mb-6 flex items-center gap-3 border-b-4 border-dashed border-[#f4f9ff] pb-6">
+            <!-- Header Mobile Sidebar (Fixed/Tidak ikut scroll) -->
+            <div class="shrink-0 mb-6 flex items-center gap-3 border-b-4 border-dashed border-[#f4f9ff] pb-6">
                 <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm">
-                <div class="min-w-0">
+                <div class="min-w-0 flex-1">
                     <p class="text-xl font-black leading-tight text-[#2b3a67] break-words">Wiboost <span class="text-[#5a76c8]">Admin</span></p>
                 </div>
             </div>
             
-            <nav class="space-y-2 flex-1">
+            <!-- Nav Menu Mobile Sidebar (Scrollable & Hide Scrollbar) -->
+            <nav class="flex-1 space-y-2 overflow-y-auto overscroll-contain hide-scroll pr-1">
                 @foreach($adminNav as $item)
-                    <a href="{{ route($item['route']) }}" class="flex items-center justify-between rounded-full px-5 py-3 text-sm font-black transition-all {{ request()->routeIs($item['pattern']) ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white' : 'bg-[#f4f9ff] text-[#2b3a67] border-2 border-transparent hover:border-white' }}">
+                    <a href="{{ route($item['route']) }}" class="flex items-center gap-3 rounded-full px-5 py-3 text-sm font-black transition-all {{ request()->routeIs($item['pattern']) ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white' : 'bg-[#f4f9ff] text-[#2b3a67] border-2 border-transparent hover:border-white' }}">
+                        <span class="text-lg">{{ $item['icon'] }}</span>
                         <span>{{ $item['label'] }}</span>
-                        <span>&rarr;</span>
                     </a>
                 @endforeach
             </nav>
             
-            <div class="mt-6 pt-6 border-t-4 border-dashed border-[#f4f9ff]">
+            <!-- Footer Mobile Sidebar (Fixed/Tidak ikut scroll) -->
+            <div class="shrink-0 mt-6 pt-6 border-t-4 border-dashed border-[#f4f9ff]">
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="flex w-full items-center justify-center rounded-full border-4 border-white bg-[#ffe5e5] px-6 py-3.5 text-sm font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 active:scale-95 transition-transform gap-2">
