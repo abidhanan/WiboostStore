@@ -1,18 +1,17 @@
 @extends('layouts.admin')
+@section('title', 'Riwayat Deposit')
+@section('admin_header_subtitle', 'Pantau riwayat top-up atau pengisian saldo pengguna.')
 
-@section('title', 'Mutasi Saldo Global')
-@section('admin_header_subtitle', 'Pantau seluruh arus kas pelanggan: Top Up, Beli, Refund, dan Tukar Poin.')
-@section('admin_header_actions')
-    <a href="{{ route('admin.deposits.index') }}" class="flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-white px-6 py-3 font-black text-[#5a76c8] shadow-lg shadow-[#bde0fe]/30 transition-transform active:scale-95 hover:bg-[#f4f9ff] sm:w-auto">
-        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-        Segarkan Data
-    </a>
-@endsection
+{{-- Section admin_header_actions dihapus, dipindah ke toolbar agar responsif --}}
 
 @section('content')
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
     .wiboost-font { font-family: 'Nunito', sans-serif; }
+    .table-scroll::-webkit-scrollbar { height: 8px; }
+    .table-scroll::-webkit-scrollbar-track { background: #f0f5ff; border-radius: 10px; }
+    .table-scroll::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; border: 2px solid #f0f5ff; }
+    .table-scroll::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
     
     .animate-float { animation: float 6s ease-in-out infinite; }
     .animate-float-delayed { animation: float 6s ease-in-out 3s infinite; }
@@ -23,170 +22,161 @@
     }
 </style>
 
-@php
-    $search = request('search');
-    $logs = \App\Models\WalletHistory::with('user')
-        ->when($search, function($query, $search) {
-            $query->where(function($q) use ($search) {
-                $q->where('invoice_number', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhereHas('user', function($userQuery) use ($search) {
-                      $userQuery->where('name', 'like', "%{$search}%");
-                  });
-            });
-        })
-        ->latest()
-        ->paginate(20);
-@endphp
+<div class="wiboost-font pb-12 relative z-10 w-full min-w-0">
+    <!-- Floating Emojis Background -->
+    <div class="absolute top-10 right-10 text-5xl animate-float opacity-30 pointer-events-none hidden lg:block z-0">💰</div>
+    <div class="absolute top-1/3 left-5 text-4xl animate-float-delayed opacity-30 pointer-events-none hidden lg:block z-0">✨</div>
+    <div class="absolute bottom-20 right-[15%] text-6xl animate-float opacity-20 pointer-events-none hidden lg:block z-0">🏦</div>
 
-<div class="wiboost-font pb-12 relative z-10">
+    <!-- Alert Messages (Aman dari 500 Error) -->
+    @if(session('success'))
+        <div class="mb-6 flex items-center gap-3 rounded-[2rem] border-4 border-white bg-[#e6fff7] px-5 sm:px-6 py-4 font-black text-emerald-500 shadow-lg shadow-emerald-100/50 relative z-10 text-sm sm:text-base w-full">
+            <span class="text-2xl sm:text-3xl drop-shadow-sm">✅</span>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="mb-6 flex items-center gap-3 rounded-[2rem] border-4 border-white bg-[#ffe5e5] px-5 sm:px-6 py-4 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 relative z-10 text-sm sm:text-base w-full">
+            <span class="text-2xl sm:text-3xl drop-shadow-sm">⚠️</span>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
 
-    <div class="absolute top-10 right-10 text-5xl animate-float opacity-30 pointer-events-none hidden md:block z-0">💸</div>
-    <div class="absolute top-1/3 left-5 text-4xl animate-float-delayed opacity-30 pointer-events-none hidden md:block z-0">✨</div>
-    <div class="absolute bottom-20 right-[15%] text-6xl animate-float opacity-20 pointer-events-none hidden md:block z-0">☁️</div>
-
-    <div class="bg-white/90 backdrop-blur-sm p-6 rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white mb-8 relative z-10 transition-transform duration-300 hover:border-[#bde0fe]">
-        <form action="{{ route('admin.deposits.index') }}" method="GET" class="flex flex-col md:flex-row gap-4">
-            <div class="relative flex-1">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-6 text-[#8faaf3]">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </span>
-                <input type="text" name="search" value="{{ request('search') }}" 
-                       class="w-full pl-16 pr-5 py-4 bg-[#f4f9ff] rounded-[1.5rem] border-4 border-white focus:border-[#bde0fe] outline-none transition text-[#2b3a67] font-black placeholder-[#a3bbfb] shadow-inner" 
-                       placeholder="Cari Nomor Invoice, Keterangan, atau Nama Pelanggan...">
+    <!-- Toolbar: Pencarian & Segarkan -->
+    <div class="mb-6 sm:mb-8 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/90 backdrop-blur-sm p-4 sm:p-5 shadow-xl shadow-[#bde0fe]/30 relative z-10 w-full min-w-0 transition-transform duration-300 hover:border-[#bde0fe]">
+        <form action="{{ route('admin.deposits.index') }}" method="GET" class="flex flex-col md:flex-row gap-3 w-full">
+            
+            <!-- Wrapper Input Cari -->
+            <div class="flex-1 flex gap-2 w-full min-w-0">
+                <input type="text" name="search" value="{{ request('search') }}"
+                    class="min-w-0 flex-1 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#f4f9ff] py-3 px-4 sm:px-5 font-black text-[#2b3a67] outline-none transition shadow-inner placeholder-[#a3bbfb] focus:border-[#bde0fe] text-xs sm:text-sm truncate"
+                    placeholder="Cari Invoice atau Pelanggan...">
+                
+                <button type="submit" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] w-12 h-12 text-white shadow-md active:scale-95 transition-transform" title="Cari Deposit">
+                    🔍
+                </button>
+                
+                @if(request('search'))
+                    <a href="{{ route('admin.deposits.index') }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[#ff6b6b] shadow-md active:scale-95 transition-transform" title="Reset">
+                        ✖️
+                    </a>
+                @endif
             </div>
-            <button type="submit" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white px-10 py-4 rounded-full font-black transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white whitespace-nowrap">
-                Cari Transaksi 🚀
-            </button>
-            @if(request('search'))
-                <a href="{{ route('admin.deposits.index') }}" class="bg-[#ffe5e5] hover:bg-[#ffcccc] text-[#ff6b6b] px-8 py-4 rounded-full font-black transition-transform active:scale-95 flex items-center justify-center border-4 border-white whitespace-nowrap shadow-md shadow-[#ff6b6b]/20">
-                    Reset
-                </a>
-            @endif
+            
+            <!-- Tombol Segarkan -->
+            <a href="{{ route('admin.deposits.index') }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#8faaf3] px-6 py-3 h-12 text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#6f8ddc] w-full md:w-auto">
+                <span class="text-base">🔄</span> <span class="whitespace-nowrap">Segarkan</span>
+            </a>
+            
         </form>
     </div>
 
-    <div class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-2xl shadow-[#bde0fe]/30 border-4 border-white overflow-hidden relative z-10">
-        <div class="overflow-x-auto p-4 md:p-6">
-            <table class="w-full text-left">
-                <thead>
-                    <tr>
-                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Invoice & Waktu</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Pelanggan</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Nominal</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Aktivitas / Detail</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff] text-center">Tipe</th>
-                        <th class="px-6 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff] text-center">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
-                    @forelse($logs as $log)
-                    
-                    @php
-                        $activityText = $log->description;
-                        if ($log->type === 'topup') {
-                            if (class_exists('\App\Models\Deposit')) {
-                                $deposit = \App\Models\Deposit::where('invoice_number', $log->invoice_number)->first();
-                                if ($deposit && $deposit->payment_method) {
-                                    $method = str_replace('_', ' ', $deposit->payment_method);
-                                    $method = ucwords($method);
-                                    if (strtolower($method) == 'qris') $method = 'QRIS';
-                                    if (strtolower($method) == 'gopay') $method = 'GoPay';
-                                    if (strtolower($method) == 'shopeepay') $method = 'ShopeePay';
-                                    
-                                    $activityText = "Top Up via " . $method;
-                                }
-                            }
-                        } elseif ($log->type === 'refund') {
-                            $desc = $log->description;
-                            if (str_starts_with($desc, 'Refund Pembelian Gagal:')) {
-                                $productName = trim(str_replace('Refund Pembelian Gagal:', '', $desc));
-                                $activityText = "Refund: Sistem Gagal ( " . $productName . " )";
-                            } elseif (str_starts_with($desc, 'Refund Otomatis (Pending > 24 Jam):')) {
-                                $productName = trim(str_replace('Refund Otomatis (Pending > 24 Jam):', '', $desc));
-                                $activityText = "Refund: Kehabisan Stok ( " . $productName . " )";
-                            }
-                        } elseif ($log->type === 'poin') {
-                            $activityText = "Bonus Penukaran Poin Loyalty";
-                        }
-                    @endphp
-
-                    <tr class="hover:bg-[#f8faff] transition-colors rounded-xl group">
-                        
-                        <td class="px-6 py-5">
-                            <p class="font-black text-[#5a76c8] text-sm mb-1 bg-[#f4f9ff] inline-block px-3 py-1 rounded-md border border-white whitespace-nowrap">{{ $log->invoice_number ?? 'Tanpa Invoice' }}</p>
-                            <p class="text-[10px] font-bold text-[#8faaf3] whitespace-nowrap ml-1">{{ $log->created_at->format('d M Y, H:i') }}</p>
-                        </td>
-
-                        <td class="px-6 py-5">
-                            <p class="font-black text-[#2b3a67] text-sm leading-tight line-clamp-1 min-w-[120px]">{{ $log->user->name ?? 'User Dihapus' }}</p>
-                        </td>
-
-                        <td class="px-6 py-5">
-                            @if($log->type == 'purchase')
-                                <p class="font-black text-sm text-[#ff6b6b] whitespace-nowrap drop-shadow-sm">
-                                    - Rp {{ number_format($log->amount, 0, ',', '.') }}
-                                </p>
-                            @else
-                                <p class="font-black text-sm text-emerald-500 whitespace-nowrap drop-shadow-sm">
-                                    + Rp {{ number_format($log->amount, 0, ',', '.') }}
-                                </p>
-                            @endif
-                        </td>
-
-                        <td class="px-6 py-5 whitespace-normal min-w-[200px]">
-                            <p class="font-bold text-[#4a5f96] text-xs leading-tight bg-[#f8faff] px-4 py-2 rounded-xl border border-[#e0fbfc]" title="{{ $activityText }}">{{ $activityText }}</p>
-                        </td>
-
-                        <td class="px-6 py-5 text-center">
-                            @php
-                                $displayType = $log->type;
-                                if (str_contains($log->invoice_number, 'POIN')) {
-                                    $displayType = 'poin';
-                                }
-
-                                $logClasses = [
-                                    'refund'   => ['bg-[#e6fff7]', 'text-emerald-500', '↺ Refund'],
-                                    'topup'    => ['bg-[#f0f5ff]', 'text-[#5a76c8]', '💰 Top Up'],
-                                    'purchase' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]', '🛍️ Beli'],
-                                    'poin'     => ['bg-[#fff5eb]', 'text-amber-500', '🎁 Poin'],
-                                ];
-                                $st = $logClasses[$displayType] ?? ['bg-gray-100', 'text-gray-500', strtoupper($displayType)];
-                            @endphp
-                            <span class="{{ $st[0] }} {{ $st[1] }} text-[9px] font-black uppercase px-4 py-2 rounded-full border-2 border-white shadow-sm inline-flex items-center justify-center gap-1.5 min-w-[90px] whitespace-nowrap">
-                                {{ $st[2] }}
-                            </span>
-                        </td>
-
-                        <td class="px-6 py-5 text-center">
-                            @php
-                                $statusLabels = [
-                                    'success' => ['bg-[#e6fff7]', 'text-emerald-500', '✅ Sukses'],
-                                ];
-                                $stStatus = $statusLabels['success'];
-                            @endphp
-                            <span class="{{ $stStatus[0] }} {{ $stStatus[1] }} px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest border-2 border-white shadow-sm inline-flex items-center justify-center gap-1.5 min-w-[96px] whitespace-nowrap">
-                                {{ $stStatus[2] }}
-                            </span>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="px-6 py-20 text-center">
-                            <div class="inline-flex items-center justify-center w-24 h-24 rounded-[2.5rem] bg-[#fff9f0] border-4 border-white mb-5 shadow-inner">
-                                <span class="text-5xl animate-float">💤</span>
-                            </div>
-                            <p class="text-[#5a76c8] font-black text-xl">Belum ada riwayat mutasi saldo.</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+    <!-- Tabel Data Deposit -->
+    <div class="overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm shadow-2xl shadow-[#bde0fe]/30 relative z-10 min-w-0 w-full">
+        <div class="w-full overflow-x-auto table-scroll pb-2">
+            <div class="inline-block min-w-full align-middle p-4 sm:p-6">
+                <table class="w-full min-w-[800px] text-left whitespace-nowrap">
+                    <thead>
+                        <tr>
+                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Waktu & Invoice</th>
+                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Pelanggan</th>
+                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Nominal</th>
+                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Metode</th>
+                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
+                        @forelse($deposits ?? [] as $deposit)
+                        <tr class="transition-colors hover:bg-[#f8faff] group">
+                            
+                            <!-- Invoice & Waktu -->
+                            <td class="px-5 py-4 sm:py-5 align-middle min-w-[150px]">
+                                <p class="font-black text-[#5a76c8] text-xs sm:text-sm mb-1 bg-[#f4f9ff] inline-block px-2 py-1 rounded-md border border-white truncate max-w-full">{{ $deposit->invoice_number ?? '-' }}</p>
+                                <p class="text-[9px] sm:text-[10px] font-bold text-[#8faaf3] ml-1">{{ isset($deposit->created_at) ? $deposit->created_at->format('d M Y, H:i') : '-' }}</p>
+                            </td>
+                            
+                            <!-- User -->
+                            <td class="px-5 py-4 sm:py-5 align-middle min-w-[150px] max-w-[200px]">
+                                <p class="font-black text-[#2b3a67] text-xs sm:text-sm truncate">{{ $deposit->user->name ?? 'Guest' }}</p>
+                                <p class="text-[9px] sm:text-[10px] font-bold text-[#8faaf3] truncate mt-1">{{ $deposit->user->email ?? '-' }}</p>
+                            </td>
+                            
+                            <!-- Nominal -->
+                            <td class="px-5 py-4 sm:py-5 align-middle">
+                                <p class="font-black text-[#4bc6b9] text-sm sm:text-base drop-shadow-sm">Rp {{ number_format($deposit->amount ?? 0, 0, ',', '.') }}</p>
+                            </td>
+                            
+                            <!-- Metode Pembayaran -->
+                            <td class="px-5 py-4 sm:py-5 align-middle text-center">
+                                @php
+                                    $rawMethod = strtolower($deposit->payment_method ?? '');
+                                    if (($rawMethod == 'manual' || empty($rawMethod)) && ($deposit->status ?? '') != 'paid') {
+                                        $methodDisplay = 'BELUM PILIH';
+                                        $colorClass = 'bg-[#fff5eb] text-amber-500 border-white';
+                                    } else {
+                                        $methodMap = [
+                                            'qris'           => 'QRIS',
+                                            'gopay'          => 'GoPay',
+                                            'shopeepay'      => 'ShopeePay',
+                                            'bank_transfer'  => 'Bank Transfer',
+                                            'cstore'         => 'Indomaret/ALFA',
+                                            'credit_card'    => 'Kartu Kredit',
+                                            'echannel'       => 'Mandiri Bill',
+                                            'permata_va'     => 'Permata VA',
+                                            'bca_va'         => 'BCA Transfer',
+                                            'bni_va'         => 'BNI Transfer',
+                                            'bri_va'         => 'BRI Transfer',
+                                            'cimb_va'        => 'CIMB Transfer',
+                                            'other_va'       => 'ATM Bersama',
+                                            'danamon_online' => 'Danamon Online',
+                                        ];
+                                        $methodDisplay = $methodMap[$rawMethod] ?? ucwords(str_replace('_', ' ', $rawMethod));
+                                        if ($methodDisplay == 'Manual' || $methodDisplay == '') $methodDisplay = 'MANUAL';
+                                        $colorClass = 'bg-[#f4f9ff] text-[#8faaf3] border-white';
+                                    }
+                                @endphp
+                                <span style="font-size: 9px;" class="font-black uppercase tracking-widest px-3 py-1.5 rounded-full border-2 shadow-sm inline-block {{ $colorClass }}">
+                                    {{ $methodDisplay }}
+                                </span>
+                            </td>
+                            
+                            <!-- Status -->
+                            <td class="px-5 py-4 sm:py-5 align-middle text-center min-w-[120px]">
+                                @php
+                                    // Status pada deposit umumnya adalah paid, unpaid, failed, atau expired
+                                    $statusLabels = [
+                                        'paid' => ['bg-[#e6fff7]', 'text-emerald-500', 'Berhasil'],
+                                        'success' => ['bg-[#e6fff7]', 'text-emerald-500', 'Berhasil'],
+                                        'unpaid' => ['bg-[#fff5eb]', 'text-amber-500', 'Pending'],
+                                        'pending' => ['bg-[#fff5eb]', 'text-amber-500', 'Pending'],
+                                        'failed' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]', 'Gagal'],
+                                        'expired' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]', 'Expired'],
+                                    ];
+                                    $rawStatus = strtolower($deposit->status ?? 'pending');
+                                    $st = $statusLabels[$rawStatus] ?? ['bg-gray-100', 'text-gray-500', $rawStatus];
+                                @endphp
+                                <span style="font-size: 9px;" class="{{ $st[0] }} {{ $st[1] }} px-4 py-1.5 rounded-full font-black uppercase tracking-widest border-2 border-white shadow-sm inline-block w-full text-center">
+                                    {{ $st[2] }}
+                                </span>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="px-5 py-16 sm:py-20 text-center">
+                                <div class="mb-4 sm:mb-5 inline-flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-[#f0f5ff] text-4xl sm:text-5xl shadow-inner animate-float">💰</div>
+                                <p class="text-lg sm:text-xl font-black text-[#5a76c8]">Belum ada riwayat deposit.</p>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
         
-        @if($logs->hasPages())
-            <div class="p-6 md:p-8 border-t-4 border-dashed border-[#f4f9ff] bg-[#f8faff]">
-                {{ $logs->appends(request()->query())->links() }}
+        <!-- Paginasi -->
+        @if(isset($deposits) && method_exists($deposits, 'links') && $deposits->hasPages())
+            <div class="border-t-4 border-dashed border-[#f4f9ff] bg-[#f8faff] p-5 sm:p-8 w-full min-w-0">
+                {{ $deposits->links() }}
             </div>
         @endif
     </div>

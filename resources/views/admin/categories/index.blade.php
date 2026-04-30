@@ -1,18 +1,15 @@
 @extends('layouts.admin')
-
 @section('title', 'Manajemen Kategori')
-@section('admin_header_subtitle', 'Kelola struktur kategori utama dan turunan sampai level 3.')
-@section('admin_header_actions')
-    <a href="{{ route('admin.categories.create') }}" class="flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-[#5a76c8] px-8 py-3.5 font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform hover:bg-[#4760a9] active:scale-95 sm:w-auto">
-        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
-        Tambah Kategori
-    </a>
-@endsection
+@section('admin_header_subtitle', 'Kelola pengelompokan layanan dan produk Wiboost Store.')
 
 @section('content')
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
     .wiboost-font { font-family: 'Nunito', sans-serif; }
+    .table-scroll::-webkit-scrollbar { height: 8px; }
+    .table-scroll::-webkit-scrollbar-track { background: #f0f5ff; border-radius: 10px; }
+    .table-scroll::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; border: 2px solid #f0f5ff; }
+    .table-scroll::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
     
     .animate-float { animation: float 6s ease-in-out infinite; }
     .animate-float-delayed { animation: float 6s ease-in-out 3s infinite; }
@@ -23,148 +20,143 @@
     }
 </style>
 
-@php
-    $sectionMeta = [
-        'main' => [
-            'title' => 'Kategori Utama',
-            'accent' => 'border-white',
-            'bg' => 'from-[#e0fbfc] to-[#f4f9ff]',
-            'iconBg' => 'bg-white',
-            'empty' => 'Belum ada kategori utama.',
-            'badge' => 'Level 0',
-        ],
-        'level_1' => [
-            'title' => 'Kategori Turunan 1',
-            'accent' => 'border-white',
-            'bg' => 'from-[#f4f9ff] to-[#eef7ff]',
-            'iconBg' => 'bg-white',
-            'empty' => 'Belum ada kategori turunan level 1.',
-            'badge' => 'Level 1',
-        ],
-        'level_2' => [
-            'title' => 'Kategori Turunan 2',
-            'accent' => 'border-white',
-            'bg' => 'from-[#f8fbff] to-[#f4f9ff]',
-            'iconBg' => 'bg-white',
-            'empty' => 'Belum ada kategori turunan level 2.',
-            'badge' => 'Level 2',
-        ],
-        'level_3' => [
-            'title' => 'Kategori Turunan 3',
-            'accent' => 'border-white',
-            'bg' => 'from-[#ffffff] to-[#f8fbff]',
-            'iconBg' => 'bg-[#f4f9ff]',
-            'empty' => 'Belum ada kategori turunan level 3.',
-            'badge' => 'Level 3+',
-        ],
-    ];
-@endphp
-
-<div class="wiboost-font mx-auto max-w-7xl pb-12 relative z-10">
-
+<div class="wiboost-font pb-12 relative z-10 w-full min-w-0">
+    <!-- Floating Emojis Background -->
     <div class="absolute top-10 right-10 text-5xl animate-float opacity-30 pointer-events-none hidden md:block z-0">📂</div>
     <div class="absolute top-1/3 left-5 text-4xl animate-float-delayed opacity-30 pointer-events-none hidden md:block z-0">✨</div>
-    <div class="absolute bottom-20 right-[15%] text-6xl animate-float opacity-20 pointer-events-none hidden md:block z-0">☁️</div>
+    <div class="absolute bottom-20 right-[15%] text-6xl animate-float opacity-20 pointer-events-none hidden md:block z-0">🏷️</div>
 
-    @if(session('success'))
-        <div class="mb-8 flex items-center gap-4 rounded-[2.5rem] border-4 border-white bg-[#e6fff7] px-6 py-4 font-black text-emerald-500 shadow-lg shadow-emerald-100/50 relative z-10">
-            <span class="text-3xl drop-shadow-sm">✅</span>
-            <span>{{ session('success') }}</span>
+    <!-- Toolbar: Pencarian & Tombol Tambah -->
+    <div class="mb-6 sm:mb-8 flex flex-col md:flex-row gap-3 sm:gap-4 relative z-10 w-full min-w-0">
+        
+        <!-- Form Pencarian (Kiri di Desktop / Atas di Mobile) -->
+        <div class="flex-1 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/90 backdrop-blur-sm p-3 sm:p-4 shadow-xl shadow-[#bde0fe]/30 transition-transform duration-300 hover:border-[#bde0fe] min-w-0">
+            <form action="{{ route('admin.categories.index') }}" method="GET" class="flex gap-2 sm:gap-3 items-center w-full">
+                <!-- Input Field -->
+                <input type="text" name="search" value="{{ request('search') }}"
+                    class="min-w-0 flex-1 rounded-[1.2rem] sm:rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] py-3 sm:py-4 px-5 sm:px-6 font-black text-[#2b3a67] outline-none transition shadow-inner placeholder-[#a3bbfb] focus:border-[#bde0fe] text-xs sm:text-sm truncate"
+                    placeholder="Cari nama kategori...">
+                
+                <!-- Tombol Cari Emoji Saja -->
+                <button type="submit" class="shrink-0 flex items-center justify-center rounded-[1.2rem] sm:rounded-[1.5rem] border-4 border-white bg-[#5a76c8] w-12 h-12 sm:w-[3.5rem] sm:h-[3.5rem] text-white shadow-lg shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9] text-lg sm:text-xl" title="Cari Kategori">
+                    🔍
+                </button>
+                
+                <!-- Tombol Reset Emoji -->
+                @if(request('search'))
+                    <a href="{{ route('admin.categories.index') }}" class="shrink-0 flex items-center justify-center rounded-[1.2rem] sm:rounded-[1.5rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 sm:w-[3.5rem] sm:h-[3.5rem] text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:bg-[#ffcccc] text-lg sm:text-xl" title="Reset Pencarian">
+                        ✖️
+                    </a>
+                @endif
+            </form>
         </div>
-    @endif
 
-    @if(session('error'))
-        <div class="mb-8 flex items-center gap-4 rounded-[2.5rem] border-4 border-white bg-[#ffe5e5] px-6 py-4 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 relative z-10">
-            <span class="text-3xl drop-shadow-sm">⚠️</span>
-            <span>{{ session('error') }}</span>
-        </div>
-    @endif
-
-    <div class="mb-10 rounded-[2.5rem] border-4 border-white bg-white/90 backdrop-blur-sm p-6 shadow-xl shadow-[#bde0fe]/30 transition-transform duration-300 hover:border-[#bde0fe] relative z-10">
-        <form action="{{ route('admin.categories.index') }}" method="GET" class="flex flex-col gap-4 md:flex-row">
-            <div class="relative flex-1">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-6 text-[#8faaf3]">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </span>
-                <input type="text" name="search" value="{{ $search }}"
-                    class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] py-4 pl-16 pr-5 font-black text-[#2b3a67] outline-none transition shadow-inner placeholder-[#a3bbfb] focus:border-[#bde0fe]"
-                    placeholder="Cari nama kategori, slug, deskripsi...">
-            </div>
-
-            <button type="submit" class="rounded-full border-4 border-white bg-[#5a76c8] px-10 py-4 font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9]">
-                Cari Kategori 🔍
-            </button>
-
-            @if(filled($search))
-                <a href="{{ route('admin.categories.index') }}" class="flex items-center justify-center rounded-full border-4 border-white bg-[#ffe5e5] px-8 py-4 font-black text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:bg-[#ffcccc]">
-                    Reset
-                </a>
-            @endif
-        </form>
+        <!-- Tombol Tambah Kategori (Kanan di Desktop / Bawah di Mobile) -->
+        <a href="{{ route('admin.categories.create') }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-[#5a76c8] px-6 sm:px-8 py-4 sm:py-0 text-sm font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9] w-full md:w-auto min-w-0">
+            <span class="text-lg">➕</span> Tambah Kategori
+        </a>
     </div>
 
-    @foreach($sectionMeta as $key => $meta)
-        @php
-            $items = $categorySections[$key] ?? collect();
-        @endphp
+    <!-- Alert Messages (Aman dari 500 Error dengan Session Check) -->
+    @if (session('success'))
+        <div class="bg-[#e6fff7] border-4 border-white text-emerald-500 px-5 sm:px-6 py-4 rounded-[2rem] mb-6 sm:mb-8 font-black flex items-center gap-3 shadow-lg shadow-emerald-100/50 relative z-10 w-full text-sm sm:text-base">
+            <span class="text-2xl sm:text-3xl drop-shadow-sm">✅</span>
+            <p>{{ session('success') }}</p>
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="bg-[#ffe5e5] border-4 border-white text-[#ff6b6b] px-5 sm:px-6 py-4 rounded-[2rem] mb-6 sm:mb-8 font-black flex items-center gap-3 shadow-lg shadow-[#ff6b6b]/20 relative z-10 w-full text-sm sm:text-base">
+            <span class="text-2xl sm:text-3xl drop-shadow-sm">⚠️</span>
+            <p>{{ session('error') }}</p>
+        </div>
+    @endif
 
-        <section class="mb-12 relative z-10">
-            <div class="mb-6 flex items-center gap-3 pl-2">
-                <h3 class="text-2xl font-black text-[#2b3a67] drop-shadow-sm">{{ $meta['title'] }}</h3>
-                <span class="rounded-full bg-[#f4f9ff] px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-[#5a76c8] border-2 border-white shadow-sm">{{ $meta['badge'] }}</span>
-                <span class="rounded-full bg-[#e6fff7] px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-500 border-2 border-white shadow-sm">{{ $items->count() }} item</span>
-            </div>
-
-            <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-                @forelse($items as $category)
-                    <div class="rounded-[2.5rem] border-4 {{ $meta['accent'] }} bg-gradient-to-br {{ $meta['bg'] }} p-6 shadow-xl shadow-[#bde0fe]/20 transition-transform hover:-translate-y-2 hover:border-[#bde0fe] group relative overflow-hidden">
-                        
-                        <div class="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between relative z-10">
-                            <div class="flex flex-1 items-center gap-4">
-                                <div class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white {{ $meta['iconBg'] }} p-2 shadow-inner group-hover:scale-110 transition-transform duration-300">
-                                    @if($category->image)
-                                        <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="h-full w-full object-contain drop-shadow-sm">
-                                    @else
-                                        <span class="text-4xl drop-shadow-md">{{ $category->emote ?: '📁' }}</span>
-                                    @endif
-                                </div>
-
-                                <div class="min-w-0 flex-1">
-                                    <p class="text-xl font-black leading-tight text-[#2b3a67]">{{ $category->name }}</p>
-                                    <div class="mt-2 flex flex-wrap items-center gap-2">
-                                        <span class="rounded-md bg-white px-2 py-1 text-[9px] font-black uppercase tracking-widest text-[#8faaf3] shadow-sm border border-[#f0f5ff]">{{ $category->breadcrumb_name }}</span>
-                                        <span class="rounded-md bg-[#e6fff7] px-2 py-1 text-[9px] font-black uppercase tracking-widest text-emerald-500 shadow-sm border border-emerald-100">{{ $category->products_count }} produk</span>
-                                        <span class="rounded-md bg-[#fff5eb] px-2 py-1 text-[9px] font-black uppercase tracking-widest text-amber-500 shadow-sm border border-amber-100">{{ $category->children_count }} child</span>
+    <!-- Tabel Data Kategori -->
+    <div class="bg-white/95 backdrop-blur-sm rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl shadow-[#bde0fe]/30 border-4 border-white flex flex-col overflow-hidden relative z-10 min-w-0 w-full">
+        <div class="w-full overflow-x-auto table-scroll pb-2">
+            <div class="inline-block min-w-full align-middle p-4 sm:p-6">
+                <table class="w-full min-w-[700px] text-left whitespace-nowrap">
+                    <thead>
+                        <tr>
+                            <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Nama & Visual</th>
+                            <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Tipe Kategori</th>
+                            <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Deskripsi</th>
+                            <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff] text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
+                        @forelse($categories ?? [] as $category)
+                            <tr class="hover:bg-[#f8faff] transition-colors group">
+                                <td class="px-5 py-4 sm:py-5 align-middle min-w-[250px]">
+                                    <div class="flex items-center gap-3 sm:gap-4">
+                                        <!-- Aman dari Error: Cek Image / Emote secara eksplisit -->
+                                        @if(!empty($category->image))
+                                            <div class="h-10 w-10 sm:h-12 sm:w-12 shrink-0 overflow-hidden rounded-xl border-2 border-white bg-[#f4f9ff] shadow-sm">
+                                                <img src="{{ Storage::url($category->image) }}" class="h-full w-full object-cover">
+                                            </div>
+                                        @else
+                                            <div class="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-[#f0f5ff] text-xl sm:text-2xl shadow-inner">
+                                                {{ $category->emote ?? '📁' }}
+                                            </div>
+                                        @endif
+                                        <div class="min-w-0">
+                                            <p class="font-black text-[#2b3a67] text-sm mb-1 truncate">{{ $category->name ?? '-' }}</p>
+                                            <p class="text-[9px] sm:text-[10px] font-bold text-[#8faaf3] bg-[#f4f9ff] inline-block px-2 py-1 rounded-md border border-white truncate max-w-full">Slug: {{ $category->slug ?? '-' }}</p>
+                                        </div>
                                     </div>
-                                    @if($category->slug)
-                                        <p class="mt-2 text-xs font-black text-[#8faaf3] bg-white/50 inline-block px-3 py-1 rounded-lg border border-[#e0fbfc]">/{{ $category->slug }}</p>
+                                </td>
+                                <td class="px-5 py-4 sm:py-5 align-middle">
+                                    <!-- Aman dari Error: Cek Null Relasi Parent -->
+                                    @if(empty($category->parent_id))
+                                        <span class="bg-[#e0fbfc] text-[#4bc6b9] px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest border border-white shadow-sm">Kategori Utama</span>
+                                    @else
+                                        <div class="flex flex-col gap-1 items-start">
+                                            <span class="bg-[#fff5eb] text-amber-500 px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest border border-white shadow-sm">Sub-Kategori</span>
+                                            <p class="text-[10px] font-bold text-[#8faaf3]">Dari: {{ $category->parent->name ?? 'Tidak diketahui' }}</p>
+                                        </div>
                                     @endif
-                                </div>
-                            </div>
-
-                            <div class="flex items-center gap-3 border-t-4 border-dashed border-[#f4f9ff] pt-5 xl:border-l-4 xl:border-t-0 xl:pl-5 xl:pt-0">
-                                <a href="{{ route('admin.categories.edit', $category->id) }}" class="flex-1 xl:flex-none rounded-xl border-4 border-white bg-white px-5 py-3 text-center text-sm font-black text-[#5a76c8] shadow-md shadow-[#bde0fe]/20 transition-transform active:scale-95 hover:bg-[#5a76c8] hover:text-white flex items-center justify-center gap-2">
-                                    ✏️
-                                </a>
-
-                                <form action="{{ route('admin.categories.destroy', $category->id) }}" method="POST" class="flex-1 xl:flex-none" onsubmit="return confirm('Yakin ingin menghapus kategori ini secara permanen?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="w-full rounded-xl border-4 border-white bg-[#ffe5e5] px-5 py-3 text-sm font-black text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:bg-[#ff6b6b] hover:text-white flex items-center justify-center gap-2">
-                                        🗑️
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                @empty
-                    <div class="col-span-full rounded-[2.5rem] border-4 border-dashed border-[#bde0fe] bg-white/80 py-16 text-center backdrop-blur-sm shadow-lg shadow-[#bde0fe]/20">
-                        <span class="text-6xl opacity-50 block mb-4 animate-float">📂</span>
-                        <p class="text-xl font-black text-[#5a76c8]">{{ filled($search) ? 'Tidak ada hasil di section ini.' : $meta['empty'] }}</p>
-                    </div>
-                @endempty
+                                </td>
+                                <td class="px-5 py-4 sm:py-5 align-middle min-w-[200px] whitespace-normal">
+                                    <p class="text-xs font-bold text-[#8faaf3] line-clamp-2 leading-relaxed">
+                                        {{ $category->description ?? '-' }}
+                                    </p>
+                                </td>
+                                <td class="px-5 py-4 sm:py-5 align-middle text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a href="{{ route('admin.categories.edit', $category->id) }}" class="w-9 h-9 sm:w-10 sm:h-10 bg-white border-2 border-white rounded-[1rem] flex items-center justify-center text-lg sm:text-xl hover:bg-[#f0f5ff] transition-transform hover:scale-110 active:scale-95 shadow-md shadow-[#bde0fe]/20" title="Edit Kategori">
+                                            ✏️
+                                        </a>
+                                        <form action="{{ route('admin.categories.destroy', $category->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus kategori ini? Jika ini kategori utama, pastikan tidak ada subkategori di dalamnya.');" class="inline-block m-0">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="w-9 h-9 sm:w-10 sm:h-10 bg-white border-2 border-white rounded-[1rem] flex items-center justify-center text-lg sm:text-xl hover:bg-[#ffe5e5] transition-transform hover:scale-110 active:scale-95 shadow-md shadow-[#ff6b6b]/20" title="Hapus Kategori">
+                                                🗑️
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="px-5 py-16 text-center">
+                                    <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-[2rem] sm:rounded-[2.5rem] bg-[#f0f5ff] border-4 border-white mb-4 sm:mb-5 shadow-inner">
+                                        <span class="text-4xl sm:text-5xl animate-float">📭</span>
+                                    </div>
+                                    <p class="text-[#5a76c8] font-black text-lg sm:text-xl">Belum ada kategori terdaftar.</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-        </section>
-    @endforeach
+        </div>
+        
+        <!-- Aman dari Error: Pengecekan method links() -->
+        @if(isset($categories) && method_exists($categories, 'links') && $categories->hasPages())
+            <div class="p-5 sm:p-8 border-t-4 border-dashed border-[#f4f9ff] bg-[#f8faff] min-w-0 w-full">
+                {{ $categories->links() }}
+            </div>
+        @endif
+    </div>
 </div>
 @endsection

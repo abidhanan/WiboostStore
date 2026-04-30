@@ -30,7 +30,7 @@
                     <div class="inline-block px-4 py-1 bg-white/80 backdrop-blur-sm text-[#5a76c8] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">
                         Overview
                     </div>
-                    <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-[#2b3a67] md:text-5xl drop-shadow-sm truncate">Selamat datang, <br class="block sm:hidden" /> <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">{{ Auth::user()->name }}</span>!</h2>
+                    <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-[#2b3a67] md:text-5xl drop-shadow-sm truncate">Selamat datang {{ Auth::user()->name }}!</h2>
                 </div>
             </div>
         </section>
