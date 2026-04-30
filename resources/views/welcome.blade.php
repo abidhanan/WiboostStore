@@ -4,23 +4,25 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Wiboost Store - Top Up & Kebutuhan Digital Termurah</title>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <style> 
-        body { font-family: 'Nunito', sans-serif; } 
-        .bg-wiboost-sky { background: linear-gradient(180deg, #bde0fe 0%, #e0fbfc 100%); }
-        .bg-wiboost-card { background-color: rgba(255, 255, 255, 0.9); }
-        
-        .animate-float { animation: float 6s ease-in-out infinite; }
-        .animate-float-delayed { animation: float 6s ease-in-out 3s infinite; }
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .popup-enter { transform: translateY(0); opacity: 1; pointer-events: auto; }
-        .popup-leave { transform: translateY(150%); opacity: 0; pointer-events: none; }
+    <style>
+         body { font-family: 'Nunito', sans-serif; }
+         .bg-wiboost-sky { background: linear-gradient(180deg, #bde0fe 0%, #e0fbfc 100%); }
+         .bg-wiboost-card { background-color: rgba(255, 255, 255, 0.9); }
+         
+         .animate-float { animation: float 6s ease-in-out infinite; }
+         .animate-float-delayed { animation: float 6s ease-in-out 3s infinite; }
+         @keyframes float {
+             0% { transform: translateY(0px); }
+             50% { transform: translateY(-15px); }
+             100% { transform: translateY(0px); }
+         }
+         .popup-enter { transform: translateY(0); opacity: 1; pointer-events: auto; }
+         .popup-leave { transform: translateY(150%); opacity: 0; pointer-events: none; }
+         .hide-scroll::-webkit-scrollbar { display: none; }
+         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white flex flex-col min-h-screen">
@@ -40,8 +42,8 @@
                             <a href="{{ route('user.dashboard') }}" class="text-sm font-extrabold text-white bg-[#5a76c8] hover:bg-[#4760a9] px-6 py-2.5 rounded-full transition-transform active:scale-95 shadow-md">Dashboard</a>
                         @endif
                     @else
-                        <a href="{{ route('login') }}" class="text-sm font-extrabold text-[#5a76c8] hover:bg-[#f0f5ff] px-5 py-2.5 rounded-full transition hidden sm:block">Masuk</a>
-                        <a href="{{ route('register') }}" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white text-sm font-extrabold px-7 py-2.5 rounded-full transition-transform active:scale-95 shadow-lg shadow-[#8faaf3]/40 border-2 border-white">Daftar</a>
+                        <a href="{{ route('register') }}" class="text-sm font-extrabold text-[#5a76c8] hover:bg-[#f0f5ff] px-5 py-2.5 rounded-full transition hidden sm:block">Daftar</a>
+                        <a href="{{ route('login') }}" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white text-sm font-extrabold px-7 py-2.5 rounded-full transition-transform active:scale-95 shadow-lg shadow-[#8faaf3]/40 border-2 border-white">Masuk</a>
                     @endauth
                 </div>
             </div>
@@ -58,16 +60,20 @@
             <div class="inline-block bg-white/80 backdrop-blur-sm text-[#5a76c8] font-black text-sm px-5 py-2 rounded-full mb-6 border-2 border-white shadow-sm">
                 Solusi Kebutuhan Digitalmu!
             </div>
-            <h1 class="text-5xl md:text-7xl font-black tracking-tight mb-6 text-[#2b3a67] drop-shadow-sm">
-                Wiboost <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Store</span>
-            </h1>
-            <p class="mt-6 text-lg md:text-xl text-[#4a5f96] max-w-2xl mx-auto font-bold leading-relaxed">
+            
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+                <h1 class="text-5xl md:text-7xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm">
+                    Wiboost <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Store</span>
+                </h1>
+            </div>
+
+            <p class="mt-2 text-lg md:text-xl text-[#4a5f96] max-w-2xl mx-auto font-bold leading-relaxed">
                 Murah, Cepat, Aman, Terpercaya, Bergaransi
             </p>
             
             <div class="mt-12 flex flex-col sm:flex-row justify-center gap-4">
-                <a href="#kategori" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white font-extrabold text-lg px-10 py-4 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex items-center justify-center gap-3">
-                    Beli Sekarang 🚀
+                <a href="#kategori" onclick="event.preventDefault(); document.getElementById('kategori').scrollIntoView({behavior: 'smooth', block: 'center'});" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white font-extrabold text-lg px-10 py-4 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex items-center justify-center gap-3">
+                    Beli Sekarang 🛒
                 </a>
             </div>
         </div>
@@ -84,7 +90,7 @@
             <div class="bg-white rounded-[2rem] shadow-xl shadow-[#bde0fe]/40 border-4 border-white p-6 md:p-8 flex flex-col md:flex-row justify-around items-center gap-8 animate-float">
                 <div class="text-center">
                     <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Total Pengguna</p>
-                    <p class="mt-1 text-4xl font-black text-[#5a76c8]">{{ number_format($totalUsers, 0, ',', '.') }}<span class="text-2xl text-[#a3bbfb]"></span></p>
+                    <p class="mt-1 text-4xl font-black text-[#5a76c8]">{{ number_format($totalUsers, 0, ',', '.') }}<span class="text-2xl text-[#a3bbfb]">+</span></p>
                 </div>
                 <div class="hidden md:block w-1 h-12 bg-[#f0f5ff] rounded-full"></div>
                 <div class="text-center">
@@ -94,7 +100,7 @@
                 <div class="hidden md:block w-1 h-12 bg-[#f0f5ff] rounded-full"></div>
                 <div class="text-center">
                     <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Total Transaksi</p>
-                    <p class="mt-1 text-4xl font-black text-[#4bc6b9]">{{ number_format($totalTransactions, 0, ',', '.') }}<span class="text-2xl text-[#8ce0d7]"></span></p>
+                    <p class="mt-1 text-4xl font-black text-[#4bc6b9]">{{ number_format($totalTransactions, 0, ',', '.') }}<span class="text-2xl text-[#8ce0d7]">+</span></p>
                 </div>
             </div>
         </div>
@@ -129,9 +135,9 @@
             </div>
         </div>
     </section>
-
+    
     <div id="fomo-toast" class="fixed bottom-6 left-4 md:left-8 z-50 bg-white border-4 border-white shadow-2xl shadow-[#bde0fe]/50 rounded-[2rem] p-4 pr-8 flex items-center gap-4 transition-all duration-700 popup-leave max-w-[300px]">
-        <div class="w-10 h-10 bg-[#e6fff7] rounded-xl flex items-center justify-center text-xl border-2 border-white shadow-inner shrink-0">🛒</div>
+        <div class="w-10 h-10 bg-[#e6fff7] rounded-xl flex items-center justify-center text-xl border-2 border-white shadow-inner shrink-0">🛍️</div>
         <div>
             <p class="text-[9px] text-[#8faaf3] font-black uppercase tracking-widest" id="fomo-name">Seseorang</p>
             <p class="text-xs text-[#2b3a67] font-black leading-tight mt-0.5">Membeli <span class="text-[#5a76c8]" id="fomo-product">Produk</span></p>
@@ -145,8 +151,8 @@
                 <div class="text-center md:text-left">
                     <div class="flex items-center justify-center md:justify-start gap-2 mb-3">
                         <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-9 w-9 shrink-0 object-contain drop-shadow-sm">
-                        <span class="font-black text-xl text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></span>
-                     </div>
+                        <span class="font-black text-xl text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></span> 
+                    </div>
                     <p class="text-xs font-bold text-[#8faaf3] max-w-xs">Penyedia layanan sosial media dan top up game termurah & tercepat di Indonesia.</p>
                 </div>
 
@@ -160,21 +166,19 @@
                         <a href="https://tiktok.com/@ahawi_channel" target="_blank" class="w-11 h-11 bg-[#f4f9ff] text-[#2b3a67] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>
                         </a>
-
                         <a href="https://youtube.com/@ahawi_channel" target="_blank" class="w-11 h-11 bg-[#f4f9ff] text-[#FF0000] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all">
                             <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                         </a>
-
                     </div>
                 </div>
             </div>
 
             <div class="border-t-2 border-[#f0f5ff] pt-8 text-center">
-                <div class="mb-5 flex flex-wrap items-center justify-center gap-3 text-xs font-black text-[#5a76c8]">
-                    <a href="{{ route('legal.show', 'terms') }}" class="rounded-full bg-[#f4f9ff] px-4 py-2 transition hover:bg-[#e0fbfc]">Syarat & Ketentuan</a>
-                    <a href="{{ route('legal.show', 'privacy-policy') }}" class="rounded-full bg-[#f4f9ff] px-4 py-2 transition hover:bg-[#e0fbfc]">Privasi</a>
-                    <a href="{{ route('legal.show', 'refund-policy') }}" class="rounded-full bg-[#f4f9ff] px-4 py-2 transition hover:bg-[#e0fbfc]">Refund</a>
-                    <a href="{{ route('legal.show', 'contact') }}" class="rounded-full bg-[#f4f9ff] px-4 py-2 transition hover:bg-[#e0fbfc]">Kontak Admin</a>
+                <div class="mb-5 flex flex-row flex-wrap items-center justify-center gap-1.5 sm:gap-3 w-full px-2">
+                    <a href="{{ route('legal.show', 'terms') }}" class="rounded-full bg-[#f4f9ff] px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] whitespace-nowrap">Syarat & Ketentuan</a>
+                    <a href="{{ route('legal.show', 'privacy-policy') }}" class="rounded-full bg-[#f4f9ff] px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] whitespace-nowrap">Privasi</a>
+                    <a href="{{ route('legal.show', 'refund-policy') }}" class="rounded-full bg-[#f4f9ff] px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] whitespace-nowrap">Refund</a>
+                    <a href="{{ route('legal.show', 'contact') }}" class="rounded-full bg-[#f4f9ff] px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] whitespace-nowrap">Kontak Admin</a>
                 </div>
                 <p class="text-[10px] font-black text-[#a3bbfb] uppercase tracking-widest">&copy; {{ date('Y') }} Wiboost Store. Hak Cipta Dilindungi.</p>
             </div>
@@ -189,12 +193,14 @@
 
         function showFomo() {
             if (!fomoToast || !fomoName || !fomoProduct || fomoPurchases.length === 0) return;
-
+            
             const purchase = fomoPurchases[Math.floor(Math.random() * fomoPurchases.length)];
             fomoName.innerText = purchase.name || 'Member Wiboost';
             fomoProduct.innerText = purchase.product || 'Produk Wiboost';
+            
             fomoToast.classList.remove('popup-leave');
             fomoToast.classList.add('popup-enter');
+            
             setTimeout(() => {
                 fomoToast.classList.remove('popup-enter');
                 fomoToast.classList.add('popup-leave');
@@ -208,7 +214,7 @@
             }, 3000);
         }
     </script>
-
+    
     @include('partials.floating-admin-report')
 </body>
 </html>
