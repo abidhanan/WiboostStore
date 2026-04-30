@@ -26,18 +26,19 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
+        'role_id' => 'integer',
         'balance' => 'decimal:2',
         'points' => 'integer',
     ];
 
     public function isAdmin()
     {
-        return $this->role_id === 1; 
+        return (int) $this->role_id === 1; 
     }
 
     public function isBuyer()
     {
-        return $this->role_id === 2; 
+        return (int) $this->role_id === 2; 
     }
 
     public function role()
