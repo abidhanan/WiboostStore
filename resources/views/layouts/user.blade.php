@@ -30,7 +30,7 @@
     <!-- Latar Belakang Floating -->
     <div class="fixed top-32 left-8 text-4xl animate-float opacity-50 pointer-events-none z-0 hidden md:block">☁️</div>
     <div class="fixed top-24 right-12 text-3xl animate-float-delayed opacity-50 pointer-events-none z-0 hidden md:block">✨</div>
-    <div class="fixed bottom-40 left-[10%] text-2xl animate-float-delayed opacity-50 pointer-events-none z-0 hidden md:block">🚀</div>
+    <div class="fixed bottom-40 left-[10%] text-2xl animate-float-delayed opacity-50 pointer-events-none z-0 hidden md:block">⭐</div>
     <div class="fixed bottom-20 right-[8%] text-5xl animate-float opacity-50 pointer-events-none z-0 hidden md:block">☁️</div>
 
     @php
