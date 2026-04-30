@@ -15,7 +15,7 @@
         ::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
         
-        /* Floating Animations ala Welcome Blade */
+        /* Floating Animations */
         .animate-float { animation: float 6s ease-in-out infinite; }
         .animate-float-delayed { animation: float 6s ease-in-out 3s infinite; }
         @keyframes float {
@@ -25,18 +25,18 @@
         }
     </style>
 </head>
-<body x-data="{ mobileNavOpen: false }" class="min-h-screen bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white relative">
+<body x-data="{ mobileNavOpen: false }" class="min-h-screen bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white relative flex flex-col">
     
     <div class="fixed top-32 left-8 text-4xl animate-float opacity-50 pointer-events-none z-0 hidden md:block">☁️</div>
     <div class="fixed top-24 right-12 text-3xl animate-float-delayed opacity-50 pointer-events-none z-0 hidden md:block">✨</div>
-    <div class="fixed bottom-40 left-[10%] text-2xl animate-float-delayed opacity-50 pointer-events-none z-0 hidden md:block">⭐</div>
-    <div class="fixed bottom-20 right-[8%] text-5xl animate-float opacity-50 pointer-events-none z-0 hidden md:block">☁️</div>
+    <div class="fixed bottom-40 left-[10%] text-2xl animate-float-delayed opacity-50 pointer-events-none z-0 hidden md:block">⭐️</div>
+    <div class="fixed bottom-20 right-[8%] text-5xl animate-float opacity-50 pointer-events-none z-0 hidden md:block">☁️️</div>
 
     @php
         $userNav = [
-            ['route' => 'user.dashboard', 'pattern' => 'user.dashboard', 'label' => 'Home'],
-            ['route' => 'user.history', 'pattern' => 'user.history', 'label' => 'Riwayat'],
-            ['route' => 'profile.edit', 'pattern' => 'profile.edit', 'label' => 'Profil'],
+            ['route' => 'user.dashboard', 'pattern' => 'user.dashboard', 'label' => 'Home', 'icon' => '🏠'],
+            ['route' => 'user.history', 'pattern' => 'user.history', 'label' => 'Riwayat', 'icon' => '🧾'],
+            ['route' => 'profile.edit', 'pattern' => 'profile.edit', 'label' => 'Profil', 'icon' => '👤'],
         ];
     @endphp
 
@@ -54,7 +54,7 @@
                     @if(Auth::check() && Auth::user()->isAdmin())
                         <a href="{{ route('admin.dashboard') }}" class="rounded-full border-2 border-white bg-[#ffe5e5] px-4 py-2 text-xs font-black text-[#ff6b6b] shadow-sm transition hover:bg-[#ffcccc] hover:scale-105">Panel Admin</a>
                     @endif
-
+                    
                     @foreach($userNav as $item)
                         <a href="{{ route($item['route']) }}" class="rounded-full px-5 py-2.5 text-sm font-black transition-all hover:scale-105 {{ request()->routeIs($item['pattern']) ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30' : 'text-[#8faaf3] hover:bg-[#f0f5ff] hover:text-[#5a76c8]' }}">
                             {{ $item['label'] }}
@@ -81,36 +81,57 @@
         </div>
     </div>
 
+    {{-- Menu Cepat Mobile (Dipercantik) --}}
     <div x-cloak x-show="mobileNavOpen" class="fixed inset-0 z-[60] md:hidden" aria-modal="true" role="dialog">
         <div x-show="mobileNavOpen" x-transition.opacity class="absolute inset-0 bg-[#2b3a67]/55 backdrop-blur-sm" @click="mobileNavOpen = false"></div>
-        <div x-show="mobileNavOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="translate-y-6 opacity-0" x-transition:enter-end="translate-y-0 opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-y-0 opacity-100" x-transition:leave-end="translate-y-6 opacity-0" class="absolute inset-x-3 top-4 rounded-[2.5rem] border-4 border-white bg-white p-6 shadow-2xl">
-            <div class="mb-6 flex items-center justify-between">
-                <div>
-                    <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Menu Cepat</p>
-                    <h2 class="text-2xl font-black text-[#2b3a67] drop-shadow-sm">{{ Auth::user()->name }}</h2>
+        
+        <div x-show="mobileNavOpen" 
+             x-transition:enter="transition ease-out duration-200" 
+             x-transition:enter-start="translate-y-6 opacity-0" 
+             x-transition:enter-end="translate-y-0 opacity-100" 
+             x-transition:leave="transition ease-in duration-150" 
+             x-transition:leave-start="translate-y-0 opacity-100" 
+             x-transition:leave-end="translate-y-6 opacity-0" 
+             class="absolute inset-x-4 top-4 rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-xl p-6 shadow-2xl">
+            
+            <div class="mb-8 flex items-center justify-between border-b-4 border-dashed border-[#f4f9ff] pb-5">
+                <div class="flex items-center gap-4">
+                    <div class="h-14 w-14 rounded-2xl bg-[#f4f9ff] border-2 border-white shadow-inner flex items-center justify-center text-[#5a76c8]">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-[#8faaf3]">Menu Cepat</p>
+                        <h2 class="text-xl font-black text-[#2b3a67] drop-shadow-sm leading-tight">{{ Auth::user()->name }}</h2>
+                    </div>
                 </div>
-                <button type="button" @click="mobileNavOpen = false" class="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-sm font-black text-xl hover:scale-105 transition-transform">✕</button>
+                <button type="button" @click="mobileNavOpen = false" class="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-sm font-black text-xl hover:scale-105 transition-transform active:scale-95">❌</button>
             </div>
 
-            <div class="space-y-3">
+            <div class="space-y-4">
                 @if(Auth::check() && Auth::user()->isAdmin())
-                    <a href="{{ route('admin.dashboard') }}" class="flex items-center justify-between rounded-[1.5rem] border-2 border-white bg-[#fff3f3] px-5 py-4 font-black text-[#ff6b6b] shadow-sm hover:scale-[1.02] transition-transform">
-                        <span>Panel Admin</span>
+                    <a href="{{ route('admin.dashboard') }}" class="flex items-center justify-between rounded-[1.5rem] border-2 border-white bg-[#fff3f3] px-5 py-4 font-black text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/10 hover:scale-[1.02] transition-transform">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl drop-shadow-sm">🛡️</span>
+                            <span>Panel Admin</span>
+                        </div>
                         <span class="text-xl">→</span>
                     </a>
                 @endif
+                
+                <div class="grid grid-cols-2 gap-3">
+                    @foreach($userNav as $item)
+                        <a href="{{ route($item['route']) }}" class="flex flex-col items-center justify-center gap-3 rounded-[1.5rem] border-4 {{ request()->routeIs($item['pattern']) ? 'border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30' : 'border-white bg-[#f8fbff] text-[#2b3a67] hover:bg-[#e0fbfc]' }} px-4 py-6 font-black transition-transform hover:scale-[1.02] text-center">
+                            <span class="text-3xl drop-shadow-sm">{{ $item['icon'] }}</span>
+                            <span class="text-xs uppercase tracking-widest">{{ $item['label'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
 
-                @foreach($userNav as $item)
-                    <a href="{{ route($item['route']) }}" class="flex items-center justify-between rounded-[1.5rem] border-4 {{ request()->routeIs($item['pattern']) ? 'border-white bg-[#f0f5ff] text-[#5a76c8] shadow-md shadow-[#bde0fe]/30' : 'border-transparent bg-[#f8fbff] text-[#2b3a67]' }} px-5 py-4 font-black transition-transform hover:scale-[1.02]">
-                        <span>{{ $item['label'] }}</span>
-                        <span class="text-xl">→</span>
-                    </a>
-                @endforeach
-
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('logout') }}" class="pt-2">
                     @csrf
-                    <button type="submit" class="mt-4 flex w-full items-center justify-center rounded-full border-4 border-white bg-[#ffe5e5] px-5 py-4 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 hover:bg-[#ffcccc] transition-all active:scale-95">
-                        Keluar
+                    <button type="submit" class="mt-2 flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-[#ffe5e5] px-5 py-4 text-base font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 hover:bg-[#ffcccc] transition-all active:scale-95">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        Keluar Akun
                     </button>
                 </form>
             </div>
@@ -119,61 +140,49 @@
 
     <div class="h-28 sm:h-32"></div>
 
-    <main class="mx-auto w-full max-w-6xl px-4 pb-28 sm:px-6 lg:px-8 md:pb-16 relative z-10">
+    <main class="flex-1 mx-auto w-full max-w-6xl px-4 pb-20 sm:px-6 lg:px-8 md:pb-16 relative z-10">
         @yield('content')
     </main>
 
-    <footer class="relative z-20 mt-auto overflow-hidden border-t-[6px] border-[#f0f5ff] bg-white pb-24 pt-12 md:pb-8">
-        <div class="relative z-10 mx-auto max-w-6xl px-6 sm:px-8">
-            <div class="mb-10 flex flex-col items-center justify-between gap-8 md:flex-row">
+    {{-- Footer sama seperti Landing Page --}}
+    <footer class="bg-white pt-12 pb-8 border-t-[6px] border-[#f0f5ff] relative overflow-hidden mt-auto">
+        <div class="max-w-6xl mx-auto px-6 sm:px-8 relative z-10">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-8 mb-10">
                 <div class="text-center md:text-left">
-                    <div class="mb-3 flex items-center justify-center gap-2 md:justify-start group cursor-pointer">
-                        <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-9 w-9 shrink-0 object-contain drop-shadow-sm group-hover:scale-110 transition-transform">
-                        <span class="text-xl font-black text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></span>
+                    <div class="flex items-center justify-center md:justify-start gap-2 mb-3">
+                        <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-9 w-9 shrink-0 object-contain drop-shadow-sm">
+                        <span class="font-black text-xl text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></span>
                     </div>
-                    <p class="max-w-xs text-xs font-bold text-[#8faaf3]">Penyedia layanan sosial media dan top up game termurah & tercepat di Indonesia.</p>
+                    <p class="text-xs font-bold text-[#8faaf3] max-w-xs">Penyedia layanan sosial media dan top up game termurah & tercepat di Indonesia.</p>
                 </div>
-
-                <div class="flex flex-col items-center gap-3 md:items-end">
-                    <p class="mb-1 text-[10px] font-black uppercase tracking-widest text-[#2b3a67]">Follow Us</p>
+                <div class="flex flex-col items-center md:items-end gap-3">
+                    <p class="text-[10px] font-black text-[#2b3a67] uppercase tracking-widest mb-1">Follow Us</p>
                     <div class="flex items-center gap-4">
-                        <a href="https://instagram.com/ahawi_channel" target="_blank" class="flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-white bg-[#f4f9ff] text-[#e1306c] shadow-sm transition-all hover:bg-[#5a76c8] hover:text-white hover:scale-110 hover:-rotate-6">
-                            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                        <a href="https://instagram.com/ahawi_channel" target="_blank" class="w-11 h-11 bg-[#f4f9ff] text-[#e1306c] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all hover:scale-110 hover:-rotate-6">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
                         </a>
-
-                        <a href="https://tiktok.com/@ahawi_channel" target="_blank" class="flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-white bg-[#f4f9ff] text-[#2b3a67] shadow-sm transition-all hover:bg-[#5a76c8] hover:text-white hover:scale-110 hover:-rotate-6">
-                            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>
+                        <a href="https://tiktok.com/@ahawi_channel" target="_blank" class="w-11 h-11 bg-[#f4f9ff] text-[#2b3a67] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all hover:scale-110 hover:-rotate-6">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>
                         </a>
-
-                        <a href="https://youtube.com/@ahawi_channel" target="_blank" class="flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-white bg-[#f4f9ff] text-[#FF0000] shadow-sm transition-all hover:bg-[#5a76c8] hover:text-white hover:scale-110 hover:-rotate-6">
-                            <svg class="h-7 w-7" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                        <a href="https://youtube.com/@ahawi_channel" target="_blank" class="w-11 h-11 bg-[#f4f9ff] text-[#FF0000] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all hover:scale-110 hover:-rotate-6">
+                            <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                         </a>
                     </div>
                 </div>
             </div>
-
-            <div class="border-t-4 border-[#f0f5ff] pt-8 text-center">
-                <div class="mb-5 flex flex-wrap items-center justify-center gap-3 text-xs font-black text-[#5a76c8]">
-                    <a href="{{ route('legal.show', 'terms') }}" class="rounded-full bg-[#f4f9ff] px-5 py-2.5 transition hover:bg-[#e0fbfc] hover:text-[#4bc6b9] border-2 border-white shadow-sm">Syarat & Ketentuan</a>
-                    <a href="{{ route('legal.show', 'privacy-policy') }}" class="rounded-full bg-[#f4f9ff] px-5 py-2.5 transition hover:bg-[#e0fbfc] hover:text-[#4bc6b9] border-2 border-white shadow-sm">Privasi</a>
-                    <a href="{{ route('legal.show', 'refund-policy') }}" class="rounded-full bg-[#f4f9ff] px-5 py-2.5 transition hover:bg-[#e0fbfc] hover:text-[#4bc6b9] border-2 border-white shadow-sm">Refund</a>
-                    <a href="{{ route('legal.show', 'contact') }}" class="rounded-full bg-[#f4f9ff] px-5 py-2.5 transition hover:bg-[#e0fbfc] hover:text-[#4bc6b9] border-2 border-white shadow-sm">Kontak Admin</a>
+            <div class="border-t-2 border-[#f0f5ff] pt-8 text-center">
+                <div class="mb-5 flex flex-row flex-wrap items-center justify-center gap-1.5 sm:gap-3 w-full px-2">
+                    <a href="{{ route('legal.show', 'terms') }}" class="rounded-full bg-[#f4f9ff] px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] whitespace-nowrap border-2 border-white shadow-sm">Syarat & Ketentuan</a>
+                    <a href="{{ route('legal.show', 'privacy-policy') }}" class="rounded-full bg-[#f4f9ff] px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] whitespace-nowrap border-2 border-white shadow-sm">Privasi</a>
+                    <a href="{{ route('legal.show', 'refund-policy') }}" class="rounded-full bg-[#f4f9ff] px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] whitespace-nowrap border-2 border-white shadow-sm">Refund</a>
+                    <a href="{{ route('legal.show', 'contact') }}" class="rounded-full bg-[#f4f9ff] px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] whitespace-nowrap border-2 border-white shadow-sm">Kontak Admin</a>
                 </div>
-                <p class="text-[10px] font-black uppercase tracking-widest text-[#a3bbfb]">&copy; {{ date('Y') }} Wiboost Store. Hak Cipta Dilindungi.</p>
+                <p class="text-[10px] font-black text-[#a3bbfb] uppercase tracking-widest">&copy; {{ date('Y') }} Wiboost Store. Hak Cipta Dilindungi.</p>
             </div>
         </div>
     </footer>
 
-    <nav class="fixed inset-x-3 bottom-3 z-50 rounded-[2.5rem] border-4 border-white bg-white/95 p-2 shadow-2xl shadow-[#bde0fe]/40 backdrop-blur-md md:hidden">
-        <div class="grid grid-cols-4 gap-2">
-            @foreach($userNav as $item)
-                <a href="{{ route($item['route']) }}" class="rounded-full px-3 py-3 text-center text-[10px] font-black uppercase tracking-wider {{ request()->routeIs($item['pattern']) ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white/50' : 'text-[#8faaf3] hover:bg-[#f0f5ff]' }}">
-                    {{ $item['label'] }}
-                </a>
-            @endforeach
-        </div>
-    </nav>
-
-    @include('partials.floating-admin-report', ['floatingOffsetClass' => 'bottom-24 md:bottom-6'])
+    {{-- Widget Lapor Admin --}}
+    @include('partials.floating-admin-report')
 </body>
 </html>
