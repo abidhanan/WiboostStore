@@ -6,12 +6,12 @@
     <div class="mx-auto w-full max-w-md text-center sm:text-left">
         <div class="mb-8">
             <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-xs border-2 border-white shadow-sm uppercase tracking-widest">
-                Yuk, Masuk!
+                Yuk Masuk!
             </div>
             <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm">
-                Selamat Datang <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Kembali!</span> ✨
+                Selamat Datang Kembali!</span>
             </h2>
-            <p class="mt-2 text-sm font-bold text-[#8faaf3]">Silakan masuk untuk melanjutkan transaksi.</p>
+            <p class="mt-2 text-sm font-bold text-[#8faaf3]">Silakan masuk untuk melakukan transaksi!</p>
         </div>
 
         @if (session('status'))
@@ -54,7 +54,7 @@
             </label>
 
             <button type="submit" class="w-full rounded-full border-4 border-white bg-[#5a76c8] px-5 py-4 text-base font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9] flex items-center justify-center gap-2">
-                Masuk Sekarang 🚀
+                Masuk Sekarang ðŸš€
             </button>
         </form>
 

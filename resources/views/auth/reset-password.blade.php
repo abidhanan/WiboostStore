@@ -9,9 +9,9 @@
                 Sandi Baru
             </div>
             <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm">
-                Atur Ulang <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Sandi!</span> 🔒
+                Atur Ulang Sandi!</span> ðŸ”’
             </h2>
-            <p class="mt-2 text-sm font-bold text-[#8faaf3]">Gunakan kata sandi baru yang aman agar akun bisa dipakai lagi seperti biasa.</p>
+            <p class="mt-2 text-sm font-bold text-[#8faaf3]">Gunakan kata sandi baru yang aman!</p>
         </div>
 
         <form method="POST" action="{{ route('password.store') }}" class="space-y-5 text-left">
@@ -46,7 +46,7 @@
             </div>
 
             <button type="submit" class="w-full rounded-full border-4 border-white bg-[#5a76c8] px-5 py-4 text-base font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9] flex items-center justify-center gap-2 mt-2">
-                Simpan Sandi Baru ✨
+                Simpan Sandi Baru âœ¨
             </button>
         </form>
     </div>

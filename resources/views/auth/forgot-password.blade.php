@@ -9,9 +9,9 @@
                 Reset Kata Sandi
             </div>
             <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm">
-                Lupa <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Sandi?</span> 🤔
+                Lupa Kata Sandi?</span>
             </h2>
-            <p class="mt-2 text-sm font-bold text-[#8faaf3]">Masukkan email kamu, dan kami akan kirimkan tautan untuk membuat kata sandi baru.</p>
+            <p class="mt-2 text-sm font-bold text-[#8faaf3]">Masukkan email kamu dan kami akan kirimkan tautan untuk membuat kata sandi baru!</p>
         </div>
 
         @if (session('status'))
