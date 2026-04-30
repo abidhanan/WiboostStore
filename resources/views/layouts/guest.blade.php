@@ -1,6 +1,6 @@
 @php
     $pageTitle = trim($__env->yieldContent('title', config('app.name', 'Wiboost Store')));
-    $isCompactAuth = request()->routeIs('login', 'register', 'password.confirm', 'password.request', 'password.reset', 'verification.notice');
+    $isCompactAuth = request()->routeIs('login', 'register', 'admin.login', 'password.confirm', 'password.request', 'password.reset', 'verification.notice');
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">

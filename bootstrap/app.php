@@ -20,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
 
+        $middleware->redirectGuestsTo(
+            fn (Request $request) => $request->is('admin/*') ? '/admin/login' : '/login'
+        );
+
         // Mengizinkan Midtrans mengirim Webhook tanpa terkena blokir CSRF Token
         $middleware->validateCsrfTokens(except: [
             '/midtrans/callback',
