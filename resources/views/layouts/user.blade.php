@@ -26,17 +26,18 @@
     </style>
 </head>
 <body x-data="{ mobileNavOpen: false }" class="min-h-screen bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white relative flex flex-col">
-    
+
+    <!-- Latar Belakang Floating -->
     <div class="fixed top-32 left-8 text-4xl animate-float opacity-50 pointer-events-none z-0 hidden md:block">☁️</div>
     <div class="fixed top-24 right-12 text-3xl animate-float-delayed opacity-50 pointer-events-none z-0 hidden md:block">✨</div>
-    <div class="fixed bottom-40 left-[10%] text-2xl animate-float-delayed opacity-50 pointer-events-none z-0 hidden md:block">⭐️</div>
-    <div class="fixed bottom-20 right-[8%] text-5xl animate-float opacity-50 pointer-events-none z-0 hidden md:block">☁️️</div>
+    <div class="fixed bottom-40 left-[10%] text-2xl animate-float-delayed opacity-50 pointer-events-none z-0 hidden md:block">🚀</div>
+    <div class="fixed bottom-20 right-[8%] text-5xl animate-float opacity-50 pointer-events-none z-0 hidden md:block">⚡</div>
 
     @php
         $userNav = [
             ['route' => 'user.dashboard', 'pattern' => 'user.dashboard', 'label' => 'Home', 'icon' => '🏠'],
-            ['route' => 'user.history', 'pattern' => 'user.history', 'label' => 'Riwayat', 'icon' => '🧾'],
-            ['route' => 'profile.edit', 'pattern' => 'profile.edit', 'label' => 'Profil', 'icon' => '👤'],
+            ['route' => 'user.history', 'pattern' => 'user.history', 'label' => 'Riwayat', 'icon' => '🕒'],
+            ['route' => 'profile.edit', 'pattern' => 'profile.edit', 'label' => 'Profil', 'icon' => '👤']
         ];
     @endphp
 
@@ -49,7 +50,7 @@
                         <p class="text-lg font-black leading-none text-[#2b3a67] sm:text-2xl drop-shadow-sm">Wiboost <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Store</span></p>
                     </div>
                 </a>
-
+                
                 <div class="hidden items-center gap-2 md:flex">
                     @if(Auth::check() && Auth::user()->isAdmin())
                         <a href="{{ route('admin.dashboard') }}" class="rounded-full border-2 border-white bg-[#ffe5e5] px-4 py-2 text-xs font-black text-[#ff6b6b] shadow-sm transition hover:bg-[#ffcccc] hover:scale-105">Panel Admin</a>
@@ -60,7 +61,6 @@
                             {{ $item['label'] }}
                         </a>
                     @endforeach
-
                     <form method="POST" action="{{ route('logout') }}" class="m-0 ml-2">
                         @csrf
                         <button type="submit" class="rounded-full border-2 border-white bg-[#ffe5e5] px-5 py-2.5 text-sm font-black text-[#ff6b6b] shadow-sm transition-all hover:bg-[#ffcccc] hover:scale-105 active:scale-95">
@@ -81,18 +81,18 @@
         </div>
     </div>
 
-    {{-- Menu Cepat Mobile (Dipercantik) --}}
+    {{-- Menu Cepat Mobile (Full Width, Ada Jarak Atas) --}}
     <div x-cloak x-show="mobileNavOpen" class="fixed inset-0 z-[60] md:hidden" aria-modal="true" role="dialog">
         <div x-show="mobileNavOpen" x-transition.opacity class="absolute inset-0 bg-[#2b3a67]/55 backdrop-blur-sm" @click="mobileNavOpen = false"></div>
         
-        <div x-show="mobileNavOpen" 
-             x-transition:enter="transition ease-out duration-200" 
-             x-transition:enter-start="translate-y-6 opacity-0" 
-             x-transition:enter-end="translate-y-0 opacity-100" 
-             x-transition:leave="transition ease-in duration-150" 
-             x-transition:leave-start="translate-y-0 opacity-100" 
-             x-transition:leave-end="translate-y-6 opacity-0" 
-             class="absolute inset-x-4 top-4 rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-xl p-6 shadow-2xl">
+        <div x-show="mobileNavOpen"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="-translate-y-6 opacity-0"
+             x-transition:enter-end="translate-y-0 opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="translate-y-0 opacity-100"
+             x-transition:leave-end="-translate-y-6 opacity-0"
+             class="absolute inset-x-0 top-4 rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-xl px-6 pt-8 pb-8 shadow-2xl">
             
             <div class="mb-8 flex items-center justify-between border-b-4 border-dashed border-[#f4f9ff] pb-5">
                 <div class="flex items-center gap-4">
@@ -104,33 +104,41 @@
                         <h2 class="text-xl font-black text-[#2b3a67] drop-shadow-sm leading-tight">{{ Auth::user()->name }}</h2>
                     </div>
                 </div>
-                <button type="button" @click="mobileNavOpen = false" class="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-sm font-black text-xl hover:scale-105 transition-transform active:scale-95">❌</button>
+                <button type="button" @click="mobileNavOpen = false" class="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-sm font-black text-xl hover:scale-105 transition-transform active:scale-95">✕</button>
             </div>
 
-            <div class="space-y-4">
+            <div class="space-y-3">
                 @if(Auth::check() && Auth::user()->isAdmin())
-                    <a href="{{ route('admin.dashboard') }}" class="flex items-center justify-between rounded-[1.5rem] border-2 border-white bg-[#fff3f3] px-5 py-4 font-black text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/10 hover:scale-[1.02] transition-transform">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl drop-shadow-sm">🛡️</span>
+                    <a href="{{ route('admin.dashboard') }}" class="flex items-center justify-between rounded-[1.5rem] border-2 border-white bg-[#fff3f3] px-5 py-4 font-black text-[#ff6b6b] shadow-sm hover:scale-[1.02] hover:shadow-md transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-sm border border-[#ffe5e5]">
+                                <span class="text-xl drop-shadow-sm">👑</span>
+                            </div>
                             <span>Panel Admin</span>
                         </div>
-                        <span class="text-xl">→</span>
+                        <svg class="w-5 h-5 text-[#ff6b6b]" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
                     </a>
                 @endif
                 
-                <div class="grid grid-cols-2 gap-3">
+                {{-- List Vertical Minimalis --}}
+                <div class="flex flex-col gap-2.5">
                     @foreach($userNav as $item)
-                        <a href="{{ route($item['route']) }}" class="flex flex-col items-center justify-center gap-3 rounded-[1.5rem] border-4 {{ request()->routeIs($item['pattern']) ? 'border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30' : 'border-white bg-[#f8fbff] text-[#2b3a67] hover:bg-[#e0fbfc]' }} px-4 py-6 font-black transition-transform hover:scale-[1.02] text-center">
-                            <span class="text-3xl drop-shadow-sm">{{ $item['icon'] }}</span>
-                            <span class="text-xs uppercase tracking-widest">{{ $item['label'] }}</span>
+                        <a href="{{ route($item['route']) }}" class="flex items-center justify-between rounded-[1.5rem] border-2 {{ request()->routeIs($item['pattern']) ? 'border-white bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/30' : 'border-transparent bg-[#f8fbff] text-[#2b3a67] hover:border-white hover:bg-[#e0fbfc]' }} px-5 py-3.5 font-black transition-all hover:translate-x-1">
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-xl {{ request()->routeIs($item['pattern']) ? 'bg-white/20 shadow-inner' : 'bg-white shadow-sm border border-[#f0f5ff]' }}">
+                                    <span class="text-xl drop-shadow-sm">{{ $item['icon'] }}</span>
+                                </div>
+                                <span class="text-sm uppercase tracking-widest">{{ $item['label'] }}</span>
+                            </div>
+                            <svg class="w-5 h-5 opacity-50" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
                         </a>
                     @endforeach
                 </div>
 
-                <form method="POST" action="{{ route('logout') }}" class="pt-2">
+                <form method="POST" action="{{ route('logout') }}" class="pt-4 border-t-2 border-dashed border-[#f4f9ff]">
                     @csrf
-                    <button type="submit" class="mt-2 flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-[#ffe5e5] px-5 py-4 text-base font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 hover:bg-[#ffcccc] transition-all active:scale-95">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-[#ffe5e5] px-5 py-4 text-sm font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 hover:bg-[#ffcccc] transition-all active:scale-95">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                         Keluar Akun
                     </button>
                 </form>
@@ -144,10 +152,11 @@
         @yield('content')
     </main>
 
-    {{-- Footer sama seperti Landing Page --}}
+    {{-- Footer Landing Page (Bersih dari duplikasi) --}}
     <footer class="bg-white pt-12 pb-8 border-t-[6px] border-[#f0f5ff] relative overflow-hidden mt-auto">
         <div class="max-w-6xl mx-auto px-6 sm:px-8 relative z-10">
             <div class="flex flex-col md:flex-row justify-between items-center gap-8 mb-10">
+                
                 <div class="text-center md:text-left">
                     <div class="flex items-center justify-center md:justify-start gap-2 mb-3">
                         <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-9 w-9 shrink-0 object-contain drop-shadow-sm">
@@ -155,6 +164,7 @@
                     </div>
                     <p class="text-xs font-bold text-[#8faaf3] max-w-xs">Penyedia layanan sosial media dan top up game termurah & tercepat di Indonesia.</p>
                 </div>
+
                 <div class="flex flex-col items-center md:items-end gap-3">
                     <p class="text-[10px] font-black text-[#2b3a67] uppercase tracking-widest mb-1">Follow Us</p>
                     <div class="flex items-center gap-4">
@@ -170,6 +180,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="border-t-2 border-[#f0f5ff] pt-8 text-center">
                 <div class="mb-5 flex flex-row flex-wrap items-center justify-center gap-1.5 sm:gap-3 w-full px-2">
                     <a href="{{ route('legal.show', 'terms') }}" class="rounded-full bg-[#f4f9ff] px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] whitespace-nowrap border-2 border-white shadow-sm">Syarat & Ketentuan</a>
