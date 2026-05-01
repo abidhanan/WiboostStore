@@ -96,6 +96,80 @@ class AdminCategoryIndexTest extends TestCase
         $response->assertDontSee('Top Up Game');
     }
 
+    public function test_admin_can_store_subcategory_and_inherit_parent_fulfillment_type(): void
+    {
+        $admin = $this->makeAdmin();
+
+        $parent = Category::create([
+            'name' => 'Aplikasi Premium',
+            'slug' => 'aplikasi-premium',
+            'fulfillment_type' => 'stock_based',
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.categories.store'), [
+            'parent_id' => $parent->id,
+            'name' => 'Netflix',
+            'slug' => 'netflix',
+            'description' => 'Akun streaming premium',
+        ]);
+
+        $response->assertRedirect(route('admin.categories.index'));
+
+        $this->assertDatabaseHas('categories', [
+            'parent_id' => $parent->id,
+            'name' => 'Netflix',
+            'slug' => 'netflix',
+            'fulfillment_type' => 'stock_based',
+        ]);
+    }
+
+    public function test_admin_store_treats_repeated_generated_slug_submission_as_success(): void
+    {
+        $admin = $this->makeAdmin();
+
+        Category::create([
+            'name' => 'Suntik Sosmed',
+            'slug' => 'suntik-sosmed',
+            'fulfillment_type' => 'auto_api',
+        ]);
+
+        $response = $this
+            ->actingAs($admin)
+            ->from(route('admin.categories.create'))
+            ->post(route('admin.categories.store'), [
+                'name' => 'Suntik Sosmed',
+                'fulfillment_type' => 'auto_api',
+            ]);
+
+        $response->assertRedirect(route('admin.categories.index'));
+        $response->assertSessionHas('success', 'Kategori baru berhasil ditambahkan!');
+        $this->assertDatabaseCount('categories', 1);
+    }
+
+    public function test_admin_store_rejects_slug_used_by_different_category(): void
+    {
+        $admin = $this->makeAdmin();
+
+        Category::create([
+            'name' => 'Top Up Game',
+            'slug' => 'top-up-game',
+            'fulfillment_type' => 'auto_api',
+        ]);
+
+        $response = $this
+            ->actingAs($admin)
+            ->from(route('admin.categories.create'))
+            ->post(route('admin.categories.store'), [
+                'name' => 'Game Voucher',
+                'slug' => 'top-up-game',
+                'fulfillment_type' => 'auto_api',
+            ]);
+
+        $response->assertRedirect(route('admin.categories.create'));
+        $response->assertSessionHasErrors('slug');
+        $this->assertDatabaseCount('categories', 1);
+    }
+
     protected function makeAdmin(): User
     {
         Role::query()->firstOrCreate(['id' => 1], ['name' => 'Admin']);

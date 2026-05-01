@@ -85,7 +85,31 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
-                        @forelse($categories ?? [] as $category)
+                        @php
+                            $sections = $categorySections ?? ['all' => $categories ?? collect()];
+                            $sectionLabels = [
+                                'main' => 'Kategori Utama',
+                                'level_1' => 'Kategori Turunan 1',
+                                'level_2' => 'Kategori Turunan 2',
+                                'level_3' => 'Kategori Turunan 3',
+                                'all' => 'Semua Kategori',
+                            ];
+                            $hasCategories = collect($sections)->contains(fn ($items) => collect($items)->isNotEmpty());
+                        @endphp
+
+                        @if($hasCategories)
+                            @foreach($sections as $sectionKey => $sectionCategories)
+                                @continue(collect($sectionCategories)->isEmpty())
+
+                                <tr class="bg-[#f8faff]">
+                                    <td colspan="4" class="px-5 py-3">
+                                        <span class="inline-flex rounded-full border-2 border-white bg-white px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-[#5a76c8] shadow-sm">
+                                            {{ $sectionLabels[$sectionKey] ?? 'Semua Kategori' }}
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                @foreach($sectionCategories as $category)
                             <tr class="hover:bg-[#f8faff] transition-colors group">
                                 <td class="px-5 py-4 sm:py-5 align-middle min-w-[250px]">
                                     <div class="flex items-center gap-3 sm:gap-4">
@@ -100,7 +124,7 @@
                                             </div>
                                         @endif
                                         <div class="min-w-0">
-                                            <p class="font-black text-[#2b3a67] text-sm mb-1 truncate">{{ $category->name ?? '-' }}</p>
+                                            <p class="font-black text-[#2b3a67] text-sm mb-1 truncate">{{ $category->breadcrumb_name ?? $category->name ?? '-' }}</p>
                                             <p class="text-[9px] sm:text-[10px] font-bold text-[#8faaf3] bg-[#f4f9ff] inline-block px-2 py-1 rounded-md border border-white truncate max-w-full">Slug: {{ $category->slug ?? '-' }}</p>
                                         </div>
                                     </div>
@@ -111,7 +135,7 @@
                                         <span class="bg-[#e0fbfc] text-[#4bc6b9] px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest border border-white shadow-sm">Kategori Utama</span>
                                     @else
                                         <div class="flex flex-col gap-1 items-start">
-                                            <span class="bg-[#fff5eb] text-amber-500 px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest border border-white shadow-sm">Sub-Kategori</span>
+                                            <span class="bg-[#fff5eb] text-amber-500 px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest border border-white shadow-sm">Kategori Turunan {{ $category->depth }}</span>
                                             <p class="text-[10px] font-bold text-[#8faaf3]">Dari: {{ $category->parent->name ?? 'Tidak diketahui' }}</p>
                                         </div>
                                     @endif
@@ -136,7 +160,9 @@
                                     </div>
                                 </td>
                             </tr>
-                        @empty
+                                @endforeach
+                            @endforeach
+                        @else
                             <tr>
                                 <td colspan="4" class="px-5 py-16 text-center">
                                     <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-[2rem] sm:rounded-[2.5rem] bg-[#f0f5ff] border-4 border-white mb-4 sm:mb-5 shadow-inner">
@@ -145,7 +171,7 @@
                                     <p class="text-[#5a76c8] font-black text-lg sm:text-xl">Belum ada kategori terdaftar.</p>
                                 </td>
                             </tr>
-                        @endforelse
+                        @endif
                     </tbody>
                 </table>
             </div>

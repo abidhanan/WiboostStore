@@ -49,6 +49,7 @@ class CategoryController extends Controller
         ];
 
         return view('admin.categories.index', [
+            'categories' => $categories,
             'categorySections' => $categorySections,
             'search' => $request->search,
         ]);
@@ -66,7 +67,7 @@ class CategoryController extends Controller
         $request->validate([
             'parent_id' => 'nullable|exists:categories,id',
             'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:categories,slug',
+            'slug' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'emote' => 'nullable|string|max:20',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,svg,webp|max:2048',
@@ -77,12 +78,37 @@ class CategoryController extends Controller
             ? Category::findOrFail($request->parent_id)
             : null;
         $fulfillmentType = $parent?->fulfillment_type ?? $request->fulfillment_type;
+        $slug = $this->resolveSlug($request);
 
         if (! $fulfillmentType) {
             return back()
                 ->withInput()
                 ->withErrors([
                     'fulfillment_type' => 'Pilih tipe fulfillment untuk kategori utama.',
+                ]);
+        }
+
+        if ($slug === '') {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'slug' => 'Slug sudah digunakan atau tidak valid. Gunakan nama/slug yang berbeda.',
+                ]);
+        }
+
+        $existingCategory = Category::query()->where('slug', $slug)->first();
+
+        if ($existingCategory) {
+            if ($this->matchesSubmittedCategory($existingCategory, $request)) {
+                return redirect()
+                    ->route('admin.categories.index')
+                    ->with('success', 'Kategori baru berhasil ditambahkan!');
+            }
+
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'slug' => 'Slug sudah digunakan atau tidak valid. Gunakan nama/slug yang berbeda.',
                 ]);
         }
 
@@ -94,7 +120,7 @@ class CategoryController extends Controller
         Category::create([
             'parent_id' => $request->parent_id,
             'name' => $request->name,
-            'slug' => $request->filled('slug') ? Str::slug($request->slug) : Str::slug($request->name),
+            'slug' => $slug,
             'description' => $parent ? $request->description : null,
             'emote' => $parent ? null : $request->emote,
             'image' => $parent ? $imagePath : null,
@@ -117,7 +143,7 @@ class CategoryController extends Controller
         $request->validate([
             'parent_id' => 'nullable|exists:categories,id',
             'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:categories,slug,' . $category->id,
+            'slug' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'emote' => 'nullable|string|max:20',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,svg,webp|max:2048',
@@ -128,6 +154,7 @@ class CategoryController extends Controller
             ? Category::findOrFail($request->parent_id)
             : null;
         $fulfillmentType = $parent?->fulfillment_type ?? $request->fulfillment_type;
+        $slug = $this->resolveSlug($request);
 
         if (! $fulfillmentType) {
             return back()
@@ -137,10 +164,18 @@ class CategoryController extends Controller
                 ]);
         }
 
+        if ($slug === '' || Category::query()->where('slug', $slug)->whereKeyNot($category->id)->exists()) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'slug' => 'Slug sudah digunakan atau tidak valid. Gunakan nama/slug yang berbeda.',
+                ]);
+        }
+
         $data = [
             'parent_id' => $request->parent_id,
             'name' => $request->name,
-            'slug' => $request->filled('slug') ? Str::slug($request->slug) : Str::slug($request->name),
+            'slug' => $slug,
             'description' => $parent ? $request->description : null,
             'emote' => $parent ? null : $request->emote,
             'fulfillment_type' => $fulfillmentType,
@@ -232,5 +267,19 @@ class CategoryController extends Controller
         }
 
         return array_values(array_unique($ids));
+    }
+
+    protected function resolveSlug(Request $request): string
+    {
+        return Str::slug($request->filled('slug') ? $request->slug : $request->name);
+    }
+
+    protected function matchesSubmittedCategory(Category $category, Request $request): bool
+    {
+        $submittedParentId = $request->filled('parent_id') ? (int) $request->parent_id : null;
+        $existingParentId = $category->parent_id ? (int) $category->parent_id : null;
+
+        return Str::lower(trim((string) $category->name)) === Str::lower(trim((string) $request->name))
+            && $existingParentId === $submittedParentId;
     }
 }

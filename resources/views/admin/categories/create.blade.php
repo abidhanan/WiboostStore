@@ -49,7 +49,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.categories.store') }}" method="POST" enctype="multipart/form-data" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-10 relative z-10">
+    <form id="category_create_form" action="{{ route('admin.categories.store') }}" method="POST" enctype="multipart/form-data" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-10 relative z-10">
         @csrf
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -100,7 +100,7 @@
             <textarea name="description" rows="4" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" placeholder="Tuliskan deskripsi atau panduan singkat layanan ini...">{{ old('description') }}</textarea>
         </div>
 
-        <button type="submit" class="w-full bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black text-xl py-5 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex justify-center items-center gap-2">
+        <button id="category_submit_button" type="submit" class="w-full bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black text-xl py-5 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex justify-center items-center gap-2">
             Simpan Kategori 🚀
         </button>
     </form>
@@ -131,5 +131,14 @@
 
     parentSelect.addEventListener('change', toggleCategoryType);
     toggleCategoryType(); 
+
+    const categoryForm = document.getElementById('category_create_form');
+    const submitButton = document.getElementById('category_submit_button');
+
+    categoryForm.addEventListener('submit', function () {
+        submitButton.disabled = true;
+        submitButton.classList.add('opacity-70', 'cursor-wait');
+        submitButton.textContent = 'Menyimpan...';
+    });
 </script>
 @endsection
