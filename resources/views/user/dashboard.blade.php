@@ -39,7 +39,7 @@
             <p class="text-[#4a5f96] max-w-md font-bold text-base md:text-lg">Siap percepat pertumbuhan sosial media & game kamu hari ini?</p>
         </div>
 
-        <div class="relative z-10 bg-white/90 backdrop-blur-md px-8 py-6 rounded-[2rem] border-4 border-white w-full md:w-auto text-center md:text-right shadow-lg shadow-[#bde0fe]/30 hover:scale-105 transition-transform duration-300">
+        <div class="relative z-10 bg-white/90 backdrop-blur-md px-8 py-6 rounded-[2rem] border-4 border-white w-full md:w-auto text-center md:text-left shadow-lg shadow-[#bde0fe]/30 hover:scale-105 transition-transform duration-300">
             <p class="text-[#8faaf3] text-xs font-black uppercase tracking-widest mb-1">Saldo Anda</p>
             <p class="text-3xl md:text-4xl font-black text-[#5a76c8] tracking-tight mb-4">Rp {{ number_format(Auth::user()->balance, 0, ',', '.') }}</p>
             <a href="{{ route('user.wallet.index') }}" class="inline-flex items-center justify-center gap-2 bg-[#5a76c8] text-white px-6 py-2.5 rounded-full text-sm font-extrabold hover:bg-[#4760a9] hover:-translate-y-1 active:scale-95 transition-all shadow-lg shadow-[#5a76c8]/30 border-2 border-white w-full md:w-auto">

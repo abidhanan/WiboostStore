@@ -33,7 +33,8 @@ class OrderController extends Controller
             'products' => function ($query) {
                 $query->where('is_active', true)
                     ->with('category.parent.parent.parent')
-                    ->orderBy('price', 'asc');
+                    ->orderBy('price', 'asc')
+                    ->orderBy('name', 'asc');
             },
         ])->where('slug', $slug)->firstOrFail();
 
@@ -42,10 +43,18 @@ class OrderController extends Controller
         }
 
         $products = $category->products;
-        $isSuntikSosmedOrder = $this->resolveRootCategorySlug($category) === 'suntik-sosmed'
+        $rootCategorySlug = $this->resolveRootCategorySlug($category);
+        $isSuntikSosmedOrder = $rootCategorySlug === 'suntik-sosmed'
             && $products->contains(fn (Product $product) => $product->is_ordersosmed_service);
+        $isTopUpGameOrder = $rootCategorySlug === 'top-up-game';
 
-        return view('user.order', compact('category', 'products', 'isSuntikSosmedOrder'));
+        if ($isSuntikSosmedOrder) {
+            $products = $this->sortSuntikSosmedProducts($products);
+            $category->setRelation('products', $products);
+            $this->attachSuccessfulAverageTimes($products);
+        }
+
+        return view('user.order', compact('category', 'products', 'isSuntikSosmedOrder', 'isTopUpGameOrder'));
     }
 
     public function processCheckout(
@@ -153,5 +162,57 @@ class OrderController extends Controller
         }
 
         return $category->slug;
+    }
+
+    protected function attachSuccessfulAverageTimes($products): void
+    {
+        $productIds = $products->pluck('id')->filter()->values();
+
+        if ($productIds->isEmpty()) {
+            return;
+        }
+
+        $durations = Transaction::query()
+            ->whereIn('product_id', $productIds)
+            ->where('order_status', 'success')
+            ->whereNotNull('created_at')
+            ->whereNotNull('updated_at')
+            ->get(['product_id', 'created_at', 'updated_at'])
+            ->map(function (Transaction $transaction) {
+                if (! $transaction->created_at || ! $transaction->updated_at || $transaction->updated_at->lessThan($transaction->created_at)) {
+                    return null;
+                }
+
+                return [
+                    'product_id' => $transaction->product_id,
+                    'seconds' => $transaction->created_at->diffInSeconds($transaction->updated_at),
+                ];
+            })
+            ->filter()
+            ->groupBy('product_id');
+
+        $products->each(function (Product $product) use ($durations) {
+            $productDurations = $durations->get($product->id, collect());
+            $seconds = $productDurations->pluck('seconds');
+
+            $product->setAttribute('ordersosmed_success_average_seconds_cache', $seconds->isNotEmpty() ? (int) round($seconds->avg()) : null);
+            $product->setAttribute('ordersosmed_success_order_count_cache', $seconds->count());
+        });
+    }
+
+    protected function sortSuntikSosmedProducts($products)
+    {
+        return $products
+            ->sort(function (Product $left, Product $right) {
+                $leftPrice = (float) $left->ordersosmed_price_per_thousand;
+                $rightPrice = (float) $right->ordersosmed_price_per_thousand;
+
+                if ($leftPrice === $rightPrice) {
+                    return strnatcasecmp($left->name, $right->name);
+                }
+
+                return $leftPrice <=> $rightPrice;
+            })
+            ->values();
     }
 }

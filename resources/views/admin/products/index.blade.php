@@ -108,13 +108,13 @@
                             <tr class="transition-colors hover:bg-[#f8faff] group">
                                 <td class="min-w-[200px] max-w-[280px] whitespace-normal px-5 py-4 sm:py-5 align-middle">
                                     <div class="flex items-center gap-3 sm:gap-4">
-                                        @if(!empty($product->image))
+                                        @if(!empty($product->display_logo_image))
                                             <div class="h-10 w-10 shrink-0 overflow-hidden rounded-[1rem] border-2 border-white bg-[#f4f9ff] shadow-sm">
-                                                <img src="{{ Storage::url($product->image) }}" class="h-full w-full object-cover">
+                                                <img src="{{ Storage::url($product->display_logo_image) }}" class="h-full w-full object-cover">
                                             </div>
                                         @else
                                             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#f0f5ff] text-xl shadow-inner group-hover:scale-110 transition-transform">
-                                                {{ $product->emote ?? '📦' }}
+                                                {{ $product->display_logo_emote ?? '📦' }}
                                             </div>
                                         @endif
                                         <div class="min-w-0 flex-1">
@@ -144,7 +144,12 @@
                                     @endif
                                 </td>
                                 <td class="px-5 py-4 sm:py-5 align-middle">
-                                    <p class="text-xs sm:text-sm font-black text-[#4bc6b9] drop-shadow-sm">Rp {{ number_format($product->price ?? 0, 0, ',', '.') }}</p>
+                                    <p class="text-xs sm:text-sm font-black text-[#4bc6b9] drop-shadow-sm">Rp {{ number_format($product->selling_price ?? 0, 0, ',', '.') }}</p>
+                                    @if($product->uses_api_selling_markup)
+                                        <p style="font-size: 9px;" class="mt-1 font-black uppercase tracking-widest text-[#8faaf3]">
+                                            Modal: Rp {{ number_format($product->price ?? 0, 0, ',', '.') }}
+                                        </p>
+                                    @endif
                                 </td>
                                 <td class="px-5 py-4 sm:py-5 align-middle text-center">
                                     <div class="space-y-1">

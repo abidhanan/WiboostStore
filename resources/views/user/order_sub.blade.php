@@ -23,17 +23,34 @@
     <div class="absolute bottom-20 right-1/4 text-3xl animate-float opacity-40 pointer-events-none hidden md:block z-0">⭐</div>
     <div class="absolute bottom-10 left-[15%] text-6xl animate-float-delayed opacity-60 pointer-events-none hidden md:block z-0">☁️</div>
 
-    <div class="flex flex-col md:flex-row items-center md:items-start gap-4 mb-10 text-center md:text-left relative z-10">
-        <a href="{{ $category->parent ? route('user.order.category', $category->parent->slug) : route('user.dashboard') }}" class="w-14 h-14 bg-white/95 backdrop-blur-sm rounded-[1.2rem] flex items-center justify-center text-[#5a76c8] hover:bg-[#e0fbfc] transition-transform border-4 border-white shadow-lg shadow-[#bde0fe]/30 shrink-0 hover:scale-110 active:scale-95">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
-        </a>
-        <div class="flex-1 mt-2 md:mt-0">
-            <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">
-                Pilih Kategori
+    <div class="relative z-10 mb-10 flex flex-col items-center gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white bg-white/95 p-6 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm md:flex-row md:gap-8 md:p-8">
+        <div class="absolute -bottom-10 -right-10 text-9xl opacity-10 pointer-events-none animate-float">📦</div>
+
+        <div class="relative z-10 flex w-full items-center justify-between gap-4 md:w-auto md:justify-start">
+            <a href="{{ $category->parent ? route('user.order.category', $category->parent->slug) : route('user.dashboard') }}" class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.2rem] border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-110 hover:bg-[#e0fbfc] active:scale-95">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+            </a>
+
+            <div class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-2 border-white bg-[#f4f9ff] p-2 text-[#5a76c8] shadow-inner">
+                @if($category->image)
+                    <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="h-full w-full object-contain drop-shadow-sm">
+                @else
+                    <span class="text-4xl font-black drop-shadow-sm">{{ $category->emote ?? '📦' }}</span>
+                @endif
             </div>
-            <h2 class="text-3xl md:text-5xl font-black text-[#2b3a67] tracking-tight drop-shadow-sm">{{ $category->name }}</h2>
+        </div>
+
+        <div class="relative z-10 flex-1 text-center md:text-left">
+            <div class="mb-3 inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1 text-[10px] font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
+                Katalog
+            </div>
+            <h2 class="mb-2 text-3xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm md:text-4xl">{{ $category->name }}</h2>
             @if($category->description)
-                <p class="mt-3 text-sm font-bold text-[#8faaf3] max-w-2xl bg-white/50 px-5 py-3 rounded-[1.5rem] border-2 border-white shadow-sm mx-auto md:mx-0">{{ $category->description }}</p>
+                <p class="inline-block w-full rounded-2xl border-2 border-white bg-[#f8faff] p-4 text-left text-sm font-bold leading-relaxed text-[#4a5f96] shadow-inner md:w-auto">
+                    {!! nl2br(e($category->description)) !!}
+                </p>
+            @else
+                <p class="font-bold text-[#8faaf3]">Pilih kategori di bawah ini untuk lanjut.</p>
             @endif
         </div>
     </div>

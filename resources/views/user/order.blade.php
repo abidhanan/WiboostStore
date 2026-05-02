@@ -52,6 +52,23 @@
 
     @php
         $showSuntikSosmedForm = $isSuntikSosmedOrder ?? false;
+        $showTopUpGameCompactCards = ($isTopUpGameOrder ?? false) && ! $showSuntikSosmedForm;
+
+        if ($showSuntikSosmedForm) {
+            $products = $products
+                ->sort(function ($left, $right) {
+                    $leftPrice = (float) $left->ordersosmed_price_per_thousand;
+                    $rightPrice = (float) $right->ordersosmed_price_per_thousand;
+
+                    if ($leftPrice === $rightPrice) {
+                        return strnatcasecmp($left->name, $right->name);
+                    }
+
+                    return $leftPrice <=> $rightPrice;
+                })
+                ->values();
+        }
+
         $socialProductsPayload = $showSuntikSosmedForm
             ? $products->map(function ($product) {
                 $plainDescription = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $product->description)));
@@ -208,57 +225,66 @@
             <h3 class="text-2xl font-black text-[#2b3a67]">Daftar Layanan</h3>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div class="{{ $showTopUpGameCompactCards ? 'grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5' }}">
             @forelse($products as $product)
                 @php
                     $isOutOfStock = in_array($product->process_type, ['account', 'number'], true) && ($product->available_stock ?? 0) <= 0;
                     $plainDescription = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $product->description)));
+                    $cardBaseClass = $showTopUpGameCompactCards
+                        ? 'group flex h-full w-full flex-col justify-between rounded-[1.35rem] border-4 border-white bg-white/95 p-3 text-left shadow-lg shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 min-h-[128px] sm:p-4'
+                        : 'group flex flex-col justify-between w-full rounded-[2rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 text-left shadow-xl shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 min-h-[160px]';
+                    $disabledCardClass = $showTopUpGameCompactCards
+                        ? 'relative flex h-full w-full cursor-not-allowed flex-col justify-between overflow-hidden rounded-[1.35rem] border-4 border-white bg-gray-50 p-3 text-left opacity-60 grayscale shadow-sm min-h-[128px] sm:p-4'
+                        : 'relative flex flex-col justify-between w-full cursor-not-allowed overflow-hidden rounded-[2rem] border-4 border-white bg-gray-50 p-6 text-left opacity-60 grayscale shadow-sm min-h-[160px]';
+                    $logoBoxClass = $showTopUpGameCompactCards
+                        ? 'h-9 w-9 rounded-xl text-xl'
+                        : 'h-12 w-12 rounded-xl text-2xl';
                 @endphp
 
                 <button
                     type="button"
                     data-id="{{ $product->id }}"
                     data-name="{{ $product->name }}"
-                    data-price="{{ $product->price }}"
+                    data-price="{{ $product->selling_price }}"
                     data-description="{{ $plainDescription }}"
                     data-checkout-fields='{{ json_encode($product->checkout_fields, JSON_UNESCAPED_UNICODE) }}'
                     @if(!$isOutOfStock)
                         onclick="goToCheckout(this)"
-                        class="group flex flex-col justify-between w-full rounded-[2rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 text-left shadow-xl shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 min-h-[160px]"
+                        class="{{ $cardBaseClass }}"
                     @else
                         disabled
-                        class="relative flex flex-col justify-between w-full cursor-not-allowed overflow-hidden rounded-[2rem] border-4 border-white bg-gray-50 p-6 text-left opacity-60 grayscale shadow-sm min-h-[160px]"
+                        class="{{ $disabledCardClass }}"
                     @endif
                 >
-                    <div class="flex items-start justify-between gap-3 w-full mb-4">
+                    <div class="flex items-start justify-between {{ $showTopUpGameCompactCards ? 'gap-2 mb-3' : 'gap-3 mb-4' }} w-full">
                         <div class="min-w-0 flex-1">
-                            <span class="block text-base font-black leading-tight text-[#2b3a67] transition-colors group-hover:text-[#5a76c8]">{{ $product->name }}</span>
+                            <span class="block font-black leading-tight text-[#2b3a67] transition-colors group-hover:text-[#5a76c8] {{ $showTopUpGameCompactCards ? 'text-xs sm:text-sm' : 'text-base' }}">{{ $product->name }}</span>
                         </div>
-                        @if($product->image)
-                            <div class="h-12 w-12 shrink-0 overflow-hidden rounded-xl border-2 border-white bg-[#f4f9ff] shadow-sm">
-                                <img src="{{ Storage::url($product->image) }}" alt="Logo" class="h-full w-full object-cover">
+                        @if($product->display_logo_image)
+                            <div class="{{ $logoBoxClass }} shrink-0 overflow-hidden border-2 border-white bg-[#f4f9ff] shadow-sm">
+                                <img src="{{ Storage::url($product->display_logo_image) }}" alt="Logo" class="h-full w-full object-cover">
                             </div>
-                        @elseif($product->emote)
-                            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-[#f4f9ff] text-2xl drop-shadow-sm shadow-inner">
-                                {{ $product->emote }}
+                        @elseif($product->display_logo_emote)
+                            <div class="{{ $logoBoxClass }} flex shrink-0 items-center justify-center border-2 border-white bg-[#f4f9ff] drop-shadow-sm shadow-inner">
+                                {{ $product->display_logo_emote }}
                             </div>
                         @else
-                            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-[#f4f9ff] text-[10px] font-black text-[#8faaf3] shadow-inner uppercase">
+                            <div class="{{ $logoBoxClass }} flex shrink-0 items-center justify-center border-2 border-white bg-[#f4f9ff] text-[9px] font-black text-[#8faaf3] shadow-inner uppercase">
                                 {{ $product->process_type }}
                             </div>
                         @endif
                     </div>
                     
-                    @if($plainDescription !== '')
+                    @if(!$showTopUpGameCompactCards && $plainDescription !== '')
                         <p class="mb-4 line-clamp-2 text-xs font-bold text-[#8faaf3] flex-1">{{ $plainDescription }}</p>
                     @endif
 
-                    <div class="mt-auto flex items-center justify-between w-full pt-4 border-t-2 border-dashed border-[#f4f9ff]">
+                    <div class="mt-auto flex items-center justify-between w-full border-t-2 border-dashed border-[#f4f9ff] {{ $showTopUpGameCompactCards ? 'pt-3 gap-2' : 'pt-4' }}">
                         @if($isOutOfStock)
                             <span class="shrink-0 rounded-lg border border-white bg-[#ffe5e5] px-3 py-1.5 text-xs font-black text-[#ff6b6b] shadow-sm">HABIS</span>
                         @else
-                            <span class="text-xs font-black uppercase tracking-widest text-[#8faaf3]">Harga</span>
-                            <span class="shrink-0 text-lg font-black text-[#4bc6b9]">Rp {{ number_format($product->price, 0, ',', '.') }}</span>
+                            <span class="font-black uppercase tracking-widest text-[#8faaf3] {{ $showTopUpGameCompactCards ? 'hidden sm:inline text-[9px]' : 'text-xs' }}">Harga</span>
+                            <span class="shrink-0 font-black text-[#4bc6b9] {{ $showTopUpGameCompactCards ? 'text-sm sm:text-base' : 'text-lg' }}">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</span>
                         @endif
                     </div>
                 </button>

@@ -8,6 +8,8 @@ use App\Support\WiboostCatalog;
 
 class Product extends Model
 {
+    protected const API_SELLING_PRICE_MARKUP_RATE = 0.10;
+
     protected $fillable = [
         'category_id',
         'provider_id',
@@ -243,6 +245,42 @@ class Product extends Model
         return ($this->provider_source ?: $this->provider_id) === 'ordersosmed';
     }
 
+    public function getUsesApiSellingMarkupAttribute(): bool
+    {
+        $provider = $this->provider_source ?: $this->provider_id;
+
+        return $this->process_type === 'api'
+            || in_array($provider, ['digiflazz', 'ordersosmed'], true);
+    }
+
+    public function getSellingPriceAttribute(): float
+    {
+        return $this->calculateSellingPrice((float) $this->price);
+    }
+
+    public function getDisplayLogoImageAttribute(): ?string
+    {
+        if ($this->usesKuotaCategoryLogo()) {
+            return $this->category?->image;
+        }
+
+        return $this->image;
+    }
+
+    public function getDisplayLogoEmoteAttribute(): ?string
+    {
+        if ($this->usesKuotaCategoryLogo()) {
+            return $this->category?->emote ?: $this->emote;
+        }
+
+        return $this->emote;
+    }
+
+    protected function usesKuotaCategoryLogo(): bool
+    {
+        return $this->resolvePrimaryCategorySlug() === 'kuota-murah';
+    }
+
     public function getOrdersosmedMinQuantityAttribute(): int
     {
         $descriptionMin = $this->extractDescriptionInteger('/Minimum order:\s*([\d.,]+)/i');
@@ -259,31 +297,21 @@ class Product extends Model
 
     public function getOrdersosmedAverageTimeAttribute(): string
     {
-        $text = trim((string) $this->description . "\n" . (string) $this->name);
-        $pattern = '/(?:Waktu\s*rata[-\s]*rata|Average\s*time|Avg\.?\s*time|Estimasi(?:\s*waktu)?|Kecepatan|Speed|Start\s*time|Completion\s*time|Waktu\s*proses)\s*[:：-]\s*(.+)$/mi';
+        $averageSeconds = $this->resolveOrdersosmedSuccessfulAverageSeconds();
 
-        if (preg_match($pattern, $text, $matches) === 1) {
-            return trim($matches[1]);
+        if ($averageSeconds === null) {
+            return 'Belum ada order sukses';
         }
 
-        if (preg_match('/\bStart\s*[:：-]\s*([^\]\n|]+)/i', $text, $matches) === 1) {
-            return 'Mulai: ' . trim($matches[1]);
-        }
+        $successCount = $this->resolveOrdersosmedSuccessfulOrderCount();
+        $suffix = $successCount > 0 ? ' dari ' . number_format($successCount, 0, ',', '.') . ' order sukses' : '';
 
-        if (preg_match('/\b(instant|instan|fast\s*start)\b/i', $text, $matches) === 1) {
-            return Str::headline($matches[1]);
-        }
-
-        if (preg_match('/\b(\d+(?:[.,]\d+)?\s*[kKmM]?\s*\/\s*(?:day|days|hari|jam|hour|hours))\b/i', $text, $matches) === 1) {
-            return 'Kecepatan: ' . trim($matches[1]);
-        }
-
-        return 'Tidak tersedia dari provider';
+        return $this->formatOrdersosmedDuration($averageSeconds) . $suffix;
     }
 
     public function getOrdersosmedUnitPriceAttribute(): float
     {
-        return (float) $this->price / max(1, $this->ordersosmed_min_quantity);
+        return $this->selling_price / max(1, $this->ordersosmed_min_quantity);
     }
 
     public function getOrdersosmedPricePerThousandAttribute(): float
@@ -299,7 +327,16 @@ class Product extends Model
             return (float) (ceil(($quantity * $this->ordersosmed_unit_price) / 100) * 100);
         }
 
-        return (float) $this->price;
+        return $this->selling_price;
+    }
+
+    protected function calculateSellingPrice(float $basePrice): float
+    {
+        if (! $this->uses_api_selling_markup) {
+            return $basePrice;
+        }
+
+        return (float) ceil(round($basePrice * (1 + static::API_SELLING_PRICE_MARKUP_RATE), 6));
     }
 
     protected function extractDescriptionInteger(string $pattern): ?int
@@ -311,6 +348,80 @@ class Product extends Model
         $digits = preg_replace('/\D+/', '', $matches[1]);
 
         return filled($digits) ? (int) $digits : null;
+    }
+
+    protected function resolveOrdersosmedSuccessfulAverageSeconds(): ?int
+    {
+        if (array_key_exists('ordersosmed_success_average_seconds_cache', $this->attributes)) {
+            $seconds = $this->attributes['ordersosmed_success_average_seconds_cache'];
+
+            return is_numeric($seconds) ? max(0, (int) round((float) $seconds)) : null;
+        }
+
+        $durations = $this->successfulOrderDurationsInSeconds();
+
+        if ($durations === []) {
+            return null;
+        }
+
+        return (int) round(array_sum($durations) / count($durations));
+    }
+
+    protected function resolveOrdersosmedSuccessfulOrderCount(): int
+    {
+        if (array_key_exists('ordersosmed_success_order_count_cache', $this->attributes)) {
+            return max(0, (int) $this->attributes['ordersosmed_success_order_count_cache']);
+        }
+
+        return count($this->successfulOrderDurationsInSeconds());
+    }
+
+    protected function successfulOrderDurationsInSeconds(): array
+    {
+        return $this->transactions()
+            ->where('order_status', 'success')
+            ->whereNotNull('created_at')
+            ->whereNotNull('updated_at')
+            ->get(['created_at', 'updated_at'])
+            ->map(function (Transaction $transaction) {
+                if (! $transaction->created_at || ! $transaction->updated_at || $transaction->updated_at->lessThan($transaction->created_at)) {
+                    return null;
+                }
+
+                return $transaction->created_at->diffInSeconds($transaction->updated_at);
+            })
+            ->filter(fn ($seconds) => $seconds !== null)
+            ->values()
+            ->all();
+    }
+
+    protected function formatOrdersosmedDuration(int $seconds): string
+    {
+        if ($seconds < 60) {
+            return 'kurang dari 1 menit';
+        }
+
+        $days = intdiv($seconds, 86400);
+        $seconds %= 86400;
+        $hours = intdiv($seconds, 3600);
+        $seconds %= 3600;
+        $minutes = intdiv($seconds, 60);
+
+        $parts = [];
+
+        if ($days > 0) {
+            $parts[] = $days . ' hari';
+        }
+
+        if ($hours > 0) {
+            $parts[] = $hours . ' jam';
+        }
+
+        if ($minutes > 0) {
+            $parts[] = $minutes . ' menit';
+        }
+
+        return implode(' ', array_slice($parts, 0, 2));
     }
 
     /**

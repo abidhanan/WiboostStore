@@ -131,6 +131,22 @@ class UserOrderCheckoutTest extends TestCase
             'stock_reminder' => 0,
         ]);
 
+        $product = Product::where('provider_product_id', 'svc-1')->firstOrFail();
+        $successfulOrder = Transaction::create([
+            'invoice_number' => 'WIB-AVG-001',
+            'user_id' => $user->id,
+            'product_id' => $product->id,
+            'amount' => 2800,
+            'target_data' => '@target',
+            'payment_status' => 'paid',
+            'order_status' => 'success',
+        ]);
+        $successfulOrder->timestamps = false;
+        $successfulOrder->forceFill([
+            'created_at' => now()->subHours(2),
+            'updated_at' => now(),
+        ])->save();
+
         $response = $this->actingAs($user)->get(route('user.order.category', $category->slug));
 
         $response->assertOk();
@@ -138,8 +154,111 @@ class UserOrderCheckoutTest extends TestCase
         $response->assertSee('Harga / 1000');
         $response->assertSee('Jumlah Pesanan');
         $response->assertSee('Target/Link/Username');
-        $response->assertSee('1-2 jam');
+        $response->assertSee('2 jam dari 1 order sukses');
         $response->assertSee('Instagram Like Indonesia');
+    }
+
+    public function test_top_up_game_order_page_uses_compact_cards_without_visible_descriptions(): void
+    {
+        $user = User::factory()->create();
+
+        $root = Category::create([
+            'name' => 'Top Up Game',
+            'slug' => 'top-up-game',
+            'description' => 'Kategori induk game',
+            'fulfillment_type' => 'auto_api',
+        ]);
+
+        $category = Category::create([
+            'name' => 'Mobile Legends',
+            'slug' => 'mobile-legends-umum',
+            'description' => 'Kategori leaf game',
+            'parent_id' => $root->id,
+            'fulfillment_type' => 'auto_api',
+        ]);
+
+        Product::create([
+            'category_id' => $category->id,
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'ML86',
+            'process_type' => 'api',
+            'name' => 'Mobile Legends 86 Diamonds',
+            'slug' => 'mobile-legends-86-diamonds',
+            'description' => 'Deskripsi layanan ini tidak boleh tampil di kartu compact.',
+            'price' => 20000,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('user.order.category', $category->slug));
+
+        $response->assertOk();
+        $response->assertSee('grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4', false);
+        $response->assertSee('min-h-[128px]', false);
+        $response->assertSee('Mobile Legends 86 Diamonds');
+        $response->assertSee('Rp 22.000');
+        $response->assertDontSeeText('Deskripsi layanan ini tidak boleh tampil di kartu compact.');
+    }
+
+    public function test_suntik_sosmed_services_are_sorted_by_price_per_thousand(): void
+    {
+        $user = User::factory()->create();
+
+        $root = Category::create([
+            'name' => 'Suntik Sosmed',
+            'slug' => 'suntik-sosmed',
+            'description' => 'Kategori induk test',
+            'fulfillment_type' => 'auto_api',
+        ]);
+
+        $category = Category::create([
+            'name' => 'Views',
+            'slug' => 'sosmed-instagram-views',
+            'description' => 'Kategori leaf test',
+            'parent_id' => $root->id,
+            'fulfillment_type' => 'auto_api',
+        ]);
+
+        Product::create([
+            'category_id' => $category->id,
+            'provider_id' => 'ordersosmed',
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => 'svc-expensive-per-1000',
+            'provider_quantity' => 100,
+            'process_type' => 'api',
+            'name' => 'Instagram Like Mahal Per 1000',
+            'slug' => 'instagram-like-mahal-per-1000',
+            'description' => "Minimum order: 100\nMaximum order: 10000",
+            'price' => 2800,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        Product::create([
+            'category_id' => $category->id,
+            'provider_id' => 'ordersosmed',
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => 'svc-cheap-per-1000',
+            'provider_quantity' => 1000,
+            'process_type' => 'api',
+            'name' => 'Instagram Views Murah Per 1000',
+            'slug' => 'instagram-views-murah-per-1000',
+            'description' => "Minimum order: 1000\nMaximum order: 100000",
+            'price' => 10000,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('user.order.category', $category->slug));
+
+        $response->assertOk();
+        $response->assertSeeInOrder([
+            'Instagram Views Murah Per 1000',
+            'Instagram Like Mahal Per 1000',
+        ]);
     }
 
     public function test_suntik_sosmed_checkout_uses_requested_quantity_for_amount_and_provider_order(): void
@@ -194,10 +313,10 @@ class UserOrderCheckoutTest extends TestCase
 
         $transaction = Transaction::query()->latest('id')->first();
 
-        $this->assertSame(7000.0, (float) $transaction->amount);
+        $this->assertSame(7700.0, (float) $transaction->amount);
         $this->assertSame('processing', $transaction->order_status);
         $this->assertSame(250, $transaction->provider_order_quantity);
-        $this->assertSame(3000.0, (float) $user->fresh()->balance);
+        $this->assertSame(2300.0, (float) $user->fresh()->balance);
         $this->assertSame('Jumlah Pesanan', data_get($transaction->order_input_data, 'fields.1.label'));
         $this->assertSame('250', data_get($transaction->order_input_data, 'fields.1.value'));
     }
@@ -397,7 +516,8 @@ class UserOrderCheckoutTest extends TestCase
         $this->assertSame('123456789 (1234)', $transaction->target_data);
         $this->assertSame('1234567891234', $transaction->provider_customer_no);
         $this->assertSame('success', $transaction->order_status);
-        $this->assertSame(8000.0, (float) $user->fresh()->balance);
+        $this->assertSame(13200.0, (float) $transaction->amount);
+        $this->assertSame(6800.0, (float) $user->fresh()->balance);
 
         Mail::assertSent(OrderSuccessMail::class, fn (OrderSuccessMail $mail) => $mail->transaction->is($transaction));
     }
@@ -454,16 +574,17 @@ class UserOrderCheckoutTest extends TestCase
 
         $this->assertSame('failed', $transaction->order_status);
         $this->assertSame('Produk sedang gangguan provider.', $transaction->target_notes);
+        $this->assertSame(13200.0, (float) $transaction->amount);
         $this->assertSame(20000.0, (float) $user->fresh()->balance);
         $this->assertDatabaseHas('wallet_histories', [
             'invoice_number' => $transaction->invoice_number,
             'type' => 'purchase',
-            'amount' => 12000,
+            'amount' => 13200,
         ]);
         $this->assertDatabaseHas('wallet_histories', [
             'invoice_number' => $transaction->invoice_number,
             'type' => 'refund',
-            'amount' => 12000,
+            'amount' => 13200,
         ]);
 
         app(\App\Services\OrderFulfillmentService::class)->markAsFailed($transaction->fresh(['product', 'user']), 'Retry gagal');

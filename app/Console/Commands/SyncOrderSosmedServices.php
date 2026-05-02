@@ -393,8 +393,13 @@ class SyncOrderSosmedServices extends Command
         $catalogType = strtolower((string) ($service['_ordersosmed_catalog_type'] ?? 'sosmed'));
         $category = strtolower($this->resolveProviderCategoryName($service));
         $name = strtolower((string) ($service['name'] ?? $service['service_name'] ?? ''));
+        $description = strtolower((string) ($service['description'] ?? $service['note'] ?? ''));
 
         if ($catalogType !== 'sosmed') {
+            return false;
+        }
+
+        if ($this->isCommentServiceText($category . ' ' . $name . ' ' . $description)) {
             return false;
         }
 
@@ -506,6 +511,11 @@ class SyncOrderSosmedServices extends Command
         ])));
 
         $providerCategoryText = $this->normalizeMatchText($this->resolveProviderCategoryName($service));
+
+        if ($this->isCommentServiceText($serviceText . ' ' . $providerCategoryText)) {
+            return null;
+        }
+
         $classification = $this->classifyStrictSosmedService($serviceText, $providerCategoryText);
 
         if ($classification === null) {
@@ -738,6 +748,21 @@ class SyncOrderSosmedServices extends Command
         }
 
         return false;
+    }
+
+    protected function isCommentServiceText(string $text): bool
+    {
+        $text = $this->normalizeMatchText($text);
+
+        return $this->containsAnyKeyword($text, [
+            ' comment ',
+            ' comments ',
+            ' komentar ',
+            ' komen ',
+            ' reply ',
+            ' replies ',
+            ' balasan ',
+        ]);
     }
 
     protected function matchKeywordGroup(string $text, array $groups): ?string

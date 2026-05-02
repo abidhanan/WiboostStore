@@ -468,7 +468,8 @@ class WiboostOperationsCommandTest extends TestCase
         $this->assertSame(1, $product->category_id);
         $this->assertSame(100, $product->provider_quantity);
         $this->assertSame(2800.0, (float) $product->price);
-        $this->assertSame('6 jam 20 menit', $product->ordersosmed_average_time);
+        $this->assertStringContainsString('Waktu rata-rata: 6 jam 20 menit', $product->description);
+        $this->assertSame('Belum ada order sukses', $product->ordersosmed_average_time);
     }
 
     public function test_ordersosmed_guest_catalog_service_parses_public_ajax_rows(): void
@@ -577,6 +578,484 @@ class WiboostOperationsCommandTest extends TestCase
         $this->assertDatabaseMissing('products', [
             'provider_source' => 'digiflazz',
             'provider_product_id' => 'pln100',
+        ]);
+    }
+
+    public function test_sync_digiflazz_command_can_match_products_to_existing_local_game_and_quota_categories(): void
+    {
+        $this->seedCategory(1, 'kuota-murah', 'Kuota Murah');
+        $this->seedCategory(2, 'top-up-game', 'Top Up Game');
+        $this->seedCategory(3, 'suntik-sosmed', 'Suntik Sosmed');
+        $this->seedCategory(4, 'axis', 'Axis', parentId: 1);
+        $this->seedCategory(5, 'axis-mini', 'Mini', parentId: 4);
+        $this->seedCategory(6, 'axis-owsem', 'Owsem', parentId: 4);
+        $this->seedCategory(7, 'axis-umum', 'Umum', parentId: 4);
+        $this->seedCategory(8, 'by-u', 'by.U', parentId: 1);
+        $this->seedCategory(9, 'by-u-super-kaget', 'Super Kaget', parentId: 8);
+        $this->seedCategory(10, 'indosat', 'Indosat', parentId: 1);
+        $this->seedCategory(11, 'indosat-freedom-combo', 'Freedom Combo', parentId: 10);
+        $this->seedCategory(12, 'smartfren', 'Smartfren', parentId: 1);
+        $this->seedCategory(13, 'smartfren-unlimited', 'Unlimited', parentId: 12);
+        $this->seedCategory(14, 'telkomsel', 'Telkomsel', parentId: 1);
+        $this->seedCategory(15, 'telkomsel-combo-sakti', 'Combo Sakti', parentId: 14);
+        $this->seedCategory(16, 'tri', 'Tri', parentId: 1);
+        $this->seedCategory(17, 'tri-always-on', 'Always On', parentId: 16);
+        $this->seedCategory(18, 'xl', 'XL', parentId: 1);
+        $this->seedCategory(19, 'xl-xtra-combo', 'Xtra Combo', parentId: 18);
+        $this->seedCategory(20, 'cod-mobile', 'COD Mobile', parentId: 2);
+        $this->seedCategory(21, 'fc-mobile', 'FC Mobile', parentId: 2);
+        $this->seedCategory(22, 'free-fire', 'Free Fire', parentId: 2);
+        $this->seedCategory(23, 'free-fire-membership', 'Membership', parentId: 22);
+        $this->seedCategory(24, 'free-fire-max', 'Free Fire Max', parentId: 2);
+        $this->seedCategory(25, 'free-fire-max-umum', 'Umum', parentId: 24);
+        $this->seedCategory(26, 'genshin-impact', 'Genshin Impact', parentId: 2);
+        $this->seedCategory(27, 'genshin-impact-indonesia', 'Indonesia', parentId: 26);
+        $this->seedCategory(28, 'genshin-impact-membership', 'Membership', parentId: 26);
+        $this->seedCategory(43, 'genshin-impact-malaysia', 'Malaysia', parentId: 26);
+        $this->seedCategory(29, 'honor-of-kings', 'Honor of Kings', parentId: 2);
+        $this->seedCategory(30, 'honor-of-kings-kombinasi', 'Kombinasi', parentId: 29);
+        $this->seedCategory(31, 'lol-pc', 'LoL PC', parentId: 2);
+        $this->seedCategory(32, 'lol-pc-malaysia', 'Malaysia', parentId: 31);
+        $this->seedCategory(47, 'lol-pc-umum', 'Umum', parentId: 31);
+        $this->seedCategory(33, 'mobile-legends', 'Mobile Legends', parentId: 2);
+        $this->seedCategory(34, 'mobile-legends-malaysia', 'Malaysia', parentId: 33);
+        $this->seedCategory(35, 'mobile-legends-membership', 'Membership', parentId: 33);
+        $this->seedCategory(36, 'pubg-mobile', 'PUBG Mobile', parentId: 2);
+        $this->seedCategory(37, 'pubg-mobile-global', 'Global', parentId: 36);
+        $this->seedCategory(38, 'valorant', 'Valorant', parentId: 2);
+        $this->seedCategory(39, 'valorant-malaysia', 'Malaysia', parentId: 38);
+        $this->seedCategory(40, 'sosmed-mobile-legends', 'Mobile Legends', parentId: 3);
+        $this->seedCategory(41, 'mobile-legends-umum', 'Umum', parentId: 33);
+        $this->seedCategory(42, 'mobile-legends-indonesia', 'Indonesia', parentId: 33);
+
+        Product::create([
+            'category_id' => 14,
+            'provider_id' => 'digiflazz',
+            'provider_source' => 'digiflazz',
+            'process_type' => 'api',
+            'name' => 'Telkomsel Pulsa Lama',
+            'slug' => 'telkomsel-pulsa-lama',
+            'description' => 'Produk lama yang tidak boleh ikut kategori kuota.',
+            'price' => 12000,
+            'provider_product_id' => 'tsel-pulsa',
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        $this->mock(DigiflazzService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('getPriceList')
+                ->once()
+                ->andReturn([
+                    'success' => true,
+                    'message' => 'OK',
+                    'raw' => [
+                        'data' => [
+                            [
+                                'buyer_sku_code' => 'axis-mini',
+                                'product_name' => 'Axis Mini 2 GB',
+                                'desc' => 'Paket data Axis Mini',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Axis',
+                                'category' => 'Data',
+                            ],
+                            [
+                                'buyer_sku_code' => 'axis-owsem',
+                                'product_name' => 'Axis Owsem 8 GB',
+                                'desc' => 'Paket data Axis Owsem',
+                                'price' => 9000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Axis',
+                                'category' => 'Data',
+                            ],
+                            [
+                                'buyer_sku_code' => 'byu-super-kaget',
+                                'product_name' => 'by.U Super Kaget 10 GB',
+                                'desc' => 'Paket internet by.U',
+                                'price' => 11000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'by.U',
+                                'category' => 'Data',
+                            ],
+                            [
+                                'buyer_sku_code' => 'indosat-combo',
+                                'product_name' => 'Indosat Freedom Combo 15 GB',
+                                'desc' => 'Paket data Indosat',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'IM3',
+                                'category' => 'Data',
+                            ],
+                            [
+                                'buyer_sku_code' => 'smartfren-unlimited',
+                                'product_name' => 'Smartfren Unlimited Harian',
+                                'desc' => 'Paket internet Smartfren',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Smartfren',
+                                'category' => 'Data',
+                            ],
+                            [
+                                'buyer_sku_code' => 'tsel-combo-sakti',
+                                'product_name' => 'Telkomsel Combo Sakti 17 GB',
+                                'desc' => 'Paket data Telkomsel',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Telkomsel',
+                                'category' => 'Data',
+                            ],
+                            [
+                                'buyer_sku_code' => 'tri-aon',
+                                'product_name' => 'Tri Always On 6 GB',
+                                'desc' => 'Paket data Tri',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Tri',
+                                'category' => 'Data',
+                            ],
+                            [
+                                'buyer_sku_code' => 'xl-xtra-combo',
+                                'product_name' => 'XL Xtra Combo 12 GB',
+                                'desc' => 'Paket data XL',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'XL',
+                                'category' => 'Data',
+                            ],
+                            [
+                                'buyer_sku_code' => 'codm',
+                                'product_name' => 'COD Mobile 80 CP',
+                                'desc' => 'Top up game',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'COD Mobile',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'fc-mobile',
+                                'product_name' => 'FC Mobile 40 Points',
+                                'desc' => 'Top up game',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'FC Mobile',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'ff-member',
+                                'product_name' => 'Free Fire Membership Mingguan',
+                                'desc' => 'Weekly membership',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Free Fire',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'ffmax',
+                                'product_name' => 'Free Fire Max 70 Diamond',
+                                'desc' => 'Top up game',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Free Fire Max',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'genshin-id',
+                                'product_name' => 'Genshin Impact Indonesia 60 Genesis Crystal',
+                                'desc' => 'Top up game',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Genshin Impact',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'genesis-my',
+                                'product_name' => 'Genesis Crystal MY 60',
+                                'desc' => 'Top up game',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Games',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'genshin-welkin',
+                                'product_name' => 'Genshin Impact Blessing Welkin Moon',
+                                'desc' => 'Membership',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Genshin Impact',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'hok-kombinasi',
+                                'product_name' => 'Honor of Kings Kombinasi Token',
+                                'desc' => 'Top up game',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Honor of Kings',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'lol-pc-my',
+                                'product_name' => 'LoL PC Malaysia RP',
+                                'desc' => 'Top up game',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'LoL PC',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'riot-rp',
+                                'product_name' => 'Riot Points 575 RP',
+                                'desc' => 'League of Legends PC',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Riot Points',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'riot-rp-my',
+                                'product_name' => 'Riot Points MY 575 RP',
+                                'desc' => 'League of Legends PC',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Riot Points',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'ml-umum',
+                                'product_name' => 'Mobile Legends 86 Diamonds',
+                                'desc' => 'Masukkan User ID dan Zone ID',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Mobile Legends',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'ml-id',
+                                'product_name' => 'Mobile Legends Indonesia 86 Diamonds',
+                                'desc' => 'Masukkan User ID dan Zone ID',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Mobile Legends',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'ml-my',
+                                'product_name' => 'Mobile Legends Malaysia 86 Diamonds',
+                                'desc' => 'Top up game',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Mobile Legends',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'ml-pass',
+                                'product_name' => 'Mobile Legends Weekly Diamond Pass',
+                                'desc' => 'Membership',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Mobile Legends',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'pubg-global',
+                                'product_name' => 'PUBG Mobile Global UC',
+                                'desc' => 'Top up game',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'PUBG Mobile',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'valorant-my',
+                                'product_name' => 'Valorant Malaysia VP',
+                                'desc' => 'Top up game',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Valorant',
+                                'category' => 'Games',
+                            ],
+                            [
+                                'buyer_sku_code' => 'tsel-pulsa',
+                                'product_name' => 'Telkomsel Pulsa 10.000',
+                                'desc' => 'Pulsa reguler',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Telkomsel',
+                                'category' => 'Pulsa',
+                            ],
+                        ],
+                    ],
+                ]);
+        });
+
+        $this->artisan('sync:digiflazz', [
+            '--match-local-categories' => true,
+        ])->assertExitCode(0);
+
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'axis-mini',
+            'category_id' => 5,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'axis-owsem',
+            'category_id' => 6,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'byu-super-kaget',
+            'category_id' => 9,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'indosat-combo',
+            'category_id' => 11,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'smartfren-unlimited',
+            'category_id' => 13,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'tsel-combo-sakti',
+            'category_id' => 15,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'tri-aon',
+            'category_id' => 17,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'xl-xtra-combo',
+            'category_id' => 19,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'codm',
+            'category_id' => 20,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'fc-mobile',
+            'category_id' => 21,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'ff-member',
+            'category_id' => 23,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'ffmax',
+            'category_id' => 25,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'genshin-id',
+            'category_id' => 27,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'genesis-my',
+            'category_id' => 43,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'genshin-welkin',
+            'category_id' => 28,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'hok-kombinasi',
+            'category_id' => 30,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'lol-pc-my',
+            'category_id' => 32,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'riot-rp',
+            'category_id' => 47,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'riot-rp-my',
+            'category_id' => 32,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'ml-umum',
+            'category_id' => 41,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'ml-id',
+            'category_id' => 42,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'ml-my',
+            'category_id' => 34,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'ml-pass',
+            'category_id' => 35,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'pubg-global',
+            'category_id' => 37,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'valorant-my',
+            'category_id' => 39,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'tsel-pulsa',
+            'category_id' => 14,
+            'status' => 'inactive',
+            'is_active' => false,
+        ]);
+        $this->assertDatabaseMissing('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'ml-my',
+            'category_id' => 40,
         ]);
     }
 
@@ -935,6 +1414,15 @@ class WiboostOperationsCommandTest extends TestCase
                             'max' => 100000,
                         ],
                         [
+                            'id' => 9008,
+                            'category_id' => 6750,
+                            'category_name' => 'Instagram Comments',
+                            'service_name' => 'Instagram Comments Indonesia',
+                            'price' => 12000,
+                            'min' => 10,
+                            'max' => 1000,
+                        ],
+                        [
                             'id' => 9007,
                             'category_id' => 6311,
                             'category_name' => 'Facebook Page Likes & Page Followers',
@@ -985,11 +1473,82 @@ class WiboostOperationsCommandTest extends TestCase
             'provider_source' => 'ordersosmed',
             'provider_product_id' => '9007',
         ]);
+        $this->assertDatabaseMissing('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => '9008',
+        ]);
         $this->assertDatabaseHas('products', [
             'provider_source' => 'ordersosmed',
             'provider_product_id' => 'old-mixed',
             'status' => 'inactive',
             'is_active' => false,
+        ]);
+    }
+
+    public function test_remove_ordersosmed_comment_services_command_deletes_only_comment_services(): void
+    {
+        $this->seedCategory(1, 'suntik-sosmed');
+
+        Product::create([
+            'category_id' => 1,
+            'provider_id' => 'ordersosmed',
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => 'comment-1',
+            'process_type' => 'api',
+            'name' => 'Instagram Comments Indonesia',
+            'slug' => 'instagram-comments-indonesia',
+            'description' => 'Custom komentar',
+            'price' => 10000,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        Product::create([
+            'category_id' => 1,
+            'provider_id' => 'ordersosmed',
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => 'like-1',
+            'process_type' => 'api',
+            'name' => 'Instagram Like Indonesia',
+            'slug' => 'instagram-like-indonesia-cleanup',
+            'description' => 'Like biasa',
+            'price' => 8000,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        Product::create([
+            'category_id' => 1,
+            'provider_id' => 'digiflazz',
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'comment-digi',
+            'process_type' => 'api',
+            'name' => 'Game Comment Pack',
+            'slug' => 'game-comment-pack',
+            'description' => 'Produk bukan OrderSosmed',
+            'price' => 7000,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        $this->artisan('wiboost:remove-ordersosmed-comment-services', [
+            '--execute' => true,
+        ])->assertExitCode(0);
+
+        $this->assertDatabaseMissing('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => 'comment-1',
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => 'like-1',
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'comment-digi',
         ]);
     }
 
