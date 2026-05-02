@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -28,6 +29,42 @@ class AuthenticationTest extends TestCase
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_admin_can_not_authenticate_using_the_user_login_screen(): void
+    {
+        Role::query()->firstOrCreate(['id' => 1], ['name' => 'Admin']);
+
+        $admin = User::factory()->create([
+            'role_id' => 1,
+        ]);
+
+        $response = $this->post('/login', [
+            'email' => $admin->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertGuest();
+        $response->assertSessionHasErrors([
+            'email' => 'Akun admin hanya bisa login melalui halaman login admin.',
+        ]);
+    }
+
+    public function test_admin_can_authenticate_using_the_admin_login_screen(): void
+    {
+        Role::query()->firstOrCreate(['id' => 1], ['name' => 'Admin']);
+
+        $admin = User::factory()->create([
+            'role_id' => 1,
+        ]);
+
+        $response = $this->post('/admin/login', [
+            'email' => $admin->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticatedAs($admin);
+        $response->assertRedirect(route('admin.dashboard', absolute: false));
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void

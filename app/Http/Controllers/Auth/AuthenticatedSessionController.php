@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -26,6 +27,16 @@ class AuthenticatedSessionController extends Controller
     {
         // 1. Validasi kredensial email & password
         $request->authenticate();
+
+        if ($request->user()?->isAdmin()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            throw ValidationException::withMessages([
+                'email' => 'Akun admin hanya bisa login melalui halaman login admin.',
+            ]);
+        }
 
         // 2. Buat sesi baru untuk keamanan
         $request->session()->regenerate();
