@@ -132,7 +132,11 @@
         @forelse($categories as $category)
             <a href="{{ route('user.order.category', $category->slug) }}" class="group bg-white p-6 md:p-8 rounded-[2rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 transition-all text-center flex flex-col items-center justify-center relative">
                 <div class="w-16 h-16 bg-[#f4f9ff] rounded-2xl border-2 border-white shadow-inner flex items-center justify-center text-[#5a76c8] mb-4 group-hover:scale-110 transition-transform duration-300">
+                    @if($category->image)
+                        <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="h-full w-full object-contain drop-shadow-sm">
+                    @else
                     <span class="text-4xl drop-shadow-sm">{{ $category->emote ?? '🛒' }}</span>
+                    @endif
                 </div>
                 <span class="text-sm md:text-base font-black text-[#2b3a67] leading-tight">{{ $category->name }}</span>
             </a>

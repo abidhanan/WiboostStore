@@ -6,6 +6,8 @@ use App\Models\Category;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AdminCategoryIndexTest extends TestCase
@@ -121,6 +123,43 @@ class AdminCategoryIndexTest extends TestCase
             'slug' => 'netflix',
             'fulfillment_type' => 'stock_based',
         ]);
+    }
+
+    public function test_admin_can_use_emoji_and_image_logo_for_any_category_level(): void
+    {
+        Storage::fake('public');
+
+        $admin = $this->makeAdmin();
+
+        $this->actingAs($admin)->post(route('admin.categories.store'), [
+            'name' => 'Top Up Game',
+            'slug' => 'top-up-game',
+            'emote' => '🎮',
+            'image' => UploadedFile::fake()->image('game.png'),
+            'fulfillment_type' => 'auto_api',
+        ])->assertRedirect(route('admin.categories.index'));
+
+        $mainCategory = Category::query()->where('slug', 'top-up-game')->firstOrFail();
+
+        $this->assertSame('🎮', $mainCategory->emote);
+        $this->assertNotNull($mainCategory->image);
+        Storage::disk('public')->assertExists($mainCategory->image);
+
+        $this->actingAs($admin)->post(route('admin.categories.store'), [
+            'parent_id' => $mainCategory->id,
+            'name' => 'Mobile Legends',
+            'slug' => 'mobile-legends',
+            'description' => 'Top up diamond Mobile Legends',
+            'emote' => '💎',
+            'image' => UploadedFile::fake()->image('mobile-legends.png'),
+        ])->assertRedirect(route('admin.categories.index'));
+
+        $childCategory = Category::query()->where('slug', 'mobile-legends')->firstOrFail();
+
+        $this->assertSame('💎', $childCategory->emote);
+        $this->assertSame('auto_api', $childCategory->fulfillment_type);
+        $this->assertNotNull($childCategory->image);
+        Storage::disk('public')->assertExists($childCategory->image);
     }
 
     public function test_admin_store_treats_repeated_generated_slug_submission_as_success(): void

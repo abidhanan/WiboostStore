@@ -707,6 +707,331 @@ class WiboostOperationsCommandTest extends TestCase
         ]);
     }
 
+    public function test_sync_ordersosmed_command_can_import_selected_provider_categories_only(): void
+    {
+        $this->seedCategory(1, 'social-media', 'Social Media');
+        $this->seedCategory(2, 'sosmed-2', 'SOSMED 2');
+        $this->seedCategory(3, 'sosmed-3', 'SOSMED 3');
+        $this->seedCategory(4, 'sosmed-4', 'SOSMED 4');
+        $this->seedCategory(5, 'sosmed-5', 'SOSMED 5');
+
+        $this->mock(OrderSosmedService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('getServices')
+                ->once()
+                ->andReturn([
+                    'success' => true,
+                    'message' => 'OK',
+                    'data' => [
+                        [
+                            'id' => 2001,
+                            'category_id' => 2,
+                            'category_name' => 'Instagram Like',
+                            'service_name' => 'Instagram Like Indonesia',
+                            'price' => 10000,
+                            'min' => 100,
+                            'max' => 10000,
+                        ],
+                        [
+                            'id' => 3001,
+                            'category_id' => 3,
+                            'category_name' => 'Instagram Followers',
+                            'service_name' => 'Instagram Followers Indonesia',
+                            'price' => 25000,
+                            'min' => 100,
+                            'max' => 10000,
+                        ],
+                        [
+                            'id' => 4001,
+                            'category_id' => 4,
+                            'category_name' => 'Instagram Comments',
+                            'service_name' => 'Instagram Comments Indonesia',
+                            'price' => 30000,
+                            'min' => 10,
+                            'max' => 1000,
+                        ],
+                        [
+                            'id' => 5001,
+                            'category_id' => 5,
+                            'category_name' => 'TikTok Views',
+                            'service_name' => 'TikTok Views Indonesia',
+                            'price' => 5000,
+                            'min' => 100,
+                            'max' => 100000,
+                        ],
+                    ],
+                ]);
+        });
+
+        $this->artisan('sync:ordersosmed', [
+            '--provider-category-ids' => '2,3,5',
+        ])->assertExitCode(0);
+
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => '2001',
+            'category_id' => 2,
+            'price' => 1100,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => '3001',
+            'category_id' => 3,
+            'price' => 2800,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => '5001',
+            'category_id' => 5,
+            'price' => 600,
+        ]);
+        $this->assertDatabaseMissing('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => '4001',
+        ]);
+    }
+
+    public function test_sync_ordersosmed_command_can_force_selected_provider_categories_into_target_category(): void
+    {
+        $this->seedCategory(1, 'social-media', 'Social Media');
+        $this->seedCategory(2, 'sosmed-2', 'SOSMED 2');
+
+        $this->mock(OrderSosmedService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('getServices')
+                ->once()
+                ->andReturn([
+                    'success' => true,
+                    'message' => 'OK',
+                    'data' => [
+                        [
+                            'id' => 6735,
+                            'category_id' => 6735,
+                            'category_name' => 'Instagram Likes [Worldwide] No Garansi',
+                            'service_name' => 'Instagram Like Indonesia',
+                            'price' => 10000,
+                            'min' => 100,
+                            'max' => 10000,
+                        ],
+                        [
+                            'id' => 6276,
+                            'category_id' => 6276,
+                            'category_name' => 'TikTok View',
+                            'service_name' => 'TikTok Views Indonesia',
+                            'price' => 5000,
+                            'min' => 100,
+                            'max' => 100000,
+                        ],
+                    ],
+                ]);
+        });
+
+        $this->artisan('sync:ordersosmed', [
+            '--provider-category-ids' => '6735',
+            '--target-category' => 'SOSMED 2',
+        ])->assertExitCode(0);
+
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => '6735',
+            'category_id' => 2,
+        ]);
+        $this->assertDatabaseMissing('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => '6276',
+        ]);
+    }
+
+    public function test_sync_ordersosmed_command_can_match_services_to_existing_local_categories(): void
+    {
+        $this->seedCategory(1, 'suntik-sosmed', 'Suntik Sosmed');
+        $this->seedCategory(2, 'instagram', 'Instagram', parentId: 1);
+        $this->seedCategory(3, 'instagram-followers', 'Followers', parentId: 2);
+        $this->seedCategory(4, 'instagram-followers-global', 'Global', parentId: 3);
+        $this->seedCategory(5, 'instagram-followers-indonesia', 'Indonesia', parentId: 3);
+        $this->seedCategory(6, 'instagram-like', 'Like', parentId: 2);
+        $this->seedCategory(7, 'instagram-like-global', 'Global', parentId: 6);
+        $this->seedCategory(8, 'instagram-like-indonesia', 'Indonesia', parentId: 6);
+        $this->seedCategory(9, 'instagram-views', 'Views', parentId: 2);
+        $this->seedCategory(10, 'instagram-lainnya', 'Lainnya', parentId: 2);
+        $this->seedCategory(11, 'tiktok', 'TikTok', parentId: 1);
+        $this->seedCategory(12, 'tiktok-views', 'Views', parentId: 11);
+        $this->seedCategory(13, 'youtube', 'YouTube', parentId: 1);
+        $this->seedCategory(14, 'youtube-subscribers', 'Subscribers', parentId: 13);
+
+        Product::create([
+            'category_id' => 10,
+            'provider_id' => 'ordersosmed',
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => 'old-mixed',
+            'provider_quantity' => 100,
+            'process_type' => 'api',
+            'name' => 'Telegram Reaction Lama Salah Kategori',
+            'slug' => 'telegram-reaction-lama-salah-kategori',
+            'description' => 'Produk lama dari sync fuzzy sebelumnya.',
+            'price' => 10000,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        $this->mock(OrderSosmedService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('getServices')
+                ->once()
+                ->andReturn([
+                    'success' => true,
+                    'message' => 'OK',
+                    'data' => [
+                        [
+                            'id' => 9001,
+                            'category_id' => 6767,
+                            'category_name' => 'Instagram [INDIA]',
+                            'service_name' => 'Instagram Followers Indonesia',
+                            'price' => 10000,
+                            'min' => 100,
+                            'max' => 10000,
+                        ],
+                        [
+                            'id' => 9002,
+                            'category_id' => 6766,
+                            'category_name' => 'Instagram [USA]',
+                            'service_name' => 'Instagram Followers USA',
+                            'price' => 5000,
+                            'min' => 100,
+                            'max' => 100000,
+                        ],
+                        [
+                            'id' => 9003,
+                            'category_id' => 6735,
+                            'category_name' => 'Instagram Likes [Worldwide] No Garansi',
+                            'service_name' => 'Instagram Like Indonesia',
+                            'price' => 15000,
+                            'min' => 100,
+                            'max' => 10000,
+                        ],
+                        [
+                            'id' => 9004,
+                            'category_id' => 15398,
+                            'category_name' => 'Instagram - Reactions + Views',
+                            'service_name' => 'Instagram Likes + Views',
+                            'price' => 8000,
+                            'min' => 100,
+                            'max' => 10000,
+                        ],
+                        [
+                            'id' => 9005,
+                            'category_id' => 6276,
+                            'category_name' => 'TikTok View',
+                            'service_name' => 'TikTok Views Indonesia',
+                            'price' => 5000,
+                            'min' => 100,
+                            'max' => 100000,
+                        ],
+                        [
+                            'id' => 9006,
+                            'category_id' => 6803,
+                            'category_name' => 'YouTube Views - Worldwide',
+                            'service_name' => 'YouTube Subscribers',
+                            'price' => 20000,
+                            'min' => 100,
+                            'max' => 100000,
+                        ],
+                        [
+                            'id' => 9007,
+                            'category_id' => 6311,
+                            'category_name' => 'Facebook Page Likes & Page Followers',
+                            'service_name' => 'Facebook Page Likes',
+                            'price' => 15000,
+                            'min' => 100,
+                            'max' => 10000,
+                        ],
+                    ],
+                ]);
+        });
+
+        $this->artisan('sync:ordersosmed', [
+            '--match-local-categories' => true,
+        ])->assertExitCode(0);
+
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => '9001',
+            'category_id' => 5,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => '9002',
+            'category_id' => 4,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => '9003',
+            'category_id' => 8,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => '9004',
+            'category_id' => 10,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => '9005',
+            'category_id' => 12,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => '9006',
+            'category_id' => 14,
+        ]);
+        $this->assertDatabaseMissing('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => '9007',
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => 'old-mixed',
+            'status' => 'inactive',
+            'is_active' => false,
+        ]);
+    }
+
+    public function test_ordersosmed_list_categories_command_shows_provider_category_ids(): void
+    {
+        $this->mock(OrderSosmedService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('getServices')
+                ->once()
+                ->andReturn([
+                    'success' => true,
+                    'message' => 'OK',
+                    'data' => [
+                        [
+                            'id' => 1,
+                            'category_id' => 6735,
+                            'category_name' => 'Instagram Likes [Worldwide] No Garansi',
+                            'service_name' => 'Instagram Like Indonesia',
+                        ],
+                        [
+                            'id' => 2,
+                            'category_id' => 6735,
+                            'category_name' => 'Instagram Likes [Worldwide] No Garansi',
+                            'service_name' => 'Instagram Like Luar Negeri',
+                        ],
+                        [
+                            'id' => 3,
+                            'category_id' => 6276,
+                            'category_name' => 'TikTok View',
+                            'service_name' => 'TikTok Views Indonesia',
+                        ],
+                    ],
+                ]);
+        });
+
+        $this->artisan('ordersosmed:list-categories', [
+            '--search' => 'instagram',
+            '--limit' => '0',
+        ])
+            ->expectsOutputToContain('6735')
+            ->assertExitCode(0);
+    }
+
     public function test_setup_catalog_command_creates_subcategories_with_logos_and_assigns_products(): void
     {
         Storage::fake('public');
@@ -880,10 +1205,11 @@ class WiboostOperationsCommandTest extends TestCase
         ]);
     }
 
-    protected function seedCategory(int $id, string $slug, ?string $name = null, string $fulfillmentType = 'manual_action'): void
+    protected function seedCategory(int $id, string $slug, ?string $name = null, string $fulfillmentType = 'manual_action', ?int $parentId = null): void
     {
         DB::table('categories')->insert([
             'id' => $id,
+            'parent_id' => $parentId,
             'name' => $name ?? ucfirst(str_replace('-', ' ', $slug)),
             'slug' => $slug,
             'fulfillment_type' => $fulfillmentType,

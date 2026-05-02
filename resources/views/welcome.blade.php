@@ -119,10 +119,14 @@
                     @if(is_null($cat->parent_id))
                         <a href="{{ route('login') }}" class="group block bg-white rounded-[1.5rem] p-4 border-4 border-white shadow-lg shadow-[#bde0fe]/30 hover:-translate-y-2 hover:border-[#bde0fe] transition-all duration-300 text-center relative flex flex-col items-center">
                             <div class="w-16 h-16 bg-[#f4f9ff] rounded-2xl border-2 border-white shadow-inner flex items-center justify-center text-[#5a76c8] mb-3 group-hover:scale-110 transition-transform duration-300">
+                                @if($cat->image)
+                                    <img src="{{ Storage::url($cat->image) }}" alt="{{ $cat->name }}" class="h-full w-full object-contain drop-shadow-sm">
+                                @else
                                 @if($cat->emote)
                                     <span class="text-4xl drop-shadow-sm">{{ $cat->emote }}</span>
                                 @else
                                     <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                @endif
                                 @endif
                             </div>
                             <h3 class="font-black text-[#2b3a67] text-sm md:text-base leading-tight">{{ $cat->name }}</h3>

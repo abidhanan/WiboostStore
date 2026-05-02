@@ -85,12 +85,12 @@
         </div>
 
         <div class="mb-6" id="emote_container">
-            <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Emote <span class="text-amber-500 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100 text-[10px] uppercase">(Kategori Utama)</span></label>
+            <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Emote <span class="text-amber-500 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100 text-[10px] uppercase">(Opsional)</span></label>
             <input type="text" name="emote" value="{{ old('emote', $category->emote) }}" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition text-2xl placeholder-[#a3bbfb]">
         </div>
 
-        <div class="mb-6" id="image_container" style="display: none;">
-            <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Logo/Ikon <span class="text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 text-[10px] uppercase">(Sub-Kategori)</span></label>
+        <div class="mb-6" id="image_container">
+            <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Logo/Ikon <span class="text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 text-[10px] uppercase">(Opsional)</span></label>
             
             @if($category->image)
                 <div class="mb-4 ml-2 flex items-center justify-between bg-[#f8faff] p-4 rounded-[1.5rem] border-4 border-white shadow-sm max-w-sm">
@@ -131,15 +131,14 @@
     const fulfillmentContainer = document.getElementById('fulfillment_container');
     
     function toggleCategoryType() {
+        imageContainer.style.display = "block";
+        emoteContainer.style.display = "block";
+
         if(parentSelect.value === "") {
             descContainer.style.display = "none";
-            imageContainer.style.display = "none";
-            emoteContainer.style.display = "block";
             fulfillmentContainer.style.display = "block";
         } else {
             descContainer.style.display = "block";
-            imageContainer.style.display = "block";
-            emoteContainer.style.display = "none";
             fulfillmentContainer.style.display = "none";
         }
     }

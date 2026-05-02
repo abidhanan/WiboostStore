@@ -122,8 +122,8 @@ class CategoryController extends Controller
             'name' => $request->name,
             'slug' => $slug,
             'description' => $parent ? $request->description : null,
-            'emote' => $parent ? null : $request->emote,
-            'image' => $parent ? $imagePath : null,
+            'emote' => $request->emote,
+            'image' => $imagePath,
             'fulfillment_type' => $fulfillmentType,
         ]);
 
@@ -177,7 +177,7 @@ class CategoryController extends Controller
             'name' => $request->name,
             'slug' => $slug,
             'description' => $parent ? $request->description : null,
-            'emote' => $parent ? null : $request->emote,
+            'emote' => $request->emote,
             'fulfillment_type' => $fulfillmentType,
         ];
 
@@ -192,12 +192,6 @@ class CategoryController extends Controller
             }
 
             $data['image'] = $request->file('image')->store('categories', 'public');
-        } elseif (! $parent) {
-            if ($category->image) {
-                Storage::disk('public')->delete($category->image);
-            }
-
-            $data['image'] = null;
         }
 
         $category->update($data);

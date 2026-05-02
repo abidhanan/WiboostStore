@@ -13,9 +13,14 @@ use Illuminate\Support\Str;
 
 class SyncOrderSosmedServices extends Command
 {
-    protected $signature = 'sync:ordersosmed';
+    protected $signature = 'sync:ordersosmed
+        {--provider-category-ids= : Batasi import berdasarkan ID kategori provider OrderSosmed, contoh: 6735,6276,6302}
+        {--target-category= : Paksa semua produk hasil filter masuk ke kategori lokal tertentu, bisa ID, slug, atau nama kategori}
+        {--match-local-categories : Import hanya layanan yang cocok dengan kategori lokal sosmed yang sudah dibuat}';
 
     protected $description = 'Sync layanan dari OrderSosmed ke database Wiboost';
+
+    protected ?array $strictSosmedCategoryCandidates = null;
 
     public function handle(
         OrderSosmedService $orderSosmedService,
@@ -32,9 +37,51 @@ class SyncOrderSosmedServices extends Command
             return self::FAILURE;
         }
 
+        $allowedProviderCategoryIds = $this->parseProviderCategoryIds((string) $this->option('provider-category-ids'));
+        $targetCategoryId = $this->resolveTargetCategoryId((string) $this->option('target-category'));
+        $matchLocalCategories = (bool) $this->option('match-local-categories');
+
+        if (filled((string) $this->option('target-category')) && ! $targetCategoryId) {
+            $this->error('Kategori lokal target tidak ditemukan: ' . $this->option('target-category'));
+            $this->warn('Gunakan ID kategori lokal, slug, atau nama persis seperti "SOSMED 2".');
+
+            return self::FAILURE;
+        }
+
+        if ($allowedProviderCategoryIds !== []) {
+            $this->info('Filter kategori provider OrderSosmed: ' . implode(', ', $allowedProviderCategoryIds));
+
+            if ($targetCategoryId) {
+                $targetCategory = Category::query()->find($targetCategoryId);
+                $this->info('Produk hasil filter akan diarahkan ke kategori lokal: ' . ($targetCategory?->name ?? $targetCategoryId));
+            } else {
+                $this->info('Produk akan diarahkan ke kategori lokal bernama/slug SOSMED <ID> jika tersedia.');
+            }
+        }
+
+        if ($matchLocalCategories) {
+            $this->info('Mode cocok kategori lokal aktif: hanya produk yang sesuai kategori sosmed lokal yang akan disimpan.');
+        }
+
         $this->info('Mengambil daftar layanan dari OrderSosmed...');
         $response = $orderSosmedService->getServices();
         $syncMode = 'api';
+
+        if (
+            (! ($response['success'] ?? false) || empty($response['data']))
+            && ($allowedProviderCategoryIds !== [] || $matchLocalCategories || $this->isUnauthorizedIpResponse($response))
+        ) {
+            $this->error('API private OrderSosmed belum bisa dipakai, sync otomatis dihentikan agar produk tidak masuk sebagai manual/fallback.');
+            $this->error('Pesan provider: ' . ($response['message'] ?? 'Provider tidak mengembalikan daftar layanan.'));
+
+            if ($this->isUnauthorizedIpResponse($response)) {
+                $this->warn('Masukkan IP yang muncul di pesan Unauthorized IP ke whitelist OrderSosmed, lalu jalankan sync ulang.');
+            } else {
+                $this->warn('Upload juga app/Services/OrderSosmedService.php terbaru, lalu jalankan optimize:clear sebelum sync ulang.');
+            }
+
+            return self::FAILURE;
+        }
 
         if (! ($response['success'] ?? false) || empty($response['data'])) {
             $this->warn('Endpoint API private OrderSosmed belum merespons daftar layanan. Beralih ke katalog publik...');
@@ -43,8 +90,19 @@ class SyncOrderSosmedServices extends Command
         }
 
         $services = collect($response['data'] ?? [])
-            ->filter(fn (array $service) => $this->shouldImportService($service))
+            ->filter(fn (array $service) => $this->shouldImportService($service, $allowedProviderCategoryIds))
             ->values();
+
+        if (($response['success'] ?? false) && ! empty($response['data']) && $services->isEmpty()) {
+            $this->error('Daftar layanan OrderSosmed berhasil diambil, tetapi filter tidak menemukan produk yang cocok.');
+
+            if ($allowedProviderCategoryIds !== []) {
+                $this->warn('Angka di --provider-category-ids harus memakai category_id dari API OrderSosmed, bukan nomor menu di dashboard.');
+                $this->warn('Jalankan: php artisan ordersosmed:list-categories --search=Instagram');
+            }
+
+            return self::FAILURE;
+        }
 
         if (! ($response['success'] ?? false) || $services->isEmpty()) {
             $this->error('Gagal ambil layanan OrderSosmed: ' . ($response['message'] ?? 'Unknown error'));
@@ -59,6 +117,20 @@ class SyncOrderSosmedServices extends Command
         $total = $services->count();
         $success = 0;
         $failed = 0;
+        $skippedMissingCategory = 0;
+        $skippedUnmatchedLocalCategory = 0;
+
+        if ($matchLocalCategories) {
+            Product::query()
+                ->where('provider_source', 'ordersosmed')
+                ->update([
+                    'is_active' => false,
+                    'status' => 'inactive',
+                    'updated_at' => now(),
+                ]);
+
+            $this->info('Produk OrderSosmed lama dinonaktifkan sementara; layanan yang cocok akan diaktifkan ulang.');
+        }
 
         $bar = $this->output->createProgressBar($total);
         $bar->start();
@@ -82,7 +154,19 @@ class SyncOrderSosmedServices extends Command
                     ? ceil(($basePrice * 1.10) / 100) * 100
                     : 0;
 
-                $categoryId = $this->resolveCategoryId($service, $defaultCategoryId);
+                $categoryId = $this->resolveCategoryId($service, $defaultCategoryId, $allowedProviderCategoryIds, $targetCategoryId, $matchLocalCategories);
+
+                if (! $categoryId) {
+                    if ($matchLocalCategories) {
+                        $skippedUnmatchedLocalCategory++;
+                    } else {
+                        $skippedMissingCategory++;
+                    }
+
+                    $bar->advance();
+                    continue;
+                }
+
                 $targetMeta = $this->resolveTargetMeta($service, $syncMode);
                 $processType = $syncMode === 'api' ? 'api' : 'manual';
 
@@ -131,7 +215,26 @@ class SyncOrderSosmedServices extends Command
             $this->warn("Gagal: {$failed}");
         }
 
-        return $failed > 0 ? self::FAILURE : self::SUCCESS;
+        if ($skippedMissingCategory > 0) {
+            $this->warn("Dilewati karena kategori lokal tidak ditemukan: {$skippedMissingCategory}");
+            $this->warn('Pastikan kategori lokal bernama SOSMED 2, SOSMED 3, dan SOSMED 5 sudah dibuat.');
+        }
+
+        if ($skippedUnmatchedLocalCategory > 0) {
+            $this->warn("Dilewati karena tidak cocok dengan kategori lokal sosmed: {$skippedUnmatchedLocalCategory}");
+        }
+
+        if ($success === 0) {
+            $this->error('Tidak ada produk OrderSosmed yang berhasil disimpan.');
+
+            if ($matchLocalCategories) {
+                $this->warn('Pastikan kategori lokal memakai nama platform/jenis layanan, contoh: Instagram, Like, Like Indonesia, TikTok Views.');
+            }
+
+            return self::FAILURE;
+        }
+
+        return ($failed > 0 || $skippedMissingCategory > 0) ? self::FAILURE : self::SUCCESS;
     }
 
     protected function resolveProviderProductId(array $service): ?string
@@ -167,7 +270,13 @@ class SyncOrderSosmedServices extends Command
         }
 
         if (isset($service['price']) && is_numeric($service['price'])) {
-            return (float) $service['price'];
+            $price = (float) $service['price'];
+
+            if (($service['_ordersosmed_pricing_mode'] ?? null) === 'flat') {
+                return $price;
+            }
+
+            return $price > 0 ? max(0, ($price / 1000) * $providerQuantity) : 0;
         }
 
         $rate = (float) ($service['rate'] ?? 0);
@@ -179,11 +288,29 @@ class SyncOrderSosmedServices extends Command
         return max(0, ($rate / 1000) * $providerQuantity);
     }
 
-    protected function resolveCategoryId(array $service, int $defaultCategoryId): int
+    protected function resolveCategoryId(
+        array $service,
+        int $defaultCategoryId,
+        array $allowedProviderCategoryIds = [],
+        ?int $targetCategoryId = null,
+        bool $matchLocalCategories = false
+    ): ?int
     {
+        if ($targetCategoryId) {
+            return $targetCategoryId;
+        }
+
+        if ($matchLocalCategories) {
+            return $this->resolveCategoryIdFromLocalMatch($service);
+        }
+
+        if ($allowedProviderCategoryIds !== []) {
+            return $this->resolveCategoryIdFromProviderCategory($service);
+        }
+
         $subcategorySlug = WiboostCatalog::resolveOrdersosmedSubcategorySlug(
             (string) ($service['name'] ?? $service['service_name'] ?? ''),
-            (string) ($service['category'] ?? $service['type'] ?? ''),
+            $this->resolveProviderCategoryName($service),
             (string) ($service['description'] ?? $service['note'] ?? ''),
         );
 
@@ -199,7 +326,8 @@ class SyncOrderSosmedServices extends Command
         $chunks = array_filter([
             $service['description'] ?? null,
             $service['note'] ?? null,
-            isset($service['category']) ? 'Kategori provider: ' . $service['category'] : null,
+            filled($this->resolveProviderCategoryId($service)) ? 'ID kategori provider: ' . $this->resolveProviderCategoryId($service) : null,
+            filled($this->resolveProviderCategoryName($service)) ? 'Kategori provider: ' . $this->resolveProviderCategoryName($service) : null,
             isset($service['min']) ? 'Minimum order: ' . $service['min'] : null,
             isset($service['max']) ? 'Maximum order: ' . $service['max'] : null,
             $averageTime ? 'Waktu rata-rata: ' . $averageTime : null,
@@ -260,10 +388,10 @@ class SyncOrderSosmedServices extends Command
         return $meta;
     }
 
-    protected function shouldImportService(array $service): bool
+    protected function shouldImportService(array $service, array $allowedProviderCategoryIds = []): bool
     {
         $catalogType = strtolower((string) ($service['_ordersosmed_catalog_type'] ?? 'sosmed'));
-        $category = strtolower((string) ($service['category'] ?? $service['type'] ?? ''));
+        $category = strtolower($this->resolveProviderCategoryName($service));
         $name = strtolower((string) ($service['name'] ?? $service['service_name'] ?? ''));
 
         if ($catalogType !== 'sosmed') {
@@ -274,7 +402,364 @@ class SyncOrderSosmedServices extends Command
             return false;
         }
 
+        if ($allowedProviderCategoryIds !== []) {
+            $providerCategoryId = $this->resolveProviderCategoryId($service);
+
+            return $providerCategoryId !== null
+                && in_array($providerCategoryId, $allowedProviderCategoryIds, true);
+        }
+
         return true;
+    }
+
+    protected function parseProviderCategoryIds(string $categoryIds): array
+    {
+        return collect(explode(',', $categoryIds))
+            ->map(fn (string $id) => trim($id))
+            ->filter(fn (string $id) => $id !== '')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    protected function isUnauthorizedIpResponse(array $response): bool
+    {
+        $message = strtolower((string) ($response['message'] ?? ''));
+        $raw = strtolower(json_encode($response['raw'] ?? $response, JSON_UNESCAPED_UNICODE) ?: '');
+
+        return str_contains($message, 'unauthorized ip')
+            || str_contains($message, 'ip anda tidak kami kenali')
+            || str_contains($raw, 'unauthorized ip')
+            || str_contains($raw, 'ip anda tidak kami kenali');
+    }
+
+    protected function resolveTargetCategoryId(string $category): ?int
+    {
+        $category = trim($category);
+
+        if ($category === '') {
+            return null;
+        }
+
+        return Category::query()
+            ->when(is_numeric($category), fn ($query) => $query->orWhereKey((int) $category))
+            ->orWhere('slug', $category)
+            ->orWhere('slug', Str::slug($category))
+            ->orWhere('name', $category)
+            ->value('id');
+    }
+
+    protected function resolveProviderCategoryId(array $service): ?string
+    {
+        foreach (['category_id', 'categoryId', 'cat_id', 'catId'] as $key) {
+            $value = trim((string) ($service[$key] ?? ''));
+
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    protected function resolveProviderCategoryName(array $service): string
+    {
+        foreach (['category_name', 'category', 'type'] as $key) {
+            $value = trim((string) ($service[$key] ?? ''));
+
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
+    }
+
+    protected function resolveCategoryIdFromProviderCategory(array $service): ?int
+    {
+        $providerCategoryId = $this->resolveProviderCategoryId($service);
+        $providerCategoryName = $this->resolveProviderCategoryName($service);
+
+        $slugCandidates = collect([
+            filled($providerCategoryId) ? 'sosmed-' . $providerCategoryId : null,
+            filled($providerCategoryId) ? Str::slug('SOSMED ' . $providerCategoryId) : null,
+            filled($providerCategoryName) ? Str::slug($providerCategoryName) : null,
+        ])->filter()->unique()->values()->all();
+
+        $nameCandidates = collect([
+            filled($providerCategoryId) ? 'SOSMED ' . $providerCategoryId : null,
+            filled($providerCategoryId) ? 'Sosmed ' . $providerCategoryId : null,
+            filled($providerCategoryName) ? $providerCategoryName : null,
+        ])->filter()->unique()->values()->all();
+
+        return Category::query()
+            ->whereIn('slug', $slugCandidates)
+            ->orWhereIn('name', $nameCandidates)
+            ->value('id');
+    }
+
+    protected function resolveCategoryIdFromLocalMatch(array $service): ?int
+    {
+        $serviceText = $this->normalizeMatchText(implode(' ', array_filter([
+            $service['service_name'] ?? null,
+            $service['name'] ?? null,
+        ])));
+
+        $providerCategoryText = $this->normalizeMatchText($this->resolveProviderCategoryName($service));
+        $classification = $this->classifyStrictSosmedService($serviceText, $providerCategoryText);
+
+        if ($classification === null) {
+            return null;
+        }
+
+        return $this->findStrictSosmedCategoryId(
+            $classification['platform'],
+            $classification['metric'],
+            $classification['region'] ?? null,
+        );
+    }
+
+    protected function classifyStrictSosmedService(string $serviceText, string $providerCategoryText): ?array
+    {
+        $classificationText = $this->normalizeMatchText($serviceText . ' ' . $providerCategoryText);
+        $platform = $this->matchKeywordGroup($classificationText, [
+            'instagram' => [' instagram ', ' instagram com ', ' ig '],
+            'tiktok' => [' tiktok ', ' tik tok '],
+            'youtube' => [' youtube ', ' youtub ', ' yt '],
+        ]);
+
+        if ($platform === null) {
+            return null;
+        }
+
+        if ($platform === 'youtube') {
+            return [
+                'platform' => 'youtube',
+                'metric' => $this->classifyStrictYoutubeMetric($serviceText, $providerCategoryText),
+                'region' => null,
+            ];
+        }
+
+        $metric = $this->classifyStrictInstagramTiktokMetric($serviceText, $providerCategoryText);
+
+        return [
+            'platform' => $platform,
+            'metric' => $metric,
+            'region' => in_array($metric, ['followers', 'like'], true)
+                ? $this->classifyStrictRegion($classificationText)
+                : null,
+        ];
+    }
+
+    protected function classifyStrictInstagramTiktokMetric(string $serviceText, string $providerCategoryText): string
+    {
+        $primaryMetrics = $this->matchingStrictInstagramTiktokMetrics($serviceText);
+
+        if (count($primaryMetrics) === 1) {
+            return $primaryMetrics[0];
+        }
+
+        if (count($primaryMetrics) > 1) {
+            return 'lainnya';
+        }
+
+        $categoryMetrics = $this->matchingStrictInstagramTiktokMetrics($providerCategoryText);
+
+        return count($categoryMetrics) === 1 ? $categoryMetrics[0] : 'lainnya';
+    }
+
+    protected function matchingStrictInstagramTiktokMetrics(string $text): array
+    {
+        $matches = [
+            'followers' => $this->containsAnyKeyword($text, [' follower ', ' followers ']),
+            'like' => $this->containsAnyKeyword($text, [' like ', ' likes ', ' heart ', ' hearts ']),
+            'views' => $this->containsAnyKeyword($text, [' view ', ' views ', ' viewer ', ' viewers ', ' reach ', ' impression ', ' impressions ', ' play ', ' plays ']),
+            'repost' => $this->containsAnyKeyword($text, [' repost ', ' reposts ']),
+            'save' => $this->containsAnyKeyword($text, [' save ', ' saves ', ' saved ', ' bookmark ', ' favorites ', ' favourite ', ' favorite ']),
+            'share' => $this->containsAnyKeyword($text, [' share ', ' shares ', ' shared ']),
+        ];
+
+        $positiveMetrics = collect($matches)
+            ->filter()
+            ->keys()
+            ->all();
+
+        return $positiveMetrics;
+    }
+
+    protected function classifyStrictYoutubeMetric(string $serviceText, string $providerCategoryText): string
+    {
+        $primaryMetrics = $this->matchingStrictYoutubeMetrics($serviceText);
+
+        if (count($primaryMetrics) === 1) {
+            return $primaryMetrics[0];
+        }
+
+        if (count($primaryMetrics) > 1) {
+            return 'lainnya';
+        }
+
+        $categoryMetrics = $this->matchingStrictYoutubeMetrics($providerCategoryText);
+
+        return count($categoryMetrics) === 1 ? $categoryMetrics[0] : 'lainnya';
+    }
+
+    protected function matchingStrictYoutubeMetrics(string $text): array
+    {
+        $matches = [
+            'subscribers' => $this->containsAnyKeyword($text, [' subscriber ', ' subscribers ', ' subs ']),
+            'like' => $this->containsAnyKeyword($text, [' like ', ' likes ']),
+            'view' => $this->containsAnyKeyword($text, [' view ', ' views ', ' viewer ', ' viewers ', ' watchtime ', ' watch time ', ' play ', ' plays ']),
+        ];
+
+        $positiveMetrics = collect($matches)
+            ->filter()
+            ->keys()
+            ->all();
+
+        return $positiveMetrics;
+    }
+
+    protected function classifyStrictRegion(string $text): string
+    {
+        if ($this->containsAnyKeyword($text, [' indonesia ', ' indonesian ', ' indo ', ' lokal ', ' local indonesia ', ' wni '])) {
+            return 'indonesia';
+        }
+
+        return 'global';
+    }
+
+    protected function findStrictSosmedCategoryId(string $platform, string $metric, ?string $region = null): ?int
+    {
+        $bestCandidate = null;
+        $bestScore = 0;
+
+        foreach ($this->strictSosmedCategoryCandidates() as $candidate) {
+            if (! $this->containsAnyKeyword($candidate['breadcrumb'], $this->strictCategoryAliases($platform))) {
+                continue;
+            }
+
+            if (! $this->containsAnyKeyword($candidate['breadcrumb'], $this->strictCategoryAliases($metric))) {
+                continue;
+            }
+
+            if ($region !== null && ! $this->containsAnyKeyword($candidate['breadcrumb'], $this->strictCategoryAliases($region))) {
+                continue;
+            }
+
+            $score = (int) $candidate['depth'];
+
+            if ($this->containsAnyKeyword($candidate['own'], $this->strictCategoryAliases($metric))) {
+                $score += 100;
+            }
+
+            if ($region !== null && $this->containsAnyKeyword($candidate['own'], $this->strictCategoryAliases($region))) {
+                $score += 140;
+            }
+
+            if ($this->containsAnyKeyword($candidate['parent'], $this->strictCategoryAliases($metric))) {
+                $score += 80;
+            }
+
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $bestCandidate = $candidate;
+            }
+        }
+
+        if ($bestCandidate !== null) {
+            return (int) $bestCandidate['id'];
+        }
+
+        return null;
+    }
+
+    protected function strictSosmedCategoryCandidates(): array
+    {
+        if ($this->strictSosmedCategoryCandidates !== null) {
+            return $this->strictSosmedCategoryCandidates;
+        }
+
+        $this->strictSosmedCategoryCandidates = Category::query()
+            ->with('parent.parent.parent.parent')
+            ->get()
+            ->map(function (Category $category) {
+                $parent = $category->parent;
+
+                return [
+                    'id' => $category->id,
+                    'own' => $this->normalizeMatchText($category->name . ' ' . $category->slug),
+                    'parent' => $parent ? $this->normalizeMatchText($parent->name . ' ' . $parent->slug) : '',
+                    'breadcrumb' => $this->normalizeMatchText($category->breadcrumb_name . ' ' . $category->slug),
+                    'depth' => $category->depth,
+                ];
+            })
+            ->filter(function (array $candidate) {
+                $text = $candidate['breadcrumb'];
+
+                if ($this->containsAnyKeyword($text, [' top up ', ' game ', ' kuota ', ' pulsa ', ' aplikasi premium ', ' nomor luar ', ' buzzer ', ' digiflazz '])) {
+                    return false;
+                }
+
+                return $this->containsAnyKeyword($text, [' suntik sosmed ', ' social media ', ' sosmed ', ' instagram ', ' tiktok ', ' youtube ']);
+            })
+            ->values()
+            ->all();
+
+        return $this->strictSosmedCategoryCandidates;
+    }
+
+    protected function strictCategoryAliases(string $key): array
+    {
+        return match ($key) {
+            'instagram' => [' instagram '],
+            'tiktok' => [' tiktok ', ' tik tok '],
+            'youtube' => [' youtube '],
+            'followers' => [' followers ', ' follower '],
+            'like' => [' like ', ' likes '],
+            'views', 'view' => [' views ', ' view ', ' viewer ', ' viewers '],
+            'repost' => [' repost ', ' reposts '],
+            'save' => [' save ', ' saves ', ' saved '],
+            'share' => [' share ', ' shares ', ' shared '],
+            'subscribers' => [' subscribers ', ' subscriber ', ' subs '],
+            'lainnya' => [' lainnya ', ' lain ', ' other ', ' others '],
+            'indonesia' => [' indonesia ', ' indo ', ' lokal ', ' local '],
+            'global' => [' global ', ' worldwide ', ' luar negeri ', ' international '],
+            default => [' ' . $key . ' '],
+        };
+    }
+
+    protected function containsAnyKeyword(string $text, array $keywords): bool
+    {
+        foreach ($keywords as $keyword) {
+            if (str_contains($text, $keyword)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function matchKeywordGroup(string $text, array $groups): ?string
+    {
+        foreach ($groups as $name => $keywords) {
+            foreach ($keywords as $keyword) {
+                if (str_contains($text, $keyword)) {
+                    return $name;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    protected function normalizeMatchText(string $text): string
+    {
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = Str::lower($text);
+        $text = preg_replace('/[^\pL\pN]+/u', ' ', $text) ?? $text;
+
+        return ' ' . trim(preg_replace('/\s+/u', ' ', $text) ?? $text) . ' ';
     }
 
     protected function categoryIdBySlug(string $slug, int $fallbackId): int

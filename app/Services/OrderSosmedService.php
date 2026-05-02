@@ -59,6 +59,12 @@ class OrderSosmedService
                 [
                     'action' => 'services',
                 ],
+                [
+                    'action' => 'service',
+                ],
+                [
+                    'action' => 'layanan',
+                ],
             ], 'services');
 
             $response = $attempt['response'] ?? null;
@@ -369,7 +375,7 @@ class OrderSosmedService
 
         $path = match ($resource) {
             'profile' => 'api-1/profile',
-            'services' => 'api-1/service',
+            'services' => ['api-1/service', 'api-1/services', 'api-1/layanan'],
             'order' => 'api-1/order',
             'status' => 'api-1/status',
             'refill' => 'api-1/refill',
@@ -377,7 +383,14 @@ class OrderSosmedService
             default => null,
         };
 
-        return $path ? [rtrim($baseUrl, '/') . '/' . $path] : [];
+        if (! $path) {
+            return [];
+        }
+
+        return collect((array) $path)
+            ->map(fn (string $endpoint) => rtrim($baseUrl, '/') . '/' . $endpoint)
+            ->values()
+            ->all();
     }
 
     protected function buildAuthPayloads(array $payload): array
@@ -389,6 +402,13 @@ class OrderSosmedService
                 'api_id' => $this->apiId,
                 'api_key' => $this->apiKey,
                 'secret_key' => $this->secretKey,
+                ...$payload,
+            ];
+
+            $variants[] = [
+                'api_id' => $this->apiId,
+                'api_key' => $this->apiKey,
+                'secret' => $this->secretKey,
                 ...$payload,
             ];
         }
