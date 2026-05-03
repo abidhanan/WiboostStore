@@ -74,7 +74,7 @@ class WalletController extends Controller
 
         WalletHistory::create([
             'user_id' => $user->id,
-            'type' => 'poin',
+            'type' => 'topup',
             'amount' => 1000,
             'description' => 'Bonus penukaran 5 poin loyalty',
             'invoice_number' => 'POIN-' . strtoupper(Str::random(8)),

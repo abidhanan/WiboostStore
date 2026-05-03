@@ -43,7 +43,7 @@ class PaymentCallbackControllerTest extends TestCase
             'invoice_number' => 'WIB-CALLBACK-001',
             'user_id' => $user->id,
             'product_id' => $product->id,
-            'amount' => 15000,
+            'amount' => 14000,
             'target_data' => 'username-instagram',
             'payment_status' => 'unpaid',
             'order_status' => 'pending',
@@ -60,6 +60,7 @@ class PaymentCallbackControllerTest extends TestCase
         $this->assertSame('paid', $transaction->payment_status);
         $this->assertSame('processing', $transaction->order_status);
         $this->assertSame('qris', $transaction->payment_method);
+        $this->assertSame(15000.0, (float) $transaction->amount);
         $this->assertStringContainsString('antrean admin', (string) $transaction->target_notes);
     }
 
@@ -76,7 +77,7 @@ class PaymentCallbackControllerTest extends TestCase
         Deposit::create([
             'user_id' => $user->id,
             'invoice_number' => 'DEP-CALLBACK-001',
-            'amount' => 50000,
+            'amount' => 45000,
             'payment_status' => 'unpaid',
         ]);
 
@@ -92,8 +93,13 @@ class PaymentCallbackControllerTest extends TestCase
             'invoice_number' => 'DEP-CALLBACK-001',
             'payment_status' => 'paid',
             'payment_method' => 'qris',
+            'amount' => 50000,
         ]);
         $this->assertSame(1, DB::table('wallet_histories')->where('invoice_number', 'DEP-CALLBACK-001')->count());
+        $this->assertDatabaseHas('wallet_histories', [
+            'invoice_number' => 'DEP-CALLBACK-001',
+            'amount' => 50000,
+        ]);
     }
 
     public function test_midtrans_callback_rejects_invalid_signature(): void

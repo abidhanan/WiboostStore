@@ -12,13 +12,20 @@ class AutoRefundPendingOrders extends Command
 {
     protected $signature = 'wiboost:auto-refund';
 
-    protected $description = 'Refund otomatis untuk pesanan lunas namun pending lebih dari 24 jam';
+    protected $description = 'Refund otomatis untuk pesanan API lunas namun pending lebih dari 24 jam';
 
     public function handle(OrderFulfillmentService $orderFulfillmentService): int
     {
         $transactions = Transaction::where('payment_status', 'paid')
             ->where('order_status', 'pending')
             ->where('updated_at', '<=', Carbon::now()->subHours(24))
+            ->whereHas('product', function ($query) {
+                $query->where('process_type', 'api')
+                    ->where(function ($providerQuery) {
+                        $providerQuery->whereIn('provider_source', ['digiflazz', 'ordersosmed'])
+                            ->orWhereIn('provider_id', ['digiflazz', 'ordersosmed']);
+                    });
+            })
             ->with('product', 'user')
             ->get();
 

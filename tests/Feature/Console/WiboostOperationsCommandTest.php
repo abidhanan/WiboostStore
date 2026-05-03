@@ -22,7 +22,7 @@ class WiboostOperationsCommandTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_auto_refund_command_refunds_stale_paid_pending_transactions(): void
+    public function test_auto_refund_command_refunds_stale_paid_pending_api_transactions(): void
     {
         $this->seedCategory(1, 'default-category');
 
@@ -32,11 +32,13 @@ class WiboostOperationsCommandTest extends TestCase
 
         $product = Product::create([
             'category_id' => 1,
-            'provider_id' => null,
-            'process_type' => 'manual',
-            'name' => 'Jasa Manual',
-            'slug' => 'jasa-manual',
-            'description' => 'Produk manual',
+            'provider_id' => 'digiflazz',
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'ML86',
+            'process_type' => 'api',
+            'name' => 'Mobile Legends 86 Diamonds',
+            'slug' => 'mobile-legends-86-diamonds-auto-refund',
+            'description' => 'Produk API',
             'price' => 10000,
             'status' => 'active',
             'is_active' => true,
@@ -72,6 +74,64 @@ class WiboostOperationsCommandTest extends TestCase
             'type' => 'refund',
             'user_id' => $user->id,
         ]);
+    }
+
+    public function test_auto_refund_command_skips_manual_and_stock_transactions(): void
+    {
+        $this->seedCategory(1, 'default-category');
+
+        $user = User::factory()->create([
+            'balance' => 5000,
+        ]);
+
+        $manualProduct = Product::create([
+            'category_id' => 1,
+            'provider_id' => null,
+            'process_type' => 'manual',
+            'name' => 'Jasa Manual',
+            'slug' => 'jasa-manual-no-refund',
+            'description' => 'Produk manual',
+            'price' => 10000,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        $stockProduct = Product::create([
+            'category_id' => 1,
+            'provider_id' => null,
+            'process_type' => 'account',
+            'name' => 'Akun Premium',
+            'slug' => 'akun-premium-no-refund',
+            'description' => 'Produk stok',
+            'price' => 15000,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        foreach ([$manualProduct, $stockProduct] as $index => $product) {
+            $transaction = Transaction::create([
+                'invoice_number' => 'WIB-NO-REFUND-00' . ($index + 1),
+                'user_id' => $user->id,
+                'product_id' => $product->id,
+                'amount' => $product->price,
+                'target_data' => 'target',
+                'payment_status' => 'paid',
+                'order_status' => 'pending',
+            ]);
+
+            $transaction->forceFill([
+                'updated_at' => now()->subHours(25),
+            ])->save();
+        }
+
+        $this->artisan('wiboost:auto-refund')
+            ->assertExitCode(0);
+
+        $this->assertSame(5000.0, (float) $user->fresh()->balance);
+        $this->assertSame(0, \App\Models\WalletHistory::where('type', 'refund')->count());
+        $this->assertSame(2, Transaction::where('order_status', 'pending')->count());
     }
 
     public function test_maintenance_report_command_sends_summary_to_discord_when_enabled(): void

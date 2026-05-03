@@ -7,8 +7,10 @@ use App\Models\ProductCredential;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\WalletHistory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class OrderFulfillmentService
 {
@@ -307,6 +309,10 @@ class OrderFulfillmentService
             return;
         }
 
+        if (! $this->isRefundableApiTransaction($transaction)) {
+            return;
+        }
+
         $alreadyRefunded = WalletHistory::where('invoice_number', $transaction->invoice_number)
             ->where('type', 'refund')
             ->exists();
@@ -332,6 +338,17 @@ class OrderFulfillmentService
         ]);
     }
 
+    protected function isRefundableApiTransaction(Transaction $transaction): bool
+    {
+        $transaction->loadMissing('product');
+
+        $product = $transaction->product;
+        $provider = $product?->provider_source ?: $product?->provider_id;
+
+        return $product?->process_type === 'api'
+            && in_array($provider, ['digiflazz', 'ordersosmed'], true);
+    }
+
     protected function rewardUserIfNeeded(Transaction $transaction, ?string $previousStatus, string $nextStatus): void
     {
         if ($nextStatus !== 'success') {
@@ -342,7 +359,33 @@ class OrderFulfillmentService
             return;
         }
 
-        User::find($transaction->user_id)?->increment('points', 1);
+        DB::transaction(function () use ($transaction) {
+            $user = User::query()->lockForUpdate()->find($transaction->user_id);
+
+            if (! $user) {
+                return;
+            }
+
+            $newPoints = (int) $user->points + 1;
+            $bonusCount = intdiv($newPoints, 5);
+            $remainingPoints = $newPoints % 5;
+            $bonusAmount = $bonusCount * 1000;
+
+            $user->forceFill([
+                'points' => $remainingPoints,
+                'balance' => (float) $user->balance + $bonusAmount,
+            ])->save();
+
+            for ($i = 0; $i < $bonusCount; $i++) {
+                WalletHistory::create([
+                    'user_id' => $user->id,
+                    'type' => 'topup',
+                    'amount' => 1000,
+                    'description' => 'Bonus otomatis 5 order sukses',
+                    'invoice_number' => 'BONUS-' . strtoupper(Str::random(10)),
+                ]);
+            }
+        });
     }
 
     protected function sendSuccessEmail(Transaction $transaction, ?string $previousStatus, bool $onlyWhenSuccess = true): void

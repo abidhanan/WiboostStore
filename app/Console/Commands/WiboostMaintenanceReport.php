@@ -8,6 +8,7 @@ use App\Services\DigiflazzService;
 use App\Services\DiscordWebhookService;
 use App\Services\OrderSosmedService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\File;
 
 class WiboostMaintenanceReport extends Command
 {
@@ -70,6 +71,8 @@ class WiboostMaintenanceReport extends Command
             ->take($maxItems)
             ->get();
 
+        $recentWebsiteErrors = $this->recentWebsiteErrors($maxItems);
+
         $providerDiagnostics = $this->buildProviderDiagnostics(
             $discordWebhookService,
             $digiflazzService,
@@ -84,6 +87,7 @@ class WiboostMaintenanceReport extends Command
             + $staleProcessingTransactions->count()
             + $manualQueue->count()
             + $misconfiguredApiProducts->count()
+            + count($recentWebsiteErrors)
             + collect($providerDiagnostics)->filter(fn (array $diagnostic) => $diagnostic['status'] === 'issue')->count();
 
         if ($issueCount === 0 && ! $this->option('force')) {
@@ -98,6 +102,7 @@ class WiboostMaintenanceReport extends Command
             ['name' => 'Processing lama', 'value' => (string) $staleProcessingTransactions->count(), 'inline' => true],
             ['name' => 'Manual queue', 'value' => (string) $manualQueue->count(), 'inline' => true],
             ['name' => 'API belum lengkap', 'value' => (string) $misconfiguredApiProducts->count(), 'inline' => true],
+            ['name' => 'Error website terbaru', 'value' => (string) count($recentWebsiteErrors), 'inline' => true],
             [
                 'name' => 'Provider siap',
                 'value' => collect($providerStatus)->map(fn ($ready, $name) => ($ready ? 'OK' : 'ISSUE') . ' ' . $name)->implode("\n"),
@@ -148,6 +153,14 @@ class WiboostMaintenanceReport extends Command
             $fields[] = [
                 'name' => 'Produk API belum lengkap',
                 'value' => $misconfiguredApiProducts->map(fn ($product) => $product->name)->implode("\n"),
+                'inline' => false,
+            ];
+        }
+
+        if ($recentWebsiteErrors !== []) {
+            $fields[] = [
+                'name' => 'Error website dari log',
+                'value' => mb_strimwidth(implode("\n", $recentWebsiteErrors), 0, 1000, '...'),
                 'inline' => false,
             ];
         }
@@ -270,6 +283,32 @@ class WiboostMaintenanceReport extends Command
         }
 
         return null;
+    }
+
+    protected function recentWebsiteErrors(int $maxItems): array
+    {
+        $logPath = storage_path('logs/laravel.log');
+
+        if (! File::exists($logPath) || ! is_readable($logPath)) {
+            return [];
+        }
+
+        $lines = File::lines($logPath);
+        $errorLines = [];
+
+        foreach ($lines as $line) {
+            if (! preg_match('/\.(ERROR|CRITICAL|ALERT|EMERGENCY):\s+/i', $line)) {
+                continue;
+            }
+
+            $errorLines[] = mb_strimwidth(trim($line), 0, 260, '...');
+
+            if (count($errorLines) > 100) {
+                array_shift($errorLines);
+            }
+        }
+
+        return array_slice(array_reverse($errorLines), 0, $maxItems);
     }
 
     protected function looksLikeLocalUrl(string $url): bool

@@ -593,6 +593,63 @@ class UserOrderCheckoutTest extends TestCase
         $this->assertSame(1, \App\Models\WalletHistory::where('invoice_number', $transaction->invoice_number)->where('type', 'refund')->count());
     }
 
+    public function test_fifth_successful_order_automatically_adds_bonus_balance(): void
+    {
+        Mail::fake();
+
+        $user = User::factory()->create([
+            'balance' => 0,
+            'points' => 0,
+        ]);
+
+        $category = Category::create([
+            'name' => 'Jasa Manual',
+            'slug' => 'jasa-manual-bonus',
+            'description' => 'Kategori test',
+            'fulfillment_type' => 'manual_action',
+        ]);
+
+        $product = Product::create([
+            'category_id' => $category->id,
+            'provider_id' => null,
+            'process_type' => 'manual',
+            'name' => 'Jasa Manual Bonus',
+            'slug' => 'jasa-manual-bonus',
+            'description' => 'Produk manual',
+            'price' => 10000,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        $fulfillment = app(\App\Services\OrderFulfillmentService::class);
+
+        for ($i = 1; $i <= 5; $i++) {
+            $transaction = Transaction::create([
+                'invoice_number' => 'WIB-BONUS-00' . $i,
+                'user_id' => $user->id,
+                'product_id' => $product->id,
+                'amount' => 10000,
+                'target_data' => 'target',
+                'payment_status' => 'paid',
+                'order_status' => 'processing',
+            ]);
+
+            $fulfillment->markOrderSuccessful($transaction->fresh(['product', 'user']), 'Selesai');
+        }
+
+        $user->refresh();
+
+        $this->assertSame(1000.0, (float) $user->balance);
+        $this->assertSame(0, (int) $user->points);
+        $this->assertDatabaseHas('wallet_histories', [
+            'user_id' => $user->id,
+            'type' => 'topup',
+            'amount' => 1000,
+            'description' => 'Bonus otomatis 5 order sukses',
+        ]);
+    }
+
     public function test_nomor_luar_checkout_allows_empty_input(): void
     {
         $user = User::factory()->create();

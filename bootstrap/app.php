@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use App\Services\DiscordWebhookService;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -31,6 +32,30 @@ return Application::configure(basePath: dirname(__DIR__))
 
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->report(function (\Throwable $exception) {
+            if ($exception instanceof HttpExceptionInterface && $exception->getStatusCode() < 500) {
+                return;
+            }
+
+            try {
+                $request = app()->bound('request') ? request() : null;
+
+                app(DiscordWebhookService::class)->sendSystemAlert(
+                    'Error website terdeteksi',
+                    'Laravel menangkap error dari aplikasi. Cek detailnya supaya bisa cepat ditangani.',
+                    [
+                        ['name' => 'Error', 'value' => get_class($exception), 'inline' => true],
+                        ['name' => 'Pesan', 'value' => mb_strimwidth($exception->getMessage() ?: '-', 0, 900, '...'), 'inline' => false],
+                        ['name' => 'Lokasi', 'value' => basename($exception->getFile()) . ':' . $exception->getLine(), 'inline' => true],
+                        ['name' => 'URL', 'value' => $request instanceof Request ? mb_strimwidth($request->fullUrl(), 0, 900, '...') : 'CLI / Scheduler', 'inline' => false],
+                    ],
+                    16738680
+                );
+            } catch (\Throwable) {
+                // Jangan biarkan kegagalan Discord mengganggu proses pelaporan error utama.
+            }
+        });
+
         $exceptions->render(function (HttpExceptionInterface $exception, Request $request) {
             if ($exception->getStatusCode() !== 419) {
                 return null;
