@@ -89,8 +89,6 @@ class SyncDigiflazzProducts extends Command
                 }
 
                 $hargaModal = (float) ($item['price'] ?? 0);
-                $markup = 1.10;
-                $hargaJual = ceil(($hargaModal * $markup) / 100) * 100;
 
                 $categoryId = $matchLocalCategories
                     ? $this->resolveStrictLocalCategoryId($item, $topCategorySlug)
@@ -127,7 +125,7 @@ class SyncDigiflazzProducts extends Command
                     'process_type' => 'api',
                     'name' => (string) ($item['product_name'] ?? 'Produk Digiflazz'),
                     'description' => (string) ($item['desc'] ?? '-'),
-                    'price' => $hargaJual,
+                    'price' => $hargaModal,
                     'provider_product_id' => (string) $item['buyer_sku_code'],
                     'provider_quantity' => 1,
                     'target_label' => $targetMeta['label'],

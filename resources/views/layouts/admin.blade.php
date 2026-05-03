@@ -73,6 +73,11 @@
             ['route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Laporan', 'icon' => '📈'],
             ['route' => 'profile.edit', 'pattern' => 'profile.edit', 'label' => 'Profil', 'icon' => '👤'],
         ];
+
+        $adminNav = array_values(array_filter(
+            $adminNav,
+            fn (array $item) => $item['route'] !== 'admin.manual-orders.index'
+        ));
     @endphp
 
     <!-- Sidebar Desktop -->

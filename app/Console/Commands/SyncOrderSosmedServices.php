@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\Category;
 use App\Models\Product;
-use App\Services\OrderSosmedGuestCatalogService;
 use App\Services\OrderSosmedService;
 use App\Support\WiboostCatalog;
 use Illuminate\Console\Command;
@@ -23,8 +22,7 @@ class SyncOrderSosmedServices extends Command
     protected ?array $strictSosmedCategoryCandidates = null;
 
     public function handle(
-        OrderSosmedService $orderSosmedService,
-        OrderSosmedGuestCatalogService $guestCatalogService
+        OrderSosmedService $orderSosmedService
     ): int
     {
         $defaultCategoryId = Category::query()
@@ -67,11 +65,8 @@ class SyncOrderSosmedServices extends Command
         $response = $orderSosmedService->getServices();
         $syncMode = 'api';
 
-        if (
-            (! ($response['success'] ?? false) || empty($response['data']))
-            && ($allowedProviderCategoryIds !== [] || $matchLocalCategories || $this->isUnauthorizedIpResponse($response))
-        ) {
-            $this->error('API private OrderSosmed belum bisa dipakai, sync otomatis dihentikan agar produk tidak masuk sebagai manual/fallback.');
+        if (! ($response['success'] ?? false) || empty($response['data'])) {
+            $this->error('API private OrderSosmed belum bisa dipakai, sync otomatis dihentikan.');
             $this->error('Pesan provider: ' . ($response['message'] ?? 'Provider tidak mengembalikan daftar layanan.'));
 
             if ($this->isUnauthorizedIpResponse($response)) {
@@ -81,12 +76,6 @@ class SyncOrderSosmedServices extends Command
             }
 
             return self::FAILURE;
-        }
-
-        if (! ($response['success'] ?? false) || empty($response['data'])) {
-            $this->warn('Endpoint API private OrderSosmed belum merespons daftar layanan. Beralih ke katalog publik...');
-            $response = $guestCatalogService->getServices(['sosmed']);
-            $syncMode = 'guest';
         }
 
         $services = collect($response['data'] ?? [])
@@ -110,27 +99,12 @@ class SyncOrderSosmedServices extends Command
             return self::FAILURE;
         }
 
-        if ($syncMode === 'guest') {
-            $this->warn('Mode fallback aktif: katalog publik berhasil diimpor. Produk OrderSosmed akan disiapkan sebagai pesanan manual sampai endpoint API private dikonfirmasi.');
-        }
-
         $total = $services->count();
         $success = 0;
         $failed = 0;
         $skippedMissingCategory = 0;
         $skippedUnmatchedLocalCategory = 0;
-
-        if ($matchLocalCategories) {
-            Product::query()
-                ->where('provider_source', 'ordersosmed')
-                ->update([
-                    'is_active' => false,
-                    'status' => 'inactive',
-                    'updated_at' => now(),
-                ]);
-
-            $this->info('Produk OrderSosmed lama dinonaktifkan sementara; layanan yang cocok akan diaktifkan ulang.');
-        }
+        $matchedProviderProductIds = [];
 
         $bar = $this->output->createProgressBar($total);
         $bar->start();
@@ -150,9 +124,6 @@ class SyncOrderSosmedServices extends Command
 
                 $providerQuantity = $this->resolveProviderQuantity($service);
                 $basePrice = $this->resolveBasePrice($service, $providerQuantity);
-                $sellingPrice = $basePrice > 0
-                    ? ceil(($basePrice * 1.10) / 100) * 100
-                    : 0;
 
                 $categoryId = $this->resolveCategoryId($service, $defaultCategoryId, $allowedProviderCategoryIds, $targetCategoryId, $matchLocalCategories);
 
@@ -168,7 +139,7 @@ class SyncOrderSosmedServices extends Command
                 }
 
                 $targetMeta = $this->resolveTargetMeta($service, $syncMode);
-                $processType = $syncMode === 'api' ? 'api' : 'manual';
+                $processType = 'api';
 
                 $product = $this->findExistingProduct($providerProductId, $name, $syncMode);
 
@@ -184,17 +155,18 @@ class SyncOrderSosmedServices extends Command
                     'process_type' => $processType,
                     'name' => $name,
                     'description' => $this->buildDescription($service, $syncMode),
-                    'price' => $sellingPrice,
+                    'price' => $basePrice,
                     'provider_product_id' => $providerProductId,
                     'target_label' => $targetMeta['label'],
                     'target_placeholder' => $targetMeta['placeholder'],
                     'target_hint' => $targetMeta['hint'],
-                    'is_active' => $sellingPrice > 0,
-                    'status' => $sellingPrice > 0 ? 'active' : 'inactive',
+                    'is_active' => $basePrice > 0,
+                    'status' => $basePrice > 0 ? 'active' : 'inactive',
                     'stock_reminder' => 0,
                 ]);
 
                 $product->save();
+                $matchedProviderProductIds[] = $providerProductId;
                 $success++;
             } catch (\Throwable $e) {
                 $failed++;
@@ -209,7 +181,7 @@ class SyncOrderSosmedServices extends Command
         $bar->finish();
         $this->info("\n\nLayanan OrderSosmed selesai disinkronkan.");
         $this->info("Berhasil: {$success}");
-        $this->info('Mode sync: ' . ($syncMode === 'api' ? 'API private' : 'Katalog publik (manual order)'));
+        $this->info('Mode sync: API private');
 
         if ($failed > 0) {
             $this->warn("Gagal: {$failed}");
@@ -232,6 +204,14 @@ class SyncOrderSosmedServices extends Command
             }
 
             return self::FAILURE;
+        }
+
+        if ($matchLocalCategories) {
+            $deactivatedUnmatched = $this->deactivateUnmatchedOrderSosmedProducts($matchedProviderProductIds);
+
+            if ($deactivatedUnmatched > 0) {
+                $this->warn("Produk OrderSosmed lama/non-cocok dinonaktifkan: {$deactivatedUnmatched}");
+            }
         }
 
         return ($failed > 0 || $skippedMissingCategory > 0) ? self::FAILURE : self::SUCCESS;
@@ -331,9 +311,6 @@ class SyncOrderSosmedServices extends Command
             isset($service['min']) ? 'Minimum order: ' . $service['min'] : null,
             isset($service['max']) ? 'Maximum order: ' . $service['max'] : null,
             $averageTime ? 'Waktu rata-rata: ' . $averageTime : null,
-            $syncMode === 'guest'
-                ? 'Sinkron dari katalog publik OrderSosmed. Pemrosesan pesanan sementara dilakukan manual oleh admin.'
-                : null,
         ]);
 
         return $chunks !== [] ? implode("\n", $chunks) : 'Layanan otomatis dari provider OrderSosmed.';
@@ -380,10 +357,6 @@ class SyncOrderSosmedServices extends Command
             'placeholder' => 'Contoh: @username atau https://instagram.com/p/abc123',
             'hint' => 'Masukkan username akun atau link postingan yang aktif sesuai layanan suntik sosmed yang dipilih.',
         ];
-
-        if ($syncMode === 'guest') {
-            $meta['hint'] .= ' Saat ini pesanan OrderSosmed diproses manual oleh admin sambil menunggu API private provider pulih.';
-        }
 
         return $meta;
     }
@@ -538,16 +511,32 @@ class SyncOrderSosmedServices extends Command
 
     protected function classifyStrictSosmedService(string $serviceText, string $providerCategoryText): ?array
     {
-        $classificationText = $this->normalizeMatchText($serviceText . ' ' . $providerCategoryText);
-        $platform = $this->matchKeywordGroup($classificationText, [
-            'instagram' => [' instagram ', ' instagram com ', ' ig '],
-            'tiktok' => [' tiktok ', ' tik tok '],
-            'youtube' => [' youtube ', ' youtub ', ' yt '],
-        ]);
+        $servicePlatforms = $this->detectTargetSosmedPlatforms($serviceText);
+
+        if (
+            $this->containsNonTargetSosmedPlatform($serviceText)
+            || ($servicePlatforms === [] && $this->containsGenericTrafficText($serviceText))
+        ) {
+            return null;
+        }
+
+        $categoryPlatforms = $this->containsNonTargetSosmedPlatform($providerCategoryText)
+            ? []
+            : $this->detectTargetSosmedPlatforms($providerCategoryText);
+
+        if (count($servicePlatforms) > 1) {
+            return null;
+        }
+
+        $platform = count($servicePlatforms) === 1
+            ? $servicePlatforms[0]
+            : (count($categoryPlatforms) === 1 ? $categoryPlatforms[0] : null);
 
         if ($platform === null) {
             return null;
         }
+
+        $classificationText = $this->normalizeMatchText($serviceText . ' ' . $providerCategoryText);
 
         if ($platform === 'youtube') {
             return [
@@ -566,6 +555,59 @@ class SyncOrderSosmedServices extends Command
                 ? $this->classifyStrictRegion($classificationText)
                 : null,
         ];
+    }
+
+    protected function detectTargetSosmedPlatforms(string $text): array
+    {
+        $matches = [
+            'instagram' => $this->containsAnyKeyword($text, [' instagram ', ' instagram com ', ' ig ']),
+            'tiktok' => $this->containsAnyKeyword($text, [' tiktok ', ' tik tok ']),
+            'youtube' => $this->containsAnyKeyword($text, [' youtube ', ' youtub ', ' yt ']),
+        ];
+
+        return collect($matches)
+            ->filter()
+            ->keys()
+            ->values()
+            ->all();
+    }
+
+    protected function containsNonTargetSosmedPlatform(string $text): bool
+    {
+        return $this->containsAnyKeyword($text, [
+            ' telegram ',
+            ' tele ',
+            ' facebook ',
+            ' fb ',
+            ' twitter ',
+            ' tweet ',
+            ' retweet ',
+            ' x twitter ',
+            ' spotify ',
+            ' whatsapp ',
+            ' discord ',
+            ' twitch ',
+            ' soundcloud ',
+            ' shopee ',
+            ' tokopedia ',
+            ' google maps ',
+            ' maps ',
+            ' threads ',
+            ' linkedin ',
+            ' pinterest ',
+            ' snapchat ',
+            ' capcut ',
+        ]);
+    }
+
+    protected function containsGenericTrafficText(string $text): bool
+    {
+        return $this->containsAnyKeyword($text, [
+            ' website ',
+            ' traffic ',
+            ' visit ',
+            ' seo ',
+        ]);
     }
 
     protected function classifyStrictInstagramTiktokMetric(string $serviceText, string $providerCategoryText): string
@@ -834,22 +876,37 @@ class SyncOrderSosmedServices extends Command
             if ($suffixMatches->count() === 1) {
                 return $suffixMatches->first();
             }
-
-            $nameMatch = Product::query()
-                ->where('provider_source', 'ordersosmed')
-                ->where('process_type', 'manual')
-                ->where('name', $name)
-                ->orderByDesc('updated_at')
-                ->first();
-
-            if ($nameMatch) {
-                return $nameMatch;
-            }
         }
 
         return new Product([
             'provider_source' => 'ordersosmed',
             'provider_product_id' => $providerProductId,
         ]);
+    }
+
+    protected function deactivateUnmatchedOrderSosmedProducts(array $matchedProviderProductIds): int
+    {
+        $matchedProviderProductIds = collect($matchedProviderProductIds)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($matchedProviderProductIds === []) {
+            return 0;
+        }
+
+        return Product::query()
+            ->where('provider_source', 'ordersosmed')
+            ->where('process_type', 'api')
+            ->where(function ($query) use ($matchedProviderProductIds) {
+                $query->whereNull('provider_product_id')
+                    ->orWhereNotIn('provider_product_id', $matchedProviderProductIds);
+            })
+            ->update([
+                'is_active' => false,
+                'status' => 'inactive',
+                'updated_at' => now(),
+            ]);
     }
 }

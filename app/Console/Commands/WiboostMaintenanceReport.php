@@ -7,6 +7,7 @@ use App\Models\Transaction;
 use App\Services\DigiflazzService;
 use App\Services\DiscordWebhookService;
 use App\Services\OrderSosmedService;
+use App\Support\WiboostCatalog;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 
@@ -25,7 +26,7 @@ class WiboostMaintenanceReport extends Command
         $processingMinutes = (int) config('wiboost.processing_alert_minutes', 120);
         $maxItems = max(1, (int) config('wiboost.maintenance_max_items', 5));
 
-        $lowStockProducts = Product::whereIn('process_type', ['account', 'number'])
+        $lowStockProducts = Product::where('process_type', 'account')
             ->get()
             ->filter(function ($product) {
                 return $product->stock_reminder > 0
@@ -38,6 +39,7 @@ class WiboostMaintenanceReport extends Command
         $stalePendingTransactions = Transaction::with(['product', 'user'])
             ->where('payment_status', 'paid')
             ->where('order_status', 'pending')
+            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
             ->where('updated_at', '<=', now()->subMinutes($pendingMinutes))
             ->latest('updated_at')
             ->take($maxItems)
@@ -46,17 +48,8 @@ class WiboostMaintenanceReport extends Command
         $staleProcessingTransactions = Transaction::with(['product', 'user'])
             ->where('payment_status', 'paid')
             ->where('order_status', 'processing')
+            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
             ->where('updated_at', '<=', now()->subMinutes($processingMinutes))
-            ->latest('updated_at')
-            ->take($maxItems)
-            ->get();
-
-        $manualQueue = Transaction::with(['product', 'user'])
-            ->where('payment_status', 'paid')
-            ->where('order_status', 'processing')
-            ->whereHas('product', function ($query) {
-                $query->where('process_type', 'manual');
-            })
             ->latest('updated_at')
             ->take($maxItems)
             ->get();
@@ -85,7 +78,6 @@ class WiboostMaintenanceReport extends Command
         $issueCount = $lowStockProducts->count()
             + $stalePendingTransactions->count()
             + $staleProcessingTransactions->count()
-            + $manualQueue->count()
             + $misconfiguredApiProducts->count()
             + count($recentWebsiteErrors)
             + collect($providerDiagnostics)->filter(fn (array $diagnostic) => $diagnostic['status'] === 'issue')->count();
@@ -100,7 +92,6 @@ class WiboostMaintenanceReport extends Command
             ['name' => 'Stok menipis', 'value' => (string) $lowStockProducts->count(), 'inline' => true],
             ['name' => 'Pending berbayar', 'value' => (string) $stalePendingTransactions->count(), 'inline' => true],
             ['name' => 'Processing lama', 'value' => (string) $staleProcessingTransactions->count(), 'inline' => true],
-            ['name' => 'Manual queue', 'value' => (string) $manualQueue->count(), 'inline' => true],
             ['name' => 'API belum lengkap', 'value' => (string) $misconfiguredApiProducts->count(), 'inline' => true],
             ['name' => 'Error website terbaru', 'value' => (string) count($recentWebsiteErrors), 'inline' => true],
             [
@@ -137,14 +128,6 @@ class WiboostMaintenanceReport extends Command
             $fields[] = [
                 'name' => 'Processing lama',
                 'value' => $staleProcessingTransactions->map(fn ($transaction) => "{$transaction->invoice_number} - " . ($transaction->product->name ?? 'Produk'))->implode("\n"),
-                'inline' => false,
-            ];
-        }
-
-        if ($manualQueue->isNotEmpty()) {
-            $fields[] = [
-                'name' => 'Manual order aktif',
-                'value' => $manualQueue->map(fn ($transaction) => "{$transaction->invoice_number} - " . ($transaction->product->name ?? 'Produk'))->implode("\n"),
                 'inline' => false,
             ];
         }

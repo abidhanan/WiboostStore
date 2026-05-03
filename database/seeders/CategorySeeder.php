@@ -18,10 +18,6 @@ class CategorySeeder extends Seeder
             
             // Kategori Berbasis Stok (Tarik dari database)
             ['name' => 'Aplikasi Premium', 'fulfillment_type' => 'stock_based'],
-            
-            // Kategori Manual (Dikerjakan Admin)
-            ['name' => 'Nomor Luar', 'fulfillment_type' => 'manual_action'],
-            ['name' => 'Buzzer', 'fulfillment_type' => 'manual_action'],
         ];
 
         foreach ($categories as $category) {

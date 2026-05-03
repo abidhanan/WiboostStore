@@ -489,7 +489,8 @@ class WiboostOperationsCommandTest extends TestCase
         $this->assertSame(1, $existingProduct->category_id);
         $this->assertSame('digiflazz', $existingProduct->provider_source);
         $this->assertSame('Mobile Legends 86 Diamonds', $existingProduct->name);
-        $this->assertSame(11000.0, (float) $existingProduct->price);
+        $this->assertSame(10000.0, (float) $existingProduct->price);
+        $this->assertSame(10500.0, (float) $existingProduct->selling_price);
     }
 
     public function test_sync_ordersosmed_command_imports_services_into_products(): void
@@ -527,7 +528,8 @@ class WiboostOperationsCommandTest extends TestCase
         $this->assertSame('ordersosmed', $product->provider_source);
         $this->assertSame(1, $product->category_id);
         $this->assertSame(100, $product->provider_quantity);
-        $this->assertSame(2800.0, (float) $product->price);
+        $this->assertSame(2500.0, (float) $product->price);
+        $this->assertSame(2750.0, (float) $product->selling_price);
         $this->assertStringContainsString('Waktu rata-rata: 6 jam 20 menit', $product->description);
         $this->assertSame('Belum ada order sukses', $product->ordersosmed_average_time);
     }
@@ -1134,7 +1136,7 @@ class WiboostOperationsCommandTest extends TestCase
         ]);
     }
 
-    public function test_sync_ordersosmed_command_falls_back_to_public_catalog_and_marks_sosmed_products_manual(): void
+    public function test_sync_ordersosmed_command_stops_when_private_api_is_unavailable(): void
     {
         $this->seedCategory(1, 'suntik-sosmed');
 
@@ -1148,40 +1150,12 @@ class WiboostOperationsCommandTest extends TestCase
                 ]);
         });
 
-        $this->mock(OrderSosmedGuestCatalogService::class, function (MockInterface $mock) {
-            $mock->shouldReceive('getServices')
-                ->once()
-                ->with(['sosmed'])
-                ->andReturn([
-                    'success' => true,
-                    'message' => 'OK',
-                    'data' => [[
-                        'id' => 406,
-                        'name' => 'Instagram Followers Lokal',
-                        'category' => 'Instagram',
-                        'rate' => 25000,
-                        'min' => 100,
-                        'max' => 5000,
-                        'description' => 'Kategori OrderSosmed: Instagram',
-                        '_ordersosmed_catalog_type' => 'sosmed',
-                        '_ordersosmed_pricing_mode' => 'per_1000',
-                    ]],
-                ]);
-        });
-
         $this->artisan('sync:ordersosmed')
-            ->assertExitCode(0);
+            ->assertExitCode(1);
 
-        $product = Product::query()
-            ->where('provider_source', 'ordersosmed')
-            ->where('provider_product_id', 'sosmed:406')
-            ->first();
-
-        $this->assertNotNull($product);
-        $this->assertSame('manual', $product->process_type);
-        $this->assertSame(1, $product->category_id);
-        $this->assertSame('Username akun / link postingan', $product->target_label);
-        $this->assertSame(2800.0, (float) $product->price);
+        $this->assertDatabaseMissing('products', [
+            'provider_source' => 'ordersosmed',
+        ]);
     }
 
     public function test_sync_ordersosmed_command_upgrades_matching_fallback_product_to_api_mode(): void
@@ -1324,19 +1298,19 @@ class WiboostOperationsCommandTest extends TestCase
             'provider_source' => 'ordersosmed',
             'provider_product_id' => '2001',
             'category_id' => 2,
-            'price' => 1100,
+            'price' => 1000,
         ]);
         $this->assertDatabaseHas('products', [
             'provider_source' => 'ordersosmed',
             'provider_product_id' => '3001',
             'category_id' => 3,
-            'price' => 2800,
+            'price' => 2500,
         ]);
         $this->assertDatabaseHas('products', [
             'provider_source' => 'ordersosmed',
             'provider_product_id' => '5001',
             'category_id' => 5,
-            'price' => 600,
+            'price' => 500,
         ]);
         $this->assertDatabaseMissing('products', [
             'provider_source' => 'ordersosmed',

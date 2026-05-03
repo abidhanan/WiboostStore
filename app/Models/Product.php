@@ -8,7 +8,10 @@ use App\Support\WiboostCatalog;
 
 class Product extends Model
 {
-    protected const API_SELLING_PRICE_MARKUP_RATE = 0.10;
+    protected const API_SELLING_PRICE_MARKUP_RATES = [
+        'ordersosmed' => 0.10,
+        'digiflazz' => 0.05,
+    ];
 
     protected $fillable = [
         'category_id',
@@ -45,7 +48,7 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    // Relasi ke stok (untuk produk manual/fisik)
+    // Relasi ke stok lama jika masih ada data historis.
     public function stocks()
     {
         return $this->hasMany(Stock::class);
@@ -64,11 +67,11 @@ class Product extends Model
     }
 
     /**
-     * Accessor untuk menghitung sisa stok otomatis (khusus tipe account/number)
+     * Accessor untuk menghitung sisa stok otomatis khusus akun premium.
      */
     public function getAvailableStockAttribute()
     {
-        if (!in_array($this->process_type, ['account', 'number'])) return null;
+        if ($this->process_type !== 'account') return null;
         
         return $this->credentials()->where('is_active', true)->get()->sum(function($cred) {
             return $cred->max_usage - $cred->current_usage;
@@ -123,15 +126,6 @@ class Product extends Model
         }
 
         return match ($this->process_type) {
-            'manual' => [[
-                'name' => 'target_data',
-                'label' => 'Informasi pesanan / kontak yang bisa dihubungi',
-                'type' => 'text',
-                'placeholder' => 'Contoh: username, link akun, nomor kontak, atau catatan pesanan',
-                'hint' => 'Masukkan data yang paling memudahkan admin memproses pesanan kamu.',
-                'rules' => ['required', 'string', 'min:3', 'max:255'],
-                'target_summary' => true,
-            ]],
             'api' => [[
                 'name' => 'target_data',
                 'label' => $this->provider_source === 'digiflazz'
@@ -190,7 +184,6 @@ class Product extends Model
         }
 
         return match ($this->process_type) {
-            'manual' => 'Informasi pesanan / kontak yang bisa dihubungi',
             'api' => $this->provider_source === 'digiflazz'
                 ? 'Data tujuan (user ID, zone ID, atau nomor tujuan)'
                 : 'Target pesanan (username atau link profile)',
@@ -211,7 +204,6 @@ class Product extends Model
         }
 
         return match ($this->process_type) {
-            'manual' => 'Contoh: username, link akun, nomor kontak, atau catatan pesanan',
             'api' => $this->provider_source === 'digiflazz'
                 ? 'Contoh: 12345678 (1234) atau 081234567890'
                 : 'Contoh: https://instagram.com/username',
@@ -232,7 +224,6 @@ class Product extends Model
         }
 
         return match ($this->process_type) {
-            'manual' => 'Masukkan data yang paling memudahkan admin memproses pesanan kamu.',
             'api' => $this->provider_source === 'digiflazz'
                 ? 'Pastikan ID, zone, atau nomor tujuan sudah benar agar pesanan tidak gagal.'
                 : 'Gunakan username atau link yang aktif dan bisa diakses publik.',
@@ -247,10 +238,18 @@ class Product extends Model
 
     public function getUsesApiSellingMarkupAttribute(): bool
     {
+        return $this->api_selling_markup_rate > 0;
+    }
+
+    public function getApiSellingMarkupRateAttribute(): float
+    {
+        if ($this->process_type !== 'api') {
+            return 0.0;
+        }
+
         $provider = $this->provider_source ?: $this->provider_id;
 
-        return $this->process_type === 'api'
-            || in_array($provider, ['digiflazz', 'ordersosmed'], true);
+        return static::API_SELLING_PRICE_MARKUP_RATES[$provider] ?? 0.0;
     }
 
     public function getSellingPriceAttribute(): float
@@ -336,7 +335,7 @@ class Product extends Model
             return $basePrice;
         }
 
-        return (float) ceil(round($basePrice * (1 + static::API_SELLING_PRICE_MARKUP_RATE), 6));
+        return (float) ceil(round($basePrice * (1 + $this->api_selling_markup_rate), 6));
     }
 
     protected function extractDescriptionInteger(string $pattern): ?int

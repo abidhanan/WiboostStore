@@ -14,24 +14,29 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Support\WiboostCatalog;
 use Throwable;
 
 class OrderController extends Controller
 {
     public function showCategory($slug)
     {
+        abort_if(in_array($slug, WiboostCatalog::removedCategorySlugs(), true), 404);
+
         $category = Category::with([
             'parent',
             'children' => function ($query) {
                 $query->withCount([
                     'children',
                     'products as active_products_count' => function ($productQuery) {
-                        $productQuery->where('is_active', true);
+                        $productQuery->where('is_active', true)
+                            ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes());
                     },
                 ])->orderBy('name');
             },
             'products' => function ($query) {
                 $query->where('is_active', true)
+                    ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes())
                     ->with('category.parent.parent.parent')
                     ->orderBy('price', 'asc')
                     ->orderBy('name', 'asc');
@@ -63,6 +68,11 @@ class OrderController extends Controller
         OrderFulfillmentService $orderFulfillmentService
     ) {
         $product = Product::findOrFail($request->product_id);
+        abort_if(
+            ! $product->is_active || ! in_array($product->process_type, WiboostCatalog::activeProductProcessTypes(), true),
+            404
+        );
+
         $user = Auth::user();
         $checkoutFields = $product->checkout_fields;
 

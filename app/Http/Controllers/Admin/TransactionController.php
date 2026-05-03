@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Services\OrderFulfillmentService;
+use App\Support\WiboostCatalog;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -17,6 +18,7 @@ class TransactionController extends Controller
     {
         // Pastikan memuat relasi product.category agar bisa mengecek slug kategori
         $query = Transaction::with(['user', 'product.category'])->latest();
+        $query->whereHas('product', fn ($productQuery) => $productQuery->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()));
 
         // 1. Pencarian
         if ($request->filled('search')) {
@@ -52,11 +54,7 @@ class TransactionController extends Controller
         $transaction = Transaction::with(['product', 'user'])->findOrFail($id);
 
         if ($request->order_status === 'success') {
-            if ($transaction->product?->process_type === 'manual') {
-                $orderFulfillmentService->markManualOrderCompleted($transaction);
-            } else {
-                $orderFulfillmentService->markOrderSuccessful($transaction);
-            }
+            $orderFulfillmentService->markOrderSuccessful($transaction);
         } else {
             $transaction->update([
                 'order_status' => $request->order_status,
@@ -75,6 +73,7 @@ class TransactionController extends Controller
             // Hanya ambil transaksi yang sudah LUNAS ('paid')
             $transactions = Transaction::with(['user', 'product'])
                 ->where('payment_status', 'paid')
+                ->whereHas('product', fn ($productQuery) => $productQuery->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
                 ->whereMonth('created_at', $month)
                 ->whereYear('created_at', $year)
                 ->latest()
@@ -108,16 +107,22 @@ class TransactionController extends Controller
     {
         $paidTransactions = Transaction::where('payment_status', 'paid');
         $successfulTransactions = Transaction::where('payment_status', 'paid')->where('order_status', 'success');
-        $manualOrders = Transaction::whereHas('product', fn ($query) => $query->where('process_type', 'manual'));
-        $lowStockProducts = Product::whereIn('process_type', ['account', 'number'])
+        $providerOrStockOrders = Transaction::whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()));
+        $lowStockProducts = Product::where('process_type', 'account')
             ->get()
             ->filter(fn ($product) => $product->stock_reminder > 0 && ($product->available_stock ?? 0) <= $product->stock_reminder);
 
-        $totalRevenue = $successfulTransactions->sum('amount');
-        $totalOrders = Transaction::count();
-        $paidOrders = $paidTransactions->count();
-        $successfulOrders = $successfulTransactions->count();
-        $pendingManualOrders = (clone $manualOrders)->whereIn('order_status', ['pending', 'processing'])->count();
+        $totalRevenue = (clone $successfulTransactions)
+            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
+            ->sum('amount');
+        $totalOrders = (clone $providerOrStockOrders)->count();
+        $paidOrders = (clone $paidTransactions)
+            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
+            ->count();
+        $successfulOrders = (clone $successfulTransactions)
+            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
+            ->count();
+        $processingOrders = (clone $providerOrStockOrders)->whereIn('order_status', ['pending', 'processing'])->count();
         $averageOrderValue = $successfulOrders > 0 ? $totalRevenue / $successfulOrders : 0;
         $successRate = $paidOrders > 0 ? ($successfulOrders / $paidOrders) * 100 : 0;
 
@@ -126,7 +131,7 @@ class TransactionController extends Controller
             'totalOrders',
             'paidOrders',
             'successfulOrders',
-            'pendingManualOrders',
+            'processingOrders',
             'averageOrderValue',
             'successRate',
             'lowStockProducts'

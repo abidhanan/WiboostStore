@@ -10,12 +10,16 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use App\Support\WiboostCatalog;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with('category.parent.parent')->latest();
+        $query = Product::with('category.parent.parent.parent')->latest();
+
+        $this->hideRemovedCatalogProducts($query);
+        $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes());
 
         if ($request->filled('search')) {
             $query->where(function ($innerQuery) use ($request) {
@@ -31,14 +35,7 @@ class ProductController extends Controller
 
     public function create()
     {
-        $categories = Category::with('parent.parent')
-            ->where(function ($query) {
-                $query->whereNotNull('parent_id')
-                    ->orDoesntHave('children');
-            })
-            ->orderBy('parent_id')
-            ->orderBy('name')
-            ->get();
+        $categories = $this->visibleProductCategories();
 
         return view('admin.products.create', compact('categories'));
     }
@@ -46,6 +43,14 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $validated = $this->validateProduct($request);
+        $existingProduct = $this->findExistingNonApiProduct($validated);
+
+        if ($existingProduct) {
+            return redirect()
+                ->route('admin.products.edit', $existingProduct)
+                ->with('error', 'Produk dengan nama dan kategori yang sama sudah ada. Kamu diarahkan ke produk yang sudah tersimpan agar tidak dobel.');
+        }
+
         $imagePath = null;
 
         if ($request->hasFile('image')) {
@@ -59,14 +64,7 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        $categories = Category::with('parent.parent')
-            ->where(function ($query) {
-                $query->whereNotNull('parent_id')
-                    ->orDoesntHave('children');
-            })
-            ->orderBy('parent_id')
-            ->orderBy('name')
-            ->get();
+        $categories = $this->visibleProductCategories();
 
         return view('admin.products.edit', compact('product', 'categories'));
     }
@@ -112,11 +110,15 @@ class ProductController extends Controller
 
     public function syncOrderSosmed()
     {
-        return $this->runSyncCommand('sync:ordersosmed', 'OrderSosmed');
+        return $this->runSyncCommand('sync:ordersosmed', 'OrderSosmed', [
+            '--match-local-categories' => true,
+        ]);
     }
 
     protected function validateProduct(Request $request, ?int $productId = null): array
     {
+        $this->normalizeProviderFieldsForValidation($request);
+
         return $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:10000',
@@ -135,7 +137,7 @@ class ProductController extends Controller
                 Rule::requiredIf(fn () => $request->process_type === 'api'),
             ],
             'provider_quantity' => 'nullable|integer|min:1|max:1000000',
-            'process_type' => 'required|in:api,account,number,manual',
+            'process_type' => 'required|in:api,account',
             'target_label' => 'nullable|string|max:255',
             'target_placeholder' => 'nullable|string|max:255',
             'target_hint' => 'nullable|string|max:1000',
@@ -147,10 +149,21 @@ class ProductController extends Controller
         ]);
     }
 
+    protected function normalizeProviderFieldsForValidation(Request $request): void
+    {
+        $providerSource = $request->input('provider_source');
+
+        if ($request->input('process_type') !== 'api' || in_array($providerSource, ['stock', 'local', 'none'], true)) {
+            $request->merge([
+                'provider_source' => null,
+            ]);
+        }
+    }
+
     protected function buildPayload(array $validated, Request $request, ?string $imagePath, ?Product $product = null): array
     {
-        $requiresTargetInput = in_array($validated['process_type'], ['api', 'manual'], true);
-        $usesInventory = in_array($validated['process_type'], ['account', 'number'], true);
+        $requiresTargetInput = $validated['process_type'] === 'api';
+        $usesInventory = $validated['process_type'] === 'account';
         $shouldPreserveProvider = $validated['process_type'] !== 'api'
             && $product
             && filled($product->provider_source)
@@ -191,10 +204,30 @@ class ProductController extends Controller
         ];
     }
 
-    protected function runSyncCommand(string $command, string $providerLabel)
+    protected function findExistingNonApiProduct(array $validated): ?Product
+    {
+        if (($validated['process_type'] ?? null) === 'api') {
+            return null;
+        }
+
+        return Product::query()
+            ->where('category_id', $validated['category_id'])
+            ->whereRaw('LOWER(name) = ?', [Str::lower($validated['name'])])
+            ->where(function ($query) {
+                $query->whereNull('provider_source')
+                    ->orWhere('provider_source', '');
+            })
+            ->where(function ($query) {
+                $query->whereNull('provider_product_id')
+                    ->orWhere('provider_product_id', '');
+            })
+            ->first();
+    }
+
+    protected function runSyncCommand(string $command, string $providerLabel, array $parameters = [])
     {
         try {
-            $exitCode = Artisan::call($command);
+            $exitCode = Artisan::call($command, $parameters);
             $output = trim((string) Artisan::output());
             $message = $this->shortenOutput($output);
 
@@ -222,5 +255,55 @@ class ProductController extends Controller
             ->trim()
             ->limit(220, '...')
             ->value();
+    }
+
+    protected function visibleProductCategories()
+    {
+        $query = Category::with('parent.parent')
+            ->where(function ($query) {
+                $query->whereNotNull('parent_id')
+                    ->orDoesntHave('children');
+            })
+            ->orderBy('parent_id')
+            ->orderBy('name');
+
+        $this->hideRemovedCatalogCategories($query);
+
+        return $query->get();
+    }
+
+    protected function hideRemovedCatalogProducts($query): void
+    {
+        $removedSlugs = WiboostCatalog::removedCategorySlugs();
+
+        $query->where(function ($query) use ($removedSlugs) {
+            $query->whereNull('category_id')
+                ->orWhereHas('category', function ($categoryQuery) use ($removedSlugs) {
+                    $this->hideRemovedCatalogCategories($categoryQuery, $removedSlugs);
+                });
+        });
+    }
+
+    protected function hideRemovedCatalogCategories($query, ?array $removedSlugs = null): void
+    {
+        $removedSlugs ??= WiboostCatalog::removedCategorySlugs();
+
+        $query->whereNotIn('slug', $removedSlugs)
+            ->where(function ($query) {
+                $query->whereNull('fulfillment_type')
+                    ->orWhere('fulfillment_type', '!=', 'manual_action');
+            })
+            ->whereDoesntHave('parent', function ($parentQuery) use ($removedSlugs) {
+                $parentQuery->whereIn('slug', $removedSlugs)
+                    ->orWhere('fulfillment_type', 'manual_action')
+                    ->orWhereHas('parent', function ($grandParentQuery) use ($removedSlugs) {
+                        $grandParentQuery->whereIn('slug', $removedSlugs)
+                            ->orWhere('fulfillment_type', 'manual_action')
+                            ->orWhereHas('parent', function ($greatGrandParentQuery) use ($removedSlugs) {
+                                $greatGrandParentQuery->whereIn('slug', $removedSlugs)
+                                    ->orWhere('fulfillment_type', 'manual_action');
+                            });
+                    });
+            });
     }
 }

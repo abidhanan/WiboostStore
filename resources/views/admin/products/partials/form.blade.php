@@ -1,6 +1,7 @@
 @php
     $currentProduct = $product ?? null;
-    $currentType = old('process_type', $currentProduct->process_type ?? 'manual');
+    $currentType = old('process_type', $currentProduct->process_type ?? 'api');
+    $currentType = in_array($currentType, ['api', 'account'], true) ? $currentType : 'api';
     $currentProvider = old('provider_source', $currentProduct->provider_source ?? $currentProduct->provider_id ?? '');
     $requiresBuyerEmail = old('requires_buyer_email', $currentProduct->requires_buyer_email ?? false);
 @endphp
@@ -64,8 +65,6 @@
                     <select name="process_type" id="process_type" required class="w-full appearance-none rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] cursor-pointer">
                         <option value="api" {{ $currentType === 'api' ? 'selected' : '' }}>API Otomatis</option>
                         <option value="account" {{ $currentType === 'account' ? 'selected' : '' }}>Akun Premium</option>
-                        <option value="number" {{ $currentType === 'number' ? 'selected' : '' }}>Nomor OTP / Nomor Luar</option>
-                        <option value="manual" {{ $currentType === 'manual' ? 'selected' : '' }}>Manual Admin</option>
                     </select>
                 </div>
 
@@ -166,7 +165,7 @@
                 <div>
                     <p class="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500">Stok</p>
                     <h4 class="text-2xl font-black text-[#2b3a67]">Pengingat Inventory</h4>
-                    <p class="mt-2 max-w-2xl text-sm font-bold text-emerald-700 bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100">Peringatan khusus untuk produk akun premium atau nomor yang stoknya terbatas di gudang kredensial.</p>
+                    <p class="mt-2 max-w-2xl text-sm font-bold text-emerald-700 bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100">Peringatan khusus untuk produk akun premium yang stoknya terbatas di gudang kredensial.</p>
                 </div>
             </div>
 
@@ -268,8 +267,8 @@
             });
 
             providerSection.style.display = type === 'api' ? 'block' : 'none';
-            targetSection.style.display = (type === 'api' || type === 'manual') ? 'block' : 'none';
-            inventorySection.style.display = (type === 'account' || type === 'number') ? 'block' : 'none';
+            targetSection.style.display = type === 'api' ? 'block' : 'none';
+            inventorySection.style.display = type === 'account' ? 'block' : 'none';
             premiumCheckoutSection.style.display = type === 'account' ? 'block' : 'none';
             providerQuantityGroup.style.display = (type === 'api' && providerSource === 'ordersosmed') ? 'block' : 'none';
         }
@@ -278,5 +277,18 @@
         providerSourceSelect.addEventListener('change', syncSections);
         categorySelect.addEventListener('change', syncSections);
         syncSections();
+
+        const productForm = processTypeSelect.closest('form');
+        productForm?.addEventListener('submit', function () {
+            const submitButton = productForm.querySelector('button[type="submit"]');
+
+            if (!submitButton || submitButton.disabled) {
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.classList.add('cursor-not-allowed', 'opacity-70');
+            submitButton.textContent = 'Menyimpan...';
+        });
     });
 </script>

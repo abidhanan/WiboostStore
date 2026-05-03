@@ -19,7 +19,7 @@ class Transaction extends Model
         'order_status',
         'payment_method',
         'snap_token',
-        'credential_data', // <-- TAMBAHAN VITAL: Untuk menyimpan data akun/nomor luar ✨
+        'credential_data', // Untuk menyimpan data akun premium yang dikirim otomatis.
     ];
 
     protected $casts = [

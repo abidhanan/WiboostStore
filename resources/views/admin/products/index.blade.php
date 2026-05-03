@@ -88,6 +88,11 @@
         </div>
     @endif
 
+    <div class="mb-6 sm:mb-8 rounded-[2rem] border-4 border-white bg-[#f8fbff] px-5 sm:px-6 py-4 shadow-lg shadow-[#bde0fe]/20 relative z-10">
+        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Katalog Aktif</p>
+        <p class="mt-1 text-sm font-black text-[#2b3a67]">Nomor Luar dan Buzzer sudah disembunyikan dari manajemen produk. Produk API Digiflazz dan OrderSosmed tetap tampil seperti biasa.</p>
+    </div>
+
     <!-- Tabel Data Produk -->
     <div class="overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm shadow-2xl shadow-[#bde0fe]/30 relative z-10 min-w-0 w-full">
         <div class="w-full overflow-x-auto table-scroll pb-2">
@@ -132,15 +137,15 @@
                                     </div>
                                 </td>
                                 <td class="px-5 py-4 sm:py-5 align-middle text-center">
-                                    @php $pType = $product->process_type ?? 'manual'; @endphp
+                                    @php $pType = $product->process_type ?? 'api'; @endphp
                                     @if($pType === 'api')
                                         <span style="font-size: 10px;" class="inline-block rounded-lg border-2 border-white bg-[#f4f9ff] shadow-sm px-3 py-1.5 font-black uppercase tracking-widest text-[#8faaf3]">API</span>
-                                    @elseif(in_array($pType, ['account', 'number'], true))
+                                    @elseif($pType === 'account')
                                         <a href="{{ route('admin.credentials.index', $product->id) }}" style="font-size: 10px;" class="inline-flex items-center gap-1.5 rounded-lg border-2 border-white bg-[#ffeef2] shadow-sm px-3 py-1.5 font-black uppercase tracking-widest text-[#e1306c] transition-transform hover:scale-105 active:scale-95">
-                                            Gudang {{ $pType === 'account' ? 'Akun' : 'Nomor' }}
+                                            Gudang Akun
                                         </a>
                                     @else
-                                        <span style="font-size: 10px;" class="inline-block rounded-lg border-2 border-white bg-[#f4f9ff] shadow-sm px-3 py-1.5 font-black uppercase tracking-widest text-[#8faaf3]">Manual</span>
+                                        <span style="font-size: 10px;" class="inline-block rounded-lg border-2 border-white bg-[#f4f9ff] shadow-sm px-3 py-1.5 font-black uppercase tracking-widest text-[#8faaf3]">Arsip</span>
                                     @endif
                                 </td>
                                 <td class="px-5 py-4 sm:py-5 align-middle">
@@ -165,7 +170,7 @@
                                     </div>
                                 </td>
                                 <td class="px-5 py-4 sm:py-5 align-middle text-center">
-                                    @if(in_array($pType, ['api', 'manual'], true))
+                                    @if($pType !== 'account')
                                         <span class="text-lg font-black text-[#8faaf3]">-</span>
                                     @else
                                         @php

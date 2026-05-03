@@ -7,6 +7,7 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Support\WiboostCatalog;
 
 class CategoryController extends Controller
 {
@@ -16,6 +17,8 @@ class CategoryController extends Controller
             ->withCount(['children', 'products'])
             ->orderBy('name')
             ->orderBy('parent_id');
+
+        $this->hideRemovedCatalogCategories($query);
 
         if ($request->filled('search')) {
             $search = trim((string) $request->search);
@@ -71,7 +74,7 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
             'emote' => 'nullable|string|max:20',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,svg,webp|max:2048',
-            'fulfillment_type' => 'nullable|in:auto_api,stock_based,manual_action',
+            'fulfillment_type' => 'nullable|in:auto_api,stock_based',
         ]);
 
         $parent = $request->filled('parent_id')
@@ -79,6 +82,14 @@ class CategoryController extends Controller
             : null;
         $fulfillmentType = $parent?->fulfillment_type ?? $request->fulfillment_type;
         $slug = $this->resolveSlug($request);
+
+        if (in_array($slug, WiboostCatalog::removedCategorySlugs(), true)) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'slug' => 'Kategori Nomor Luar dan Buzzer sudah dihapus dari katalog aktif admin.',
+                ]);
+        }
 
         if (! $fulfillmentType) {
             return back()
@@ -147,7 +158,7 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
             'emote' => 'nullable|string|max:20',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,svg,webp|max:2048',
-            'fulfillment_type' => 'nullable|in:auto_api,stock_based,manual_action',
+            'fulfillment_type' => 'nullable|in:auto_api,stock_based',
         ]);
 
         $parent = $request->filled('parent_id')
@@ -155,6 +166,14 @@ class CategoryController extends Controller
             : null;
         $fulfillmentType = $parent?->fulfillment_type ?? $request->fulfillment_type;
         $slug = $this->resolveSlug($request);
+
+        if (in_array($slug, WiboostCatalog::removedCategorySlugs(), true)) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'slug' => 'Kategori Nomor Luar dan Buzzer sudah dihapus dari katalog aktif admin.',
+                ]);
+        }
 
         if (! $fulfillmentType) {
             return back()
@@ -233,6 +252,10 @@ class CategoryController extends Controller
                 continue;
             }
 
+            if ($this->isRemovedCatalogCategory($category)) {
+                continue;
+            }
+
             $options[] = [
                 'id' => $category->id,
                 'label' => str_repeat('— ', $depth) . $category->name,
@@ -275,5 +298,49 @@ class CategoryController extends Controller
 
         return Str::lower(trim((string) $category->name)) === Str::lower(trim((string) $request->name))
             && $existingParentId === $submittedParentId;
+    }
+
+    protected function hideRemovedCatalogCategories($query, ?array $removedSlugs = null): void
+    {
+        $removedSlugs ??= WiboostCatalog::removedCategorySlugs();
+
+        $query->whereNotIn('slug', $removedSlugs)
+            ->where(function ($query) {
+                $query->whereNull('fulfillment_type')
+                    ->orWhere('fulfillment_type', '!=', 'manual_action');
+            })
+            ->whereDoesntHave('parent', function ($parentQuery) use ($removedSlugs) {
+                $parentQuery->whereIn('slug', $removedSlugs)
+                    ->orWhere('fulfillment_type', 'manual_action')
+                    ->orWhereHas('parent', function ($grandParentQuery) use ($removedSlugs) {
+                        $grandParentQuery->whereIn('slug', $removedSlugs)
+                            ->orWhere('fulfillment_type', 'manual_action')
+                            ->orWhereHas('parent', function ($greatGrandParentQuery) use ($removedSlugs) {
+                                $greatGrandParentQuery->whereIn('slug', $removedSlugs)
+                                    ->orWhere('fulfillment_type', 'manual_action');
+                            });
+                    });
+            });
+    }
+
+    protected function isRemovedCatalogCategory(Category $category): bool
+    {
+        $removedSlugs = WiboostCatalog::removedCategorySlugs();
+
+        if (in_array($category->slug, $removedSlugs, true) || $category->fulfillment_type === 'manual_action') {
+            return true;
+        }
+
+        $parent = $category->parent;
+
+        while ($parent) {
+            if (in_array($parent->slug, $removedSlugs, true) || $parent->fulfillment_type === 'manual_action') {
+                return true;
+            }
+
+            $parent = $parent->parent;
+        }
+
+        return false;
     }
 }

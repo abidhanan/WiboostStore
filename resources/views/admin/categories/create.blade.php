@@ -79,7 +79,6 @@
             <select name="fulfillment_type" id="fulfillment_type_select" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition cursor-pointer appearance-none">
                 <option value="auto_api" {{ old('fulfillment_type', 'auto_api') === 'auto_api' ? 'selected' : '' }}>API Otomatis</option>
                 <option value="stock_based" {{ old('fulfillment_type') === 'stock_based' ? 'selected' : '' }}>Stok / Gudang Kredensial</option>
-                <option value="manual_action" {{ old('fulfillment_type') === 'manual_action' ? 'selected' : '' }}>Manual Admin</option>
             </select>
             <p class="text-[10px] font-black text-[#8faaf3] mt-3 ml-2 uppercase tracking-widest bg-[#f4f9ff] inline-block px-3 py-1 rounded-md border border-white shadow-sm">Kategori turunan akan mengikuti parent teratasnya.</p>
         </div>

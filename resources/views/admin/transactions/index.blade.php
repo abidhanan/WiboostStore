@@ -188,9 +188,9 @@
                                 </span>
                             </td>
                             
-                            <!-- Status & Aksi -->
+                            <!-- Status -->
                             <td class="px-5 py-4 sm:py-5 align-top text-center min-w-[140px]">
-                                @if(isset($trx->product) && ($trx->product->process_type ?? '') === 'manual')
+                                @if(false)
                                     <form action="{{ route('admin.transactions.update', $trx->id) }}" method="POST" class="flex items-center gap-1.5 justify-center w-full">
                                         @csrf
                                         @method('PATCH')

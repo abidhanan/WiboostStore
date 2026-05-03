@@ -67,10 +67,10 @@
                     <div class="text-3xl">⚙️</div>
                     <div>
                         <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Fokus Operasional</p>
-                        <h4 class="text-2xl font-black text-[#2b3a67]">Antrean Manual</h4>
+                        <h4 class="text-2xl font-black text-[#2b3a67]">Antrean Otomatis</h4>
                     </div>
                 </div>
-                <a href="{{ route('admin.manual-orders.index') }}" class="rounded-full border-2 border-white bg-[#f0f5ff] px-5 py-2.5 text-xs font-black text-[#5a76c8] shadow-sm hover:bg-[#5a76c8] hover:text-white transition-colors">Buka Antrean</a>
+                <a href="{{ route('admin.transactions.index') }}" class="rounded-full border-2 border-white bg-[#f0f5ff] px-5 py-2.5 text-xs font-black text-[#5a76c8] shadow-sm hover:bg-[#5a76c8] hover:text-white transition-colors">Buka Transaksi</a>
             </div>
 
             <div class="rounded-[2rem] border-4 border-white bg-[#fffdf7] p-8 shadow-inner flex flex-col items-center justify-center text-center h-full">
@@ -78,8 +78,8 @@
                     🛎️
                 </div>
                 <p class="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500">Perlu Follow Up</p>
-                <p class="mt-2 text-6xl font-black text-amber-600 drop-shadow-sm">{{ number_format($pendingManualOrders) }}</p>
-                <p class="mt-4 text-sm font-bold text-amber-700 bg-amber-50 px-4 py-2 rounded-xl border border-amber-100">Pesanan manual masih berstatus pending / processing.</p>
+                <p class="mt-2 text-6xl font-black text-amber-600 drop-shadow-sm">{{ number_format($processingOrders) }}</p>
+                <p class="mt-4 text-sm font-bold text-amber-700 bg-amber-50 px-4 py-2 rounded-xl border border-amber-100">Pesanan API atau stok premium masih berstatus pending / processing.</p>
             </div>
         </div>
 

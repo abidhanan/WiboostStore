@@ -13,7 +13,6 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CredentialController; 
 use App\Http\Controllers\Admin\StockController;
-use App\Http\Controllers\Admin\ManualOrderController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
 use App\Http\Controllers\Admin\DepositController as AdminDepositController;
 use App\Http\Controllers\Admin\PromoController;
@@ -89,7 +88,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('users', AdminUserController::class);
     Route::resource('categories', CategoryController::class);
     
-    // Produk & Manajemen Stok Kredensial (Akun Premium/Nomor Luar)
+    // Produk & Manajemen Stok Kredensial (Akun Premium)
     Route::post('/products/sync/digiflazz', [ProductController::class, 'syncDigiflazz'])->name('products.sync.digiflazz');
     Route::post('/products/sync/ordersosmed', [ProductController::class, 'syncOrderSosmed'])->name('products.sync.ordersosmed');
     Route::resource('products', ProductController::class);
@@ -113,9 +112,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/deposits', [AdminDepositController::class, 'index'])->name('deposits.index');
     Route::patch('/deposits/{id}', [AdminDepositController::class, 'update'])->name('deposits.update');
 
-    // Manual Orders
-    Route::get('/manual-orders', [ManualOrderController::class, 'index'])->name('manual-orders.index');
-    Route::post('/manual-orders/{id}/complete', [ManualOrderController::class, 'markAsComplete'])->name('manual-orders.complete');
 });
 
 require __DIR__.'/auth.php';

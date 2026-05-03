@@ -43,7 +43,7 @@
                     <div class="max-w-2xl min-w-0">
                         <p class="inline-flex px-3 py-1 bg-[#fff5eb] text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 rounded-full border border-amber-200 mb-2 shadow-sm">Perlu Perhatian</p>
                         <h3 class="mt-2 text-xl sm:text-2xl font-black tracking-tight text-amber-600 md:text-3xl drop-shadow-sm">Stok produk mulai menipis!</h3>
-                        <p class="mt-3 text-xs sm:text-sm font-bold text-amber-700 bg-amber-50 p-3 sm:p-4 rounded-2xl border-2 border-white shadow-inner">Beberapa produk akun atau nomor sudah menyentuh batas pengingat stok. Segera restock supaya order dari pengguna tetap lancar.</p>
+                        <p class="mt-3 text-xs sm:text-sm font-bold text-amber-700 bg-amber-50 p-3 sm:p-4 rounded-2xl border-2 border-white shadow-inner">Beberapa produk akun premium sudah menyentuh batas pengingat stok. Segera restock supaya order dari pengguna tetap lancar.</p>
                     </div>
                     <a href="{{ route('admin.products.index') }}" class="w-full sm:w-auto text-center inline-flex items-center justify-center gap-2 rounded-full border-4 border-white bg-amber-500 px-6 py-3 sm:py-4 text-sm font-black text-white shadow-lg shadow-amber-500/30 transition-transform active:scale-95 hover:bg-amber-600 mt-2 shrink-0">
                         Kelola Produk 📦

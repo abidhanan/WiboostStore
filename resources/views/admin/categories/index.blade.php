@@ -71,6 +71,11 @@
         </div>
     @endif
 
+    <div class="mb-6 sm:mb-8 rounded-[2rem] border-4 border-white bg-[#f8fbff] px-5 sm:px-6 py-4 shadow-lg shadow-[#bde0fe]/20 relative z-10">
+        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Katalog Aktif</p>
+        <p class="mt-1 text-sm font-black text-[#2b3a67]">Kategori Nomor Luar dan Buzzer sudah tidak ditampilkan di admin, termasuk subkategori turunannya.</p>
+    </div>
+
     <!-- Tabel Data Kategori -->
     <div class="bg-white/95 backdrop-blur-sm rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl shadow-[#bde0fe]/30 border-4 border-white flex flex-col overflow-hidden relative z-10 min-w-0 w-full">
         <div class="w-full overflow-x-auto table-scroll pb-2">

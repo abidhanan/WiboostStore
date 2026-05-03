@@ -22,12 +22,15 @@ class FrontendController extends Controller
         // 1. Mengambil data untuk statistik metrik real-time
         $totalUsers = User::where('role_id', 2)->count();
         $totalTransactions = Transaction::where('payment_status', 'paid')->count();
-        $activeProducts = Product::where('is_active', true)->count();
+        $activeProducts = Product::where('is_active', true)
+            ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes())
+            ->count();
         
         // 2. Mengambil semua kategori beserta jumlah produk yang ada di dalamnya
         $categories = Category::whereIn('slug', $catalogSlugs)
             ->withCount(['products' => function ($query) {
-                $query->where('is_active', true);
+                $query->where('is_active', true)
+                    ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes());
             }])
             ->orderByRaw($categoryOrderSql)
             ->get();
@@ -57,7 +60,7 @@ class FrontendController extends Controller
                 'intro' => 'Panduan penggunaan layanan Wiboost Store agar transaksi berjalan aman dan jelas untuk buyer maupun admin.',
                 'sections' => [
                     ['title' => 'Akun dan data buyer', 'body' => 'Buyer wajib mengisi data pesanan dengan benar, termasuk username, link, User ID, Zone ID, nomor handphone, atau email khusus aplikasi bila diminta oleh produk. Kesalahan input dapat menyebabkan pesanan gagal atau tertunda.'],
-                    ['title' => 'Pemrosesan pesanan', 'body' => 'Produk API diproses melalui provider seperti Digiflazz dan OrderSosmed. Produk manual, buzzer, aplikasi premium, dan nomor luar diproses oleh admin sesuai antrean dan ketersediaan stok.'],
+                    ['title' => 'Pemrosesan pesanan', 'body' => 'Produk API diproses melalui provider seperti Digiflazz dan OrderSosmed. Produk aplikasi premium diproses dari stok kredensial yang tersedia di website.'],
                     ['title' => 'Larangan penggunaan', 'body' => 'Layanan tidak boleh digunakan untuk penipuan, spam, penyalahgunaan akun, aktivitas ilegal, atau tindakan yang merugikan pihak lain. Wiboost berhak menolak pesanan yang melanggar aturan.'],
                 ],
             ],
@@ -77,14 +80,14 @@ class FrontendController extends Controller
                 'intro' => 'Refund dilakukan dalam bentuk saldo Wiboost ketika sistem mendeteksi pesanan gagal atau memenuhi aturan refund otomatis.',
                 'sections' => [
                     ['title' => 'Refund otomatis', 'body' => 'Jika pesanan API gagal diproses provider setelah pembayaran berhasil, sistem otomatis mengembalikan saldo ke akun buyer. Pesanan paid yang pending lebih dari 24 jam juga masuk auto-refund.'],
-                    ['title' => 'Refund manual', 'body' => 'Untuk produk manual, admin dapat membantu pengecekan melalui riwayat pesanan atau tombol lapor admin. Refund manual mengikuti kondisi pesanan dan bukti kendala.'],
+                    ['title' => 'Bantuan kendala', 'body' => 'Jika pesanan API atau stok premium bermasalah, admin dapat membantu pengecekan melalui riwayat pesanan atau tombol lapor admin.'],
                     ['title' => 'Batasan refund', 'body' => 'Kesalahan data yang dimasukkan buyer, target private/tidak valid, atau perubahan target setelah order dapat membuat refund perlu ditinjau admin terlebih dahulu.'],
                 ],
             ],
             'contact' => [
                 'title' => 'Kontak Admin',
                 'badge' => 'Bantuan Pesanan',
-                'intro' => 'Hubungi admin jika ada kendala pembayaran, pesanan pending, salah input, atau butuh bantuan akses produk premium dan nomor luar.',
+                'intro' => 'Hubungi admin jika ada kendala pembayaran, pesanan pending, salah input, atau butuh bantuan akses produk premium.',
                 'sections' => [
                     ['title' => 'Jam bantuan', 'body' => 'Admin akan memprioritaskan pesanan paid, pesanan gagal, dan laporan buyer dari halaman riwayat atau tombol lapor admin.'],
                     ['title' => 'Data yang perlu disiapkan', 'body' => 'Sertakan invoice, email akun Wiboost, nama produk, target pesanan, dan screenshot kendala agar admin cepat mengecek.'],

@@ -24,7 +24,7 @@ class SetupWiboostCatalog extends Command
             $this->ensureTopCategories();
             $this->ensureSubcategories();
             $this->assignExistingProductsToSubcategories();
-            $this->ensureManualTemplates();
+            $this->ensureStockTemplates();
             $this->cleanupDeprecatedCategories();
         });
 
@@ -152,9 +152,9 @@ class SetupWiboostCatalog extends Command
             });
     }
 
-    protected function ensureManualTemplates(): void
+    protected function ensureStockTemplates(): void
     {
-        foreach (WiboostCatalog::manualProductTemplates() as $template) {
+        foreach (WiboostCatalog::stockProductTemplates() as $template) {
             $category = Category::query()->where('slug', $template['subcategory_slug'])->first();
 
             if (! $category) {
@@ -169,7 +169,6 @@ class SetupWiboostCatalog extends Command
             ];
 
             $product = Product::query()->firstOrNew($attributes);
-            $targetMeta = WiboostCatalog::targetMetaForTopCategory($template['top_category_slug']);
 
             if (! $product->exists) {
                 $product->slug = Str::slug($template['name']) . '-' . Str::lower(Str::random(5));
@@ -178,14 +177,14 @@ class SetupWiboostCatalog extends Command
             $product->fill([
                 'provider_id' => null,
                 'process_type' => $template['process_type'],
-                'description' => $template['description'] . "\n\nTemplate ini dibuat otomatis. Atur harga, aktivasi produk, dan isi stok / brief sesuai kebutuhan dari panel admin.",
+                'description' => $template['description'] . "\n\nTemplate ini dibuat otomatis. Atur harga, aktivasi produk, dan isi stok sesuai kebutuhan dari panel admin.",
                 'price' => 0,
                 'is_active' => false,
                 'status' => 'inactive',
-                'stock_reminder' => in_array($template['process_type'], ['account', 'number'], true) ? 1 : 0,
-                'target_label' => $template['process_type'] === 'manual' ? ($targetMeta['label'] ?? null) : null,
-                'target_placeholder' => $template['process_type'] === 'manual' ? ($targetMeta['placeholder'] ?? null) : null,
-                'target_hint' => $template['process_type'] === 'manual' ? ($targetMeta['hint'] ?? null) : null,
+                'stock_reminder' => $template['process_type'] === 'account' ? 1 : 0,
+                'target_label' => null,
+                'target_placeholder' => null,
+                'target_hint' => null,
             ]);
 
             $product->save();

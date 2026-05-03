@@ -197,7 +197,7 @@ class UserOrderCheckoutTest extends TestCase
         $response->assertSee('grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4', false);
         $response->assertSee('min-h-[128px]', false);
         $response->assertSee('Mobile Legends 86 Diamonds');
-        $response->assertSee('Rp 22.000');
+        $response->assertSee('Rp 21.000');
         $response->assertDontSeeText('Deskripsi layanan ini tidak boleh tampil di kartu compact.');
     }
 
@@ -516,8 +516,8 @@ class UserOrderCheckoutTest extends TestCase
         $this->assertSame('123456789 (1234)', $transaction->target_data);
         $this->assertSame('1234567891234', $transaction->provider_customer_no);
         $this->assertSame('success', $transaction->order_status);
-        $this->assertSame(13200.0, (float) $transaction->amount);
-        $this->assertSame(6800.0, (float) $user->fresh()->balance);
+        $this->assertSame(12600.0, (float) $transaction->amount);
+        $this->assertSame(7400.0, (float) $user->fresh()->balance);
 
         Mail::assertSent(OrderSuccessMail::class, fn (OrderSuccessMail $mail) => $mail->transaction->is($transaction));
     }
@@ -574,17 +574,17 @@ class UserOrderCheckoutTest extends TestCase
 
         $this->assertSame('failed', $transaction->order_status);
         $this->assertSame('Produk sedang gangguan provider.', $transaction->target_notes);
-        $this->assertSame(13200.0, (float) $transaction->amount);
+        $this->assertSame(12600.0, (float) $transaction->amount);
         $this->assertSame(20000.0, (float) $user->fresh()->balance);
         $this->assertDatabaseHas('wallet_histories', [
             'invoice_number' => $transaction->invoice_number,
             'type' => 'purchase',
-            'amount' => 13200,
+            'amount' => 12600,
         ]);
         $this->assertDatabaseHas('wallet_histories', [
             'invoice_number' => $transaction->invoice_number,
             'type' => 'refund',
-            'amount' => 13200,
+            'amount' => 12600,
         ]);
 
         app(\App\Services\OrderFulfillmentService::class)->markAsFailed($transaction->fresh(['product', 'user']), 'Retry gagal');
@@ -650,14 +650,9 @@ class UserOrderCheckoutTest extends TestCase
         ]);
     }
 
-    public function test_nomor_luar_checkout_allows_empty_input(): void
+    public function test_removed_nomor_luar_product_cannot_be_checked_out(): void
     {
         $user = User::factory()->create();
-
-        $this->mock(MidtransService::class, function (MockInterface $mock) {
-            $mock->shouldReceive('getTransactionSnapToken')
-                ->andReturn('snap-token-demo');
-        });
 
         $category = Category::create([
             'name' => 'Nomor Luar',
@@ -679,27 +674,17 @@ class UserOrderCheckoutTest extends TestCase
             'stock_reminder' => 0,
         ]);
 
-        $response = $this->actingAs($user)->post(route('user.checkout.process'), [
+        $this->actingAs($user)->post(route('user.checkout.process'), [
             'product_id' => $product->id,
             'payment_method' => 'manual',
-        ]);
+        ])->assertNotFound();
 
-        $response->assertOk();
-
-        $transaction = Transaction::query()->latest('id')->first();
-
-        $this->assertSame('- (Tidak membutuhkan target tambahan)', $transaction->target_data);
-        $this->assertNull($transaction->order_input_data);
+        $this->assertDatabaseCount('transactions', 0);
     }
 
-    public function test_buzzer_checkout_requires_link_and_comment_and_stores_both_fields(): void
+    public function test_removed_buzzer_category_is_not_browsable(): void
     {
         $user = User::factory()->create();
-
-        $this->mock(MidtransService::class, function (MockInterface $mock) {
-            $mock->shouldReceive('getTransactionSnapToken')
-                ->andReturn('snap-token-demo');
-        });
 
         $category = Category::create([
             'name' => 'Buzzer',
@@ -708,44 +693,8 @@ class UserOrderCheckoutTest extends TestCase
             'fulfillment_type' => 'manual_action',
         ]);
 
-        $product = Product::create([
-            'category_id' => $category->id,
-            'provider_id' => null,
-            'process_type' => 'manual',
-            'name' => 'Buzzer Test',
-            'slug' => 'buzzer-test',
-            'description' => 'Produk buzzer',
-            'price' => 50000,
-            'status' => 'active',
-            'is_active' => true,
-            'stock_reminder' => 0,
-        ]);
-
-        $invalidResponse = $this->from(route('user.order.category', $category->slug))
-            ->actingAs($user)
-            ->post(route('user.checkout.process'), [
-                'product_id' => $product->id,
-                'payment_method' => 'manual',
-                'campaign_link' => 'https://maps.app.goo.gl/test-buzzer',
-            ]);
-
-        $invalidResponse->assertRedirect(route('user.order.category', $category->slug));
-        $invalidResponse->assertSessionHasErrors('comment_brief');
-
-        $validResponse = $this->actingAs($user)->post(route('user.checkout.process'), [
-            'product_id' => $product->id,
-            'payment_method' => 'manual',
-            'campaign_link' => 'https://maps.app.goo.gl/test-buzzer',
-            'comment_brief' => 'Komentar positif, natural, dan menonjolkan pelayanan cepat.',
-        ]);
-
-        $validResponse->assertOk();
-
-        $transaction = Transaction::query()->latest('id')->first();
-
-        $this->assertSame('https://maps.app.goo.gl/test-buzzer', $transaction->target_data);
-        $this->assertCount(2, $transaction->order_input_data['fields']);
-        $this->assertSame('Link postingan / link Google Maps', data_get($transaction->order_input_data, 'fields.0.label'));
-        $this->assertSame('Deskripsi komentar buzzer', data_get($transaction->order_input_data, 'fields.1.label'));
+        $this->actingAs($user)
+            ->get(route('user.order.category', $category->slug))
+            ->assertNotFound();
     }
 }

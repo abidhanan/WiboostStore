@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\WalletHistory;
+use App\Support\WiboostCatalog;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -18,16 +19,19 @@ class DashboardController extends Controller
 
         $totalTransactionsMonth = Transaction::whereMonth('created_at', $currentMonth)
             ->whereYear('created_at', $currentYear)
+            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
             ->count();
 
         $revenueMonth = Transaction::where('payment_status', 'paid')
             ->whereMonth('created_at', $currentMonth)
             ->whereYear('created_at', $currentYear)
+            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
             ->sum('amount');
 
         $totalUsers = User::where('role_id', 2)->count();
 
         $recentTransactions = Transaction::with(['user', 'product'])
+            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
             ->latest()
             ->take(5)
             ->get();
@@ -40,7 +44,7 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        $lowStockProducts = Product::whereIn('process_type', ['account', 'number'])
+        $lowStockProducts = Product::where('process_type', 'account')
             ->get()
             ->filter(function ($product) {
                 return $product->stock_reminder > 0 && $product->available_stock <= $product->stock_reminder;

@@ -13,8 +13,8 @@ class CredentialController extends Controller
 {
     public function index(Product $product)
     {
-        if (! in_array($product->process_type, ['account', 'number'], true)) {
-            return redirect()->route('admin.products.index')->with('error', 'Produk ini tidak membutuhkan manajemen stok akun atau nomor.');
+        if ($product->process_type !== 'account') {
+            return redirect()->route('admin.products.index')->with('error', 'Produk ini tidak membutuhkan manajemen stok akun premium.');
         }
 
         $credentials = $product->credentials()->latest()->get();
@@ -24,28 +24,22 @@ class CredentialController extends Controller
 
     public function store(Request $request, Product $product, OrderFulfillmentService $orderFulfillmentService)
     {
-        if ($product->process_type === 'account') {
-            $request->validate([
-                'max_usage' => 'required|integer|min:1',
-                'data_1' => 'nullable|string',
-                'data_2' => 'nullable|string',
-                'data_3' => 'nullable|string',
-                'data_4' => 'nullable|string',
-                'data_5' => 'nullable|string',
-                'tutorial_link' => 'nullable|url|max:500',
-            ]);
-
-            $data1 = $request->data_1 ?? '-';
-            $maxUsage = (int) $request->max_usage;
-        } else {
-            $request->validate([
-                'data_1' => 'required|string|max:255',
-                'tutorial_link' => 'nullable|url|max:500',
-            ]);
-
-            $data1 = $request->data_1;
-            $maxUsage = 1;
+        if ($product->process_type !== 'account') {
+            return redirect()->route('admin.products.index')->with('error', 'Produk ini tidak membutuhkan manajemen stok akun premium.');
         }
+
+        $request->validate([
+            'max_usage' => 'required|integer|min:1',
+            'data_1' => 'nullable|string',
+            'data_2' => 'nullable|string',
+            'data_3' => 'nullable|string',
+            'data_4' => 'nullable|string',
+            'data_5' => 'nullable|string',
+            'tutorial_link' => 'nullable|url|max:500',
+        ]);
+
+        $data1 = $request->data_1 ?? '-';
+        $maxUsage = (int) $request->max_usage;
 
         $credential = $product->credentials()->create([
             'data_1' => $data1,

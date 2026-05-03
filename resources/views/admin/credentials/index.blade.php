@@ -105,15 +105,10 @@
                             <input type="number" name="max_usage" required min="1" value="1" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner">
                             <p class="text-[10px] font-black text-[#8faaf3] mt-2 ml-2 uppercase tracking-widest bg-white inline-block px-2 py-1 border border-white rounded shadow-sm">Berapa orang yang boleh beli?</p>
                         </div>
-                    @else
-                        <div>
-                            <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Nomor Luar / Nomor HP <span class="text-rose-500">*</span></label>
-                            <input type="text" name="data_1" required class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner placeholder-[#a3bbfb]" placeholder="Contoh: +123456789">
-                        </div>
                     @endif
 
                     <div class="mt-6 pt-6 border-t-4 border-dashed border-[#f4f9ff]">
-                        <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Link Tutorial OTP / Login (Ops)</label>
+                        <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Link Tutorial Login (Ops)</label>
                         <input type="url" name="tutorial_link" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner placeholder-[#a3bbfb]" placeholder="https://youtube.com/...">
                         <p class="text-[10px] font-black text-[#8faaf3] mt-2 ml-2 uppercase tracking-widest">Tutorial khusus data ini.</p>
                     </div>

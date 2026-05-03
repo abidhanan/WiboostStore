@@ -8,7 +8,7 @@ class WiboostCatalog
 {
     public static function coreCategories(): array
     {
-        return [
+        $categories = [
             [
                 'slug' => 'suntik-sosmed',
                 'name' => 'Suntik Sosmed',
@@ -52,11 +52,38 @@ class WiboostCatalog
                 'fulfillment_type' => 'manual_action',
             ],
         ];
+
+        return array_values(array_filter(
+            $categories,
+            fn (array $category) => ! in_array($category['slug'], ['nomor-luar', 'buzzer'], true)
+        ));
     }
 
     public static function coreCategorySlugs(): array
     {
         return collect(self::coreCategories())->pluck('slug')->all();
+    }
+
+    public static function removedCategorySlugs(): array
+    {
+        return [
+            'nomor-luar',
+            'nomor-whatsapp',
+            'nomor-telegram',
+            'nomor-all-app',
+            'nomor-lainnya',
+            'buzzer',
+            'buzzer-instagram',
+            'buzzer-tiktok',
+            'buzzer-youtube',
+            'buzzer-twitter-x',
+            'buzzer-lainnya',
+        ];
+    }
+
+    public static function activeProductProcessTypes(): array
+    {
+        return ['api', 'account'];
     }
 
     public static function categoryOrderSql(string $column = 'slug'): string
@@ -94,7 +121,7 @@ class WiboostCatalog
             }
         }
 
-        return array_merge($subcategories, [
+        $configuredSubcategories = array_merge($subcategories, [
             'top-up-game' => [
                 self::subcategory('game-mobile-legends', 'Mobile Legends', 'Produk top up dan voucher Mobile Legends.', 'ML', '#2563EB', '#FFFFFF'),
                 self::subcategory('game-free-fire', 'Free Fire', 'Produk diamond dan membership Free Fire.', 'FF', '#F97316', '#FFFFFF'),
@@ -117,7 +144,7 @@ class WiboostCatalog
                 self::subcategory('premium-spotify', 'Spotify', 'Akun Spotify premium family atau individual.', 'SP', '#1DB954', '#FFFFFF'),
                 self::subcategory('premium-canva', 'Canva', 'Akun Canva Pro dan akses desain premium.', 'C', '#06B6D4', '#FFFFFF'),
                 self::subcategory('premium-youtube', 'YouTube Premium', 'Akun YouTube Premium / Music Premium.', 'YT', '#FF0033', '#FFFFFF'),
-                self::subcategory('premium-lainnya', 'Lainnya', 'Aplikasi premium lain yang dikelola manual.', 'APP', '#5A76C8', '#FFFFFF'),
+                self::subcategory('premium-lainnya', 'Lainnya', 'Aplikasi premium lain yang dikelola lewat stok akun.', 'APP', '#5A76C8', '#FFFFFF'),
             ],
             'nomor-luar' => [
                 self::subcategory('nomor-whatsapp', 'WhatsApp', 'Nomor luar untuk kebutuhan WhatsApp atau verifikasi terkait.', 'WA', '#25D366', '#FFFFFF'),
@@ -133,6 +160,11 @@ class WiboostCatalog
                 self::subcategory('buzzer-lainnya', 'Lainnya', 'Campaign buzzer manual untuk platform lain.', 'BZ', '#5A76C8', '#FFFFFF'),
             ],
         ]);
+
+        unset($configuredSubcategories['nomor-luar']);
+        unset($configuredSubcategories['buzzer']);
+
+        return $configuredSubcategories;
     }
 
     public static function deprecatedCategorySlugs(): array
@@ -234,26 +266,6 @@ class WiboostCatalog
                     targetSummary: true
                 ),
             ],
-            'nomor-luar' => [],
-            'buzzer' => [
-                self::checkoutField(
-                    'campaign_link',
-                    'Link postingan / link Google Maps',
-                    'url',
-                    'Contoh: https://instagram.com/p/abc123 atau https://maps.app.goo.gl/xxxx',
-                    'Masukkan link postingan atau link Google Maps yang akan dipakai tim buzzer.',
-                    ['required', 'string', 'url', 'max:500'],
-                    targetSummary: true
-                ),
-                self::checkoutField(
-                    'comment_brief',
-                    'Deskripsi komentar buzzer',
-                    'textarea',
-                    'Contoh: Komentar bernada positif, natural, dan menonjolkan pelayanan cepat.',
-                    'Tuliskan arahan komentar yang kamu inginkan agar admin dan tim buzzer bisa mengeksekusi campaign dengan tepat.',
-                    ['required', 'string', 'min:5', 'max:2000']
-                ),
-            ],
             default => [],
         };
     }
@@ -340,7 +352,7 @@ class WiboostCatalog
         return self::ordersosmedMetricSlug($platformSlug, $metricKey) . '-' . $regionSuffix;
     }
 
-    public static function manualProductTemplates(): array
+    public static function stockProductTemplates(): array
     {
         return [
             self::template('premium-netflix', 'Netflix Premium Sharing', 'account', 'Template akun Netflix sharing. Isi email, password, profil, PIN, link akses, tutorial, dan kuota pemakaian di gudang kredensial.'),
@@ -348,15 +360,6 @@ class WiboostCatalog
             self::template('premium-canva', 'Canva Pro Sharing', 'account', 'Template akun Canva Pro sharing. Cocok untuk stok akun yang bisa dipakai beberapa pembeli.'),
             self::template('premium-youtube', 'YouTube Premium Family', 'account', 'Template akun YouTube Premium / Music Premium. Isi stok kredensial dari panel gudang akun.'),
             self::template('premium-lainnya', 'Aplikasi Premium Custom', 'account', 'Template akun premium custom untuk aplikasi selain Netflix, Spotify, Canva, dan YouTube Premium.'),
-            self::template('nomor-whatsapp', 'Nomor Luar WhatsApp', 'number', 'Template nomor luar untuk WhatsApp. Nomor dan tutorial bisa dikirim otomatis, OTP dibantu admin bila diperlukan.'),
-            self::template('nomor-telegram', 'Nomor Luar Telegram', 'number', 'Template nomor luar untuk Telegram. Cocok untuk stok nomor yang dikelola dari gudang nomor.'),
-            self::template('nomor-all-app', 'Nomor OTP All App', 'number', 'Template nomor luar untuk kebutuhan OTP berbagai aplikasi.'),
-            self::template('nomor-lainnya', 'Nomor Luar Custom', 'number', 'Template nomor luar custom untuk kebutuhan selain WhatsApp dan Telegram.'),
-            self::template('buzzer-instagram', 'Campaign Buzzer Instagram', 'manual', 'Template jasa buzzer Instagram yang dikerjakan manual oleh admin dan tim buzzer.'),
-            self::template('buzzer-tiktok', 'Campaign Buzzer TikTok', 'manual', 'Template jasa buzzer TikTok yang dikerjakan manual oleh admin dan tim buzzer.'),
-            self::template('buzzer-youtube', 'Campaign Buzzer YouTube', 'manual', 'Template jasa buzzer YouTube yang dikerjakan manual oleh admin dan tim buzzer.'),
-            self::template('buzzer-twitter-x', 'Campaign Buzzer X / Twitter', 'manual', 'Template jasa buzzer X / Twitter yang dikerjakan manual oleh admin dan tim buzzer.'),
-            self::template('buzzer-lainnya', 'Campaign Buzzer Custom', 'manual', 'Template jasa buzzer custom untuk campaign di platform lain.'),
         ];
     }
 
@@ -544,8 +547,6 @@ class WiboostCatalog
             'subcategory_slug' => $subcategorySlug,
             'top_category_slug' => match ($topCategorySlug) {
                 'premium' => 'aplikasi-premium',
-                'nomor' => 'nomor-luar',
-                'buzzer' => 'buzzer',
                 default => $topCategorySlug,
             },
             'name' => $name,
