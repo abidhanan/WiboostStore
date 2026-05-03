@@ -393,13 +393,12 @@ class SyncOrderSosmedServices extends Command
         $catalogType = strtolower((string) ($service['_ordersosmed_catalog_type'] ?? 'sosmed'));
         $category = strtolower($this->resolveProviderCategoryName($service));
         $name = strtolower((string) ($service['name'] ?? $service['service_name'] ?? ''));
-        $description = strtolower((string) ($service['description'] ?? $service['note'] ?? ''));
 
         if ($catalogType !== 'sosmed') {
             return false;
         }
 
-        if ($this->isCommentServiceText($category . ' ' . $name . ' ' . $description)) {
+        if ($this->isCommentServiceText($category . ' ' . $name)) {
             return false;
         }
 
@@ -511,12 +510,20 @@ class SyncOrderSosmedServices extends Command
         ])));
 
         $providerCategoryText = $this->normalizeMatchText($this->resolveProviderCategoryName($service));
+        $descriptionText = $this->normalizeMatchText((string) ($service['description'] ?? $service['note'] ?? ''));
 
         if ($this->isCommentServiceText($serviceText . ' ' . $providerCategoryText)) {
             return null;
         }
 
         $classification = $this->classifyStrictSosmedService($serviceText, $providerCategoryText);
+
+        if ($classification === null && trim($descriptionText) !== '') {
+            $classification = $this->classifyStrictSosmedService(
+                $this->normalizeMatchText($serviceText . ' ' . $descriptionText),
+                $providerCategoryText
+            );
+        }
 
         if ($classification === null) {
             return null;
@@ -580,6 +587,10 @@ class SyncOrderSosmedServices extends Command
 
     protected function matchingStrictInstagramTiktokMetrics(string $text): array
     {
+        if ($this->containsAnyKeyword($text, [' reaction ', ' reactions ', ' react ', ' reacts '])) {
+            return ['lainnya'];
+        }
+
         $matches = [
             'followers' => $this->containsAnyKeyword($text, [' follower ', ' followers ']),
             'like' => $this->containsAnyKeyword($text, [' like ', ' likes ', ' heart ', ' hearts ']),

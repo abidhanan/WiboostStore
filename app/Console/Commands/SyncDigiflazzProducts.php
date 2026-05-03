@@ -211,7 +211,7 @@ class SyncDigiflazzProducts extends Command
             return 'kuota-murah';
         }
 
-        if ($this->detectStrictGameKey($primaryText) !== null) {
+        if (($this->detectStrictGameKey($primaryText) ?? $this->detectStrictGameKey($text)) !== null) {
             return 'top-up-game';
         }
 
@@ -242,7 +242,7 @@ class SyncDigiflazzProducts extends Command
         }
 
         if ($topCategorySlug === 'top-up-game') {
-            $game = $this->detectStrictGameKey($primaryText);
+            $game = $this->detectStrictGameKey($primaryText) ?? $this->detectStrictGameKey($text);
 
             if ($game === null) {
                 return null;
@@ -369,10 +369,10 @@ class SyncDigiflazzProducts extends Command
 
         return [
             'free-fire-max' => [' free fire max ', ' freefire max ', ' ff max '],
-            'mobile-legends' => [' mobile legends ', ' mobilelegend ', ' mlbb ', ' ml '],
+            'mobile-legends' => [' mobile legends ', ' mobile legend ', ' mobilelegend ', ' mlbb ', ' ml '],
             'free-fire' => [' free fire ', ' freefire ', ' ff '],
-            'pubg-mobile' => [' pubg ', ' pubg mobile ', ' uc pubg '],
-            'valorant' => [' valorant ', ' valorant points ', ' vp '],
+            'pubg-mobile' => [' pubg ', ' pubg mobile ', ' uc pubg ', ' uc mobile '],
+            'valorant' => [' valorant ', ' valorant points ', ' vp ', ' valorant point '],
             'arena-of-valor' => [' arena of valor ', ' aov '],
             'genshin-impact' => [
                 ' genshin ',
@@ -383,8 +383,8 @@ class SyncDigiflazzProducts extends Command
                 ' blessing of the welkin ',
                 ' blessing welkin ',
             ],
-            'call-of-duty-mobile' => [' call of duty ', ' call of duty mobile ', ' codm ', ' cod mobile ', ' cp '],
-            'fc-mobile' => [' fc mobile ', ' fifa mobile ', ' fifa points ', ' eafc mobile ', ' ea fc mobile ', ' fc points '],
+            'call-of-duty-mobile' => [' call of duty ', ' call of duty mobile ', ' codm ', ' cod mobile ', ' cod ', ' cp cod '],
+            'fc-mobile' => [' fc mobile ', ' fifa mobile ', ' fifa points ', ' eafc mobile ', ' ea fc mobile ', ' fc points ', ' fc point '],
             'honor-of-kings' => [' honor of kings ', ' hok '],
             'lol-wild-rift' => [
                 ' wild rift ',

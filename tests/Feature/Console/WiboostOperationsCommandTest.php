@@ -912,6 +912,16 @@ class WiboostOperationsCommandTest extends TestCase
                                 'category' => 'Games',
                             ],
                             [
+                                'buyer_sku_code' => 'ml-desc-only',
+                                'product_name' => '86 Diamonds',
+                                'desc' => 'Top up Mobile Legends',
+                                'price' => 10000,
+                                'buyer_product_status' => true,
+                                'seller_product_status' => true,
+                                'brand' => 'Games',
+                                'category' => 'Games',
+                            ],
+                            [
                                 'buyer_sku_code' => 'ml-id',
                                 'product_name' => 'Mobile Legends Indonesia 86 Diamonds',
                                 'desc' => 'Masukkan User ID dan Zone ID',
@@ -1078,6 +1088,11 @@ class WiboostOperationsCommandTest extends TestCase
         $this->assertDatabaseHas('products', [
             'provider_source' => 'digiflazz',
             'provider_product_id' => 'ml-umum',
+            'category_id' => 41,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'digiflazz',
+            'provider_product_id' => 'ml-desc-only',
             'category_id' => 41,
         ]);
         $this->assertDatabaseHas('products', [
@@ -1456,6 +1471,16 @@ class WiboostOperationsCommandTest extends TestCase
                             'max' => 10000,
                         ],
                         [
+                            'id' => 9009,
+                            'category_id' => 6735,
+                            'category_name' => 'Instagram Likes [Worldwide] No Garansi',
+                            'service_name' => 'Instagram Like Global',
+                            'description' => 'Catatan provider: jangan isi komentar, cukup link postingan publik.',
+                            'price' => 15000,
+                            'min' => 100,
+                            'max' => 10000,
+                        ],
+                        [
                             'id' => 9005,
                             'category_id' => 6276,
                             'category_name' => 'TikTok View',
@@ -1518,6 +1543,11 @@ class WiboostOperationsCommandTest extends TestCase
             'provider_source' => 'ordersosmed',
             'provider_product_id' => '9004',
             'category_id' => 10,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => '9009',
+            'category_id' => 7,
         ]);
         $this->assertDatabaseHas('products', [
             'provider_source' => 'ordersosmed',

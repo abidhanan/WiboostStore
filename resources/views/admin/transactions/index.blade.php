@@ -70,7 +70,7 @@
             </div>
 
             <!-- Baris Bawah: Filter Bulan/Tahun + Cetak PDF -->
-            <div class="flex flex-col md:flex-row justify-between items-center gap-3 w-full border-t-4 border-dashed border-[#f4f9ff] pt-4 mt-1">
+            <div class="flex flex-col md:flex-row justify-start md:justify-end items-center gap-3 w-full border-t-4 border-dashed border-[#f4f9ff] pt-4 mt-1">
                 
                 <!-- Filter Dropdown -->
                 <div class="flex items-center gap-2 w-full md:w-auto">
