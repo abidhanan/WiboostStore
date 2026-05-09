@@ -8,8 +8,8 @@ use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\DigiflazzService;
-use App\Services\MidtransService;
 use App\Services\OrderSosmedService;
+use App\Services\TripayService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Mockery\MockInterface;
@@ -23,9 +23,13 @@ class UserOrderCheckoutTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->mock(MidtransService::class, function (MockInterface $mock) {
-            $mock->shouldReceive('getTransactionSnapToken')
-                ->andReturn('snap-token-demo');
+        $this->mock(TripayService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('createTransactionPayment')
+                ->andReturn([
+                    'reference' => 'TRIPAY-DEMO',
+                    'checkout_url' => 'https://tripay.test/checkout',
+                    'raw' => ['success' => true],
+                ]);
         });
 
         $cases = [
@@ -325,9 +329,13 @@ class UserOrderCheckoutTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->mock(MidtransService::class, function (MockInterface $mock) {
-            $mock->shouldReceive('getTransactionSnapToken')
-                ->andReturn('snap-token-demo');
+        $this->mock(TripayService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('createTransactionPayment')
+                ->andReturn([
+                    'reference' => 'TRIPAY-DEMO',
+                    'checkout_url' => 'https://tripay.test/checkout',
+                    'raw' => ['success' => true],
+                ]);
         });
 
         $category = Category::create([
@@ -379,9 +387,13 @@ class UserOrderCheckoutTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->mock(MidtransService::class, function (MockInterface $mock) {
-            $mock->shouldReceive('getTransactionSnapToken')
-                ->andReturn('snap-token-demo');
+        $this->mock(TripayService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('createTransactionPayment')
+                ->andReturn([
+                    'reference' => 'TRIPAY-DEMO',
+                    'checkout_url' => 'https://tripay.test/checkout',
+                    'raw' => ['success' => true],
+                ]);
         });
 
         $category = Category::create([

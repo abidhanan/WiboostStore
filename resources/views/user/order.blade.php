@@ -204,11 +204,11 @@
                         </label>
 
                         <label class="group relative flex cursor-pointer items-center gap-4 rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] p-5 shadow-sm transition-all hover:border-[#bde0fe]">
-                            <input type="radio" name="payment_method" value="manual" class="peer sr-only" required>
+                            <input type="radio" name="payment_method" value="tripay" class="peer sr-only" required>
                             <div class="h-6 w-6 shrink-0 rounded-full border-2 border-[#8faaf3] bg-white transition-all peer-checked:border-[7px] peer-checked:border-[#5a76c8]"></div>
                             <div class="flex-1">
-                                <p class="text-base font-black text-[#2b3a67]">E-Wallet & QRIS</p>
-                                <p class="mt-1 text-xs font-bold text-[#8faaf3]">Otomatis via Gateway</p>
+                                <p class="text-base font-black text-[#2b3a67]">Tripay / QRIS</p>
+                                <p class="mt-1 text-xs font-bold text-[#8faaf3]">Otomatis via Tripay</p>
                             </div>
                             <div class="text-2xl transition-transform group-hover:scale-110 opacity-50">💳</div>
                             <div class="pointer-events-none absolute inset-0 rounded-[1.5rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
@@ -362,11 +362,11 @@
                     </label>
 
                     <label class="group relative flex cursor-pointer items-center gap-4 rounded-[2rem] border-4 border-white bg-[#f4f9ff] p-6 shadow-md transition-transform hover:scale-[1.02]">
-                        <input type="radio" name="payment_method" value="manual" class="peer sr-only" required>
+                        <input type="radio" name="payment_method" value="tripay" class="peer sr-only" required>
                         <div class="h-7 w-7 shrink-0 rounded-full border-2 border-[#8faaf3] bg-white transition-all peer-checked:border-[8px] peer-checked:border-[#5a76c8]"></div>
                         <div class="flex-1">
-                            <p class="text-xl font-black text-[#2b3a67]">E-Wallet & QRIS</p>
-                            <p class="mt-1 text-xs font-bold text-[#8faaf3]">Otomatis via Gateway</p>
+                            <p class="text-xl font-black text-[#2b3a67]">Tripay / QRIS</p>
+                            <p class="mt-1 text-xs font-bold text-[#8faaf3]">Otomatis via Tripay</p>
                         </div>
                         <div class="text-4xl transition-transform group-hover:scale-110 drop-shadow-sm opacity-50">💳</div>
                         <div class="pointer-events-none absolute inset-0 rounded-[2rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>

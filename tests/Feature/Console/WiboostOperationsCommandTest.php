@@ -145,8 +145,9 @@ class WiboostOperationsCommandTest extends TestCase
             'services.ordersosmed.api_url' => 'https://ordersosmed.test/api',
             'services.ordersosmed.api_id' => 'demo-id',
             'services.ordersosmed.api_key' => 'demo-key',
-            'midtrans.server_key' => 'midtrans-server',
-            'midtrans.client_key' => 'midtrans-client',
+            'tripay.api_key' => 'tripay-api',
+            'tripay.private_key' => 'tripay-private',
+            'tripay.merchant_code' => 'T1234',
             'wiboost.public_url' => 'https://demo.ngrok-free.app',
         ]);
 
@@ -201,7 +202,7 @@ class WiboostOperationsCommandTest extends TestCase
 
             return $request->url() === 'https://discord.test/webhook'
                 && ($payload['embeds'][0]['title'] ?? null) === 'Laporan maintenance Wiboost'
-                && str_contains(($payload['embeds'][0]['fields'][6]['value'] ?? ''), 'Midtrans');
+                && str_contains(($payload['embeds'][0]['fields'][6]['value'] ?? ''), 'Tripay');
         });
     }
 
@@ -324,8 +325,9 @@ class WiboostOperationsCommandTest extends TestCase
             'app.env' => 'production',
             'app.debug' => false,
             'wiboost.public_url' => 'https://wiboost.example',
-            'midtrans.server_key' => 'mid-server',
-            'midtrans.client_key' => 'mid-client',
+            'tripay.api_key' => 'tripay-api',
+            'tripay.private_key' => 'tripay-private',
+            'tripay.merchant_code' => 'T1234',
             'mail.default' => 'smtp',
             'mail.from.address' => 'support@wiboost.example',
             'mail.mailers.smtp.host' => 'smtp.example',

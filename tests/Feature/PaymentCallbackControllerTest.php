@@ -16,10 +16,10 @@ class PaymentCallbackControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_midtrans_transaction_callback_marks_order_as_paid_and_routes_manual_order_to_queue(): void
+    public function test_tripay_transaction_callback_marks_order_as_paid_and_routes_manual_order_to_queue(): void
     {
         config([
-            'midtrans.server_key' => 'server-key-test',
+            'tripay.private_key' => 'private-key-test',
         ]);
 
         $this->seedCategory(1, 'default-category');
@@ -49,25 +49,25 @@ class PaymentCallbackControllerTest extends TestCase
             'order_status' => 'pending',
         ]);
 
-        $payload = $this->midtransPayload('WIB-CALLBACK-001', '15000.00', 'settlement', 'qris');
+        $payload = $this->tripayPayload('WIB-CALLBACK-001', 15000, 'PAID', 'QRIS');
 
-        $this->postJson(route('midtrans.callback'), $payload)
+        $this->postTripayCallback($payload)
             ->assertOk()
-            ->assertJson(['message' => 'Transaction callback handled successfully']);
+            ->assertJson(['success' => true]);
 
         $transaction->refresh();
 
         $this->assertSame('paid', $transaction->payment_status);
         $this->assertSame('processing', $transaction->order_status);
-        $this->assertSame('qris', $transaction->payment_method);
+        $this->assertSame('QRIS', $transaction->payment_method);
         $this->assertSame(15000.0, (float) $transaction->amount);
         $this->assertStringContainsString('antrean admin', (string) $transaction->target_notes);
     }
 
-    public function test_midtrans_deposit_callback_is_idempotent_for_balance_and_wallet_history(): void
+    public function test_tripay_deposit_callback_is_idempotent_for_balance_and_wallet_history(): void
     {
         config([
-            'midtrans.server_key' => 'server-key-test',
+            'tripay.private_key' => 'private-key-test',
         ]);
 
         $user = User::factory()->create([
@@ -81,10 +81,10 @@ class PaymentCallbackControllerTest extends TestCase
             'payment_status' => 'unpaid',
         ]);
 
-        $payload = $this->midtransPayload('DEP-CALLBACK-001', '50000.00', 'settlement', 'qris');
+        $payload = $this->tripayPayload('DEP-CALLBACK-001', 50000, 'PAID', 'QRIS');
 
-        $this->postJson(route('midtrans.callback'), $payload)->assertOk();
-        $this->postJson(route('midtrans.callback'), $payload)->assertOk();
+        $this->postTripayCallback($payload)->assertOk();
+        $this->postTripayCallback($payload)->assertOk();
 
         $user->refresh();
 
@@ -92,7 +92,7 @@ class PaymentCallbackControllerTest extends TestCase
         $this->assertDatabaseHas('deposits', [
             'invoice_number' => 'DEP-CALLBACK-001',
             'payment_status' => 'paid',
-            'payment_method' => 'qris',
+            'payment_method' => 'QRIS',
             'amount' => 50000,
         ]);
         $this->assertSame(1, DB::table('wallet_histories')->where('invoice_number', 'DEP-CALLBACK-001')->count());
@@ -102,18 +102,22 @@ class PaymentCallbackControllerTest extends TestCase
         ]);
     }
 
-    public function test_midtrans_callback_rejects_invalid_signature(): void
+    public function test_tripay_callback_rejects_invalid_signature(): void
     {
         config([
-            'midtrans.server_key' => 'server-key-test',
+            'tripay.private_key' => 'private-key-test',
         ]);
 
-        $payload = $this->midtransPayload('WIB-INVALID-001', '10000.00', 'settlement', 'qris');
-        $payload['signature_key'] = 'invalid-signature';
+        $payload = $this->tripayPayload('WIB-INVALID-001', 10000, 'PAID', 'QRIS');
 
-        $this->postJson(route('midtrans.callback'), $payload)
+        $this->call('POST', route('tripay.callback'), [], [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_ACCEPT' => 'application/json',
+            'HTTP_X_CALLBACK_EVENT' => 'payment_status',
+            'HTTP_X_CALLBACK_SIGNATURE' => 'invalid-signature',
+        ], json_encode($payload))
             ->assertForbidden()
-            ->assertJson(['message' => 'Invalid signature']);
+            ->assertJson(['success' => false, 'message' => 'Invalid signature']);
     }
 
     public function test_admin_marking_non_manual_order_success_sends_success_email(): void
@@ -169,18 +173,28 @@ class PaymentCallbackControllerTest extends TestCase
         Mail::assertSent(OrderSuccessMail::class, fn (OrderSuccessMail $mail) => $mail->transaction->is($transaction));
     }
 
-    protected function midtransPayload(string $orderId, string $grossAmount, string $transactionStatus, string $paymentType): array
+    protected function tripayPayload(string $merchantRef, int $amount, string $status, string $paymentMethod): array
     {
-        $statusCode = '200';
-
         return [
-            'order_id' => $orderId,
-            'status_code' => $statusCode,
-            'gross_amount' => $grossAmount,
-            'transaction_status' => $transactionStatus,
-            'payment_type' => $paymentType,
-            'signature_key' => hash('sha512', $orderId . $statusCode . $grossAmount . config('midtrans.server_key')),
+            'reference' => 'T' . substr(md5($merchantRef), 0, 10),
+            'merchant_ref' => $merchantRef,
+            'payment_method' => $paymentMethod,
+            'payment_method_code' => $paymentMethod,
+            'total_amount' => $amount,
+            'status' => $status,
         ];
+    }
+
+    protected function postTripayCallback(array $payload)
+    {
+        $rawPayload = json_encode($payload);
+
+        return $this->call('POST', route('tripay.callback'), [], [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_ACCEPT' => 'application/json',
+            'HTTP_X_CALLBACK_EVENT' => 'payment_status',
+            'HTTP_X_CALLBACK_SIGNATURE' => hash_hmac('sha256', $rawPayload, (string) config('tripay.private_key')),
+        ], $rawPayload);
     }
 
     protected function seedCategory(int $id, string $slug, ?string $name = null): void

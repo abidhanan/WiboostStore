@@ -122,3 +122,4 @@ require __DIR__.'/auth.php';
 |--------------------------------------------------------------------------
 */
 Route::post('/midtrans/callback', [PaymentCallbackController::class, 'handleNotification'])->name('midtrans.callback');
+Route::post('/tripay/callback', [PaymentCallbackController::class, 'handleTripayCallback'])->name('tripay.callback');

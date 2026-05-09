@@ -224,22 +224,22 @@ class WiboostMaintenanceReport extends Command
         }
 
         $publicUrl = rtrim((string) config('wiboost.public_url', config('app.url')), '/');
-        $callbackUrl = $publicUrl . '/api/midtrans/callback';
-        $midtransConfigured = filled(config('midtrans.server_key')) && filled(config('midtrans.client_key'));
+        $callbackUrl = $publicUrl . '/tripay/callback';
+        $tripayConfigured = filled(config('tripay.api_key')) && filled(config('tripay.private_key')) && filled(config('tripay.merchant_code'));
 
-        if (! $midtransConfigured) {
-            $diagnostics['Midtrans'] = [
+        if (! $tripayConfigured) {
+            $diagnostics['Tripay'] = [
                 'status' => 'issue',
-                'message' => 'Server key atau client key belum diatur.',
+                'message' => 'API key, private key, atau merchant code belum diatur.',
             ];
         } elseif ($this->looksLikeLocalUrl($publicUrl)) {
-            $diagnostics['Midtrans'] = [
+            $diagnostics['Tripay'] = [
                 'status' => 'issue',
                 'message' => "Public URL masih lokal ({$publicUrl}). Callback eksternal belum siap.",
             ];
         } else {
-            $mode = config('midtrans.is_production') ? 'production' : 'sandbox';
-            $diagnostics['Midtrans'] = [
+            $mode = config('tripay.is_production') ? 'production' : 'sandbox';
+            $diagnostics['Tripay'] = [
                 'status' => 'ok',
                 'message' => "Mode {$mode}. Callback {$callbackUrl}",
             ];

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\WalletHistory;
-use App\Services\MidtransService;
+use App\Services\TripayService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +20,7 @@ class WalletController extends Controller
         return view('user.wallet.index', compact('deposits'));
     }
 
-    public function store(Request $request, MidtransService $midtransService)
+    public function store(Request $request, TripayService $tripayService)
     {
         $request->validate([
             'amount' => 'required|numeric|min:10000',
@@ -32,17 +32,19 @@ class WalletController extends Controller
                 'invoice_number' => 'DEP-' . strtoupper(Str::random(10)),
                 'amount' => $request->amount,
                 'payment_status' => 'unpaid',
+                'payment_method' => 'tripay',
             ]);
 
-            $snapToken = $midtransService->getDepositSnapToken($deposit->fresh('user'), Auth::user());
+            $payment = $tripayService->createDepositPayment($deposit->fresh('user'), Auth::user());
+            $paymentUrl = $payment['checkout_url'];
 
-            return view('user.wallet.checkout', compact('deposit', 'snapToken'));
+            return view('user.wallet.checkout', compact('deposit', 'paymentUrl'));
         } catch (Exception $e) {
             return back()->with('error', 'Gagal terhubung ke server pembayaran: ' . $e->getMessage());
         }
     }
 
-    public function pay($invoice_number, MidtransService $midtransService)
+    public function pay($invoice_number, TripayService $tripayService)
     {
         $deposit = Deposit::where('invoice_number', $invoice_number)
             ->where('user_id', Auth::id())
@@ -53,9 +55,10 @@ class WalletController extends Controller
         }
 
         try {
-            $snapToken = $midtransService->getDepositSnapToken($deposit->fresh('user'), Auth::user());
+            $payment = $tripayService->createDepositPayment($deposit->fresh('user'), Auth::user());
+            $paymentUrl = $payment['checkout_url'];
 
-            return view('user.wallet.checkout', compact('deposit', 'snapToken'));
+            return view('user.wallet.checkout', compact('deposit', 'paymentUrl'));
         } catch (Exception $e) {
             return back()->with('error', 'Gagal memuat ulang pembayaran: ' . $e->getMessage());
         }

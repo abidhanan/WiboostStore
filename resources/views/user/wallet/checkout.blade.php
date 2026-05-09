@@ -54,8 +54,6 @@
             100% { transform: translateY(0px); }
         }
     </style>
-    
-    <script type="text/javascript" src="{{ config('midtrans.snap_url') }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
 </head>
 <body class="relative selection:bg-[#7b9eed] selection:text-white">
     
@@ -97,10 +95,10 @@
                 <span class="text-2xl sm:text-3xl font-black text-[#4bc6b9] tracking-tight drop-shadow-sm">Rp {{ number_format($deposit->amount, 0, ',', '.') }}</span>
             </div>
 
-            <button id="pay-button" class="w-full bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black py-3 sm:py-4 rounded-full shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 flex justify-center items-center gap-2 border-4 border-white text-base sm:text-lg">
+            <a id="pay-button" href="{{ $paymentUrl }}" class="w-full bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black py-3 sm:py-4 rounded-full shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 flex justify-center items-center gap-2 border-4 border-white text-base sm:text-lg">
                 <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                Pilih Metode Bayar
-            </button>
+                Bayar via Tripay
+            </a>
 
             <div class="mt-3 sm:mt-4 text-center">
                 <a href="{{ route('user.wallet.index') }}" class="text-xs sm:text-sm font-black text-[#8faaf3] hover:text-[#ff6b6b] hover:bg-[#ffe5e5] px-5 py-2.5 rounded-full transition-colors border-2 border-transparent hover:border-white inline-block shadow-sm">Batal & Kembali</a>
@@ -112,23 +110,6 @@
             Pembayaran Aman Terenkripsi
         </p>
     </div>
-
-    <script type="text/javascript">
-        var payButton = document.getElementById('pay-button');
-        payButton.addEventListener('click', function () {
-            window.snap.pay('{{ $snapToken }}', {
-                onSuccess: function(result){
-                    window.location.href = "{{ route('user.wallet.index') }}";
-                },
-                onPending: function(result){
-                    window.location.href = "{{ route('user.wallet.index') }}";
-                },
-                onError: function(result){
-                    alert("Pembayaran gagal. Silakan coba lagi.");
-                }
-            });
-        });
-    </script>
 
     @include('partials.floating-admin-report')
 </body>

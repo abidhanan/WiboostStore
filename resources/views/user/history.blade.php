@@ -171,6 +171,7 @@
                                         $colorClass = 'bg-[#fff5eb] text-amber-500 border-amber-200';
                                     } else {
                                         $methodMap = [
+                                            'tripay' => 'Tripay',
                                             'qris' => 'QRIS', 'gopay' => 'GoPay', 'shopeepay' => 'ShopeePay',
                                             'bank_transfer' => 'Bank', 'cstore' => 'ALFA/INDOMARET',
                                             'credit_card' => 'Kartu Kredit', 'echannel' => 'Mandiri Bill',
@@ -227,10 +228,11 @@
 
                     <div class="mt-6 pt-5 border-t-4 border-dashed border-[#f4f9ff] shrink-0">
                         @if($isUnpaid)
-                            @if(!empty($trx->snap_token))
-                                <button type="button" onclick="payWithMidtrans('{{ $trx->snap_token }}', '{{ $trx->id }}')" class="w-full bg-[#4bc6b9] hover:bg-[#3ba398] text-white py-4 rounded-full font-black transition-transform active:scale-95 shadow-xl shadow-[#4bc6b9]/30 border-4 border-white flex justify-center items-center gap-2 text-lg mb-3">
-                                    Bayar Sekarang 💳
-                                </button>
+                            @php($paymentUrl = filter_var($trx->snap_token, FILTER_VALIDATE_URL) ? $trx->snap_token : null)
+                            @if($paymentUrl)
+                                <a href="{{ $paymentUrl }}" class="w-full bg-[#4bc6b9] hover:bg-[#3ba398] text-white py-4 rounded-full font-black transition-transform active:scale-95 shadow-xl shadow-[#4bc6b9]/30 border-4 border-white flex justify-center items-center gap-2 text-lg mb-3">
+                                    Bayar via Tripay 💳
+                                </a>
                             @else
                                 <div class="mb-3 rounded-[1.5rem] border-4 border-white bg-[#fff5eb] px-5 py-4 text-center text-sm font-black text-amber-600 shadow-sm">
                                     Tagihan belum memiliki link otomatis. Tunggu admin atau gunakan metode lain.
@@ -262,7 +264,6 @@
     @endif
 </div>
 
-<script src="{{ config('midtrans.snap_url') }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const modals = document.querySelectorAll('[id^="modal-"]');
@@ -295,18 +296,6 @@
             modal.querySelector('.transform').classList.remove('modal-content-active');
             document.body.style.overflow = '';
         }
-    }
-
-    function payWithMidtrans(snapToken, trxId) {
-        if (!snapToken) {
-            return alert('Maaf, token pembayaran tidak ditemukan.');
-        }
-
-        snap.pay(snapToken, {
-            onSuccess: () => { window.location.href = window.location.pathname + '?auto_open=' + trxId; },
-            onPending: () => { window.location.href = window.location.pathname + '?auto_open=' + trxId; },
-            onError: () => alert('Pembayaran gagal, silakan coba lagi.'),
-        });
     }
 
     function copyToClipboard(text) {

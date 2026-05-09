@@ -9,8 +9,9 @@ use App\Http\Controllers\PaymentCallbackController;
 | API Routes
 |--------------------------------------------------------------------------
 | Di sini tempat kamu mendaftarkan rute untuk aplikasi atau layanan luar 
-| (seperti Midtrans) yang ingin mengirim data ke Wiboost Store.
+| (seperti Tripay) yang ingin mengirim data ke Wiboost Store.
 */
 
-// Rute untuk menerima notifikasi otomatis dari Midtrans
+// Rute untuk menerima notifikasi otomatis dari payment gateway
+Route::post('/tripay/callback', [PaymentCallbackController::class, 'handleTripayCallback']);
 Route::post('/midtrans/callback', [PaymentCallbackController::class, 'handleNotification']);

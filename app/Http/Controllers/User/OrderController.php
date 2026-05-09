@@ -8,8 +8,8 @@ use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\WalletHistory;
-use App\Services\MidtransService;
 use App\Services\OrderFulfillmentService;
+use App\Services\TripayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -64,7 +64,7 @@ class OrderController extends Controller
 
     public function processCheckout(
         Request $request,
-        MidtransService $midtransService,
+        TripayService $tripayService,
         OrderFulfillmentService $orderFulfillmentService
     ) {
         $product = Product::findOrFail($request->product_id);
@@ -78,7 +78,7 @@ class OrderController extends Controller
 
         $rules = [
             'product_id' => 'required|exists:products,id',
-            'payment_method' => 'required|string|in:wallet,manual',
+            'payment_method' => 'required|string|in:wallet,manual,tripay',
         ];
 
         $attributes = [
@@ -146,15 +146,22 @@ class OrderController extends Controller
                 'order_input_data' => $orderInputData,
                 'payment_status' => 'unpaid',
                 'order_status' => 'pending',
-                'payment_method' => 'manual',
+                'payment_method' => 'tripay',
             ]);
 
-            $snapToken = $midtransService->getTransactionSnapToken($transaction->fresh(['product', 'user']), $user);
-            $transaction->update(['snap_token' => $snapToken]);
+            $payment = $tripayService->createTransactionPayment($transaction->fresh(['product', 'user']), $user);
+            $transaction->update([
+                'snap_token' => $payment['checkout_url'],
+                'response_data' => array_merge($transaction->response_data ?? [], [
+                    'payment_gateway' => 'tripay',
+                    'tripay_reference' => $payment['reference'] ?? null,
+                    'tripay_create_response' => $payment['raw'] ?? null,
+                ]),
+            ]);
 
             return view('user.checkout', [
                 'transaction' => $transaction->fresh(['product', 'user']),
-                'snapToken' => $snapToken,
+                'paymentUrl' => $payment['checkout_url'],
             ]);
         } catch (Throwable $e) {
             return back()
