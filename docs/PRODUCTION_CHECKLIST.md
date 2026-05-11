@@ -4,7 +4,7 @@ Gunakan checklist ini sebelum menerima buyer asli.
 
 ## 1. Hosting dan domain final
 
-- Gunakan domain tetap, bukan URL ngrok gratis.
+- Gunakan domain tetap milik website.
 - Set `.env`:
 
 ```env
@@ -23,18 +23,18 @@ php artisan view:clear
 php artisan optimize
 ```
 
-## 2. Midtrans callback
+## 2. Tripay callback
 
-Set callback/notification URL di dashboard Midtrans:
+Set callback URL di dashboard Tripay:
 
 ```text
-https://domain-kamu.com/midtrans/callback
+https://domain-kamu.com/tripay/callback
 ```
 
 Pastikan mode key sesuai kebutuhan:
 
-- `MIDTRANS_IS_PRODUCTION=false` untuk sandbox.
-- `MIDTRANS_IS_PRODUCTION=true` untuk transaksi asli.
+- `TRIPAY_IS_PRODUCTION=false` untuk sandbox.
+- `TRIPAY_IS_PRODUCTION=true` untuk transaksi asli.
 
 ## 3. Cron scheduler
 
@@ -67,7 +67,7 @@ Di hosting VPS, jalankan queue worker lewat Supervisor atau process manager seje
 Regenerate semua secret yang pernah dibagikan atau dipakai testing:
 
 - `APP_KEY` jika pernah bocor.
-- Midtrans server/client key.
+- Tripay API key/private key/merchant code.
 - Digiflazz username/key.
 - OrderSosmed API key/secret key.
 - Gmail app password.
@@ -93,13 +93,11 @@ Pastikan halaman ini bisa dibuka:
 
 Uji dengan nominal kecil:
 
-- Deposit saldo via Midtrans.
+- Deposit saldo via Tripay.
 - Top up game dengan User ID dan Zone ID.
 - Kuota murah ke nomor sendiri.
 - Suntik sosmed quantity kecil.
 - Aplikasi premium stok test.
-- Nomor luar stok test.
-- Buzzer manual test.
 - Reset password dari email asli.
 - Provider gagal atau produk nonaktif untuk memastikan refund berjalan.
 

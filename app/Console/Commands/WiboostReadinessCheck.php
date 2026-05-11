@@ -13,7 +13,7 @@ class WiboostReadinessCheck extends Command
     public function handle(): int
     {
         $checks = collect([
-            $this->check('Domain publik final', $this->hasFinalPublicUrl(), 'Isi APP_URL dan WIBOOST_PUBLIC_URL dengan domain/hosting final, bukan localhost/ngrok gratis.'),
+            $this->check('Domain publik final', $this->hasFinalPublicUrl(), 'Isi APP_URL dan WIBOOST_PUBLIC_URL dengan domain/hosting final, bukan localhost atau 127.0.0.1.'),
             $this->check('Mode production', config('app.env') === 'production' && config('app.debug') === false, 'Set APP_ENV=production dan APP_DEBUG=false saat live.'),
             $this->check('Tripay live key', filled(config('tripay.api_key')) && filled(config('tripay.private_key')) && filled(config('tripay.merchant_code')), 'Isi TRIPAY_API_KEY, TRIPAY_PRIVATE_KEY, dan TRIPAY_MERCHANT_CODE. Gunakan production mode jika sudah menerima transaksi asli.'),
             $this->check('Email SMTP', config('mail.default') !== 'log' && filled(config('mail.from.address')) && filled(config('mail.mailers.smtp.host')), 'Gunakan SMTP aktif agar reset password dan email sukses transaksi terkirim.'),
@@ -52,7 +52,6 @@ class WiboostReadinessCheck extends Command
 
         return filled($url)
             && ! str_contains($url, 'localhost')
-            && ! str_contains($url, '127.0.0.1')
-            && ! str_contains($url, 'ngrok-free');
+            && ! str_contains($url, '127.0.0.1');
     }
 }

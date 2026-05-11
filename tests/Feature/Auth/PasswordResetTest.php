@@ -75,7 +75,7 @@ class PasswordResetTest extends TestCase
     {
         Notification::fake();
 
-        config(['wiboost.public_url' => 'https://demo.ngrok-free.app']);
+        config(['wiboost.public_url' => 'https://demo.wiboost.test']);
 
         $user = User::factory()->create();
 
@@ -85,7 +85,7 @@ class PasswordResetTest extends TestCase
             $mail = $notification->toMail($user);
 
             $this->assertSame('emails.password_reset', $mail->view);
-            $this->assertStringStartsWith('https://demo.ngrok-free.app/reset-password/', $mail->viewData['resetUrl']);
+            $this->assertStringStartsWith('https://demo.wiboost.test/reset-password/', $mail->viewData['resetUrl']);
             $this->assertStringContainsString('email=' . urlencode($user->email), $mail->viewData['resetUrl']);
 
             return true;

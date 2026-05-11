@@ -11,7 +11,7 @@
 
 ### Integrasi yang dipakai
 
-- Midtrans untuk pembayaran checkout dan top up saldo.
+- Tripay untuk pembayaran checkout dan top up saldo.
 - Digiflazz untuk produk API seperti PPOB dan top up game.
 - OrderSosmed untuk layanan social media order.
 - Discord webhook untuk notifikasi order, stok menipis, deposit, auto-refund, dan maintenance report.
@@ -41,8 +41,9 @@ php artisan wiboost:maintenance-report --force
 
 Isi variabel berikut di `.env`:
 
-- `MIDTRANS_SERVER_KEY`
-- `MIDTRANS_CLIENT_KEY`
+- `TRIPAY_API_KEY`
+- `TRIPAY_PRIVATE_KEY`
+- `TRIPAY_MERCHANT_CODE`
 - `DIGIFLAZZ_USERNAME`
 - `DIGIFLAZZ_KEY`
 - `ORDERSOSMED_API_URL`
@@ -58,21 +59,23 @@ Tambahan tuning maintenance:
 - `WIBOOST_MAINTENANCE_MAX_ITEMS`
 - `WIBOOST_ADMIN_WHATSAPP`
 
-URL publik untuk callback provider:
+URL publik untuk callback provider production:
 
 - `WIBOOST_PUBLIC_URL`
 
-Jika website masih jalan di localhost tetapi diakses dari internet via ngrok atau tunnel lain, isi `WIBOOST_PUBLIC_URL` dengan URL publik tersebut. Contoh callback Midtrans:
+Jika `WIBOOST_PUBLIC_URL` dikosongkan, project sekarang otomatis fallback ke `APP_URL`.
 
-```txt
-https://nama-ngrok-kamu.ngrok-free.app/midtrans/callback
+Untuk local development di Windows, jalankan:
+
+```bat
+run-local-chrome.bat
 ```
 
-Jika `WIBOOST_PUBLIC_URL` dikosongkan, project sekarang otomatis fallback ke `APP_URL`.
+Script itu akan menyiapkan URL lokal `http://127.0.0.1:8000`, memastikan link `public/storage` aktif agar gambar upload lokal tetap muncul, lalu membuka website langsung di Google Chrome.
 
 ### Checklist menuju live
 
-- Isi produk manual yang masih draft: `Aplikasi Premium`, `Nomor Luar`, dan `Buzzer`.
+- Isi stok dan tutorial produk `Aplikasi Premium`.
 - Isi harga final, deskripsi final, gambar/logo subkategori, tutorial, dan stok kredensial/nomor.
 - Jalankan sync provider sebelum launching:
 
@@ -82,8 +85,8 @@ php artisan sync:digiflazz
 php artisan sync:ordersosmed
 ```
 
-- Uji checkout saldo untuk tiap tipe produk: OrderSosmed, Digiflazz, akun premium, nomor luar, dan buzzer manual.
-- Uji Midtrans sandbox/live dari checkout sampai callback sukses.
+- Uji checkout saldo untuk tiap tipe produk: OrderSosmed, Digiflazz, dan akun premium.
+- Uji Tripay sandbox/live dari checkout sampai callback sukses.
 - Saat deploy produksi, ubah environment ke production: `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://domain-kamu`.
 - Pastikan server menjalankan queue worker untuk `QUEUE_CONNECTION=database` dan scheduler `php artisan schedule:run`.
 - Jalankan cache produksi setelah `.env` final:

@@ -148,7 +148,7 @@ class WiboostOperationsCommandTest extends TestCase
             'tripay.api_key' => 'tripay-api',
             'tripay.private_key' => 'tripay-private',
             'tripay.merchant_code' => 'T1234',
-            'wiboost.public_url' => 'https://demo.ngrok-free.app',
+            'wiboost.public_url' => 'https://demo.wiboost.test',
         ]);
 
         $this->mock(DigiflazzService::class, function (MockInterface $mock) {
