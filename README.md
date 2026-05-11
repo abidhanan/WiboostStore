@@ -65,19 +65,21 @@ URL publik untuk callback provider production:
 
 Jika `WIBOOST_PUBLIC_URL` dikosongkan, project sekarang otomatis fallback ke `APP_URL`.
 
-Untuk local development di Windows, jalankan:
-
-```bat
-run-local-chrome.bat
-```
-
-Atau pakai:
+Untuk local development normal di Windows, jalankan:
 
 ```bat
 npm run dev
 ```
 
-Keduanya akan menyiapkan URL lokal `http://127.0.0.1:8000`, memastikan link `public/storage` aktif agar gambar upload lokal tetap muncul, lalu membuka website langsung di Google Chrome. Kalau hanya ingin menjalankan server Laravel tanpa Vite, `php artisan serve` juga tetap bisa dipakai. Untuk akses dari Laragon virtual host, gambar upload memakai URL relatif `/storage` agar tidak terkunci ke satu host lokal tertentu.
+Perintah itu akan menampilkan link Laravel `http://127.0.0.1:8000` di terminal. Ctrl+klik link tersebut untuk membukanya di browser. Kalau PowerShell memblokir `npm.ps1`, pakai `npm.cmd run dev` atau terminal CMD/Laragon Terminal.
+
+Kalau hanya ingin menjalankan Laravel tanpa Vite:
+
+```bat
+php artisan serve
+```
+
+Kalau ingin langsung dibukakan otomatis ke Chrome, jalankan `run-local-chrome.bat`. Untuk akses dari menu `www` Laragon, gunakan project seperti biasa; root `.htaccess` akan meneruskan request ke folder `public`, dan gambar upload memakai URL relatif `/storage` agar tidak terkunci ke satu host lokal tertentu.
 
 ### Checklist menuju live
 
