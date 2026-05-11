@@ -47,8 +47,9 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.promos.store') }}" method="POST" enctype="multipart/form-data" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-10 relative z-10">
+    <form id="promo-create-form" action="{{ route('admin.promos.store') }}" method="POST" enctype="multipart/form-data" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-10 relative z-10">
         @csrf
+        <input type="hidden" name="submission_token" value="{{ $submissionToken }}">
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
@@ -101,9 +102,23 @@
             </div>
         </div>
 
-        <button type="submit" class="w-full bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black text-xl py-5 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex justify-center items-center gap-2">
+        <button id="promo-create-submit" type="submit" class="w-full bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black text-xl py-5 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex justify-center items-center gap-2">
             Simpan Banner 🚀
         </button>
     </form>
 </div>
+<script>
+    const promoCreateForm = document.getElementById('promo-create-form');
+    const promoCreateSubmit = document.getElementById('promo-create-submit');
+
+    promoCreateForm?.addEventListener('submit', function () {
+        if (!promoCreateSubmit || promoCreateSubmit.disabled) {
+            return;
+        }
+
+        promoCreateSubmit.disabled = true;
+        promoCreateSubmit.classList.add('cursor-not-allowed', 'opacity-70');
+        promoCreateSubmit.textContent = 'Menyimpan...';
+    });
+</script>
 @endsection

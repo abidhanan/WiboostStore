@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Tutorial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class TutorialController extends Controller
 {
@@ -30,12 +31,17 @@ class TutorialController extends Controller
 
     public function create()
     {
-        return view('admin.tutorials.create');
+        $submissionToken = (string) Str::uuid();
+        $tokens = session('admin_tutorial_create_tokens', []);
+        $tokens[$submissionToken] = true;
+        session(['admin_tutorial_create_tokens' => $tokens]);
+
+        return view('admin.tutorials.create', compact('submissionToken'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'title'       => 'required|string|max:255',
             'category'    => 'required|string|max:100',
             'description' => 'required|string|max:255',
@@ -44,9 +50,16 @@ class TutorialController extends Controller
             'youtube_url' => 'nullable|url|max:500',
             'content'     => 'nullable|string',
             'is_active'   => 'required|boolean',
+            'submission_token' => 'required|string',
         ]);
 
-        $data = $request->all();
+        if (! $this->consumeCreateToken($validated['submission_token'])) {
+            return redirect()
+                ->route('admin.tutorials.index')
+                ->with('success', 'Tutorial sudah diproses sebelumnya. Data tidak dibuat dobel.');
+        }
+
+        $data = collect($validated)->except('submission_token')->all();
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('tutorials', 'public');
@@ -99,5 +112,19 @@ class TutorialController extends Controller
         }
         $tutorial->delete();
         return back()->with('success', 'Tutorial berhasil dihapus! 🗑️');
+    }
+
+    protected function consumeCreateToken(string $token): bool
+    {
+        $tokens = session('admin_tutorial_create_tokens', []);
+
+        if (! isset($tokens[$token])) {
+            return false;
+        }
+
+        unset($tokens[$token]);
+        session(['admin_tutorial_create_tokens' => $tokens]);
+
+        return true;
     }
 }

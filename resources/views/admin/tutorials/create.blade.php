@@ -45,8 +45,9 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.tutorials.store') }}" method="POST" enctype="multipart/form-data" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-10 relative z-10">
+    <form id="tutorial-create-form" action="{{ route('admin.tutorials.store') }}" method="POST" enctype="multipart/form-data" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-10 relative z-10">
         @csrf
+        <input type="hidden" name="submission_token" value="{{ $submissionToken }}">
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
@@ -97,9 +98,23 @@
             </select>
         </div>
 
-        <button type="submit" class="w-full bg-[#4bc6b9] hover:bg-[#3ba398] text-white font-black text-xl py-5 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#4bc6b9]/40 border-4 border-white flex justify-center items-center gap-2">
+        <button id="tutorial-create-submit" type="submit" class="w-full bg-[#4bc6b9] hover:bg-[#3ba398] text-white font-black text-xl py-5 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#4bc6b9]/40 border-4 border-white flex justify-center items-center gap-2">
             Simpan Tutorial ✨
         </button>
     </form>
 </div>
+<script>
+    const tutorialCreateForm = document.getElementById('tutorial-create-form');
+    const tutorialCreateSubmit = document.getElementById('tutorial-create-submit');
+
+    tutorialCreateForm?.addEventListener('submit', function () {
+        if (!tutorialCreateSubmit || tutorialCreateSubmit.disabled) {
+            return;
+        }
+
+        tutorialCreateSubmit.disabled = true;
+        tutorialCreateSubmit.classList.add('cursor-not-allowed', 'opacity-70');
+        tutorialCreateSubmit.textContent = 'Menyimpan...';
+    });
+</script>
 @endsection

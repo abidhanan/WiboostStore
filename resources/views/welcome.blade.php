@@ -114,10 +114,10 @@
                 <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pilih Kategori</h2>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-5">
+            <div class="mx-auto flex max-w-5xl flex-wrap justify-center gap-4 md:gap-5">
                 @forelse($categories as $cat)
                     @if(is_null($cat->parent_id))
-                        <a href="{{ route('login') }}" class="group block bg-white rounded-[1.5rem] p-4 border-4 border-white shadow-lg shadow-[#bde0fe]/30 hover:-translate-y-2 hover:border-[#bde0fe] transition-all duration-300 text-center relative flex flex-col items-center">
+                        <a href="{{ route('login') }}" class="group block w-[calc(50%-0.5rem)] sm:w-56 md:w-60 lg:w-56 bg-white rounded-[1.5rem] p-4 border-4 border-white shadow-lg shadow-[#bde0fe]/30 hover:-translate-y-2 hover:border-[#bde0fe] transition-all duration-300 text-center relative flex flex-col items-center">
                             <div class="w-16 h-16 bg-[#f4f9ff] rounded-2xl border-2 border-white shadow-inner flex items-center justify-center text-[#5a76c8] mb-3 group-hover:scale-110 transition-transform duration-300">
                                 @if($cat->image)
                                     <img src="{{ Storage::url($cat->image) }}" alt="{{ $cat->name }}" class="h-full w-full object-contain drop-shadow-sm">
@@ -133,7 +133,7 @@
                         </a>
                     @endif
                 @empty
-                    <div class="col-span-full text-center py-10 bg-white rounded-[2rem] border-4 border-dashed border-[#bde0fe]">
+                    <div class="w-full max-w-md text-center py-10 bg-white rounded-[2rem] border-4 border-dashed border-[#bde0fe]">
                         <p class="text-[#5a76c8] font-black">Layanan sedang dipersiapkan...</p>
                     </div>
                 @endforelse

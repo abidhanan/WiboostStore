@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Promo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PromoController extends Controller
 {
@@ -30,12 +31,17 @@ class PromoController extends Controller
 
     public function create()
     {
-        return view('admin.promos.create');
+        $submissionToken = (string) Str::uuid();
+        $tokens = session('admin_promo_create_tokens', []);
+        $tokens[$submissionToken] = true;
+        session(['admin_promo_create_tokens' => $tokens]);
+
+        return view('admin.promos.create', compact('submissionToken'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'badge_text'  => 'required|string|max:50',
             'title'       => 'required|string|max:255',
             'description' => 'required|string',
@@ -44,9 +50,16 @@ class PromoController extends Controller
             'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
             'link'        => 'nullable|url|max:500', 
             'is_active'   => 'required|boolean',
+            'submission_token' => 'required|string',
         ]);
 
-        $data = $request->all();
+        if (! $this->consumeCreateToken($validated['submission_token'])) {
+            return redirect()
+                ->route('admin.promos.index')
+                ->with('success', 'Banner sudah diproses sebelumnya. Data tidak dibuat dobel.');
+        }
+
+        $data = collect($validated)->except('submission_token')->all();
         
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('promos', 'public');
@@ -109,5 +122,19 @@ class PromoController extends Controller
         $promo->delete();
         
         return back()->with('success', 'Banner Promo berhasil dihapus! 🗑️');
+    }
+
+    protected function consumeCreateToken(string $token): bool
+    {
+        $tokens = session('admin_promo_create_tokens', []);
+
+        if (! isset($tokens[$token])) {
+            return false;
+        }
+
+        unset($tokens[$token]);
+        session(['admin_promo_create_tokens' => $tokens]);
+
+        return true;
     }
 }
