@@ -8,82 +8,8 @@ $projectRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
 Set-Location $projectRoot
 
 $localUrl = "http://127.0.0.1:$Port"
-$envPath = Join-Path $projectRoot '.env'
-$envExamplePath = Join-Path $projectRoot '.env.example'
-
-if (-not (Test-Path $envPath) -and (Test-Path $envExamplePath)) {
-    Copy-Item -LiteralPath $envExamplePath -Destination $envPath
-}
-
-function Set-DotEnvValue {
-    param(
-        [string] $Path,
-        [string] $Key,
-        [string] $Value
-    )
-
-    if (-not (Test-Path $Path)) {
-        return
-    }
-
-    $lines = Get-Content -LiteralPath $Path
-    $pattern = "^\s*$([regex]::Escape($Key))="
-    $replacement = "$Key=$Value"
-    $found = $false
-
-    $updated = $lines | ForEach-Object {
-        if ($_ -match $pattern) {
-            $found = $true
-            $replacement
-        } else {
-            $_
-        }
-    }
-
-    if (-not $found) {
-        $updated += $replacement
-    }
-
-    Set-Content -LiteralPath $Path -Value $updated -Encoding UTF8
-}
-
-if (Test-Path $envPath) {
-    Set-DotEnvValue -Path $envPath -Key 'APP_URL' -Value $localUrl
-    Set-DotEnvValue -Path $envPath -Key 'WIBOOST_PUBLIC_URL' -Value ''
-}
-
-foreach ($path in @('public/images', 'storage/app/public', 'storage/app/public/categories', 'storage/app/public/products', 'storage/app/public/promos', 'storage/app/public/tutorials')) {
-    if (-not (Test-Path $path)) {
-        New-Item -ItemType Directory -Path $path | Out-Null
-    }
-}
-
-$storageLink = Join-Path $projectRoot 'public/storage'
-if (-not (Test-Path $storageLink)) {
-    php artisan storage:link
-}
-
-php artisan optimize:clear
-
-$chromeCandidates = @(
-    "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
-    "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe",
-    "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
-) | Where-Object { $_ -and (Test-Path $_) }
-
-$chromePath = $chromeCandidates | Select-Object -First 1
-
-Start-Job -ScriptBlock {
-    param($BrowserPath, $Url)
-
-    Start-Sleep -Seconds 2
-
-    if ($BrowserPath) {
-        Start-Process -FilePath $BrowserPath -ArgumentList $Url
-    } else {
-        Start-Process $Url
-    }
-} -ArgumentList $chromePath, $localUrl | Out-Null
+& (Join-Path $PSScriptRoot 'prepare-local.ps1') -Port $Port
+& (Join-Path $PSScriptRoot 'open-local-chrome.ps1') -Url $localUrl
 
 Write-Host "Wiboost local akan dibuka di Chrome: $localUrl"
 Write-Host "Tekan Ctrl+C untuk menghentikan server."

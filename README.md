@@ -71,7 +71,13 @@ Untuk local development di Windows, jalankan:
 run-local-chrome.bat
 ```
 
-Script itu akan menyiapkan URL lokal `http://127.0.0.1:8000`, memastikan link `public/storage` aktif agar gambar upload lokal tetap muncul, lalu membuka website langsung di Google Chrome.
+Atau pakai:
+
+```bat
+npm run dev
+```
+
+Keduanya akan menyiapkan URL lokal `http://127.0.0.1:8000`, memastikan link `public/storage` aktif agar gambar upload lokal tetap muncul, lalu membuka website langsung di Google Chrome. Kalau hanya ingin menjalankan server Laravel tanpa Vite, `php artisan serve` juga tetap bisa dipakai. Untuk akses dari Laragon virtual host, gambar upload memakai URL relatif `/storage` agar tidak terkunci ke satu host lokal tertentu.
 
 ### Checklist menuju live
 

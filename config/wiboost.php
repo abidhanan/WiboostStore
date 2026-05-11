@@ -1,6 +1,7 @@
 <?php
 
 $publicUrl = trim((string) env('WIBOOST_PUBLIC_URL', ''));
+$configuredPublicUrl = $publicUrl;
 
 if ($publicUrl === '') {
     $publicUrl = (string) env('APP_URL', 'http://localhost');
@@ -8,6 +9,7 @@ if ($publicUrl === '') {
 
 return [
     'public_url' => rtrim($publicUrl, '/'),
+    'configured_public_url' => rtrim($configuredPublicUrl, '/'),
     'admin_contact' => [
         'label' => (string) env('WIBOOST_ADMIN_LABEL', 'Admin Wiboost'),
         'whatsapp' => env('WIBOOST_ADMIN_WHATSAPP'),
