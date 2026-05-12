@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="{{ asset('images/wiboost-logo.png') }}?v=20260426-full">
-    <title>Wiboost Store - Top Up & Kebutuhan Digital Termurah</title>
+    <title>Wiboost Store</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.vite-fallback')
@@ -59,7 +59,7 @@
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
             <div class="inline-block bg-white/80 backdrop-blur-sm text-[#5a76c8] font-black text-sm px-5 py-2 rounded-full mb-6 border-2 border-white shadow-sm">
-                Solusi Kebutuhan Digitalmu!
+                Pusat Kebutuhan Digitalmu!
             </div>
             
             <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
@@ -69,12 +69,12 @@
             </div>
 
             <p class="mt-2 text-lg md:text-xl text-[#4a5f96] max-w-2xl mx-auto font-bold leading-relaxed">
-                Murah, Cepat, Aman, Terpercaya, Bergaransi
+                Wiboost Store adalah platform layanan digital terintegrasi yang menyediakan katalog lengkap mencakup layanan Pemasaran Media Sosial (SMM) guna menunjang pertumbuhan metrik akun sosial media, top up game online secara instan, pembelian paket data operator, hingga penyediaan akses langganan aplikasi premium dengan harga kompetitif, di mana seluruh transaksi diproses secara otomatis dan didukung oleh pembayaran QRIS yang support semua metode pembayaran secara praktis dan aman.
             </p>
             
             <div class="mt-12 flex flex-col sm:flex-row justify-center gap-4">
                 <a href="#kategori" onclick="event.preventDefault(); document.getElementById('kategori').scrollIntoView({behavior: 'smooth', block: 'center'});" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white font-extrabold text-lg px-10 py-4 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex items-center justify-center gap-3">
-                    Beli Sekarang 🛒
+                    Beli Sekarang
                 </a>
             </div>
         </div>
@@ -150,7 +150,7 @@
                         <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-9 w-9 shrink-0 object-contain drop-shadow-sm">
                         <span class="font-black text-xl text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></span> 
                     </div>
-                    <p class="text-xs font-bold text-[#8faaf3] max-w-xs">Penyedia layanan sosial media dan top up game termurah & tercepat di Indonesia.</p>
+                    <p class="text-xs font-bold text-[#8faaf3] max-w-xs">Pusat Kebutuhan Digitalmu!</p>
                 </div>
 
                 <div class="flex flex-col items-center md:items-end gap-3">
@@ -177,7 +177,7 @@
                     <a href="{{ route('legal.show', 'refund-policy') }}" class="rounded-full bg-[#f4f9ff] px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] whitespace-nowrap">Refund</a>
                     <a href="{{ route('legal.show', 'contact') }}" class="rounded-full bg-[#f4f9ff] px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] whitespace-nowrap">Kontak Admin</a>
                 </div>
-                <p class="text-[10px] font-black text-[#a3bbfb] uppercase tracking-widest">&copy; {{ date('Y') }} Wiboost Store. Hak Cipta Dilindungi.</p>
+                <p class="text-[10px] font-black text-[#a3bbfb] uppercase tracking-widest">&copy; {{ date('Y') }} Wiboost Store - Hak Cipta Dilindungi.</p>
             </div>
         </div>
     </footer>
