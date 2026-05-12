@@ -10,6 +10,116 @@
     .table-scroll::-webkit-scrollbar-track { background: #f0f5ff; border-radius: 10px; }
     .table-scroll::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; border: 2px solid #f0f5ff; }
     .table-scroll::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
+    .admin-detail-modal {
+        background: rgba(43, 58, 103, .58) !important;
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+        overflow: hidden;
+        overscroll-behavior: contain;
+        top: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 7rem .85rem 1rem;
+    }
+    @media (min-width: 640px) {
+        .admin-detail-modal {
+            padding: 7.25rem 1.5rem 1.25rem;
+        }
+    }
+    @media (min-width: 1280px) {
+        .admin-detail-modal {
+            left: 0 !important;
+            padding-top: 7.5rem;
+            padding-left: 26rem;
+            padding-right: 2rem;
+        }
+    }
+    .admin-detail-modal.modal-active { opacity: 1 !important; pointer-events: auto !important; }
+    .admin-detail-modal.modal-active .admin-detail-card { transform: scale(1) !important; }
+    .admin-detail-card {
+        border-radius: 1.75rem !important;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        width: min(100%, 44rem);
+        max-height: calc(100dvh - 9rem) !important;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    @media (min-width: 640px) {
+        .admin-detail-card {
+            max-height: calc(100dvh - 9.5rem) !important;
+        }
+    }
+    @media (max-width: 639px) {
+        .admin-detail-modal {
+            padding-top: 8rem;
+        }
+        .admin-detail-card {
+            max-height: calc(100dvh - 9.5rem) !important;
+        }
+    }
+    .admin-detail-card * { min-width: 0; }
+    .admin-detail-card p,
+    .admin-detail-card h3,
+    .admin-detail-card span {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    .admin-detail-header {
+        border-radius: 0;
+        border: 0;
+        border-bottom: 3px dashed #f4f9ff;
+        background: transparent;
+        box-shadow: none;
+        padding: 0 0 .85rem 0;
+    }
+    .admin-detail-panel {
+        border-radius: 1.2rem;
+        border: 1px solid #eaf2ff;
+        background: #f8faff;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+        padding: .85rem 1rem;
+        overflow: hidden;
+    }
+    .admin-detail-panel-soft {
+        border-color: #fff1d6;
+        background: #fffdf7;
+    }
+    .admin-detail-body {
+        min-height: 0;
+        flex: 1 1 auto;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-right: .9rem;
+        padding-bottom: .25rem;
+        scrollbar-color: #bde0fe transparent;
+        scrollbar-width: thin;
+        scrollbar-gutter: stable both-edges;
+    }
+    .admin-detail-body::-webkit-scrollbar {
+        width: 8px;
+    }
+    .admin-detail-body::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 999px;
+        margin: .75rem 0;
+    }
+    .admin-detail-body::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #d8ecff, #8faaf3);
+        border: 2px solid #ffffff;
+        border-radius: 999px;
+    }
+    .admin-detail-body::-webkit-scrollbar-thumb:hover {
+        background: #8faaf3;
+    }
+    .admin-detail-close {
+        box-shadow: 0 10px 22px rgba(255, 107, 107, .14), inset 0 1px 0 rgba(255,255,255,.85);
+    }
     
     .animate-float { animation: float 6s ease-in-out infinite; }
     .animate-float-delayed { animation: float 6s ease-in-out 3s infinite; }
@@ -114,7 +224,16 @@
                     </thead>
                     <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
                         @forelse($transactions ?? [] as $trx)
-                        <tr class="transition-colors hover:bg-[#f8faff] group">
+                        @php
+                            $adminTargetSummary = $trx->order_input_summary
+                                ?: (filled($trx->target_data) && $trx->target_data !== '- (Tidak membutuhkan target tambahan)' ? $trx->target_data : null);
+                            $adminTargetText = $trx->order_input_text
+                                ?: ($adminTargetSummary ? 'Target: ' . $adminTargetSummary : null);
+                            $canManualUpdate = $trx->payment_status === 'paid'
+                                && ($trx->product?->process_type === 'account')
+                                && (bool) ($trx->product?->requires_buyer_email);
+                        @endphp
+                        <tr onclick="openAdminDetailModal('admin-trx-detail-{{ $trx->id }}')" class="transition-colors hover:bg-[#f8faff] group cursor-pointer">
                             
                             <!-- Invoice & Waktu -->
                             <td class="px-5 py-4 sm:py-5 align-top min-w-[150px]">
@@ -140,9 +259,9 @@
                             
                             <!-- Target Input -->
                             <td class="px-5 py-4 sm:py-5 align-top text-center max-w-[150px]">
-                                @if(($trx->has_order_input ?? false) && !empty($trx->order_input_summary))
-                                    <span style="font-size: 9px;" class="font-black text-[#2b3a67] bg-[#f0f5ff] inline-block px-3 py-1.5 rounded-xl border-2 border-white shadow-sm truncate max-w-full" title="{{ $trx->order_input_text ?? '' }}">
-                                        {{ $trx->order_input_summary }}
+                                @if($adminTargetSummary)
+                                    <span style="font-size: 9px;" class="font-black text-[#2b3a67] bg-[#f0f5ff] inline-block px-3 py-1.5 rounded-xl border-2 border-white shadow-sm truncate max-w-full" title="{{ $adminTargetText ?? '' }}">
+                                        {{ $adminTargetSummary }}
                                     </span>
                                 @else
                                     <span class="text-sm font-black text-[#a3bbfb]">-</span>
@@ -190,8 +309,8 @@
                             
                             <!-- Status -->
                             <td class="px-5 py-4 sm:py-5 align-top text-center min-w-[140px]">
-                                @if(false)
-                                    <form action="{{ route('admin.transactions.update', $trx->id) }}" method="POST" class="flex items-center gap-1.5 justify-center w-full">
+                                @if($canManualUpdate)
+                                    <form onclick="event.stopPropagation()" action="{{ route('admin.transactions.update', $trx->id) }}" method="POST" class="flex items-center gap-1.5 justify-center w-full">
                                         @csrf
                                         @method('PATCH')
                                         <select name="order_status" style="font-size: 9px;" class="bg-[#f8faff] border-4 border-white text-[#2b3a67] uppercase tracking-widest rounded-full focus:border-[#bde0fe] block px-3 py-1.5 font-black outline-none shadow-sm cursor-pointer hover:bg-[#e0fbfc] transition-colors appearance-none text-center w-full min-w-[85px]">
@@ -232,6 +351,88 @@
                 </table>
             </div>
         </div>
+
+        @foreach($transactions ?? [] as $trx)
+            @php
+                $detailTargetSummary = $trx->order_input_summary
+                    ?: (filled($trx->target_data) && $trx->target_data !== '- (Tidak membutuhkan target tambahan)' ? $trx->target_data : null);
+                $detailTargetText = $trx->order_input_text
+                    ?: ($detailTargetSummary ? 'Target: ' . $detailTargetSummary : '-');
+                $detailCategory = collect([
+                    $trx->product?->category?->parent?->parent?->name,
+                    $trx->product?->category?->parent?->name,
+                    $trx->product?->category?->name,
+                ])->filter()->implode(' / ');
+                $detailCanManualUpdate = $trx->payment_status === 'paid'
+                    && ($trx->product?->process_type === 'account')
+                    && (bool) ($trx->product?->requires_buyer_email);
+            @endphp
+            <div id="admin-trx-detail-{{ $trx->id }}" class="admin-detail-modal fixed inset-0 z-[9999] flex items-center justify-center opacity-0 pointer-events-none transition-all duration-200">
+                <div class="absolute inset-0" onclick="closeAdminDetailModal('admin-trx-detail-{{ $trx->id }}')"></div>
+                <div class="admin-detail-card relative flex w-full max-w-2xl max-h-[calc(100dvh-8.25rem)] flex-col rounded-[1.75rem] border-4 border-white bg-white p-4 shadow-2xl shadow-[#2b3a67]/20 transform scale-95 transition-transform duration-200 sm:p-5">
+                    <div class="admin-detail-header mb-3.5 flex items-start justify-between gap-3 p-3.5">
+                        <div>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Detail Transaksi</p>
+                            <h3 class="mt-1 break-all text-xl font-black text-[#2b3a67]">{{ $trx->invoice_number }}</h3>
+                            <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ optional($trx->created_at)->format('d M Y, H:i') }}</p>
+                        </div>
+                        <button type="button" onclick="closeAdminDetailModal('admin-trx-detail-{{ $trx->id }}')" class="admin-detail-close flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#ffe5e5] text-lg font-black text-[#ff6b6b]">×</button>
+                    </div>
+
+                    <div class="admin-detail-body">
+                    <div class="grid gap-3.5 md:grid-cols-2">
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Pelanggan</p>
+                            <p class="mt-1 font-black text-[#2b3a67]">{{ $trx->user->name ?? 'Guest' }}</p>
+                            <p class="mt-1 text-xs font-bold text-[#8faaf3] break-all">{{ $trx->user->email ?? '-' }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Pembayaran</p>
+                            <p class="mt-1 font-black text-[#4bc6b9]">Rp {{ number_format($trx->amount ?? 0, 0, ',', '.') }}</p>
+                            <p class="mt-1 text-xs font-bold text-[#8faaf3] uppercase">{{ $trx->payment_method ?? '-' }} / {{ $trx->payment_status ?? '-' }}</p>
+                        </div>
+                        <div class="admin-detail-panel md:col-span-2">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Layanan</p>
+                            <p class="mt-1 font-black text-[#2b3a67]">{{ $trx->product->name ?? 'Produk Dihapus' }}</p>
+                            <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $detailCategory ?: 'Kategori tidak tersedia' }}</p>
+                        </div>
+                        <div class="admin-detail-panel md:col-span-2">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Target / Input Pembeli</p>
+                            <p class="mt-2 whitespace-pre-line break-all text-xs font-black text-[#2b3a67]">{{ $detailTargetText }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Status Pesanan</p>
+                            <p class="mt-1 font-black uppercase text-[#5a76c8]">{{ $trx->order_status ?? '-' }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">ID Provider</p>
+                            <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $trx->provider_order_id ?? '-' }}</p>
+                        </div>
+                        @if($trx->target_notes)
+                            <div class="admin-detail-panel admin-detail-panel-soft md:col-span-2">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-amber-500">Catatan</p>
+                                <p class="mt-1 text-sm font-bold text-[#2b3a67]">{{ $trx->target_notes }}</p>
+                            </div>
+                        @endif
+                    </div>
+
+                    @if($detailCanManualUpdate)
+                        <form action="{{ route('admin.transactions.update', $trx->id) }}" method="POST" class="admin-detail-panel mt-3.5 flex flex-col gap-2.5 sm:flex-row">
+                            @csrf
+                            @method('PATCH')
+                            <select name="order_status" class="flex-1 rounded-full border-4 border-white bg-white px-4 py-2.5 text-xs font-black uppercase text-[#2b3a67] outline-none">
+                                <option value="pending" {{ ($trx->order_status ?? '') == 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="processing" {{ ($trx->order_status ?? '') == 'processing' ? 'selected' : '' }}>Proses</option>
+                                <option value="success" {{ ($trx->order_status ?? '') == 'success' ? 'selected' : '' }}>Sukses</option>
+                                <option value="failed" {{ ($trx->order_status ?? '') == 'failed' ? 'selected' : '' }}>Gagal</option>
+                            </select>
+                            <button type="submit" class="rounded-full border-4 border-white bg-[#5a76c8] px-5 py-2.5 text-xs font-black text-white shadow-md">Simpan Status Manual</button>
+                        </form>
+                    @endif
+                    </div>
+                </div>
+            </div>
+        @endforeach
         
         <!-- Paginasi -->
         @if(isset($transactions) && method_exists($transactions, 'links') && $transactions->hasPages())
@@ -241,4 +442,27 @@
         @endif
     </div>
 </div>
+<script>
+    function openAdminDetailModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.classList.add('modal-active');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function closeAdminDetailModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.classList.remove('modal-active');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        document.querySelectorAll('.admin-detail-modal.modal-active').forEach((modal) => {
+            modal.classList.remove('modal-active');
+        });
+        document.body.classList.remove('overflow-hidden');
+    });
+</script>
 @endsection

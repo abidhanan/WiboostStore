@@ -17,6 +17,40 @@
 
     .animate-pulse-soft { animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
     .hide-scroll::-webkit-scrollbar { display: none; }
+    html.modal-scroll-locked,
+    body.modal-scroll-locked {
+        overflow: hidden !important;
+        overscroll-behavior: none;
+        touch-action: none;
+    }
+    .history-modal-shell {
+        height: 100vh;
+        height: 100dvh;
+        max-height: 100vh;
+        max-height: 100dvh;
+        overflow: hidden;
+        padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+    }
+    .history-modal-card {
+        max-height: calc(100vh - 1.5rem);
+        max-height: calc(100dvh - 1.5rem);
+        min-height: 0;
+    }
+    .history-modal-body {
+        min-height: 0;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    @media (min-width: 768px) {
+        .history-modal-shell {
+            padding: 1.5rem;
+        }
+        .history-modal-card {
+            max-height: min(760px, calc(100vh - 3rem));
+            max-height: min(760px, calc(100dvh - 3rem));
+        }
+    }
 </style>
 
 <div class="wiboost-font pb-12 max-w-4xl mx-auto mt-4 relative z-10">
@@ -77,7 +111,11 @@
                     <h4 class="font-black text-xl md:text-2xl text-[#2b3a67] line-clamp-2 group-hover:text-[#5a76c8] transition-colors leading-tight drop-shadow-sm">{{ $trx->product->name ?? 'Produk Dihapus' }}</h4>
 
                     @if($trx->has_order_input && filled($trx->order_input_summary))
-                        <p class="text-xs text-[#8faaf3] font-bold truncate mt-3 bg-[#f8faff] inline-block px-4 py-2 rounded-xl border border-white shadow-inner">Input: {{ $trx->order_input_summary }}</p>
+                        <div class="mt-3 max-w-[92%] overflow-hidden rounded-xl border border-white bg-[#f8faff] px-4 py-2 shadow-inner sm:inline-block sm:max-w-full">
+                            <p class="min-w-0 truncate text-xs font-bold text-[#8faaf3]">
+                                <span class="font-black">Input:</span> {{ $trx->order_input_summary }}
+                            </p>
+                        </div>
                     @endif
                 </div>
 
@@ -89,16 +127,16 @@
                 </div>
             </div>
 
-            <div id="modal-{{ $trx->id }}" class="fixed inset-0 flex items-center justify-center bg-[#2b3a67]/60 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300 p-4" style="z-index: 99999;">
+            <div id="modal-{{ $trx->id }}" class="history-modal-shell fixed inset-0 flex items-center justify-center bg-[#2b3a67]/60 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300" style="z-index: 99999;">
                 <div class="absolute inset-0" onclick="closeModal('modal-{{ $trx->id }}')"></div>
 
-                <div class="relative bg-white/95 backdrop-blur-md w-full max-w-md rounded-[2.5rem] p-6 md:p-8 shadow-2xl transform scale-90 transition-transform duration-300 flex flex-col overflow-hidden max-h-[90vh] border-4 border-white">
-                    <div class="flex justify-between items-center mb-6 pb-4 border-b-4 border-dashed border-[#f4f9ff]">
+                <div class="history-modal-card relative bg-white/95 backdrop-blur-md w-full max-w-lg md:max-w-xl rounded-[2rem] p-4 md:p-5 shadow-2xl transform scale-90 transition-transform duration-300 flex flex-col overflow-hidden border-4 border-white">
+                    <div class="flex justify-between items-center mb-4 pb-3 border-b-4 border-dashed border-[#f4f9ff]">
                         <h3 class="text-xl font-black text-[#2b3a67] drop-shadow-sm">Detail Pesanan 🧾</h3>
                         <button onclick="closeModal('modal-{{ $trx->id }}')" class="w-12 h-12 bg-[#ffe5e5] text-[#ff6b6b] hover:bg-[#ff6b6b] hover:text-white rounded-[1.2rem] flex items-center justify-center transition-colors font-black border-4 border-white shadow-sm text-xl shrink-0 active:scale-95">✕</button>
                     </div>
 
-                    <div class="flex-1 overflow-y-auto hide-scroll space-y-5 pr-1 pb-4">
+                    <div data-history-detail-scroll class="history-modal-body flex-1 overflow-y-auto hide-scroll space-y-3 pr-1 pb-3">
                         @if($trx->order_status == 'failed' && !empty($trx->target_notes))
                             <div class="bg-[#ffe5e5] p-5 rounded-[1.5rem] border-4 border-white shadow-inner relative overflow-hidden mb-5">
                                 <div class="relative z-10">
@@ -117,7 +155,7 @@
                                     </div>
 
                                     <div class="space-y-4">
-                                        @foreach(['email' => 'Nomor / Akun', 'password' => 'Password', 'profile' => 'Profil', 'pin' => 'PIN', 'link' => 'Link Akses'] as $key => $label)
+                                        @foreach(['email' => 'Email', 'password' => 'Password', 'profile' => 'Profil', 'pin' => 'PIN', 'link' => 'Link Akses'] as $key => $label)
                                             @if(!empty($credentials[$key]))
                                                 <div>
                                                     <p class="text-[9px] font-black text-amber-600/70 uppercase tracking-widest mb-1 ml-1">{{ $label }}</p>
@@ -226,7 +264,7 @@
                         </div>
                     </div>
 
-                    <div class="mt-6 pt-5 border-t-4 border-dashed border-[#f4f9ff] shrink-0">
+                    <div class="mt-4 pt-4 border-t-4 border-dashed border-[#f4f9ff] shrink-0">
                         @if($isUnpaid)
                             @php($paymentUrl = filter_var($trx->snap_token, FILTER_VALIDATE_URL) ? $trx->snap_token : null)
                             @if($paymentUrl)
@@ -265,6 +303,8 @@
 </div>
 
 <script>
+    let lockedScrollY = 0;
+
     document.addEventListener('DOMContentLoaded', function () {
         const modals = document.querySelectorAll('[id^="modal-"]');
         modals.forEach(modal => document.body.appendChild(modal));
@@ -280,12 +320,59 @@
         }
     });
 
+    function lockPageScroll() {
+        if (document.body.classList.contains('modal-scroll-locked')) {
+            return;
+        }
+
+        lockedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+        document.documentElement.classList.add('modal-scroll-locked');
+        document.body.classList.add('modal-scroll-locked');
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${lockedScrollY}px`;
+        document.body.style.left = '0';
+        document.body.style.right = '0';
+        document.body.style.width = '100%';
+    }
+
+    function unlockPageScroll() {
+        if (!document.body.classList.contains('modal-scroll-locked')) {
+            return;
+        }
+
+        document.documentElement.classList.remove('modal-scroll-locked');
+        document.body.classList.remove('modal-scroll-locked');
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.width = '';
+        window.scrollTo(0, lockedScrollY);
+    }
+
     function openModal(modalId) {
         const modal = document.getElementById(modalId);
         if (modal) {
+            const modalContent = modal.querySelector('.transform');
+            const scrollArea = modal.querySelector('[data-history-detail-scroll]');
+
+            if (scrollArea) {
+                scrollArea.scrollTop = 0;
+            }
+
+            if (modalContent) {
+                modalContent.scrollTop = 0;
+            }
+
             modal.classList.add('modal-active');
-            modal.querySelector('.transform').classList.add('modal-content-active');
-            document.body.style.overflow = 'hidden';
+            modalContent?.classList.add('modal-content-active');
+            lockPageScroll();
+
+            requestAnimationFrame(() => {
+                if (scrollArea) {
+                    scrollArea.scrollTop = 0;
+                }
+            });
         }
     }
 
@@ -293,8 +380,8 @@
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.classList.remove('modal-active');
-            modal.querySelector('.transform').classList.remove('modal-content-active');
-            document.body.style.overflow = '';
+            modal.querySelector('.transform')?.classList.remove('modal-content-active');
+            unlockPageScroll();
         }
     }
 

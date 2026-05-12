@@ -12,6 +12,8 @@
         <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @include('partials.vite-fallback')
+        @include('partials.ui-performance-tuning')
 
         <style>
             body { font-family: 'Nunito', sans-serif; }
@@ -25,7 +27,7 @@
             }
         </style>
     </head>
-    <body class="font-sans antialiased text-slate-800 selection:bg-[#7b9eed] selection:text-white bg-wiboost-sky min-h-screen relative overflow-x-hidden">
+    <body class="wiboost-compact-ui font-sans antialiased text-slate-800 selection:bg-[#7b9eed] selection:text-white bg-wiboost-sky min-h-screen relative overflow-x-hidden">
         
         <div class="fixed top-20 left-10 text-4xl animate-float opacity-60 pointer-events-none z-0">☁️</div>
         <div class="fixed top-32 right-20 text-3xl animate-float-delayed opacity-60 pointer-events-none z-0">✨</div>

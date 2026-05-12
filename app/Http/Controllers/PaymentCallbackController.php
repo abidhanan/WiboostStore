@@ -9,6 +9,7 @@ use App\Models\WalletHistory;
 use App\Services\DiscordWebhookService;
 use App\Services\OrderFulfillmentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PaymentCallbackController extends Controller
 {
@@ -37,7 +38,7 @@ class PaymentCallbackController extends Controller
 
         $merchantRef = (string) data_get($payload, 'merchant_ref', '');
         $status = strtoupper((string) data_get($payload, 'status', ''));
-        $realAmount = (int) round((float) data_get($payload, 'total_amount', data_get($payload, 'amount', 0)));
+        $paidAmount = (int) round((float) data_get($payload, 'total_amount', data_get($payload, 'amount', 0)));
         $paymentMethod = (string) (
             data_get($payload, 'payment_method')
             ?: data_get($payload, 'payment_method_code')
@@ -45,82 +46,109 @@ class PaymentCallbackController extends Controller
         );
 
         if (str_starts_with($merchantRef, 'DEP-')) {
-            $deposit = Deposit::where('invoice_number', $merchantRef)->first();
+            $result = DB::transaction(function () use ($merchantRef, $status, $paidAmount, $paymentMethod) {
+                $deposit = Deposit::where('invoice_number', $merchantRef)
+                    ->lockForUpdate()
+                    ->first();
 
-            if (! $deposit) {
+                if (! $deposit) {
+                    return ['found' => false];
+                }
+
+                if ($status === 'PAID' && in_array($deposit->payment_status, ['unpaid', 'pending'], true)) {
+                    $topupAmount = (float) $deposit->amount;
+                    $actualPaidAmount = $paidAmount > 0 ? $paidAmount : $topupAmount;
+
+                    $deposit->update([
+                        'payment_status' => 'paid',
+                        'payment_method' => $paymentMethod,
+                        'paid_amount' => $actualPaidAmount,
+                    ]);
+
+                    $user = User::whereKey($deposit->user_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($user) {
+                        $user->increment('balance', $topupAmount);
+                    }
+
+                    WalletHistory::firstOrCreate(
+                        [
+                            'invoice_number' => $deposit->invoice_number,
+                            'type' => 'topup',
+                        ],
+                        [
+                            'user_id' => $deposit->user_id,
+                            'amount' => $topupAmount,
+                            'description' => 'Top Up Saldo via ' . strtoupper($paymentMethod),
+                        ]
+                    );
+
+                    return ['found' => true, 'paid' => true, 'deposit_id' => $deposit->id];
+                }
+
+                if (in_array($status, ['FAILED', 'EXPIRED', 'REFUND'], true) && in_array($deposit->payment_status, ['unpaid', 'pending'], true)) {
+                    $deposit->delete();
+                }
+
+                return ['found' => true, 'paid' => false];
+            });
+
+            if (! $result['found']) {
                 return response()->json(['success' => false, 'message' => 'Deposit not found'], 404);
             }
 
-            if ($status === 'PAID' && $deposit->payment_status === 'unpaid') {
-                $deposit->update([
-                    'payment_status' => 'paid',
-                    'payment_method' => $paymentMethod,
-                    'amount' => $realAmount,
-                ]);
-
-                $user = User::find($deposit->user_id);
-
-                if ($user) {
-                    $user->increment('balance', $realAmount);
-                }
-
-                $historyExists = WalletHistory::where('invoice_number', $deposit->invoice_number)
-                    ->where('type', 'topup')
-                    ->exists();
-
-                if (! $historyExists) {
-                    WalletHistory::create([
-                        'user_id' => $deposit->user_id,
-                        'type' => 'topup',
-                        'amount' => $realAmount,
-                        'description' => 'Top Up Saldo via ' . strtoupper($paymentMethod),
-                        'invoice_number' => $deposit->invoice_number,
-                    ]);
-                }
-
+            if ($result['paid'] ?? false) {
                 $discordWebhookService->sendDepositAlert(
-                    $deposit->fresh('user'),
+                    Deposit::with('user')->find($result['deposit_id']),
                     'Deposit berhasil dibayar',
                     'Saldo user sudah otomatis ditambahkan.'
                 );
-            } elseif (in_array($status, ['FAILED', 'EXPIRED', 'REFUND'], true) && $deposit->payment_status === 'unpaid') {
-                $deposit->update(['payment_status' => 'failed']);
             }
 
             return response()->json(['success' => true]);
         }
 
         if (str_starts_with($merchantRef, 'WIB-')) {
-            $transaction = Transaction::where('invoice_number', $merchantRef)->first();
+            $result = DB::transaction(function () use ($merchantRef, $status, $paidAmount, $paymentMethod, $payload) {
+                $transaction = Transaction::where('invoice_number', $merchantRef)
+                    ->lockForUpdate()
+                    ->first();
 
-            if (! $transaction) {
+                if (! $transaction) {
+                    return ['found' => false];
+                }
+
+                if ($status === 'PAID' && in_array($transaction->payment_status, ['unpaid', 'pending'], true)) {
+                    $transaction->update([
+                        'payment_status' => 'paid',
+                        'payment_method' => $paymentMethod,
+                        'amount' => $paidAmount > 0 ? $paidAmount : $transaction->amount,
+                        'response_data' => array_merge($transaction->response_data ?? [], [
+                            'payment_gateway' => 'tripay',
+                            'tripay_reference' => data_get($payload, 'reference'),
+                            'tripay_callback' => $payload,
+                        ]),
+                    ]);
+
+                    return ['found' => true, 'paid' => true, 'transaction_id' => $transaction->id];
+                }
+
+                if (in_array($status, ['FAILED', 'EXPIRED', 'REFUND'], true) && in_array($transaction->payment_status, ['unpaid', 'pending'], true)) {
+                    $transaction->delete();
+                }
+
+                return ['found' => true, 'paid' => false];
+            });
+
+            if (! $result['found']) {
                 return response()->json(['success' => false, 'message' => 'Transaction not found'], 404);
             }
 
-            if ($status === 'PAID' && $transaction->payment_status === 'unpaid') {
-                $transaction->update([
-                    'payment_status' => 'paid',
-                    'payment_method' => $paymentMethod,
-                    'amount' => $realAmount,
-                    'response_data' => array_merge($transaction->response_data ?? [], [
-                        'payment_gateway' => 'tripay',
-                        'tripay_reference' => data_get($payload, 'reference'),
-                        'tripay_callback' => $payload,
-                    ]),
-                ]);
-
+            if ($result['paid'] ?? false) {
+                $transaction = Transaction::with(['product', 'user'])->find($result['transaction_id']);
                 $orderFulfillmentService->handlePaidTransaction($transaction->fresh(['product', 'user']));
-            } elseif (in_array($status, ['FAILED', 'EXPIRED', 'REFUND'], true) && $transaction->payment_status === 'unpaid') {
-                $transaction->update([
-                    'payment_status' => 'failed',
-                    'order_status' => 'failed',
-                    'target_notes' => 'Pembayaran dibatalkan atau kedaluwarsa di Tripay.',
-                    'response_data' => array_merge($transaction->response_data ?? [], [
-                        'payment_gateway' => 'tripay',
-                        'tripay_reference' => data_get($payload, 'reference'),
-                        'tripay_callback' => $payload,
-                    ]),
-                ]);
             }
 
             return response()->json(['success' => true]);
@@ -152,49 +180,68 @@ class PaymentCallbackController extends Controller
 
         $transactionStatus = $notification->transaction_status;
         $orderId = $notification->order_id;
-        $realAmount = (int) round((float) $notification->gross_amount);
+        $paidAmount = (int) round((float) $notification->gross_amount);
 
         if (str_starts_with($orderId, 'DEP-')) {
-            $deposit = Deposit::where('invoice_number', $orderId)->first();
+            $result = DB::transaction(function () use ($orderId, $transactionStatus, $paidAmount, $notification) {
+                $deposit = Deposit::where('invoice_number', $orderId)
+                    ->lockForUpdate()
+                    ->first();
 
-            if (! $deposit) {
+                if (! $deposit) {
+                    return ['found' => false];
+                }
+
+                if (in_array($transactionStatus, ['settlement', 'capture'], true) && in_array($deposit->payment_status, ['unpaid', 'pending'], true)) {
+                    $topupAmount = (float) $deposit->amount;
+                    $actualPaidAmount = $paidAmount > 0 ? $paidAmount : $topupAmount;
+
+                    $deposit->update([
+                        'payment_status' => 'paid',
+                        'payment_method' => $notification->payment_type,
+                        'paid_amount' => $actualPaidAmount,
+                    ]);
+
+                    $user = User::whereKey($deposit->user_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($user) {
+                        $user->increment('balance', $topupAmount);
+                    }
+
+                    WalletHistory::firstOrCreate(
+                        [
+                            'invoice_number' => $deposit->invoice_number,
+                            'type' => 'topup',
+                        ],
+                        [
+                            'user_id' => $deposit->user_id,
+                            'amount' => $topupAmount,
+                            'description' => 'Top Up Saldo via ' . strtoupper($notification->payment_type),
+                        ]
+                    );
+
+                    return ['found' => true, 'paid' => true, 'deposit_id' => $deposit->id];
+                }
+
+                if (in_array($transactionStatus, ['deny', 'expire', 'cancel'], true) && in_array($deposit->payment_status, ['unpaid', 'pending'], true)) {
+                    $deposit->delete();
+                }
+
+                return ['found' => true, 'paid' => false];
+            });
+
+            if (! $result['found']) {
                 return response()->json(['message' => 'Deposit not found'], 404);
             }
 
-            if (in_array($transactionStatus, ['settlement', 'capture'], true) && $deposit->payment_status === 'unpaid') {
-                $deposit->update([
-                    'payment_status' => 'paid',
-                    'payment_method' => $notification->payment_type,
-                    'amount' => $realAmount,
-                ]);
-
-                $user = User::find($deposit->user_id);
-
-                if ($user) {
-                    $user->increment('balance', $realAmount);
-                }
-
-                $historyExists = WalletHistory::where('invoice_number', $deposit->invoice_number)
-                    ->where('type', 'topup')
-                    ->exists();
-
-                if (! $historyExists) {
-                    WalletHistory::create([
-                        'user_id' => $deposit->user_id,
-                        'type' => 'topup',
-                        'amount' => $realAmount,
-                        'description' => 'Top Up Saldo via ' . strtoupper($notification->payment_type),
-                        'invoice_number' => $deposit->invoice_number,
-                    ]);
-                }
-
+            if ($result['paid'] ?? false) {
                 $discordWebhookService->sendDepositAlert(
-                    $deposit->fresh('user'),
+                    Deposit::with('user')->find($result['deposit_id']),
                     'Deposit berhasil dibayar',
                     'Saldo user sudah otomatis ditambahkan.'
                 );
-            } elseif (in_array($transactionStatus, ['deny', 'expire', 'cancel'], true)) {
-                $deposit->update(['payment_status' => 'failed']);
             }
 
             return response()->json(['message' => 'Deposit handled successfully']);
@@ -207,11 +254,11 @@ class PaymentCallbackController extends Controller
                 return response()->json(['message' => 'Transaction not found'], 404);
             }
 
-            if (in_array($transactionStatus, ['settlement', 'capture'], true) && $transaction->payment_status === 'unpaid') {
+            if (in_array($transactionStatus, ['settlement', 'capture'], true) && in_array($transaction->payment_status, ['unpaid', 'pending'], true)) {
                 $transaction->update([
                     'payment_status' => 'paid',
                     'payment_method' => $notification->payment_type,
-                    'amount' => $realAmount,
+                    'amount' => $paidAmount,
                 ]);
 
                 $orderFulfillmentService->handlePaidTransaction($transaction->fresh(['product', 'user']));

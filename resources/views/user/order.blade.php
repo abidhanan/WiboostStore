@@ -121,7 +121,7 @@
         </div>
 
         @if($showSuntikSosmedForm)
-            <form action="{{ route('user.checkout.process') }}" method="POST" id="socialCheckoutForm" onsubmit="showSocialLoadingBtn()" class="rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 shadow-xl shadow-[#bde0fe]/30 md:p-10 relative overflow-hidden">
+            <form action="{{ route('user.checkout.process') }}" method="POST" id="socialCheckoutForm" onsubmit="return showSocialLoadingBtn()" class="rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 shadow-xl shadow-[#bde0fe]/30 md:p-10 relative overflow-hidden">
                 @csrf
                 <input type="hidden" name="product_id" id="social_product_id" value="{{ old('product_id') }}">
 
@@ -312,7 +312,7 @@
             <p class="mt-2 font-bold text-[#8faaf3]">Lengkapi data sesuai layanan yang dipilih lalu pilih metode pembayaran.</p>
         </div>
 
-        <form action="{{ route('user.checkout.process') }}" method="POST" id="checkoutForm" onsubmit="showLoadingBtn()">
+        <form action="{{ route('user.checkout.process') }}" method="POST" id="checkoutForm" onsubmit="return showLoadingBtn()">
             @csrf
             <input type="hidden" name="product_id" id="checkout_product_id">
 
@@ -440,14 +440,26 @@
     }
 
     function showSocialLoadingBtn() {
+        const form = document.getElementById('socialCheckoutForm');
         const btn = document.getElementById('btnSocialCheckout');
 
-        if (!btn) {
-            return;
+        if (form?.dataset.submitted === '1') {
+            return false;
         }
 
-        btn.innerHTML = 'Memproses... ⏳';
+        if (form) {
+            form.dataset.submitted = '1';
+        }
+
+        if (!btn) {
+            return true;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = 'Menyiapkan Tripay... ⏳';
         btn.classList.add('cursor-not-allowed', 'opacity-70');
+
+        return true;
     }
 
     function checkoutInputClass() {
@@ -551,9 +563,22 @@
     }
 
     function showLoadingBtn() {
+        const form = document.getElementById('checkoutForm');
         const btn = document.getElementById('btnCheckout');
-        btn.innerHTML = 'Memproses... ⏳';
+
+        if (form?.dataset.submitted === '1') {
+            return false;
+        }
+
+        if (form) {
+            form.dataset.submitted = '1';
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = 'Menyiapkan Tripay... ⏳';
         btn.classList.add('cursor-not-allowed', 'opacity-70');
+
+        return true;
     }
 
     document.addEventListener('DOMContentLoaded', function () {

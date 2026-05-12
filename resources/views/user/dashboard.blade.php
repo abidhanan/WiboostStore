@@ -1,6 +1,7 @@
 @extends('layouts.user')
 
 @section('title', 'Dashboard Saya')
+@section('body_class', 'wiboost-user-dashboard-page')
 
 @section('content')
 <style>
@@ -9,10 +10,14 @@
     .bg-wiboost-sky { background: linear-gradient(180deg, #bde0fe 0%, #e0fbfc 100%); }
     .hide-scroll::-webkit-scrollbar { display: none; }
     .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-    .popup-enter { transform: translateY(0); opacity: 1; pointer-events: auto; }
-    .popup-leave { transform: translateY(150%); opacity: 0; pointer-events: none; }
     .modal-active { opacity: 1 !important; pointer-events: auto !important; }
     .modal-content-active { transform: scale(1) !important; }
+    .tut-filter-btn.is-active {
+        background: #5a76c8 !important;
+        color: #ffffff !important;
+        border-color: #ffffff !important;
+        box-shadow: 0 10px 18px rgba(90, 118, 200, 0.28) !important;
+    }
     
     .animate-float { animation: float 6s ease-in-out infinite; }
     .animate-float-delayed { animation: float 6s ease-in-out 3s infinite; }
@@ -39,7 +44,7 @@
             <p class="text-[#4a5f96] max-w-md font-bold text-base md:text-lg">Siap percepat pertumbuhan sosial media & game kamu hari ini?</p>
         </div>
 
-        <div class="relative z-10 bg-white/90 backdrop-blur-md px-8 py-6 rounded-[2rem] border-4 border-white w-full md:w-auto text-center md:text-left shadow-lg shadow-[#bde0fe]/30 hover:scale-105 transition-transform duration-300">
+        <div class="relative z-10 bg-white/90 backdrop-blur-md px-8 py-6 rounded-[2rem] border-4 border-white w-full md:w-auto text-center shadow-lg shadow-[#bde0fe]/30 hover:scale-105 transition-transform duration-300">
             <p class="text-[#8faaf3] text-xs font-black uppercase tracking-widest mb-1">Saldo Anda</p>
             <p class="text-3xl md:text-4xl font-black text-[#5a76c8] tracking-tight mb-4">Rp {{ number_format(Auth::user()->balance, 0, ',', '.') }}</p>
             <a href="{{ route('user.wallet.index') }}" class="inline-flex items-center justify-center gap-2 bg-[#5a76c8] text-white px-6 py-2.5 rounded-full text-sm font-extrabold hover:bg-[#4760a9] hover:-translate-y-1 active:scale-95 transition-all shadow-lg shadow-[#5a76c8]/30 border-2 border-white w-full md:w-auto">
@@ -95,9 +100,9 @@
                     @endif
 
                     <div class="relative z-20 pointer-events-none">
-                        <span class="bg-white/90 backdrop-blur-sm text-[#5a76c8] text-xs font-black px-4 py-1.5 rounded-full mb-3 inline-block shadow-sm uppercase tracking-widest border-2 border-white">{{ $promo->badge_text }}</span>
-                        <h2 class="text-3xl md:text-5xl font-black mb-2 drop-shadow-md tracking-tight">{{ $promo->title }}</h2>
-                        <p class="font-bold text-white/90 text-sm md:text-lg max-w-lg drop-shadow-md">{{ $promo->description }}</p>
+                        <span class="bg-white/90 backdrop-blur-sm text-[#5a76c8] text-xs md:text-sm font-black px-4 py-1.5 rounded-full mb-3 inline-block shadow-sm uppercase tracking-widest border-2 border-white">{{ $promo->badge_text }}</span>
+                        <h2 class="text-3xl md:text-6xl font-black mb-3 drop-shadow-md tracking-tight">{{ $promo->title }}</h2>
+                        <p class="font-bold text-white/90 text-sm md:text-xl max-w-2xl drop-shadow-md">{{ $promo->description }}</p>
                     </div>
 
                     @if(!$promo->image)
@@ -110,8 +115,8 @@
                 <div class="snap-center shrink-0 w-full bg-gradient-to-r from-[#8faaf3] to-[#5a76c8] p-8 md:p-12 text-white relative overflow-hidden flex items-center justify-center h-[250px] md:h-[300px]">
                     <div class="text-center relative z-20">
                         <span class="text-6xl mb-4 block animate-float">🎁</span>
-                        <h2 class="text-3xl md:text-4xl font-black mb-2 drop-shadow-md">Belum Ada Promo</h2>
-                        <p class="font-bold text-white/90 text-sm md:text-lg drop-shadow-md">Nantikan penawaran menarik dari Wiboost.</p>
+                        <h2 class="text-3xl md:text-5xl font-black mb-3 drop-shadow-md">Belum Ada Promo</h2>
+                        <p class="font-bold text-white/90 text-sm md:text-xl drop-shadow-md">Nantikan penawaran menarik dari Wiboost.</p>
                     </div>
                 </div>
             @endforelse
@@ -155,9 +160,9 @@
     </div>
 
     <div class="flex gap-3 overflow-x-auto hide-scroll mb-8 pl-2 pb-2">
-        <button onclick="filterTutorial('all')" id="btn-tut-all" class="tut-filter-btn px-6 py-2.5 rounded-full font-extrabold text-sm transition-transform active:scale-95 bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white shrink-0">Semua Kategori</button>
+        <button onclick="filterTutorial('all')" id="btn-tut-all" data-category-filter="all" class="tut-filter-btn is-active px-6 py-2.5 rounded-full font-extrabold text-sm transition-transform active:scale-95 bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white shrink-0">Semua Kategori</button>
         @foreach($tutorialCategories ?? [] as $cat)
-            <button onclick="filterTutorial('{{ $cat }}')" id="btn-tut-{{ Str::slug($cat) }}" class="tut-filter-btn px-6 py-2.5 rounded-full font-extrabold text-sm transition-transform active:scale-95 bg-white text-[#5a76c8] hover:bg-[#f0f5ff] shadow-md shadow-[#bde0fe]/20 border-2 border-transparent shrink-0">{{ $cat }}</button>
+            <button onclick="filterTutorial(@js($cat))" id="btn-tut-{{ Str::slug($cat) }}" data-category-filter="{{ $cat }}" class="tut-filter-btn px-6 py-2.5 rounded-full font-extrabold text-sm transition-transform active:scale-95 bg-white text-[#5a76c8] hover:bg-[#f0f5ff] shadow-md shadow-[#bde0fe]/20 border-2 border-transparent shrink-0">{{ $cat }}</button>
         @endforeach
     </div>
 
@@ -188,15 +193,6 @@
                 <p class="text-[#8faaf3] font-black text-lg">Belum ada tutorial tersedia.</p>
             </div>
         @endforelse
-    </div>
-</div>
-
-<div id="fomo-toast" class="fixed bottom-6 left-4 md:left-8 z-50 bg-white border-4 border-white shadow-2xl shadow-[#bde0fe]/50 rounded-[2rem] p-4 pr-8 flex items-center gap-4 transition-all duration-700 popup-leave max-w-[320px]">
-    <div class="w-12 h-12 bg-[#e6fff7] rounded-[1rem] flex items-center justify-center text-2xl border-2 border-white shadow-inner shrink-0">🛒</div>
-    <div>
-        <p class="text-[9px] text-[#8faaf3] font-black uppercase tracking-widest" id="fomo-name">Member Wiboost</p>
-        <p class="text-xs md:text-sm text-[#2b3a67] font-black leading-tight mt-0.5">Membeli <span class="text-[#5a76c8]" id="fomo-product">Produk</span></p>
-        <p class="text-[10px] text-[#4bc6b9] font-black mt-1" id="fomo-time">Baru saja</p>
     </div>
 </div>
 
@@ -247,11 +243,6 @@
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('[id^="tut-"]').forEach(modal => document.body.appendChild(modal));
 
-        const fomo = document.getElementById('fomo-toast');
-        if (fomo) {
-            document.body.appendChild(fomo);
-        }
-
         const slider = document.getElementById('promo-slider');
         if (slider && slider.children.length > 1) {
             let autoSlide = setInterval(() => slidePromo(1), 5000);
@@ -274,16 +265,16 @@
 
     function filterTutorial(category) {
         document.querySelectorAll('.tut-filter-btn').forEach(btn => {
+            btn.classList.remove('is-active');
             btn.classList.remove('bg-[#5a76c8]', 'text-white', 'shadow-lg', 'shadow-[#5a76c8]/30', 'border-white');
             btn.classList.add('bg-white', 'text-[#5a76c8]', 'shadow-md', 'shadow-[#bde0fe]/20', 'border-transparent');
         });
 
-        const slug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-        const activeBtn = category === 'all'
-            ? document.getElementById('btn-tut-all')
-            : document.getElementById('btn-tut-' + slug);
+        const activeBtn = Array.from(document.querySelectorAll('.tut-filter-btn'))
+            .find(btn => btn.dataset.categoryFilter === category);
 
         if (activeBtn) {
+            activeBtn.classList.add('is-active');
             activeBtn.classList.remove('bg-white', 'text-[#5a76c8]', 'shadow-md', 'shadow-[#bde0fe]/20', 'border-transparent');
             activeBtn.classList.add('bg-[#5a76c8]', 'text-white', 'shadow-lg', 'shadow-[#5a76c8]/30', 'border-white');
         }
@@ -291,36 +282,6 @@
         document.querySelectorAll('.tutorial-card').forEach(card => {
             card.style.display = category === 'all' || card.getAttribute('data-category') === category ? 'flex' : 'none';
         });
-    }
-
-    const fomoPurchases = @json($recentFomoPurchases ?? []);
-    const fomoToast = document.getElementById('fomo-toast');
-    const fomoName = document.getElementById('fomo-name');
-    const fomoProduct = document.getElementById('fomo-product');
-
-    function showFomo() {
-        if (!fomoName || !fomoProduct || !fomoToast || fomoPurchases.length === 0) {
-            return;
-        }
-
-        const purchase = fomoPurchases[Math.floor(Math.random() * fomoPurchases.length)];
-        fomoName.innerText = purchase.name || 'Member Wiboost';
-        fomoProduct.innerText = purchase.product || 'Produk Wiboost';
-
-        fomoToast.classList.remove('popup-leave');
-        fomoToast.classList.add('popup-enter');
-
-        setTimeout(() => {
-            fomoToast.classList.remove('popup-enter');
-            fomoToast.classList.add('popup-leave');
-        }, 4000);
-    }
-
-    if (fomoPurchases.length > 0) {
-        setTimeout(() => {
-            showFomo();
-            setInterval(showFomo, Math.floor(Math.random() * (20000 - 10000 + 1) + 10000));
-        }, 3000);
     }
 
     function openTutorialModal(id) {

@@ -12,6 +12,112 @@
     .table-scroll::-webkit-scrollbar-track { background: #f0f5ff; border-radius: 10px; }
     .table-scroll::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; border: 2px solid #f0f5ff; }
     .table-scroll::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
+    .admin-detail-modal {
+        background: rgba(43, 58, 103, .58) !important;
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+        overflow: hidden;
+        overscroll-behavior: contain;
+        top: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 7rem .85rem 1rem;
+    }
+    @media (min-width: 640px) {
+        .admin-detail-modal {
+            padding: 7.25rem 1.5rem 1.25rem;
+        }
+    }
+    @media (min-width: 1280px) {
+        .admin-detail-modal {
+            left: 0 !important;
+            padding-top: 7.5rem;
+            padding-left: 26rem;
+            padding-right: 2rem;
+        }
+    }
+    .admin-detail-modal.modal-active { opacity: 1 !important; pointer-events: auto !important; }
+    .admin-detail-modal.modal-active .admin-detail-card { transform: scale(1) !important; }
+    .admin-detail-card {
+        border-radius: 1.75rem !important;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        width: min(100%, 42rem);
+        max-height: calc(100dvh - 9rem) !important;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    @media (min-width: 640px) {
+        .admin-detail-card {
+            max-height: calc(100dvh - 9.5rem) !important;
+        }
+    }
+    @media (max-width: 639px) {
+        .admin-detail-modal {
+            padding-top: 8rem;
+        }
+        .admin-detail-card {
+            max-height: calc(100dvh - 9.5rem) !important;
+        }
+    }
+    .admin-detail-card * { min-width: 0; }
+    .admin-detail-card p,
+    .admin-detail-card h3,
+    .admin-detail-card span {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    .admin-detail-header {
+        border-radius: 0;
+        border: 0;
+        border-bottom: 3px dashed #f4f9ff;
+        background: transparent;
+        box-shadow: none;
+        padding: 0 0 .85rem 0;
+    }
+    .admin-detail-panel {
+        border-radius: 1.2rem;
+        border: 1px solid #eaf2ff;
+        background: #f8faff;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+        padding: .85rem 1rem;
+        overflow: hidden;
+    }
+    .admin-detail-body {
+        min-height: 0;
+        flex: 1 1 auto;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-right: .9rem;
+        padding-bottom: .25rem;
+        scrollbar-color: #bde0fe transparent;
+        scrollbar-width: thin;
+        scrollbar-gutter: stable both-edges;
+    }
+    .admin-detail-body::-webkit-scrollbar {
+        width: 8px;
+    }
+    .admin-detail-body::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 999px;
+        margin: .75rem 0;
+    }
+    .admin-detail-body::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #d8ecff, #8faaf3);
+        border: 2px solid #ffffff;
+        border-radius: 999px;
+    }
+    .admin-detail-body::-webkit-scrollbar-thumb:hover {
+        background: #8faaf3;
+    }
+    .admin-detail-close {
+        box-shadow: 0 10px 22px rgba(255, 107, 107, .14), inset 0 1px 0 rgba(255,255,255,.85);
+    }
     
     .animate-float { animation: float 6s ease-in-out infinite; }
     .animate-float-delayed { animation: float 6s ease-in-out 3s infinite; }
@@ -87,7 +193,7 @@
                     </thead>
                     <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
                         @forelse($deposits ?? [] as $deposit)
-                        <tr class="transition-colors hover:bg-[#f8faff] group">
+                        <tr onclick="openAdminDepositDetail('admin-deposit-detail-{{ $deposit->id }}')" class="transition-colors hover:bg-[#f8faff] group cursor-pointer">
                             
                             <!-- Invoice & Waktu -->
                             <td class="px-5 py-4 sm:py-5 align-middle min-w-[150px]">
@@ -104,13 +210,18 @@
                             <!-- Nominal -->
                             <td class="px-5 py-4 sm:py-5 align-middle">
                                 <p class="font-black text-[#4bc6b9] text-sm sm:text-base drop-shadow-sm">Rp {{ number_format($deposit->amount ?? 0, 0, ',', '.') }}</p>
+                                @if(($deposit->paid_amount ?? null) && (float) $deposit->paid_amount !== (float) $deposit->amount)
+                                    <p class="mt-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">
+                                        Dibayar: Rp {{ number_format($deposit->paid_amount, 0, ',', '.') }}
+                                    </p>
+                                @endif
                             </td>
                             
                             <!-- Metode Pembayaran -->
                             <td class="px-5 py-4 sm:py-5 align-middle text-center">
                                 @php
                                     $rawMethod = strtolower($deposit->payment_method ?? '');
-                                    if (($rawMethod == 'manual' || empty($rawMethod)) && ($deposit->status ?? '') != 'paid') {
+                                    if (($rawMethod == 'manual' || empty($rawMethod)) && ($deposit->payment_status ?? '') != 'paid') {
                                         $methodDisplay = 'BELUM PILIH';
                                         $colorClass = 'bg-[#fff5eb] text-amber-500 border-white';
                                     } else {
@@ -152,7 +263,7 @@
                                         'failed' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]', 'Gagal'],
                                         'expired' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]', 'Expired'],
                                     ];
-                                    $rawStatus = strtolower($deposit->status ?? 'pending');
+                                    $rawStatus = strtolower($deposit->payment_status ?? 'pending');
                                     $st = $statusLabels[$rawStatus] ?? ['bg-gray-100', 'text-gray-500', $rawStatus];
                                 @endphp
                                 <span style="font-size: 9px;" class="{{ $st[0] }} {{ $st[1] }} px-4 py-1.5 rounded-full font-black uppercase tracking-widest border-2 border-white shadow-sm inline-block w-full text-center">
@@ -172,6 +283,64 @@
                 </table>
             </div>
         </div>
+
+        @foreach($deposits ?? [] as $deposit)
+            @php
+                $depositStatusLabels = [
+                    'paid' => ['bg-[#e6fff7]', 'text-emerald-500', 'Berhasil'],
+                    'success' => ['bg-[#e6fff7]', 'text-emerald-500', 'Berhasil'],
+                    'unpaid' => ['bg-[#fff5eb]', 'text-amber-500', 'Pending'],
+                    'pending' => ['bg-[#fff5eb]', 'text-amber-500', 'Pending'],
+                    'failed' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]', 'Gagal'],
+                    'expired' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]', 'Expired'],
+                ];
+                $depositRawStatus = strtolower($deposit->payment_status ?? 'pending');
+                $depositStatus = $depositStatusLabels[$depositRawStatus] ?? ['bg-gray-100', 'text-gray-500', $depositRawStatus];
+            @endphp
+            <div id="admin-deposit-detail-{{ $deposit->id }}" class="admin-detail-modal fixed inset-0 z-[9999] flex items-center justify-center opacity-0 pointer-events-none transition-all duration-200">
+                <div class="absolute inset-0" onclick="closeAdminDepositDetail('admin-deposit-detail-{{ $deposit->id }}')"></div>
+                <div class="admin-detail-card relative flex w-full max-w-xl max-h-[calc(100dvh-8.25rem)] flex-col rounded-[1.75rem] border-4 border-white bg-white p-4 shadow-2xl shadow-[#2b3a67]/20 transform scale-95 transition-transform duration-200 sm:p-5">
+                    <div class="admin-detail-header mb-3.5 flex items-start justify-between gap-3 p-3.5">
+                        <div>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Detail Deposit</p>
+                            <h3 class="mt-1 break-all text-xl font-black text-[#2b3a67]">{{ $deposit->invoice_number }}</h3>
+                            <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ optional($deposit->created_at)->format('d M Y, H:i') }}</p>
+                        </div>
+                        <button type="button" onclick="closeAdminDepositDetail('admin-deposit-detail-{{ $deposit->id }}')" class="admin-detail-close flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#ffe5e5] text-lg font-black text-[#ff6b6b]">×</button>
+                    </div>
+
+                    <div class="admin-detail-body">
+                    <div class="grid gap-3.5 md:grid-cols-2">
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Pelanggan</p>
+                            <p class="mt-1 font-black text-[#2b3a67]">{{ $deposit->user->name ?? 'Guest' }}</p>
+                            <p class="mt-1 break-all text-xs font-bold text-[#8faaf3]">{{ $deposit->user->email ?? '-' }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Status</p>
+                            <span class="{{ $depositStatus[0] }} {{ $depositStatus[1] }} mt-2 inline-flex rounded-full border-2 border-white px-4 py-1.5 text-[10px] font-black uppercase tracking-widest shadow-sm">{{ $depositStatus[2] }}</span>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nominal Masuk Saldo</p>
+                            <p class="mt-1 text-lg font-black text-[#4bc6b9]">Rp {{ number_format($deposit->amount ?? 0, 0, ',', '.') }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Jumlah Dibayar</p>
+                            <p class="mt-1 text-lg font-black text-[#5a76c8]">Rp {{ number_format($deposit->paid_amount ?? $deposit->amount ?? 0, 0, ',', '.') }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Metode</p>
+                            <p class="mt-1 font-black uppercase text-[#2b3a67]">{{ $deposit->payment_method ?? '-' }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Referensi Tripay</p>
+                            <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $deposit->tripay_reference ?? '-' }}</p>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
         
         <!-- Paginasi -->
         @if(isset($deposits) && method_exists($deposits, 'links') && $deposits->hasPages())
@@ -181,4 +350,27 @@
         @endif
     </div>
 </div>
+<script>
+    function openAdminDepositDetail(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.classList.add('modal-active');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function closeAdminDepositDetail(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.classList.remove('modal-active');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        document.querySelectorAll('.admin-detail-modal.modal-active').forEach((modal) => {
+            modal.classList.remove('modal-active');
+        });
+        document.body.classList.remove('overflow-hidden');
+    });
+</script>
 @endsection

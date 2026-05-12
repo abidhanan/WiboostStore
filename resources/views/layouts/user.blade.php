@@ -6,9 +6,33 @@
     <title>@yield('title') - Wiboost Store</title>
     <link rel="icon" type="image/png" href="{{ asset('images/wiboost-logo.png') }}?v=20260426-full">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.vite-fallback')
+    @include('partials.ui-performance-tuning')
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+        html,
+        body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
         body { font-family: 'Nunito', sans-serif; }
+        main,
+        footer {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+        }
+
+        img,
+        svg,
+        video,
+        canvas {
+            max-width: 100%;
+        }
+
+        [x-cloak] { display: none !important; }
         .bg-wiboost-sky { background: linear-gradient(180deg, #bde0fe 0%, #e0fbfc 100%); }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f4f9ff; }
@@ -25,7 +49,7 @@
         }
     </style>
 </head>
-<body x-data="{ mobileNavOpen: false }" class="min-h-screen bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white relative flex flex-col">
+<body x-data="{ mobileNavOpen: false }" class="wiboost-compact-ui wiboost-user-shell @yield('body_class') min-h-screen w-full max-w-full overflow-x-hidden bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white relative flex flex-col">
 
     <!-- Latar Belakang Floating -->
     <div class="fixed top-32 left-8 text-4xl animate-float opacity-50 pointer-events-none z-0 hidden md:block">☁️</div>
@@ -41,10 +65,10 @@
         ];
     @endphp
 
-    <div class="pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-6">
+    <div class="wiboost-user-navbar pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-6">
         <div class="pointer-events-auto mx-auto max-w-6xl">
             <div class="flex items-center justify-between rounded-[2rem] border-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/40 backdrop-blur-md sm:px-6 transition-all hover:shadow-[#bde0fe]/60 hover:border-[#e0fbfc]">
-                <a href="{{ route('home') }}" class="flex items-center gap-3 group">
+                <a href="{{ route('user.dashboard') }}" class="flex items-center gap-3 group">
                     <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm sm:h-14 sm:w-14 group-hover:scale-105 transition-transform">
                     <div>
                         <p class="text-lg font-black leading-none text-[#2b3a67] sm:text-2xl drop-shadow-sm">Wiboost <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Store</span></p>
@@ -73,16 +97,17 @@
                     <a href="{{ route('user.wallet.index') }}" class="rounded-full border-2 border-white bg-[#f0f5ff] px-3 py-2 text-xs font-black text-[#5a76c8] shadow-sm">
                         Rp {{ number_format((float) (Auth::user()->balance ?? 0), 0, ',', '.') }}
                     </a>
-                    <button type="button" @click="mobileNavOpen = true" class="flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-white bg-[#f0f5ff] text-[#5a76c8] shadow-sm hover:scale-105 transition-transform">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    <button type="button" @click="mobileNavOpen = !mobileNavOpen" :aria-expanded="mobileNavOpen.toString()" class="flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-white bg-[#f0f5ff] text-[#5a76c8] shadow-sm hover:scale-105 transition-transform">
+                        <svg x-show="!mobileNavOpen" x-cloak class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        <svg x-show="mobileNavOpen" x-cloak class="h-6 w-6 text-[#ff6b6b]" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18"></path></svg>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Menu Cepat Mobile (Full Width, Ada Jarak Atas) --}}
-    <div x-cloak x-show="mobileNavOpen" class="fixed inset-0 z-[60] md:hidden" aria-modal="true" role="dialog">
+    {{-- Menu Cepat Mobile --}}
+    <div x-cloak x-show="mobileNavOpen" class="fixed inset-x-0 bottom-0 top-24 z-40 md:hidden" aria-modal="true" role="dialog">
         <div x-show="mobileNavOpen" x-transition.opacity class="absolute inset-0 bg-[#2b3a67]/55 backdrop-blur-sm" @click="mobileNavOpen = false"></div>
         
         <div x-show="mobileNavOpen"
@@ -92,21 +117,8 @@
              x-transition:leave="transition ease-in duration-200"
              x-transition:leave-start="translate-y-0 opacity-100"
              x-transition:leave-end="-translate-y-6 opacity-0"
-             class="absolute inset-x-0 top-4 rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-xl px-6 pt-8 pb-8 shadow-2xl">
+             class="absolute inset-x-0 top-0 rounded-b-[2rem] border-x-4 border-b-4 border-white bg-white/95 px-5 pt-5 pb-6 shadow-2xl">
             
-            <div class="mb-8 flex items-center justify-between border-b-4 border-dashed border-[#f4f9ff] pb-5">
-                <div class="flex items-center gap-4">
-                    <div class="h-14 w-14 rounded-2xl bg-[#f4f9ff] border-2 border-white shadow-inner flex items-center justify-center text-[#5a76c8]">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-[#8faaf3]">Menu Cepat</p>
-                        <h2 class="text-xl font-black text-[#2b3a67] drop-shadow-sm leading-tight">{{ Auth::user()->name }}</h2>
-                    </div>
-                </div>
-                <button type="button" @click="mobileNavOpen = false" class="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-sm font-black text-xl hover:scale-105 transition-transform active:scale-95">✕</button>
-            </div>
-
             <div class="space-y-3">
                 @if(Auth::check() && Auth::user()->isAdmin())
                     <a href="{{ route('admin.dashboard') }}" class="flex items-center justify-between rounded-[1.5rem] border-2 border-white bg-[#fff3f3] px-5 py-4 font-black text-[#ff6b6b] shadow-sm hover:scale-[1.02] hover:shadow-md transition-all">
@@ -153,7 +165,7 @@
     </main>
 
     {{-- Footer Landing Page (Bersih dari duplikasi) --}}
-    <footer class="bg-white pt-12 pb-8 border-t-[6px] border-[#f0f5ff] relative overflow-hidden mt-auto">
+    <footer class="wiboost-user-footer bg-white pt-12 pb-8 border-t-[6px] border-[#f0f5ff] relative overflow-hidden mt-auto">
         <div class="max-w-6xl mx-auto px-6 sm:px-8 relative z-10">
             <div class="flex flex-col md:flex-row justify-between items-center gap-8 mb-10">
                 

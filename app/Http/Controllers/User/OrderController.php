@@ -12,6 +12,7 @@ use App\Services\OrderFulfillmentService;
 use App\Services\TripayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Support\WiboostCatalog;
@@ -132,9 +133,48 @@ class OrderController extends Controller
 
                 $orderFulfillmentService->handlePaidTransaction($transaction->fresh(['product', 'user']));
 
-                return redirect()->route('user.history')
+                return redirect()->route('user.history', ['auto_open' => $transaction->id])
                     ->with('success', 'Pesanan berhasil dibuat dan langsung diproses.')
                     ->with('new_trx_id', $transaction->id);
+            }
+
+            $existingTransaction = $this->findReusableTripayTransaction(
+                $user,
+                $product,
+                $checkoutAmount,
+                $targetData,
+                $orderInputData
+            );
+
+            if ($existingTransaction) {
+                return view('user.checkout', [
+                    'transaction' => $existingTransaction->fresh(['product', 'user']),
+                    'paymentUrl' => $existingTransaction->snap_token,
+                ]);
+            }
+
+            $lockKey = 'tripay-checkout:' . sha1($user->id . '|' . $product->id . '|' . $checkoutAmount . '|' . $targetData . '|' . json_encode($orderInputData));
+
+            if (! Cache::add($lockKey, true, now()->addSeconds(20))) {
+                usleep(500000);
+                $existingTransaction = $this->findReusableTripayTransaction(
+                    $user,
+                    $product,
+                    $checkoutAmount,
+                    $targetData,
+                    $orderInputData
+                );
+
+                if ($existingTransaction) {
+                    return view('user.checkout', [
+                        'transaction' => $existingTransaction->fresh(['product', 'user']),
+                        'paymentUrl' => $existingTransaction->snap_token,
+                    ]);
+                }
+
+                return back()
+                    ->withInput()
+                    ->with('error', 'Tagihan Tripay sedang disiapkan. Tunggu sebentar lalu cek riwayat pesanan.');
             }
 
             $transaction = Transaction::create([
@@ -168,6 +208,21 @@ class OrderController extends Controller
                 ->withInput()
                 ->with('error', 'Gagal memproses pesanan: ' . $e->getMessage());
         }
+    }
+
+    public function cancelTripayCheckout(Transaction $transaction)
+    {
+        abort_if((int) $transaction->user_id !== (int) Auth::id(), 403);
+
+        if ($transaction->payment_method === 'tripay' && in_array($transaction->payment_status, ['unpaid', 'pending'], true)) {
+            $transaction->delete();
+
+            return redirect()
+                ->route('user.dashboard')
+                ->with('success', 'Checkout Tripay dibatalkan. Invoice pending tidak dimasukkan ke riwayat.');
+        }
+
+        return redirect()->route('user.history', ['auto_open' => $transaction->id]);
     }
 
     protected function resolveRootCategorySlug(Category $category): ?string
@@ -215,6 +270,29 @@ class OrderController extends Controller
             $product->setAttribute('ordersosmed_success_average_seconds_cache', $seconds->isNotEmpty() ? (int) round($seconds->avg()) : null);
             $product->setAttribute('ordersosmed_success_order_count_cache', $seconds->count());
         });
+    }
+
+    protected function findReusableTripayTransaction(
+        User $user,
+        Product $product,
+        $checkoutAmount,
+        string $targetData,
+        array $orderInputData
+    ): ?Transaction {
+        $expiresInMinutes = max(1, (int) config('tripay.expired_minutes', 60));
+
+        return Transaction::query()
+            ->where('user_id', $user->id)
+            ->where('product_id', $product->id)
+            ->whereIn('payment_status', ['unpaid', 'pending'])
+            ->where('payment_method', 'tripay')
+            ->where('amount', $checkoutAmount)
+            ->where('target_data', $targetData)
+            ->whereNotNull('snap_token')
+            ->where('created_at', '>=', now()->subMinutes($expiresInMinutes))
+            ->latest()
+            ->get()
+            ->first(fn (Transaction $transaction) => $transaction->order_input_data == $orderInputData);
     }
 
     protected function sortSuntikSosmedProducts($products)

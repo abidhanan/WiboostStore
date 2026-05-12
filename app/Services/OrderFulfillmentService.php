@@ -151,12 +151,16 @@ class OrderFulfillmentService
             return 'unsupported_provider';
         }
 
+        $responseData = array_merge($transaction->response_data ?? [], [
+            'provider_order_id' => $response['provider_order_id'] ?? $transaction->provider_order_id,
+            'provider_order_status' => $response['order_status'] ?? null,
+            'provider_status_message' => $response['message'] ?? null,
+            'raw' => $response['raw'] ?? $response,
+            'last_status_check_at' => now()->toDateTimeString(),
+        ]);
+
         $transaction->update([
-            'response_data' => [
-                'provider_order_id' => $response['provider_order_id'] ?? $transaction->provider_order_id,
-                'raw' => $response['raw'] ?? $response,
-                'last_status_check_at' => now()->toDateTimeString(),
-            ],
+            'response_data' => $responseData,
             'target_notes' => $response['message'] ?? $transaction->target_notes,
         ]);
 
@@ -172,6 +176,13 @@ class OrderFulfillmentService
             $this->markAsFailed($transaction->fresh(['product', 'user']), $response['message'] ?? 'Provider menandai pesanan gagal.', $response['raw'] ?? $response);
 
             return 'failed';
+        }
+
+        if ($transaction->order_status !== 'processing') {
+            $transaction->update([
+                'order_status' => 'processing',
+                'target_notes' => $response['message'] ?? $transaction->target_notes,
+            ]);
         }
 
         return 'processing';
@@ -236,6 +247,22 @@ class OrderFulfillmentService
 
     protected function handleCredentialOrder(Transaction $transaction): void
     {
+        if ($transaction->product?->process_type === 'account' && $transaction->product?->requires_buyer_email) {
+            $transaction->update([
+                'order_status' => 'pending',
+                'target_notes' => 'Menunggu admin memproses aplikasi premium untuk email pembeli: ' . $transaction->target_data,
+            ]);
+
+            $this->discordWebhookService->sendOrderAlert(
+                $transaction,
+                'Pesanan aplikasi premium butuh proses admin',
+                'Pembeli mengisi email aplikasi. Status pesanan perlu diupdate manual oleh admin.',
+                16433050
+            );
+
+            return;
+        }
+
         $credential = ProductCredential::where('product_id', $transaction->product_id)
             ->where('is_active', true)
             ->whereColumn('current_usage', '<', 'max_usage')

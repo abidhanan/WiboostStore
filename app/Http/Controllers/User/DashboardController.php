@@ -47,26 +47,13 @@ class DashboardController extends Controller
         // Ambil daftar kategori unik untuk menu Filter di Dashboard User
         $tutorialCategories = Tutorial::where('is_active', true)->select('category')->distinct()->pluck('category');
 
-        $recentFomoPurchases = Transaction::with('product')
-            ->where('payment_status', 'paid')
-            ->whereIn('order_status', ['processing', 'success'])
-            ->latest()
-            ->limit(10)
-            ->get()
-            ->map(fn (Transaction $transaction) => [
-                'name' => 'Member Wiboost',
-                'product' => $transaction->product?->name ?? 'Produk Wiboost',
-            ])
-            ->values();
-
         return view('user.dashboard', compact(
             'categories', 
             'promos', 
             'totalThisMonth', 
             'totalSpent', 
             'tutorials',
-            'tutorialCategories',
-            'recentFomoPurchases'
+            'tutorialCategories'
         ));
     }
 }

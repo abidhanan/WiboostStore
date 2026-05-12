@@ -38,12 +38,12 @@
                         class="min-w-0 flex-1 rounded-[1.2rem] sm:rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] py-3 sm:py-4 px-5 sm:px-6 font-black text-[#2b3a67] outline-none transition shadow-inner placeholder-[#a3bbfb] focus:border-[#bde0fe] text-xs sm:text-sm truncate"
                         placeholder="Cari nama produk atau SKU provider...">
                     
-                    <button type="submit" class="shrink-0 flex items-center justify-center rounded-[1.2rem] sm:rounded-[1.5rem] border-4 border-white bg-[#5a76c8] w-12 h-12 sm:w-[3.5rem] sm:h-[3.5rem] text-white shadow-lg shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9] text-lg sm:text-xl" title="Cari Produk">
+                    <button type="submit" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] w-12 h-12 text-white shadow-md shadow-[#5a76c8]/25 transition-transform active:scale-95 hover:bg-[#4760a9] text-base" title="Cari Produk">
                         🔍
                     </button>
                     
                     @if(request('search'))
-                        <a href="{{ route('admin.products.index') }}" class="shrink-0 flex items-center justify-center rounded-[1.2rem] sm:rounded-[1.5rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 sm:w-[3.5rem] sm:h-[3.5rem] text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:bg-[#ffcccc] text-lg sm:text-xl" title="Reset Pencarian">
+                        <a href="{{ route('admin.products.index') }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:bg-[#ffcccc] text-base" title="Reset Pencarian">
                             ✖️
                         </a>
                     @endif
@@ -51,8 +51,8 @@
             </div>
 
             <!-- Tombol Tambah Produk -->
-            <a href="{{ route('admin.products.create') }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-[#5a76c8] px-6 sm:px-8 py-4 sm:py-0 text-sm font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9] w-full md:w-auto min-w-0">
-                <span class="text-lg">➕</span> Tambah Produk
+            <a href="{{ route('admin.products.create') }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] px-5 py-3 text-sm font-black text-white shadow-md shadow-[#5a76c8]/25 transition-transform active:scale-95 hover:bg-[#4760a9] w-full md:w-auto md:h-12 min-w-0">
+                <span class="text-base">➕</span> Tambah Produk
             </a>
         </div>
 
@@ -87,11 +87,6 @@
             <span>{{ session('error') }}</span>
         </div>
     @endif
-
-    <div class="mb-6 sm:mb-8 rounded-[2rem] border-4 border-white bg-[#f8fbff] px-5 sm:px-6 py-4 shadow-lg shadow-[#bde0fe]/20 relative z-10">
-        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Katalog Aktif</p>
-        <p class="mt-1 text-sm font-black text-[#2b3a67]">Nomor Luar dan Buzzer sudah disembunyikan dari manajemen produk. Produk API Digiflazz dan OrderSosmed tetap tampil seperti biasa.</p>
-    </div>
 
     <!-- Tabel Data Produk -->
     <div class="overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm shadow-2xl shadow-[#bde0fe]/30 relative z-10 min-w-0 w-full">

@@ -14,6 +14,8 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.vite-fallback')
+    @include('partials.ui-performance-tuning')
     
     <style>
         body { font-family: 'Nunito', sans-serif; }
@@ -27,7 +29,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white">
+<body class="wiboost-compact-ui min-h-screen bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white">
     <div class="relative overflow-hidden bg-wiboost-sky px-4 sm:px-6 lg:px-8 {{ $isCompactAuth ? 'min-h-screen py-10 flex flex-col justify-center' : 'min-h-screen py-5' }}">
         
         <div class="pointer-events-none absolute top-16 left-10 text-5xl animate-float opacity-70">☁️</div>
@@ -38,7 +40,7 @@
         @unless($isCompactAuth)
             <nav class="relative z-20 mx-auto max-w-6xl mt-2 w-full">
                 <div class="flex h-20 items-center justify-between rounded-[2rem] border-4 border-white bg-white/90 px-5 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-8">
-                    <a href="{{ route('home') }}" class="flex items-center gap-3">
+                    <a href="{{ Auth::check() ? (Auth::user()->isAdmin() ? route('admin.dashboard') : route('user.dashboard')) : route('home') }}" class="flex items-center gap-3">
                         <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm sm:h-14 sm:w-14">
                         <span class="text-xl font-extrabold tracking-tight text-[#2b3a67] sm:text-2xl">Wiboost <span class="text-[#5a76c8]">Store</span></span>
                     </a>

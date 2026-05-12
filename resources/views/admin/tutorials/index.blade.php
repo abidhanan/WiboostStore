@@ -36,13 +36,13 @@
                     placeholder="Cari judul, kategori, atau deskripsi...">
                 
                 <!-- Tombol Cari Emoji Saja -->
-                <button type="submit" class="shrink-0 flex items-center justify-center rounded-[1.2rem] sm:rounded-[1.5rem] border-4 border-white bg-[#5a76c8] w-12 h-12 sm:w-[3.5rem] sm:h-[3.5rem] text-white shadow-lg shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9] text-lg sm:text-xl" title="Cari Tutorial">
+                <button type="submit" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] w-12 h-12 text-white shadow-md shadow-[#5a76c8]/25 transition-transform active:scale-95 hover:bg-[#4760a9] text-base" title="Cari Tutorial">
                     🔍
                 </button>
                 
                 <!-- Tombol Reset Emoji -->
                 @if(request('search'))
-                    <a href="{{ route('admin.tutorials.index') }}" class="shrink-0 flex items-center justify-center rounded-[1.2rem] sm:rounded-[1.5rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 sm:w-[3.5rem] sm:h-[3.5rem] text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:bg-[#ffcccc] text-lg sm:text-xl" title="Reset Pencarian">
+                    <a href="{{ route('admin.tutorials.index') }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:bg-[#ffcccc] text-base" title="Reset Pencarian">
                         ✖️
                     </a>
                 @endif
@@ -50,8 +50,8 @@
         </div>
 
         <!-- Tombol Tambah Tutorial (Kanan di Desktop / Bawah di Mobile) -->
-        <a href="{{ route('admin.tutorials.create') }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-[#5a76c8] px-6 sm:px-8 py-4 sm:py-0 text-sm font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9] w-full md:w-auto min-w-0">
-            <span class="text-lg">➕</span> Tambah Tutorial
+        <a href="{{ route('admin.tutorials.create') }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] px-5 py-3 text-sm font-black text-white shadow-md shadow-[#5a76c8]/25 transition-transform active:scale-95 hover:bg-[#4760a9] w-full md:w-auto md:h-12 min-w-0">
+            <span class="text-base">➕</span> Tambah Tutorial
         </a>
     </div>
 

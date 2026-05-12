@@ -35,20 +35,8 @@ class FrontendController extends Controller
             ->orderByRaw($categoryOrderSql)
             ->get();
 
-        $recentFomoPurchases = Transaction::with('product')
-            ->where('payment_status', 'paid')
-            ->whereIn('order_status', ['processing', 'success'])
-            ->latest()
-            ->limit(10)
-            ->get()
-            ->map(fn (Transaction $transaction) => [
-                'name' => 'Member Wiboost',
-                'product' => $transaction->product?->name ?? 'Produk Wiboost',
-            ])
-            ->values();
-
         // 3. Melempar semua data ke file tampilan 'welcome.blade.php'
-        return view('welcome', compact('totalUsers', 'totalTransactions', 'activeProducts', 'categories', 'recentFomoPurchases'));
+        return view('welcome', compact('totalUsers', 'totalTransactions', 'activeProducts', 'categories'));
     }
 
     public function legal(string $page)

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\User;
+use App\Models\WalletHistory;
 use Illuminate\Http\Request;
 
 class DepositController extends Controller
@@ -14,14 +15,22 @@ class DepositController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Deposit::with('user')->latest();
+        $query = Deposit::with('user')
+            ->where(function ($statusQuery) {
+                $statusQuery->whereNull('payment_status')
+                    ->orWhereNotIn('payment_status', ['unpaid', 'pending']);
+            })
+            ->latest();
 
         // Fitur Pencarian
         if ($request->filled('search')) {
-            $query->where('invoice_number', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('user', function($q) use ($request) {
-                      $q->where('name', 'like', '%' . $request->search . '%');
-                  });
+            $query->where(function ($searchQuery) use ($request) {
+                $searchQuery->where('invoice_number', 'like', '%' . $request->search . '%')
+                    ->orWhereHas('user', function($q) use ($request) {
+                        $q->where('name', 'like', '%' . $request->search . '%')
+                            ->orWhere('email', 'like', '%' . $request->search . '%');
+                    });
+            });
         }
 
         $deposits = $query->paginate(20);
@@ -47,6 +56,18 @@ class DepositController extends Controller
             // Tambahkan saldo ke user
             $user = User::find($deposit->user_id);
             $user->increment('balance', $deposit->amount);
+
+            WalletHistory::firstOrCreate(
+                [
+                    'invoice_number' => $deposit->invoice_number,
+                    'type' => 'topup',
+                ],
+                [
+                    'user_id' => $deposit->user_id,
+                    'amount' => $deposit->amount,
+                    'description' => 'Top Up Saldo via MANUAL ADMIN',
+                ]
+            );
 
             return back()->with('success', 'Deposit disetujui! Saldo Rp ' . number_format($deposit->amount, 0, ',', '.') . ' telah ditambahkan ke akun ' . $user->name);
         }

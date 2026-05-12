@@ -54,27 +54,38 @@
             </div>
 
             <div class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] p-8 shadow-xl shadow-[#bde0fe]/30 border-4 border-white">
+                @php
+                    $currentPoints = (int) (Auth::user()->points ?? 0);
+                    $targetPoints = 5;
+                    $pointProgress = min(100, (int) round(($currentPoints / $targetPoints) * 100));
+                    $remainingPoints = max(0, $targetPoints - $currentPoints);
+                @endphp
                 <div class="flex justify-between items-start mb-6">
                     <div>
-                        <p class="text-[#8faaf3] text-[10px] font-black uppercase tracking-widest mb-1">Poin Wiboost ⭐</p>
-                        <h3 class="text-3xl font-black text-[#2b3a67] tracking-tight">{{ Auth::user()->points ?? 0 }} <span class="text-sm font-bold text-[#8faaf3]">Pts</span></h3>
+                        <p class="text-[#8faaf3] text-[10px] font-black uppercase tracking-widest mb-1">POIN Wiboost ⭐</p>
+                        <h3 class="text-3xl font-black text-[#2b3a67] tracking-tight">{{ $currentPoints }} <span class="text-sm font-bold text-[#8faaf3]">POIN</span></h3>
                     </div>
                     <div class="text-4xl animate-bounce drop-shadow-sm">🎁</div>
                 </div>
 
-                @if((Auth::user()->points ?? 0) >= 5)
+                @if($currentPoints >= $targetPoints)
                     <form action="{{ route('user.wallet.exchange') }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full bg-[#4bc6b9] hover:bg-[#3ba398] text-white py-4 rounded-full font-black transition-transform active:scale-95 shadow-lg shadow-[#4bc6b9]/30 border-4 border-white flex items-center justify-center gap-2">
-                            Tukar 5 Poin &rarr; Saldo 1K
+                            Tukar 5 POIN &rarr; Saldo 1K
                         </button>
                     </form>
                 @else
-                    <div class="w-full bg-[#f8faff] border-4 border-dashed border-[#bde0fe] text-[#8faaf3] py-4 rounded-[1.5rem] font-black text-center text-sm shadow-inner">
-                        Kumpulkan {{ 5 - (Auth::user()->points ?? 0) }} Poin Lagi!
+                    <div class="w-full bg-[#f8faff] border-4 border-dashed border-[#bde0fe] text-[#8faaf3] p-4 rounded-[1.5rem] font-black text-center text-sm shadow-inner">
+                        <div class="mb-3 text-center text-[10px] uppercase tracking-widest">
+                            <span>Kumpulkan {{ $remainingPoints }} POIN Lagi!</span>
+                        </div>
+                        <div class="h-4 overflow-hidden rounded-full border-2 border-white bg-white shadow-inner">
+                            <div class="h-full rounded-full bg-gradient-to-r from-[#4bc6b9] to-[#5a76c8] transition-all duration-500" style="width: {{ $pointProgress }}%;"></div>
+                        </div>
                     </div>
                 @endif
-                <p class="text-[9px] font-bold text-[#8faaf3] mt-4 text-center uppercase tracking-widest">1 Poin didapat tiap transaksi sukses.</p>
+                <p class="text-[9px] font-bold text-[#8faaf3] mt-4 text-center uppercase tracking-widest">Kumpulkan POIN dan dapatkan bonus saldo.</p>
             </div>
 
             <div class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/30">
@@ -82,15 +93,15 @@
                     <span class="text-2xl">⚡</span>
                     <h4 class="font-black text-[#2b3a67] text-xl">Isi Saldo Cepat</h4>
                 </div>
-                <form action="{{ route('user.wallet.topup') }}" method="POST">
+                <form action="{{ route('user.wallet.topup') }}" method="POST" data-single-submit>
                     @csrf
                     <div class="mb-6">
                         <label class="block text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mb-3 ml-2">Pilih Nominal Instan</label>
                         <div class="grid grid-cols-2 gap-3 mb-5">
+                            <button type="button" onclick="setNominal(10000)" class="py-3 bg-[#f4f9ff] border-2 border-white hover:border-[#bde0fe] shadow-sm hover:bg-[#e0fbfc] rounded-[1.2rem] text-sm font-black text-[#5a76c8] transition-all active:scale-95">10K</button>
                             <button type="button" onclick="setNominal(20000)" class="py-3 bg-[#f4f9ff] border-2 border-white hover:border-[#bde0fe] shadow-sm hover:bg-[#e0fbfc] rounded-[1.2rem] text-sm font-black text-[#5a76c8] transition-all active:scale-95">20K</button>
                             <button type="button" onclick="setNominal(50000)" class="py-3 bg-[#f4f9ff] border-2 border-white hover:border-[#bde0fe] shadow-sm hover:bg-[#e0fbfc] rounded-[1.2rem] text-sm font-black text-[#5a76c8] transition-all active:scale-95">50K</button>
                             <button type="button" onclick="setNominal(100000)" class="py-3 bg-[#f4f9ff] border-2 border-white hover:border-[#bde0fe] shadow-sm hover:bg-[#e0fbfc] rounded-[1.2rem] text-sm font-black text-[#5a76c8] transition-all active:scale-95">100K</button>
-                            <button type="button" onclick="setNominal(500000)" class="py-3 bg-[#f4f9ff] border-2 border-white hover:border-[#bde0fe] shadow-sm hover:bg-[#e0fbfc] rounded-[1.2rem] text-sm font-black text-[#5a76c8] transition-all active:scale-95">500K</button>
                         </div>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-5 font-black text-[#5a76c8]">Rp</span>
@@ -100,7 +111,7 @@
                         </div>
                         <p class="text-[10px] font-black text-amber-500 mt-3 ml-3 uppercase tracking-widest">*Min. isi Rp 10.000</p>
                     </div>
-                    <button type="submit" class="w-full bg-[#5a76c8] text-white py-4 rounded-full font-black hover:bg-[#4760a9] transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex justify-center items-center gap-2">
+                    <button type="submit" data-submit-label="Menyiapkan Tripay..." class="w-full bg-[#5a76c8] text-white py-4 rounded-full font-black hover:bg-[#4760a9] transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex justify-center items-center gap-2">
                         Lanjut Bayar 🚀
                     </button>
                 </form>
@@ -125,6 +136,8 @@
                             $displayDesc = $log->description;
                             
                             if ($log->type === 'topup') {
+                                $paidAmount = null;
+
                                 if (class_exists('\App\Models\Deposit')) {
                                     $deposit = \App\Models\Deposit::where('invoice_number', $log->invoice_number)->first();
                                     if ($deposit && $deposit->payment_method) {
@@ -134,6 +147,7 @@
                                         if (strtolower($method) == 'shopeepay') $method = 'ShopeePay';
                                         
                                         $displayDesc = "Top Up Saldo via " . $method;
+                                        $paidAmount = $deposit->paid_amount ?? null;
                                     }
                                 }
                             }
@@ -151,8 +165,8 @@
 
                         <div class="flex flex-col md:flex-row items-start md:items-center justify-between p-5 bg-white border-2 border-white rounded-[1.5rem] hover:border-[#bde0fe] hover:-translate-y-1 transition-all duration-300 group shadow-md shadow-[#bde0fe]/10">
                             
-                            <div class="flex items-center gap-4 mb-3 md:mb-0">
-                                <div class="w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center text-2xl font-black border-2 border-white shadow-inner group-hover:scale-110 transition-transform {{ $iconClass }}">
+                            <div class="flex items-center gap-3 mb-3 md:mb-0">
+                                <div class="w-11 h-11 md:w-12 md:h-12 shrink-0 rounded-[1rem] flex items-center justify-center text-lg md:text-xl font-black border-2 border-white shadow-inner group-hover:scale-110 transition-transform {{ $iconClass }}">
                                     {{ $iconChar }}
                                 </div>
                                 <div>
@@ -162,15 +176,20 @@
                                     <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mt-1.5 flex items-center gap-1">
                                         <span class="bg-[#f4f9ff] px-2 py-0.5 rounded border border-white">{{ $log->invoice_number ?? '-' }}</span> &bull; {{ $log->created_at->format('d M, H:i') }}
                                     </p>
+                                    @if(isset($paidAmount) && $paidAmount && (float) $paidAmount !== (float) $log->amount)
+                                        <p class="text-[10px] font-black text-[#4bc6b9] uppercase tracking-widest mt-1">
+                                            Dibayar ke Tripay: Rp {{ number_format($paidAmount, 0, ',', '.') }}
+                                        </p>
+                                    @endif
                                 </div>
                             </div>
                             
-                            <div class="text-left md:text-right w-full md:w-auto pl-16 md:pl-0 flex flex-row md:flex-col justify-between md:justify-end items-center md:items-end">
+                            <div class="text-left md:text-right w-full md:w-auto pl-14 md:pl-0 flex flex-row md:flex-col justify-between md:justify-end items-center md:items-end">
                                 <p class="font-black text-xl mb-1 {{ $log->type == 'purchase' ? 'text-[#ff6b6b]' : 'text-emerald-500' }} drop-shadow-sm">
                                     {{ $log->type == 'purchase' ? '-' : '+' }} Rp {{ number_format($log->amount, 0, ',', '.') }}
                                 </p>
                                 <span class="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-[#f4f9ff] text-[#8faaf3] border-2 border-white shadow-sm inline-block">
-                                    {{ $log->type }}
+                                    {{ $log->type_label }}
                                 </span>
                             </div>
                         </div>
@@ -191,5 +210,22 @@
     function setNominal(amount) {
         document.getElementById('amount_input').value = amount;
     }
+
+    document.querySelectorAll('form[data-single-submit]').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            if (form.dataset.submitted === '1') {
+                event.preventDefault();
+                return;
+            }
+
+            form.dataset.submitted = '1';
+            const button = form.querySelector('[type="submit"]');
+            if (button) {
+                button.disabled = true;
+                button.classList.add('cursor-not-allowed', 'opacity-70');
+                button.innerHTML = button.dataset.submitLabel || 'Memproses...';
+            }
+        });
+    });
 </script>
 @endsection

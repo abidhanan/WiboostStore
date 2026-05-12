@@ -19,6 +19,11 @@ class DashboardController extends Controller
 
         $totalTransactionsMonth = Transaction::whereMonth('created_at', $currentMonth)
             ->whereYear('created_at', $currentYear)
+            ->where(function ($query) {
+                $query->where('payment_method', '!=', 'tripay')
+                    ->orWhereNull('payment_method')
+                    ->orWhereNotIn('payment_status', ['unpaid', 'pending']);
+            })
             ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
             ->count();
 
@@ -31,6 +36,11 @@ class DashboardController extends Controller
         $totalUsers = User::where('role_id', 2)->count();
 
         $recentTransactions = Transaction::with(['user', 'product'])
+            ->where(function ($query) {
+                $query->where('payment_method', '!=', 'tripay')
+                    ->orWhereNull('payment_method')
+                    ->orWhereNotIn('payment_status', ['unpaid', 'pending']);
+            })
             ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
             ->latest()
             ->take(5)

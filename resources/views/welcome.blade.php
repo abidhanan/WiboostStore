@@ -7,6 +7,8 @@
     <title>Wiboost Store - Top Up & Kebutuhan Digital Termurah</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.vite-fallback')
+    @include('partials.ui-performance-tuning')
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
          body { font-family: 'Nunito', sans-serif; }
@@ -20,21 +22,19 @@
              50% { transform: translateY(-15px); }
              100% { transform: translateY(0px); }
          }
-         .popup-enter { transform: translateY(0); opacity: 1; pointer-events: auto; }
-         .popup-leave { transform: translateY(150%); opacity: 0; pointer-events: none; }
          .hide-scroll::-webkit-scrollbar { display: none; }
          .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white flex flex-col min-h-screen">
+<body class="wiboost-compact-ui wiboost-welcome-page bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white flex flex-col min-h-screen">
 
     <nav class="fixed w-full z-50 top-4 px-4 sm:px-6 lg:px-8 pointer-events-none">
         <div class="max-w-7xl mx-auto pointer-events-auto">
             <div class="bg-white/90 backdrop-blur-md border-4 border-white shadow-xl shadow-[#bde0fe]/50 rounded-[2rem] flex justify-between items-center h-20 px-6 sm:px-8">
-                <div class="flex items-center gap-3">
+                <a href="{{ Auth::check() ? (Auth::user()->isAdmin() ? route('admin.dashboard') : route('user.dashboard')) : route('home') }}" class="flex items-center gap-3">
                     <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm sm:h-14 sm:w-14">
                     <span class="font-extrabold text-2xl tracking-tight text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></span>
-                </div>
+                </a>
                 <div class="flex items-center gap-3">
                     @auth
                         @if(Auth::user()->isAdmin())
@@ -141,14 +141,6 @@
         </div>
     </section>
     
-    <div id="fomo-toast" class="fixed bottom-6 left-4 md:left-8 z-50 bg-white border-4 border-white shadow-2xl shadow-[#bde0fe]/50 rounded-[2rem] p-4 pr-8 flex items-center gap-4 transition-all duration-700 popup-leave max-w-[300px]">
-        <div class="w-10 h-10 bg-[#e6fff7] rounded-xl flex items-center justify-center text-xl border-2 border-white shadow-inner shrink-0">🛍️</div>
-        <div>
-            <p class="text-[9px] text-[#8faaf3] font-black uppercase tracking-widest" id="fomo-name">Seseorang</p>
-            <p class="text-xs text-[#2b3a67] font-black leading-tight mt-0.5">Membeli <span class="text-[#5a76c8]" id="fomo-product">Produk</span></p>
-        </div>
-    </div>
-
     <footer class="bg-white pt-12 pb-8 border-t-[6px] border-[#f0f5ff] relative overflow-hidden mt-auto">
         <div class="max-w-6xl mx-auto px-6 sm:px-8 relative z-10">
             <div class="flex flex-col md:flex-row justify-between items-center gap-8 mb-10">
@@ -190,36 +182,6 @@
         </div>
     </footer>
 
-    <script>
-        const fomoPurchases = @json($recentFomoPurchases ?? []);
-        const fomoToast = document.getElementById('fomo-toast');
-        const fomoName = document.getElementById('fomo-name');
-        const fomoProduct = document.getElementById('fomo-product');
-
-        function showFomo() {
-            if (!fomoToast || !fomoName || !fomoProduct || fomoPurchases.length === 0) return;
-            
-            const purchase = fomoPurchases[Math.floor(Math.random() * fomoPurchases.length)];
-            fomoName.innerText = purchase.name || 'Member Wiboost';
-            fomoProduct.innerText = purchase.product || 'Produk Wiboost';
-            
-            fomoToast.classList.remove('popup-leave');
-            fomoToast.classList.add('popup-enter');
-            
-            setTimeout(() => {
-                fomoToast.classList.remove('popup-enter');
-                fomoToast.classList.add('popup-leave');
-            }, 4000);
-        }
-
-        if (fomoPurchases.length > 0) {
-            setTimeout(() => {
-                showFomo();
-                setInterval(showFomo, Math.floor(Math.random() * (20000 - 10000 + 1) + 10000));
-            }, 3000);
-        }
-    </script>
-    
     @include('partials.floating-admin-report')
 </body>
 </html>

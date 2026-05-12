@@ -18,7 +18,7 @@ class CheckProviderOrderStatuses extends Command
         $transactions = Transaction::query()
             ->with(['product', 'user'])
             ->where('payment_status', 'paid')
-            ->where('order_status', 'processing')
+            ->whereIn('order_status', ['pending', 'processing'])
             ->whereHas('product', function ($query) {
                 $query->where('process_type', 'api')
                     ->whereIn('provider_source', ['digiflazz', 'ordersosmed']);

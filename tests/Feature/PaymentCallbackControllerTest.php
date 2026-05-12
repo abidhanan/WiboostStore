@@ -94,6 +94,7 @@ class PaymentCallbackControllerTest extends TestCase
             'payment_status' => 'paid',
             'payment_method' => 'QRIS',
             'amount' => 50000,
+            'paid_amount' => 50000,
         ]);
         $this->assertSame(1, DB::table('wallet_histories')->where('invoice_number', 'DEP-CALLBACK-001')->count());
         $this->assertDatabaseHas('wallet_histories', [

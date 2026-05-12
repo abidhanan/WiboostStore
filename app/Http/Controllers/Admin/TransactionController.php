@@ -17,8 +17,13 @@ class TransactionController extends Controller
     public function index(Request $request)
     {
         // Pastikan memuat relasi product.category agar bisa mengecek slug kategori
-        $query = Transaction::with(['user', 'product.category'])->latest();
+        $query = Transaction::with(['user', 'product.category.parent.parent'])->latest();
         $query->whereHas('product', fn ($productQuery) => $productQuery->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()));
+        $query->where(function ($statusQuery) {
+            $statusQuery->where('payment_method', '!=', 'tripay')
+                ->orWhereNull('payment_method')
+                ->orWhereNotIn('payment_status', ['unpaid', 'pending']);
+        });
 
         // 1. Pencarian
         if ($request->filled('search')) {

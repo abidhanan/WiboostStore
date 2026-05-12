@@ -9,13 +9,20 @@ use App\Services\TripayService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class WalletController extends Controller
 {
     public function index()
     {
-        $deposits = Deposit::where('user_id', Auth::id())->latest()->get();
+        $deposits = Deposit::where('user_id', Auth::id())
+            ->where(function ($query) {
+                $query->whereNull('payment_status')
+                    ->orWhereNotIn('payment_status', ['unpaid', 'pending']);
+            })
+            ->latest()
+            ->get();
 
         return view('user.wallet.index', compact('deposits'));
     }
@@ -27,16 +34,31 @@ class WalletController extends Controller
         ]);
 
         try {
-            $deposit = Deposit::create([
+            $amount = (float) $request->amount;
+            $lockKey = 'wallet-topup:' . sha1(Auth::id() . '|' . $amount);
+
+            if (! Cache::add($lockKey, true, now()->addSeconds(20))) {
+                usleep(500000);
+                $deposit = $this->findReusableDeposit($amount);
+
+                if ($deposit && filled($deposit->payment_url)) {
+                    $paymentUrl = $deposit->payment_url;
+
+                    return view('user.wallet.checkout', compact('deposit', 'paymentUrl'));
+                }
+
+                return back()->with('error', 'Tagihan Tripay sedang disiapkan. Tunggu sebentar lalu cek ulang halaman dompet.');
+            }
+
+            $deposit = $this->findReusableDeposit($amount) ?: Deposit::create([
                 'user_id' => Auth::id(),
                 'invoice_number' => 'DEP-' . strtoupper(Str::random(10)),
-                'amount' => $request->amount,
+                'amount' => $amount,
                 'payment_status' => 'unpaid',
                 'payment_method' => 'tripay',
             ]);
 
-            $payment = $tripayService->createDepositPayment($deposit->fresh('user'), Auth::user());
-            $paymentUrl = $payment['checkout_url'];
+            $paymentUrl = $this->resolveDepositPaymentUrl($deposit->fresh('user'), $tripayService);
 
             return view('user.wallet.checkout', compact('deposit', 'paymentUrl'));
         } catch (Exception $e) {
@@ -50,18 +72,32 @@ class WalletController extends Controller
             ->where('user_id', Auth::id())
             ->firstOrFail();
 
-        if ($deposit->payment_status !== 'unpaid') {
+        if (! in_array($deposit->payment_status, ['unpaid', 'pending'], true)) {
             return redirect()->route('user.wallet.index')->with('error', 'Tagihan ini sudah lunas atau dibatalkan.');
         }
 
         try {
-            $payment = $tripayService->createDepositPayment($deposit->fresh('user'), Auth::user());
-            $paymentUrl = $payment['checkout_url'];
+            $paymentUrl = $this->resolveDepositPaymentUrl($deposit->fresh('user'), $tripayService);
 
             return view('user.wallet.checkout', compact('deposit', 'paymentUrl'));
         } catch (Exception $e) {
             return back()->with('error', 'Gagal memuat ulang pembayaran: ' . $e->getMessage());
         }
+    }
+
+    public function cancelTripayDeposit(Deposit $deposit)
+    {
+        abort_if((int) $deposit->user_id !== (int) Auth::id(), 403);
+
+        if (in_array($deposit->payment_status, ['unpaid', 'pending'], true)) {
+            $deposit->delete();
+
+            return redirect()
+                ->route('user.wallet.index')
+                ->with('success', 'Checkout Tripay dibatalkan. Deposit pending tidak dimasukkan ke riwayat.');
+        }
+
+        return redirect()->route('user.wallet.index');
     }
 
     public function exchangePoints()
@@ -84,5 +120,35 @@ class WalletController extends Controller
         ]);
 
         return back()->with('success', 'Selamat, 5 poin berhasil ditukar menjadi saldo Rp 1.000.');
+    }
+
+    protected function findReusableDeposit(float $amount): ?Deposit
+    {
+        $expiresInMinutes = max(1, (int) config('tripay.expired_minutes', 60));
+
+        return Deposit::where('user_id', Auth::id())
+            ->whereIn('payment_status', ['unpaid', 'pending'])
+            ->where('payment_method', 'tripay')
+            ->where('amount', $amount)
+            ->where('created_at', '>=', now()->subMinutes($expiresInMinutes))
+            ->latest()
+            ->first();
+    }
+
+    protected function resolveDepositPaymentUrl(Deposit $deposit, TripayService $tripayService): string
+    {
+        if (filled($deposit->payment_url)) {
+            return (string) $deposit->payment_url;
+        }
+
+        $payment = $tripayService->createDepositPayment($deposit, Auth::user());
+
+        $deposit->update([
+            'payment_url' => $payment['checkout_url'],
+            'tripay_reference' => $payment['reference'] ?? null,
+            'payment_response' => $payment['raw'] ?? null,
+        ]);
+
+        return $payment['checkout_url'];
     }
 }

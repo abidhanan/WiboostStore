@@ -6,6 +6,8 @@
     <title>@yield('title') - Admin Wiboost</title>
     <link rel="icon" type="image/png" href="{{ asset('images/wiboost-logo.png') }}?v=20260426-full">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.vite-fallback')
+    @include('partials.ui-performance-tuning')
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Nunito', sans-serif; overflow-x: hidden; }
@@ -52,7 +54,7 @@
         }
     }"
     x-init="restoreSidebarScroll()"
-    class="min-h-screen bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white relative flex"
+    class="wiboost-compact-ui min-h-screen bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white relative flex"
 >
     <!-- Background Ornaments -->
     <div class="fixed top-20 right-10 text-4xl animate-float opacity-50 pointer-events-none z-0 hidden lg:block">🚀</div>
@@ -84,7 +86,7 @@
     <aside class="sticky top-0 hidden h-screen w-80 shrink-0 p-5 xl:block z-40">
         <div class="flex h-full flex-col rounded-[2.5rem] border-4 border-white bg-white/80 shadow-2xl shadow-[#bde0fe]/30 backdrop-blur-xl">
             <div class="shrink-0 border-b-4 border-dashed border-[#f4f9ff] px-6 py-6">
-                <a href="{{ route('home') }}" class="flex items-center gap-3 group">
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 group">
                     <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm group-hover:scale-110 transition-transform">
                     <div class="min-w-0 flex-1">
                         <p class="text-xl font-black leading-tight text-[#2b3a67] break-words">Wiboost <span class="text-[#5a76c8]">Admin</span></p>
