@@ -24,6 +24,18 @@
          }
          .hide-scroll::-webkit-scrollbar { display: none; }
          .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+         
+         /* Animasi mulus untuk FAQ accordion */
+         details > summary { list-style: none; }
+         details > summary::-webkit-details-marker { display: none; }
+         
+         /* Panah FAQ berputar menunjuk ke atas saat elemen terbuka */
+         details[open] summary .faq-icon {
+             transform: rotate(180deg);
+         }
+         .faq-icon {
+             transition: transform 0.3s ease-in-out;
+         }
     </style>
 </head>
 <body class="wiboost-compact-ui wiboost-welcome-page bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white flex flex-col min-h-screen">
@@ -51,7 +63,8 @@
         </div>
     </nav>
 
-    <main class="relative pt-40 pb-32 lg:pt-56 lg:pb-48 bg-wiboost-sky overflow-hidden">
+    <!-- SECTION HERO & DATA REAL-TIME -->
+    <main class="relative pt-40 pb-24 lg:pt-56 lg:pb-32 bg-wiboost-sky overflow-hidden border-b-[6px] border-[#f0f5ff]">
         <div class="absolute top-32 left-10 text-4xl animate-float opacity-70">☁️</div>
         <div class="absolute top-20 right-20 text-4xl animate-float-delayed opacity-70">✨</div>
         <div class="absolute bottom-40 left-1/4 text-3xl animate-float-delayed opacity-60">⭐</div>
@@ -63,12 +76,12 @@
             </div>
             
             <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-                <h1 class="text-5xl md:text-7xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm">
+                <h1 class="text-7xl md:text-8xl lg:text-[8rem] font-black tracking-tight text-[#2b3a67] drop-shadow-sm">
                     Wiboost <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Store</span>
                 </h1>
             </div>
 
-            <p class="mt-2 text-lg md:text-xl text-[#4a5f96] max-w-2xl mx-auto font-bold leading-relaxed">
+            <p class="mt-2 text-sm md:text-base text-[#4a5f96] max-w-5xl mx-auto font-bold leading-normal">
                 Wiboost Store adalah platform layanan digital terintegrasi yang menyediakan katalog lengkap mencakup layanan Pemasaran Media Sosial (SMM) guna menunjang pertumbuhan metrik akun sosial media, top up game online secara instan, pembelian paket data operator, hingga penyediaan akses langganan aplikasi premium dengan harga kompetitif, di mana seluruh transaksi diproses secara otomatis dan didukung oleh pembayaran QRIS yang support semua metode pembayaran secara praktis dan aman.
             </p>
             
@@ -77,48 +90,41 @@
                     Beli Sekarang
                 </a>
             </div>
-        </div>
 
-        <div class="absolute inset-x-0 bottom-0">
-            <svg viewBox="0 0 1440 120" class="w-full h-auto text-[#f4f9ff] fill-current" preserveAspectRatio="none">
-                <path d="M0,64L48,74.7C96,85,192,107,288,101.3C384,96,480,64,576,64C672,64,768,96,864,106.7C960,117,1056,107,1152,85.3C1248,64,1344,32,1392,16L1440,0L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"></path>
-            </svg>
-        </div>
-    </main>
-
-    <div class="bg-[#f4f9ff] pb-10 relative z-20 -mt-10">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-white rounded-[2rem] shadow-xl shadow-[#bde0fe]/40 border-4 border-white p-6 md:p-8 flex flex-col md:flex-row justify-around items-center gap-8 animate-float">
-                <div class="text-center">
-                    <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Total Pengguna</p>
-                    <p class="mt-1 text-4xl font-black text-[#5a76c8]">{{ number_format($totalUsers, 0, ',', '.') }}<span class="text-2xl text-[#a3bbfb]">+</span></p>
-                </div>
-                <div class="hidden md:block w-1 h-12 bg-[#f0f5ff] rounded-full"></div>
-                <div class="text-center">
-                    <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Total Layanan</p>
-                    <p class="mt-1 text-4xl font-black text-[#9a8ce5]">{{ number_format($activeProducts, 0, ',', '.') }}</p>
-                </div>
-                <div class="hidden md:block w-1 h-12 bg-[#f0f5ff] rounded-full"></div>
-                <div class="text-center">
-                    <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Total Transaksi</p>
-                    <p class="mt-1 text-4xl font-black text-[#4bc6b9]">{{ number_format($totalTransactions, 0, ',', '.') }}<span class="text-2xl text-[#8ce0d7]">+</span></p>
+            <div class="mt-24 lg:mt-32 max-w-5xl mx-auto">
+                <div class="bg-white/90 backdrop-blur-md rounded-[2rem] shadow-xl shadow-[#bde0fe]/40 border-4 border-white p-6 md:p-8 flex flex-col md:flex-row justify-around items-center gap-8 animate-float">
+                    <div class="text-center">
+                        <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Total Pengguna</p>
+                        <p class="mt-1 text-4xl font-black text-[#5a76c8]">{{ number_format($totalUsers, 0, ',', '.') }}<span class="text-2xl text-[#a3bbfb]">+</span></p>
+                    </div>
+                    <div class="hidden md:block w-1 h-12 bg-[#f0f5ff] rounded-full"></div>
+                    <div class="text-center">
+                        <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Total Layanan</p>
+                        <p class="mt-1 text-4xl font-black text-[#9a8ce5]">{{ number_format($activeProducts, 0, ',', '.') }}</p>
+                    </div>
+                    <div class="hidden md:block w-1 h-12 bg-[#f0f5ff] rounded-full"></div>
+                    <div class="text-center">
+                        <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Total Transaksi</p>
+                        <p class="mt-1 text-4xl font-black text-[#4bc6b9]">{{ number_format($totalTransactions, 0, ',', '.') }}<span class="text-2xl text-[#8ce0d7]">+</span></p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
-    <section id="kategori" class="py-16 bg-[#f4f9ff] relative flex-1 z-10">
+    <!-- SECTION KATEGORI (PUTIH) -->
+    <section id="kategori" class="py-24 lg:py-32 bg-white relative flex-1 z-10 border-b-[6px] border-[#f0f5ff]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
-                <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-xs border-2 border-white">Katalog Utama</div>
-                <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pilih Kategori</h2>
+                <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-6 text-xs border-2 border-white">Katalog Utama</div>
+                <h2 class="text-3xl md:text-5xl font-black text-[#2b3a67] tracking-tight">Pilih Kategori</h2>
             </div>
 
             <div class="mx-auto flex max-w-5xl flex-wrap justify-center gap-4 md:gap-5">
                 @forelse($categories as $cat)
                     @if(is_null($cat->parent_id))
-                        <a href="{{ route('login') }}" class="group block w-[calc(50%-0.5rem)] sm:w-56 md:w-60 lg:w-56 bg-white rounded-[1.5rem] p-4 border-4 border-white shadow-lg shadow-[#bde0fe]/30 hover:-translate-y-2 hover:border-[#bde0fe] transition-all duration-300 text-center relative flex flex-col items-center">
-                            <div class="w-16 h-16 bg-[#f4f9ff] rounded-2xl border-2 border-white shadow-inner flex items-center justify-center text-[#5a76c8] mb-3 group-hover:scale-110 transition-transform duration-300">
+                        <a href="{{ route('login') }}" class="group block w-[calc(50%-0.5rem)] sm:w-56 md:w-60 lg:w-56 bg-[#f4f9ff] rounded-[1.5rem] p-4 border-4 border-white shadow-lg shadow-[#bde0fe]/20 hover:-translate-y-2 hover:border-[#bde0fe] transition-all duration-300 text-center relative flex flex-col items-center">
+                            <div class="w-16 h-16 bg-white rounded-2xl border-2 border-white shadow-sm flex items-center justify-center text-[#5a76c8] mb-3 group-hover:scale-110 transition-transform duration-300">
                                 @if($cat->image)
                                     <img src="{{ Storage::url($cat->image) }}" alt="{{ $cat->name }}" class="h-full w-full object-contain drop-shadow-sm">
                                 @else
@@ -133,15 +139,145 @@
                         </a>
                     @endif
                 @empty
-                    <div class="w-full max-w-md text-center py-10 bg-white rounded-[2rem] border-4 border-dashed border-[#bde0fe]">
+                    <div class="w-full max-w-md text-center py-10 bg-[#f4f9ff] rounded-[2rem] border-4 border-dashed border-[#bde0fe]">
                         <p class="text-[#5a76c8] font-black">Layanan sedang dipersiapkan...</p>
                     </div>
                 @endforelse
             </div>
         </div>
     </section>
+
+    <!-- SECTION KENAPA HARUS WIBOOST STORE (BIRU) -->
+    <section id="fitur" class="py-24 lg:py-32 bg-[#f4f9ff] border-b-[6px] border-white relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <div class="inline-block px-4 py-1 bg-white text-[#4bc6b9] font-black rounded-full mb-6 text-xs shadow-sm">Keunggulan</div>
+                <h2 class="text-3xl md:text-5xl font-black text-[#2b3a67] tracking-tight">Kenapa Harus Wiboost Store?</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                <div class="bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
+                    <div class="w-16 h-16 bg-[#f4f9ff] rounded-2xl border-2 border-[#e0fbfc] flex items-center justify-center text-[#5a76c8] mb-5 mx-auto text-3xl shadow-sm">⚡</div>
+                    <h3 class="font-black text-[#2b3a67] text-lg mb-3">Proses Otomatis</h3>
+                    <p class="text-sm text-[#4a5f96] font-bold leading-relaxed">Sistem kami berjalan 24/7. Transaksi diproses seketika tanpa perlu konfirmasi manual dari admin.</p>
+                </div>
+                <div class="bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
+                    <div class="w-16 h-16 bg-[#f4f9ff] rounded-2xl border-2 border-[#e0fbfc] flex items-center justify-center text-[#4bc6b9] mb-5 mx-auto text-3xl shadow-sm">🛡️</div>
+                    <h3 class="font-black text-[#2b3a67] text-lg mb-3">Aman & Terpercaya</h3>
+                    <p class="text-sm text-[#4a5f96] font-bold leading-relaxed">Pembayaran menggunakan QRIS resmi yang aman, serta privasi akun media sosial Anda terjamin 100%.</p>
+                </div>
+                <div class="bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
+                    <div class="w-16 h-16 bg-[#f4f9ff] rounded-2xl border-2 border-[#e0fbfc] flex items-center justify-center text-[#9a8ce5] mb-5 mx-auto text-3xl shadow-sm">📦</div>
+                    <h3 class="font-black text-[#2b3a67] text-lg mb-3">Layanan Terlengkap</h3>
+                    <p class="text-sm text-[#4a5f96] font-bold leading-relaxed">Mulai dari Top Up Game, SMM Panel, hingga Aplikasi Premium tersedia lengkap dalam satu platform.</p>
+                </div>
+                <div class="bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
+                    <div class="w-16 h-16 bg-[#f4f9ff] rounded-2xl border-2 border-[#e0fbfc] flex items-center justify-center text-[#e1306c] mb-5 mx-auto text-3xl shadow-sm">💸</div>
+                    <h3 class="font-black text-[#2b3a67] text-lg mb-3">Harga Kompetitif</h3>
+                    <p class="text-sm text-[#4a5f96] font-bold leading-relaxed">Dapatkan layanan berkualitas dengan harga termurah. Sangat cocok untuk digunakan sendiri atau dijual kembali.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION ALUR PEMESANAN (PUTIH) -->
+    <section id="alur-pemesanan" class="py-24 lg:py-32 bg-white relative z-10 border-b-[6px] border-[#f0f5ff]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-6 text-xs border-2 border-white">Cara Kerja</div>
+                <h2 class="text-3xl md:text-5xl font-black text-[#2b3a67] tracking-tight">Alur Pemesanan</h2>
+            </div>
+
+            <div class="relative max-w-5xl mx-auto">
+                <div class="hidden md:block absolute top-10 left-[12%] right-[12%] h-2 bg-[#f4f9ff] rounded-full shadow-inner z-0"></div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-4 relative z-10">
+                    <div class="flex flex-col items-center text-center group">
+                        <div class="w-20 h-20 bg-[#5a76c8] text-white font-black text-3xl rounded-3xl border-4 border-white shadow-xl shadow-[#5a76c8]/40 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">1</div>
+                        <h3 class="font-black text-[#2b3a67] text-xl mb-2">Pilih Layanan</h3>
+                        <p class="text-sm text-[#4a5f96] font-bold px-4">Telusuri katalog dan pilih layanan digital yang Anda butuhkan.</p>
+                    </div>
+                    <div class="flex flex-col items-center text-center group">
+                        <div class="w-20 h-20 bg-[#5a76c8] text-white font-black text-3xl rounded-3xl border-4 border-white shadow-xl shadow-[#5a76c8]/40 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">2</div>
+                        <h3 class="font-black text-[#2b3a67] text-xl mb-2">Isi Data</h3>
+                        <p class="text-sm text-[#4a5f96] font-bold px-4">Masukkan data yang diminta seperti User ID game atau Link Sosial Media.</p>
+                    </div>
+                    <div class="flex flex-col items-center text-center group">
+                        <div class="w-20 h-20 bg-[#5a76c8] text-white font-black text-3xl rounded-3xl border-4 border-white shadow-xl shadow-[#5a76c8]/40 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">3</div>
+                        <h3 class="font-black text-[#2b3a67] text-xl mb-2">Pembayaran</h3>
+                        <p class="text-sm text-[#4a5f96] font-bold px-4">Lakukan pembayaran dengan scan QRIS atau metode lainnya yang tersedia.</p>
+                    </div>
+                    <div class="flex flex-col items-center text-center group">
+                        <div class="w-20 h-20 bg-[#5a76c8] text-white font-black text-3xl rounded-3xl border-4 border-white shadow-xl shadow-[#5a76c8]/40 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">4</div>
+                        <h3 class="font-black text-[#2b3a67] text-xl mb-2">Selesai!</h3>
+                        <p class="text-sm text-[#4a5f96] font-bold px-4">Pesanan Anda akan langsung diproses secara instan oleh sistem kami.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION PERTANYAAN UMUM (FAQ) (BIRU) -->
+    <section id="faq" class="py-24 lg:py-32 bg-[#f4f9ff] border-b-[6px] border-white relative z-10">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <div class="inline-block px-4 py-1 bg-white text-[#4bc6b9] font-black rounded-full mb-6 text-xs shadow-sm">FAQ</div>
+                <h2 class="text-3xl md:text-5xl font-black text-[#2b3a67] tracking-tight">Pertanyaan Umum</h2>
+            </div>
+
+            <div class="flex flex-col gap-4">
+                <details class="bg-white rounded-[1.5rem] border-4 border-white shadow-lg shadow-[#bde0fe]/20 overflow-hidden cursor-pointer">
+                    <summary class="flex justify-between items-center p-6 font-black text-[#2b3a67] text-base md:text-lg focus:outline-none">
+                        <span>Berapa lama waktu yang dibutuhkan untuk proses pesanan?</span>
+                        <span class="text-[#5a76c8]">
+                            <svg class="faq-icon w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                        </span>
+                    </summary>
+                    <div class="px-6 pb-6 text-sm text-[#4a5f96] font-bold leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white mx-2 mb-2">
+                        Sebagian besar layanan kami diproses secara otomatis dan instan dalam hitungan detik setelah pembayaran berhasil dikonfirmasi. Untuk layanan tertentu (seperti SMM dengan target tinggi), proses mungkin membutuhkan waktu yang sedikit lebih lama sesuai deskripsi produk.
+                    </div>
+                </details>
+
+                <details class="bg-white rounded-[1.5rem] border-4 border-white shadow-lg shadow-[#bde0fe]/20 overflow-hidden cursor-pointer">
+                    <summary class="flex justify-between items-center p-6 font-black text-[#2b3a67] text-base md:text-lg focus:outline-none">
+                        <span>Apakah butuh password akun sosmed saya?</span>
+                        <span class="text-[#5a76c8]">
+                            <svg class="faq-icon w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                        </span>
+                    </summary>
+                    <div class="px-6 pb-6 text-sm text-[#4a5f96] font-bold leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white mx-2 mb-2">
+                        Tidak! Layanan SMM (Social Media Marketing) kami 100% aman karena hanya membutuhkan <strong>Username</strong> atau <strong>Link/Tautan</strong> postingan Anda. Kami tidak akan pernah meminta password akun Anda.
+                    </div>
+                </details>
+
+                <details class="bg-white rounded-[1.5rem] border-4 border-white shadow-lg shadow-[#bde0fe]/20 overflow-hidden cursor-pointer">
+                    <summary class="flex justify-between items-center p-6 font-black text-[#2b3a67] text-base md:text-lg focus:outline-none">
+                        <span>Metode pembayaran apa saja yang tersedia?</span>
+                        <span class="text-[#5a76c8]">
+                            <svg class="faq-icon w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                        </span>
+                    </summary>
+                    <div class="px-6 pb-6 text-sm text-[#4a5f96] font-bold leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white mx-2 mb-2">
+                        Kami mendukung pembayaran via <strong>QRIS</strong> yang dapat di-scan menggunakan seluruh aplikasi E-Wallet (Dana, Ovo, Gopay, LinkAja, ShopeePay) maupun Mobile Banking (BCA, Mandiri, BRI, BNI, dll). Pembayaran diproses otomatis tanpa perlu mengirim bukti transfer.
+                    </div>
+                </details>
+
+                <details class="bg-white rounded-[1.5rem] border-4 border-white shadow-lg shadow-[#bde0fe]/20 overflow-hidden cursor-pointer">
+                    <summary class="flex justify-between items-center p-6 font-black text-[#2b3a67] text-base md:text-lg focus:outline-none">
+                        <span>Bagaimana jika pesanan saya gagal?</span>
+                        <span class="text-[#5a76c8]">
+                            <svg class="faq-icon w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                        </span>
+                    </summary>
+                    <div class="px-6 pb-6 text-sm text-[#4a5f96] font-bold leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white mx-2 mb-2">
+                        Jika terjadi gangguan teknis dari pusat yang menyebabkan pesanan Anda berstatus gagal (Error/Canceled), sistem kami akan secara otomatis mengembalikan dana Anda dalam bentuk saldo akun yang bisa Anda gunakan kembali untuk transaksi lainnya.
+                    </div>
+                </details>
+            </div>
+        </div>
+    </section>
     
-    <footer class="bg-white pt-12 pb-8 border-t-[6px] border-[#f0f5ff] relative overflow-hidden mt-auto">
+    <footer class="bg-white pt-12 pb-8 relative overflow-hidden mt-auto">
         <div class="max-w-6xl mx-auto px-6 sm:px-8 relative z-10">
             <div class="flex flex-col md:flex-row justify-between items-center gap-8 mb-10">
                 
