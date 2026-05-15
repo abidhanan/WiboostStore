@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:buyer'])->prefix('user')->name('user.')->group(function () {
     // Dashboard & History
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/tutorials', [UserDashboardController::class, 'tutorialCategory'])->name('tutorials.category');
     Route::get('/history', [TransactionHistoryController::class, 'index'])->name('history');
     
     // Order & Checkout

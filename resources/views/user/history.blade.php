@@ -209,7 +209,7 @@
                                         $colorClass = 'bg-[#fff5eb] text-amber-500 border-amber-200';
                                     } else {
                                         $methodMap = [
-                                            'tripay' => 'Tripay',
+                                            'tripay' => 'QRIS',
                                             'qris' => 'QRIS', 'gopay' => 'GoPay', 'shopeepay' => 'ShopeePay',
                                             'bank_transfer' => 'Bank', 'cstore' => 'ALFA/INDOMARET',
                                             'credit_card' => 'Kartu Kredit', 'echannel' => 'Mandiri Bill',
@@ -269,7 +269,7 @@
                             @php($paymentUrl = filter_var($trx->snap_token, FILTER_VALIDATE_URL) ? $trx->snap_token : null)
                             @if($paymentUrl)
                                 <a href="{{ $paymentUrl }}" class="w-full bg-[#4bc6b9] hover:bg-[#3ba398] text-white py-4 rounded-full font-black transition-transform active:scale-95 shadow-xl shadow-[#4bc6b9]/30 border-4 border-white flex justify-center items-center gap-2 text-lg mb-3">
-                                    Bayar via Tripay 💳
+                                    Bayar via QRIS
                                 </a>
                             @else
                                 <div class="mb-3 rounded-[1.5rem] border-4 border-white bg-[#fff5eb] px-5 py-4 text-center text-sm font-black text-amber-600 shadow-sm">

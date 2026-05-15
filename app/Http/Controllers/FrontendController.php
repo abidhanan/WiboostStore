@@ -79,7 +79,7 @@ class FrontendController extends Controller
                 'sections' => [
                     ['title' => 'Jam bantuan', 'body' => 'Admin akan memprioritaskan pesanan paid, pesanan gagal, dan laporan buyer dari halaman riwayat atau tombol lapor admin.'],
                     ['title' => 'Data yang perlu disiapkan', 'body' => 'Sertakan invoice, email akun Wiboost, nama produk, target pesanan, dan screenshot kendala agar admin cepat mengecek.'],
-                    ['title' => 'Channel utama', 'body' => 'Gunakan tombol lapor admin di kanan bawah website agar pesan langsung diarahkan ke kontak resmi Wiboost.'],
+                    ['title' => 'Channel utama', 'body' => 'Gunakan kontak resmi Wiboost dan sertakan detail invoice agar admin bisa membantu pengecekan dengan cepat.'],
                 ],
             ],
         ];

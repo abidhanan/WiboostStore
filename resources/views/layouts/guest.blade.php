@@ -32,11 +32,6 @@
 <body class="wiboost-compact-ui min-h-screen bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white">
     <div class="relative overflow-hidden bg-wiboost-sky px-4 sm:px-6 lg:px-8 {{ $isCompactAuth ? 'min-h-screen py-10 flex flex-col justify-center' : 'min-h-screen py-5' }}">
         
-        <div class="pointer-events-none absolute top-16 left-10 text-5xl animate-float opacity-70">☁️</div>
-        <div class="pointer-events-none absolute top-24 right-16 text-3xl animate-float-delayed opacity-70">✨</div>
-        <div class="pointer-events-none absolute bottom-32 left-[15%] text-3xl animate-float-delayed opacity-60">⭐</div>
-        <div class="pointer-events-none absolute bottom-10 right-[5%] text-6xl animate-float opacity-80">☁️</div>
-
         @unless($isCompactAuth)
             <nav class="relative z-20 mx-auto max-w-6xl mt-2 w-full">
                 <div class="flex h-20 items-center justify-between rounded-[2rem] border-4 border-white bg-white/90 px-5 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-8">

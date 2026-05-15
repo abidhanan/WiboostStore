@@ -29,11 +29,6 @@
     </head>
     <body class="wiboost-compact-ui font-sans antialiased text-slate-800 selection:bg-[#7b9eed] selection:text-white bg-wiboost-sky min-h-screen relative overflow-x-hidden">
         
-        <div class="fixed top-20 left-10 text-4xl animate-float opacity-60 pointer-events-none z-0">☁️</div>
-        <div class="fixed top-32 right-20 text-3xl animate-float-delayed opacity-60 pointer-events-none z-0">✨</div>
-        <div class="fixed bottom-40 left-1/4 text-2xl animate-float-delayed opacity-50 pointer-events-none z-0">⭐</div>
-        <div class="fixed bottom-20 right-1/4 text-5xl animate-float opacity-60 pointer-events-none z-0">☁️</div>
-
         <div class="min-h-screen relative z-10 flex flex-col">
             @include('layouts.navigation')
 

@@ -5,17 +5,17 @@
 @section('content')
     <div class="mx-auto w-full max-w-md text-center sm:text-left">
         <div class="mb-8">
-            <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-xs border-2 border-white shadow-sm uppercase tracking-widest">
+            <div class="inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1 text-xs font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
                 Yuk Masuk!
             </div>
-            <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm">
-                Selamat Datang Kembali!</span>
+            <h2 class="text-3xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm sm:text-4xl">
+                Selamat Datang Kembali!
             </h2>
             <p class="mt-2 text-sm font-bold text-[#8faaf3]">Silakan masuk untuk melakukan transaksi!</p>
         </div>
 
         @if (session('status'))
-            <div class="mb-6 rounded-[1.5rem] border-4 border-white bg-[#e6fff7] px-5 py-4 text-sm font-bold text-emerald-600 shadow-lg shadow-emerald-100 text-left">
+            <div class="mb-6 rounded-[1.5rem] border-4 border-white bg-[#e6fff7] px-5 py-4 text-left text-sm font-bold text-emerald-600 shadow-lg shadow-emerald-100">
                 {{ session('status') }}
             </div>
         @endif
@@ -48,19 +48,19 @@
                 @enderror
             </div>
 
-            <label for="remember_me" class="flex items-center gap-3 rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-4 py-3 shadow-sm hover:border-[#bde0fe] transition cursor-pointer">
-                <input id="remember_me" type="checkbox" name="remember" class="h-5 w-5 rounded-md border-2 border-white bg-white text-[#5a76c8] focus:ring-[#5a76c8] shadow-inner">
+            <label for="remember_me" class="flex cursor-pointer items-center gap-3 rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-4 py-3 shadow-sm transition hover:border-[#bde0fe]">
+                <input id="remember_me" type="checkbox" name="remember" class="h-5 w-5 rounded-md border-2 border-white bg-white text-[#5a76c8] shadow-inner focus:ring-[#5a76c8]">
                 <span class="text-sm font-black text-[#8faaf3]">Tetap masuk di perangkat ini</span>
             </label>
 
-            <button type="submit" class="w-full rounded-full border-4 border-white bg-[#5a76c8] px-5 py-4 text-base font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9] flex items-center justify-center gap-2">
-                Masuk Sekarang ðŸš€
+            <button type="submit" class="flex w-full items-center justify-center rounded-full border-4 border-white bg-[#5a76c8] px-5 py-4 text-base font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform hover:bg-[#4760a9] active:scale-95">
+                Masuk Sekarang
             </button>
         </form>
 
         <p class="mt-6 text-center text-sm font-black text-[#8faaf3]">
             Belum punya akun?
-            <a href="{{ route('register') }}" class="text-[#5a76c8] transition hover:text-[#4760a9] underline decoration-2 underline-offset-4">Daftar di sini</a>
+            <a href="{{ route('register') }}" class="text-[#5a76c8] underline decoration-2 underline-offset-4 transition hover:text-[#4760a9]">Daftar di sini</a>
         </p>
     </div>
 @endsection

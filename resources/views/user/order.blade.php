@@ -24,11 +24,6 @@
 
 <div class="wiboost-font relative mx-auto mt-4 max-w-5xl overflow-hidden px-4 pb-24 z-10">
     
-    <div class="absolute top-10 right-10 text-4xl animate-float opacity-50 pointer-events-none hidden md:block">☁️</div>
-    <div class="absolute top-1/3 left-5 text-3xl animate-float-delayed opacity-50 pointer-events-none hidden md:block">✨</div>
-    <div class="absolute bottom-20 left-1/4 text-2xl animate-float-delayed opacity-50 pointer-events-none hidden md:block">⭐</div>
-    <div class="absolute bottom-40 right-[10%] text-5xl animate-float opacity-40 pointer-events-none hidden md:block">☁️</div>
-
     @if(session('error'))
         <div class="mb-8 flex items-center gap-3 rounded-[2rem] border-4 border-white bg-[#ffe5e5] px-6 py-4 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 relative z-10">
             <span class="text-3xl drop-shadow-sm">⚠️</span>
@@ -53,6 +48,7 @@
     @php
         $showSuntikSosmedForm = $isSuntikSosmedOrder ?? false;
         $showTopUpGameCompactCards = ($isTopUpGameOrder ?? false) && ! $showSuntikSosmedForm;
+        $showCompactServiceCards = ($isCompactServiceCardOrder ?? $showTopUpGameCompactCards) && ! $showSuntikSosmedForm;
 
         if ($showSuntikSosmedForm) {
             $products = $products
@@ -89,8 +85,6 @@
 
     <div id="page-product-list" class="transition-all duration-300 relative z-10">
         <div class="relative mb-10 flex flex-col items-center gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 shadow-xl shadow-[#bde0fe]/30 md:flex-row md:gap-8 md:p-8">
-            <div class="absolute -bottom-10 -right-10 text-9xl opacity-10 pointer-events-none animate-float">📦</div>
-
             <div class="relative z-10 flex w-full items-center justify-between md:justify-start gap-4 md:w-auto">
                 <a href="{{ $category->parent_id ? route('user.order.category', $category->parent->slug) : route('user.dashboard') }}" class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.2rem] border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-110 active:scale-95 hover:bg-[#e0fbfc]">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
@@ -126,7 +120,6 @@
                 <input type="hidden" name="product_id" id="social_product_id" value="{{ old('product_id') }}">
 
                 <div class="flex items-center gap-3 mb-6 border-b-4 border-dashed border-[#f4f9ff] pb-4">
-                    <span class="text-3xl">🚀</span>
                     <h3 class="text-2xl font-black text-[#2b3a67]">Detail Pesanan</h3>
                 </div>
 
@@ -199,7 +192,7 @@
                                 <p class="text-base font-black text-[#2b3a67]">Saldo Wiboost</p>
                                 <p class="mt-1 text-sm font-bold text-[#5a76c8]">Sisa: Rp {{ number_format(Auth::user()->balance ?? 0, 0, ',', '.') }}</p>
                             </div>
-                            <div class="text-2xl transition-transform group-hover:scale-110 opacity-50">💰</div>
+                            <div class="text-3xl drop-shadow-sm opacity-70 transition-transform group-hover:scale-110">&#128176;</div>
                             <div class="pointer-events-none absolute inset-0 rounded-[1.5rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
                         </label>
 
@@ -207,17 +200,17 @@
                             <input type="radio" name="payment_method" value="tripay" class="peer sr-only" required>
                             <div class="h-6 w-6 shrink-0 rounded-full border-2 border-[#8faaf3] bg-white transition-all peer-checked:border-[7px] peer-checked:border-[#5a76c8]"></div>
                             <div class="flex-1">
-                                <p class="text-base font-black text-[#2b3a67]">Tripay / QRIS</p>
-                                <p class="mt-1 text-xs font-bold text-[#8faaf3]">Otomatis via Tripay</p>
+                                <p class="text-base font-black text-[#2b3a67]">QRIS</p>
+                                <p class="mt-1 text-xs font-bold text-[#8faaf3]">Otomatis via QRIS</p>
                             </div>
-                            <div class="text-2xl transition-transform group-hover:scale-110 opacity-50">💳</div>
+                            <div class="text-3xl drop-shadow-sm opacity-70 transition-transform group-hover:scale-110">&#128241;</div>
                             <div class="pointer-events-none absolute inset-0 rounded-[1.5rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
                         </label>
                     </div>
                 </div>
 
                 <button type="submit" id="btnSocialCheckout" class="flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-[#4bc6b9] py-5 text-xl font-black text-white shadow-xl shadow-[#4bc6b9]/40 transition-transform hover:bg-[#3ba398] active:scale-95">
-                    Bayar Pesanan 🚀
+                    Bayar Pesanan
                 </button>
             </form>
         @else
@@ -225,20 +218,20 @@
             <h3 class="text-2xl font-black text-[#2b3a67]">Daftar Layanan</h3>
         </div>
 
-        <div class="{{ $showTopUpGameCompactCards ? 'grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5' }}">
+        <div class="{{ $showCompactServiceCards ? 'grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5' }}">
             @forelse($products as $product)
                 @php
                     $isOutOfStock = in_array($product->process_type, ['account', 'number'], true) && ($product->available_stock ?? 0) <= 0;
                     $plainDescription = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $product->description)));
-                    $cardBaseClass = $showTopUpGameCompactCards
-                        ? 'group flex h-full w-full flex-col justify-between rounded-[1.35rem] border-4 border-white bg-white/95 p-3 text-left shadow-lg shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 min-h-[128px] sm:p-4'
-                        : 'group flex flex-col justify-between w-full rounded-[2rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 text-left shadow-xl shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 min-h-[160px]';
-                    $disabledCardClass = $showTopUpGameCompactCards
-                        ? 'relative flex h-full w-full cursor-not-allowed flex-col justify-between overflow-hidden rounded-[1.35rem] border-4 border-white bg-gray-50 p-3 text-left opacity-60 grayscale shadow-sm min-h-[128px] sm:p-4'
-                        : 'relative flex flex-col justify-between w-full cursor-not-allowed overflow-hidden rounded-[2rem] border-4 border-white bg-gray-50 p-6 text-left opacity-60 grayscale shadow-sm min-h-[160px]';
-                    $logoBoxClass = $showTopUpGameCompactCards
-                        ? 'h-9 w-9 rounded-xl text-xl'
-                        : 'h-12 w-12 rounded-xl text-2xl';
+                    $cardBaseClass = $showCompactServiceCards
+                        ? 'group flex h-full w-full flex-col items-center justify-between rounded-[1.35rem] border-4 border-white bg-white/95 p-3 text-center shadow-lg shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 min-h-[150px] sm:p-4'
+                        : 'group flex flex-col items-center justify-between w-full rounded-[2rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 text-center shadow-xl shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 min-h-[230px]';
+                    $disabledCardClass = $showCompactServiceCards
+                        ? 'relative flex h-full w-full cursor-not-allowed flex-col items-center justify-between overflow-hidden rounded-[1.35rem] border-4 border-white bg-gray-50 p-3 text-center opacity-60 grayscale shadow-sm min-h-[150px] sm:p-4'
+                        : 'relative flex flex-col items-center justify-between w-full cursor-not-allowed overflow-hidden rounded-[2rem] border-4 border-white bg-gray-50 p-6 text-center opacity-60 grayscale shadow-sm min-h-[230px]';
+                    $logoBoxClass = $showCompactServiceCards
+                        ? 'mb-3 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[1.35rem] border-4 border-white bg-[#f4f9ff] p-2 text-3xl shadow-inner transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3'
+                        : 'mb-5 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] p-3 text-5xl shadow-inner transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3';
                 @endphp
 
                 <button
@@ -247,6 +240,8 @@
                     data-name="{{ $product->name }}"
                     data-price="{{ $product->selling_price }}"
                     data-description="{{ $plainDescription }}"
+                    data-logo-image="{{ $product->display_logo_image ? Storage::url($product->display_logo_image) : '' }}"
+                    data-logo-emote="{{ $product->display_logo_emote ?? '' }}"
                     data-checkout-fields='{{ json_encode($product->checkout_fields, JSON_UNESCAPED_UNICODE) }}'
                     @if(!$isOutOfStock)
                         onclick="goToCheckout(this)"
@@ -256,41 +251,37 @@
                         class="{{ $disabledCardClass }}"
                     @endif
                 >
-                    <div class="flex items-start justify-between {{ $showTopUpGameCompactCards ? 'gap-2 mb-3' : 'gap-3 mb-4' }} w-full">
-                        <div class="min-w-0 flex-1">
-                            <span class="block font-black leading-tight text-[#2b3a67] transition-colors group-hover:text-[#5a76c8] {{ $showTopUpGameCompactCards ? 'text-xs sm:text-sm' : 'text-base' }}">{{ $product->name }}</span>
-                        </div>
+                    <div class="flex w-full flex-col items-center {{ $showCompactServiceCards ? 'mb-3' : 'mb-4' }}">
                         @if($product->display_logo_image)
-                            <div class="{{ $logoBoxClass }} shrink-0 overflow-hidden border-2 border-white bg-[#f4f9ff] shadow-sm">
-                                <img src="{{ Storage::url($product->display_logo_image) }}" alt="Logo" class="h-full w-full object-cover">
+                            <div class="{{ $logoBoxClass }}">
+                                <img src="{{ Storage::url($product->display_logo_image) }}" alt="Logo" class="h-full w-full object-contain drop-shadow-sm">
                             </div>
                         @elseif($product->display_logo_emote)
-                            <div class="{{ $logoBoxClass }} flex shrink-0 items-center justify-center border-2 border-white bg-[#f4f9ff] drop-shadow-sm shadow-inner">
+                            <div class="{{ $logoBoxClass }} text-[#5a76c8] drop-shadow-sm">
                                 {{ $product->display_logo_emote }}
                             </div>
                         @else
-                            <div class="{{ $logoBoxClass }} flex shrink-0 items-center justify-center border-2 border-white bg-[#f4f9ff] text-[9px] font-black text-[#8faaf3] shadow-inner uppercase">
+                            <div class="{{ $logoBoxClass }} text-[9px] font-black text-[#8faaf3] uppercase">
                                 {{ $product->process_type }}
                             </div>
                         @endif
+                        <span class="block font-black leading-tight text-[#2b3a67] transition-colors group-hover:text-[#5a76c8] {{ $showCompactServiceCards ? 'text-xs sm:text-sm' : 'text-lg' }}">{{ $product->name }}</span>
                     </div>
                     
-                    @if(!$showTopUpGameCompactCards && $plainDescription !== '')
-                        <p class="mb-4 line-clamp-2 text-xs font-bold text-[#8faaf3] flex-1">{{ $plainDescription }}</p>
+                    @if(!$showCompactServiceCards && $plainDescription !== '')
+                        <p class="mb-4 line-clamp-2 text-center text-xs font-bold text-[#8faaf3] flex-1">{{ $plainDescription }}</p>
                     @endif
 
-                    <div class="mt-auto flex items-center justify-between w-full border-t-2 border-dashed border-[#f4f9ff] {{ $showTopUpGameCompactCards ? 'pt-3 gap-2' : 'pt-4' }}">
+                    <div class="mt-auto flex items-center justify-center w-full border-t-2 border-dashed border-[#f4f9ff] {{ $showCompactServiceCards ? 'pt-3 gap-2' : 'pt-4' }}">
                         @if($isOutOfStock)
                             <span class="shrink-0 rounded-lg border border-white bg-[#ffe5e5] px-3 py-1.5 text-xs font-black text-[#ff6b6b] shadow-sm">HABIS</span>
                         @else
-                            <span class="font-black uppercase tracking-widest text-[#8faaf3] {{ $showTopUpGameCompactCards ? 'hidden sm:inline text-[9px]' : 'text-xs' }}">Harga</span>
-                            <span class="shrink-0 font-black text-[#4bc6b9] {{ $showTopUpGameCompactCards ? 'text-sm sm:text-base' : 'text-lg' }}">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</span>
+                            <span class="shrink-0 font-black text-[#4bc6b9] {{ $showCompactServiceCards ? 'text-sm sm:text-base' : 'text-lg' }}">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</span>
                         @endif
                     </div>
                 </button>
             @empty
                 <div class="col-span-full rounded-[2.5rem] border-4 border-dashed border-[#bde0fe] bg-white py-20 text-center shadow-lg shadow-[#bde0fe]/20">
-                    <div class="text-6xl mb-4 opacity-50 animate-float">📦</div>
                     <p class="text-2xl font-black text-[#5a76c8]">Layanan sedang kosong.</p>
                 </div>
             @endforelse
@@ -299,17 +290,22 @@
     </div>
 
     <div id="page-checkout" class="hidden transition-all duration-300 relative z-10">
-        <button type="button" onclick="goBackToProducts()" class="mb-8 inline-flex items-center gap-2 rounded-full border-4 border-white bg-white/95 backdrop-blur-sm px-6 py-3 font-black text-[#5a76c8] shadow-lg hover:shadow-[#bde0fe]/50 transition-transform active:scale-95">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
-            Kembali ke Daftar
-        </button>
-
-        <div class="mb-8 pl-2">
-            <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">
-                Checkout
+        <div class="relative z-10 mb-8 flex flex-col items-center gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white bg-white/95 p-6 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm md:flex-row md:items-center md:gap-8 md:p-8">
+            <div class="relative z-10 flex w-full items-center justify-between gap-4 md:w-auto md:justify-start">
+                <button type="button" onclick="goBackToProducts()" class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.2rem] border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-110 hover:bg-[#e0fbfc] active:scale-95">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
             </div>
-            <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm">Pesanan Anda 🛒</h2>
-            <p class="mt-2 font-bold text-[#8faaf3]">Lengkapi data sesuai layanan yang dipilih lalu pilih metode pembayaran.</p>
+
+            <div class="relative z-10 flex-1 text-center md:text-left">
+                <div class="mb-3 inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1 text-[10px] font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
+                    Checkout
+                </div>
+                <h2 class="text-3xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm md:text-4xl">Pesanan Anda</h2>
+                <p class="mt-2 text-sm font-bold leading-relaxed text-[#8faaf3] md:text-base">
+                    Lengkapi data sesuai layanan yang dipilih lalu pilih metode pembayaran.
+                </p>
+            </div>
         </div>
 
         <form action="{{ route('user.checkout.process') }}" method="POST" id="checkoutForm" onsubmit="return showLoadingBtn()">
@@ -317,17 +313,23 @@
             <input type="hidden" name="product_id" id="checkout_product_id">
 
             <div class="relative mb-8 flex flex-col justify-between gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white bg-gradient-to-br from-[#8faaf3] to-[#5a76c8] p-8 text-white shadow-xl shadow-[#bde0fe]/40 md:flex-row md:items-center">
-                <div class="absolute -bottom-6 -right-6 text-9xl opacity-20 pointer-events-none animate-float">🛍️</div>
-
-                <div class="relative z-10">
-                    <span class="mb-3 inline-block rounded-full bg-white/20 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-white shadow-inner border border-white/50">Layanan Terpilih</span>
-                    <h3 class="text-3xl font-black drop-shadow-md leading-tight" id="checkout_product_name">Nama Produk</h3>
-                    <p id="checkout_product_description" class="mt-4 hidden max-w-2xl rounded-2xl bg-white/10 px-5 py-4 text-sm font-bold leading-relaxed text-white backdrop-blur-md shadow-inner border border-white/20"></p>
+                <div class="relative z-10 flex flex-1 items-center gap-5">
+                    <div id="checkout_product_logo_box" class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-2 border-white/70 bg-white/20 p-2 text-white shadow-inner">
+                        <span id="checkout_product_logo_emote" class="text-4xl font-black leading-none drop-shadow-sm">W</span>
+                        <img id="checkout_product_logo_image" src="" alt="Logo produk" class="hidden h-full w-full object-contain drop-shadow-sm">
+                    </div>
+                    <div>
+                        <span class="mb-3 inline-block rounded-full bg-white/20 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-white shadow-inner border border-white/50">Layanan Terpilih</span>
+                        <h3 class="text-2xl md:text-3xl font-black drop-shadow-md leading-tight" id="checkout_product_name">Nama Produk</h3>
+                        <p id="checkout_product_description" class="mt-3 hidden max-w-2xl text-sm font-bold leading-relaxed text-white/90"></p>
+                    </div>
                 </div>
 
-                <div class="relative z-10 shrink-0 rounded-[2rem] border-4 border-white/50 bg-white/20 px-8 py-6 text-left backdrop-blur-md md:text-right shadow-lg">
-                    <p class="mb-1 text-[10px] font-black uppercase tracking-widest text-[#e0fbfc]">Total Harga</p>
-                    <p class="text-3xl font-black drop-shadow-md" id="checkout_product_price">Rp 0</p>
+                <div class="relative z-10 shrink-0 rounded-[2rem] border-4 border-white/50 bg-white/20 px-6 py-5 text-left backdrop-blur-md shadow-lg">
+                    <div class="text-left md:text-right">
+                        <p class="mb-1 text-[10px] font-black uppercase tracking-widest text-[#e0fbfc]">Total Harga</p>
+                        <p class="text-3xl font-black drop-shadow-md" id="checkout_product_price">Rp 0</p>
+                    </div>
                 </div>
             </div>
 
@@ -338,10 +340,12 @@
             </div>
 
             <div id="no_target_msg" class="relative mb-8 hidden items-center gap-5 rounded-[2.5rem] border-4 border-white bg-[#e6fff7] p-8 shadow-xl shadow-emerald-100/50">
-                <div class="shrink-0 text-6xl drop-shadow-sm animate-bounce">✅</div>
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border-2 border-white bg-emerald-100 text-emerald-500 shadow-sm sm:h-10 sm:w-10">
+                    <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" stroke-width="3.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                </div>
                 <div>
                     <h4 class="text-xl font-black text-emerald-500 mb-1">Tidak Perlu Isi Form</h4>
-                    <p class="text-sm font-bold leading-relaxed text-[#4bc6b9]">Untuk layanan ini, kamu tidak perlu mengisi data tambahan. Detail nomor atau akun akan diproses otomatis oleh sistem secara instan.</p>
+                    <p class="text-sm font-bold leading-relaxed text-[#4bc6b9]">Tidak perlu isi form untuk layanan ini, kamu tidak perlu mengisi data tambahan. Detail akun akan diproses otomatis oleh sistem secara instan.</p>
                 </div>
             </div>
 
@@ -357,7 +361,7 @@
                             <p class="text-xl font-black text-[#2b3a67]">Saldo Wiboost</p>
                             <p class="mt-1 text-sm font-bold text-[#5a76c8]">Sisa: Rp {{ number_format(Auth::user()->balance ?? 0, 0, ',', '.') }}</p>
                         </div>
-                        <div class="text-4xl transition-transform group-hover:scale-110 drop-shadow-sm opacity-50">💰</div>
+                        <div class="text-4xl drop-shadow-sm opacity-70 transition-transform group-hover:scale-110">&#128176;</div>
                         <div class="pointer-events-none absolute inset-0 rounded-[2rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
                     </label>
 
@@ -365,17 +369,17 @@
                         <input type="radio" name="payment_method" value="tripay" class="peer sr-only" required>
                         <div class="h-7 w-7 shrink-0 rounded-full border-2 border-[#8faaf3] bg-white transition-all peer-checked:border-[8px] peer-checked:border-[#5a76c8]"></div>
                         <div class="flex-1">
-                            <p class="text-xl font-black text-[#2b3a67]">Tripay / QRIS</p>
-                            <p class="mt-1 text-xs font-bold text-[#8faaf3]">Otomatis via Tripay</p>
+                            <p class="text-xl font-black text-[#2b3a67]">QRIS</p>
+                            <p class="mt-1 text-xs font-bold text-[#8faaf3]">Otomatis via QRIS</p>
                         </div>
-                        <div class="text-4xl transition-transform group-hover:scale-110 drop-shadow-sm opacity-50">💳</div>
+                        <div class="text-4xl drop-shadow-sm opacity-70 transition-transform group-hover:scale-110">&#128241;</div>
                         <div class="pointer-events-none absolute inset-0 rounded-[2rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
                     </label>
                 </div>
             </div>
 
             <button type="submit" id="btnCheckout" class="flex w-full items-center justify-center gap-3 rounded-full border-4 border-white bg-[#4bc6b9] py-5 text-2xl font-black text-white shadow-xl shadow-[#4bc6b9]/40 transition-transform hover:bg-[#3ba398] active:scale-95">
-                Bayar Pesanan 🚀
+                Bayar Pesanan
             </button>
         </form>
     </div>
@@ -393,6 +397,8 @@
     const socialServices = @json($socialProductsPayload);
     const socialServiceSelect = document.getElementById('social_service_select');
     const socialQuantityInput = document.getElementById('social_order_quantity');
+    const checkoutProductLogoImage = document.getElementById('checkout_product_logo_image');
+    const checkoutProductLogoEmote = document.getElementById('checkout_product_logo_emote');
     const rupiahFormatter = new Intl.NumberFormat('id-ID');
 
     function findSocialService() {
@@ -420,7 +426,7 @@
         if (socialQuantityInput && service) {
             socialQuantityInput.min = service.min;
             socialQuantityInput.max = service.max;
-            socialQuantityInput.placeholder = `${service.min} - ${service.max}`;
+            socialQuantityInput.placeholder = '';
         }
 
         updateSocialTotal();
@@ -456,7 +462,7 @@
         }
 
         btn.disabled = true;
-        btn.innerHTML = 'Menyiapkan Tripay... ⏳';
+        btn.innerHTML = 'Menyiapkan QRIS...';
         btn.classList.add('cursor-not-allowed', 'opacity-70');
 
         return true;
@@ -464,6 +470,38 @@
 
     function checkoutInputClass() {
         return 'w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] placeholder-[#a3bbfb]';
+    }
+
+    function resetCheckoutLogo() {
+        if (!checkoutProductLogoImage || !checkoutProductLogoEmote) {
+            return;
+        }
+
+        checkoutProductLogoImage.src = '';
+        checkoutProductLogoImage.classList.add('hidden');
+        checkoutProductLogoEmote.textContent = 'W';
+        checkoutProductLogoEmote.classList.remove('hidden');
+    }
+
+    function syncCheckoutLogo(button) {
+        if (!checkoutProductLogoImage || !checkoutProductLogoEmote) {
+            return;
+        }
+
+        const logoImage = (button.dataset.logoImage || '').trim();
+        const logoEmote = (button.dataset.logoEmote || '').trim();
+
+        if (logoImage !== '') {
+            checkoutProductLogoImage.src = logoImage;
+            checkoutProductLogoImage.alt = button.dataset.name || 'Logo produk';
+            checkoutProductLogoImage.classList.remove('hidden');
+            checkoutProductLogoEmote.classList.add('hidden');
+            return;
+        }
+
+        checkoutProductLogoImage.classList.add('hidden');
+        checkoutProductLogoEmote.classList.remove('hidden');
+        checkoutProductLogoEmote.textContent = logoEmote !== '' ? logoEmote : (button.dataset.name || 'W').trim().charAt(0).toUpperCase();
     }
 
     function renderCheckoutFields(fields, values = {}) {
@@ -522,6 +560,7 @@
         document.getElementById('checkout_product_id').value = id;
         document.getElementById('checkout_product_name').innerText = name;
         document.getElementById('checkout_product_price').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(price);
+        syncCheckoutLogo(button);
 
         if (description && description.trim() !== '') {
             descriptionNode.innerText = description;
@@ -558,6 +597,7 @@
         pageProductList.classList.add('fade-in');
         document.getElementById('checkoutForm').reset();
         checkoutFieldsWrapper.innerHTML = '';
+        resetCheckoutLogo();
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -575,7 +615,7 @@
         }
 
         btn.disabled = true;
-        btn.innerHTML = 'Menyiapkan Tripay... ⏳';
+        btn.innerHTML = 'Menyiapkan QRIS...';
         btn.classList.add('cursor-not-allowed', 'opacity-70');
 
         return true;

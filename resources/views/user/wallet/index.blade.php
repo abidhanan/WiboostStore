@@ -50,7 +50,6 @@
                         Aman & Terenkripsi
                     </div>
                 </div>
-                <div class="absolute -right-10 -bottom-10 text-9xl opacity-20 transform -rotate-12 pointer-events-none animate-float">☁️</div>
             </div>
 
             <div class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] p-8 shadow-xl shadow-[#bde0fe]/30 border-4 border-white">
@@ -111,8 +110,8 @@
                         </div>
                         <p class="text-[10px] font-black text-amber-500 mt-3 ml-3 uppercase tracking-widest">*Min. isi Rp 10.000</p>
                     </div>
-                    <button type="submit" data-submit-label="Menyiapkan Tripay..." class="w-full bg-[#5a76c8] text-white py-4 rounded-full font-black hover:bg-[#4760a9] transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex justify-center items-center gap-2">
-                        Lanjut Bayar 🚀
+                    <button type="submit" data-submit-label="Menyiapkan QRIS..." class="w-full bg-[#5a76c8] text-white py-4 rounded-full font-black hover:bg-[#4760a9] transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex justify-center items-center gap-2">
+                        Lanjut Bayar
                     </button>
                 </form>
             </div>
@@ -142,6 +141,7 @@
                                     $deposit = \App\Models\Deposit::where('invoice_number', $log->invoice_number)->first();
                                     if ($deposit && $deposit->payment_method) {
                                         $method = ucwords(str_replace('_', ' ', $deposit->payment_method));
+                                        if (strtolower($method) == 'tripay') $method = 'QRIS';
                                         if (strtolower($method) == 'qris') $method = 'QRIS';
                                         if (strtolower($method) == 'gopay') $method = 'GoPay';
                                         if (strtolower($method) == 'shopeepay') $method = 'ShopeePay';
@@ -178,7 +178,7 @@
                                     </p>
                                     @if(isset($paidAmount) && $paidAmount && (float) $paidAmount !== (float) $log->amount)
                                         <p class="text-[10px] font-black text-[#4bc6b9] uppercase tracking-widest mt-1">
-                                            Dibayar ke Tripay: Rp {{ number_format($paidAmount, 0, ',', '.') }}
+                                            Dibayar via QRIS: Rp {{ number_format($paidAmount, 0, ',', '.') }}
                                         </p>
                                     @endif
                                 </div>

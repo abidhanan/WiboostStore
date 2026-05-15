@@ -16,7 +16,7 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with('category.parent.parent.parent')->latest();
+        $query = Product::with('category.parent.parent.parent');
 
         $this->hideRemovedCatalogProducts($query);
         $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes());
@@ -28,9 +28,36 @@ class ProductController extends Controller
             });
         }
 
-        $products = $query->paginate(20);
+        $products = $query
+            ->orderByRaw("CASE WHEN process_type = 'account' THEN 0 ELSE 1 END")
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('admin.products.index', compact('products'));
+        $productSections = $products
+            ->getCollection()
+            ->groupBy(fn (Product $product) => $this->resolveRootCategoryName($product))
+            ->sortKeysUsing(fn (string $first, string $second) => $this->compareRootCategoryNames($first, $second))
+            ->map(function ($rootProducts, string $rootCategoryName) {
+                return [
+                    'name' => $rootCategoryName,
+                    'count' => $rootProducts->count(),
+                    'categories' => $rootProducts
+                        ->groupBy(fn (Product $product) => $this->resolveDescendantCategoryName($product))
+                        ->sortKeysUsing(fn (string $first, string $second) => strnatcasecmp($first, $second))
+                        ->map(function ($categoryProducts, string $categoryName) {
+                            return [
+                                'name' => $categoryName,
+                                'count' => $categoryProducts->count(),
+                                'products' => $categoryProducts->values(),
+                            ];
+                        })
+                        ->values(),
+                ];
+            })
+            ->values();
+
+        return view('admin.products.index', compact('products', 'productSections'));
     }
 
     public function create()
@@ -270,6 +297,55 @@ class ProductController extends Controller
         $this->hideRemovedCatalogCategories($query);
 
         return $query->get();
+    }
+
+    protected function resolveRootCategoryName(Product $product): string
+    {
+        $category = $product->category;
+
+        while ($category?->parent) {
+            $category = $category->parent;
+        }
+
+        return $category?->name ?: 'Kategori Kosong';
+    }
+
+    protected function resolveDescendantCategoryName(Product $product): string
+    {
+        $category = $product->category;
+
+        if (! $category) {
+            return 'Kategori Kosong';
+        }
+
+        $segments = [];
+
+        while ($category) {
+            array_unshift($segments, $category->name);
+            $category = $category->parent;
+        }
+
+        array_shift($segments);
+
+        return $segments !== []
+            ? implode(' / ', $segments)
+            : 'Produk Utama';
+    }
+
+    protected function compareRootCategoryNames(string $first, string $second): int
+    {
+        $firstSlug = Str::slug($first);
+        $secondSlug = Str::slug($second);
+
+        if ($firstSlug === 'aplikasi-premium' && $secondSlug !== 'aplikasi-premium') {
+            return -1;
+        }
+
+        if ($secondSlug === 'aplikasi-premium' && $firstSlug !== 'aplikasi-premium') {
+            return 1;
+        }
+
+        return strnatcasecmp($first, $second);
     }
 
     protected function hideRemovedCatalogProducts($query): void

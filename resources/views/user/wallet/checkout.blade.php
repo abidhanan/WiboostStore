@@ -139,20 +139,14 @@
     <div class="absolute top-20 -right-20 w-72 h-72 bg-[#e0fbfc] rounded-full mix-blend-multiply filter blur-3xl opacity-50 z-0"></div>
     <div class="absolute -bottom-20 left-20 w-64 h-64 bg-[#e0ebff] rounded-full mix-blend-multiply filter blur-3xl opacity-50 z-0"></div>
     
-    <div class="absolute top-12 left-10 text-5xl animate-float opacity-60 pointer-events-none z-0 hidden sm:block">☁️</div>
-    <div class="absolute top-32 right-16 text-4xl animate-float-delayed opacity-60 pointer-events-none z-0 hidden sm:block">✨</div>
-    <div class="absolute bottom-24 left-[20%] text-3xl animate-float-delayed opacity-50 pointer-events-none z-0 hidden sm:block">⭐</div>
-    <div class="absolute bottom-10 right-[15%] text-6xl animate-float opacity-70 pointer-events-none z-0 hidden sm:block">☁️</div>
-
     <div class="checkout-shell max-w-md w-full max-h-full relative z-10">
         <div class="checkout-hero bg-gradient-to-br from-[#8faaf3] via-[#7695e8] to-[#5a76c8] rounded-[2rem] sm:rounded-[2.5rem] p-4 sm:p-6 text-center text-white shadow-xl shadow-[#5a76c8]/30 mb-3 sm:mb-4 border-4 border-white relative overflow-hidden transform hover:scale-[1.02] transition-transform duration-300">
-            <div class="absolute -right-6 -bottom-6 text-8xl opacity-20 transform rotate-12 pointer-events-none animate-float">💳</div>
             <div class="relative z-10">
                 <div class="inline-block px-4 py-1 bg-white/20 backdrop-blur-sm text-white font-black rounded-full mb-2 text-[10px] border-2 border-white/50 shadow-inner uppercase tracking-widest">
                     Checkout
                 </div>
-                <h2 class="font-black text-2xl sm:text-3xl tracking-tight drop-shadow-sm">Checkout <span class="text-[#e0fbfc]">Tripay</span></h2>
-                <p class="text-white/90 text-xs sm:text-sm mt-1.5 font-bold drop-shadow-sm">Selesaikan satu invoice ini saja. Sistem akan memakai ulang tagihan pending agar tidak dobel.</p>
+                <h2 class="font-black text-2xl sm:text-3xl tracking-tight drop-shadow-sm">Checkout <span class="text-[#e0fbfc]">QRIS</span></h2>
+                <p class="text-white/90 text-xs sm:text-sm mt-1.5 font-bold drop-shadow-sm">Scan QRIS lalu selesaikan pembayaran agar saldo masuk otomatis.</p>
             </div>
         </div>
 
@@ -182,9 +176,8 @@
                 <span class="text-2xl sm:text-3xl font-black text-[#4bc6b9] tracking-tight drop-shadow-sm">Rp {{ number_format($deposit->amount, 0, ',', '.') }}</span>
             </div>
 
-            <a id="pay-button" href="{{ $paymentUrl }}" data-tripay-pay-link class="w-full bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black py-3 sm:py-4 rounded-full shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 flex justify-center items-center gap-2 border-4 border-white text-base sm:text-lg">
-                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                Bayar via Tripay
+            <a id="pay-button" href="{{ $paymentUrl }}" data-qris-pay-link class="w-full bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black py-3 sm:py-4 rounded-full shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 flex justify-center items-center gap-2 border-4 border-white text-base sm:text-lg">
+                Bayar via QRIS
             </a>
 
             <form action="{{ route('user.wallet.deposits.cancel', $deposit) }}" method="POST" class="mt-3 sm:mt-4 text-center">
@@ -204,7 +197,7 @@
 
     @include('partials.floating-admin-report')
     <script>
-        document.querySelectorAll('[data-tripay-pay-link]').forEach((link) => {
+        document.querySelectorAll('[data-qris-pay-link]').forEach((link) => {
             link.addEventListener('click', () => {
                 if (link.dataset.clicked === '1') {
                     return;
@@ -212,7 +205,7 @@
 
                 link.dataset.clicked = '1';
                 link.classList.add('pointer-events-none', 'opacity-70');
-                link.innerHTML = 'Membuka Tripay...';
+                link.innerHTML = 'Membuka QRIS...';
             });
         });
     </script>

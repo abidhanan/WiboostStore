@@ -98,8 +98,8 @@ class Product extends Model
                 'name' => 'order_quantity',
                 'label' => 'Jumlah Pesanan',
                 'type' => 'number',
-                'placeholder' => 'Masukkan jumlah pesanan',
-                'hint' => 'Jumlah harus sesuai minimal dan maksimal pesanan layanan.',
+                'placeholder' => '',
+                'hint' => '',
                 'rules' => [
                     'required',
                     'integer',
@@ -133,7 +133,7 @@ class Product extends Model
                     : 'Target pesanan (username atau link profile)',
                 'type' => 'text',
                 'placeholder' => $this->provider_source === 'digiflazz'
-                    ? 'Contoh: 12345678 (1234) atau 081234567890'
+                    ? 'Contoh: 12345678 (1234) atau 6281234567890'
                     : 'Contoh: https://instagram.com/username',
                 'hint' => $this->provider_source === 'digiflazz'
                     ? 'Pastikan ID, zone, atau nomor tujuan sudah benar agar pesanan tidak gagal.'
@@ -205,7 +205,7 @@ class Product extends Model
 
         return match ($this->process_type) {
             'api' => $this->provider_source === 'digiflazz'
-                ? 'Contoh: 12345678 (1234) atau 081234567890'
+                ? 'Contoh: 12345678 (1234) atau 6281234567890'
                 : 'Contoh: https://instagram.com/username',
             default => 'Masukkan data tujuan pesanan',
         };

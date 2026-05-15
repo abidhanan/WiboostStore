@@ -5,11 +5,11 @@
 @section('content')
     <div class="mx-auto w-full max-w-md text-center sm:text-left">
         <div class="mb-8">
-            <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-xs border-2 border-white shadow-sm uppercase tracking-widest">
+            <div class="inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1 text-xs font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
                 Sandi Baru
             </div>
-            <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm">
-                Atur Ulang Sandi!</span> ðŸ”’
+            <h2 class="text-3xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm sm:text-4xl">
+                Atur Ulang Sandi!
             </h2>
             <p class="mt-2 text-sm font-bold text-[#8faaf3]">Gunakan kata sandi baru yang aman!</p>
         </div>
@@ -45,8 +45,8 @@
                     placeholder="Ulangi sandi baru">
             </div>
 
-            <button type="submit" class="w-full rounded-full border-4 border-white bg-[#5a76c8] px-5 py-4 text-base font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9] flex items-center justify-center gap-2 mt-2">
-                Simpan Sandi Baru âœ¨
+            <button type="submit" class="mt-2 flex w-full items-center justify-center rounded-full border-4 border-white bg-[#5a76c8] px-5 py-4 text-base font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform hover:bg-[#4760a9] active:scale-95">
+                Simpan Sandi Baru
             </button>
         </form>
     </div>

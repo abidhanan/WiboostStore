@@ -41,17 +41,7 @@ class PromoController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'badge_text'  => 'required|string|max:50',
-            'title'       => 'required|string|max:255',
-            'description' => 'required|string',
-            'emoji'       => 'nullable|string|max:10',
-            'theme'       => 'required|in:blue,teal,orange,rose',
-            'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
-            'link'        => 'nullable|url|max:500', 
-            'is_active'   => 'required|boolean',
-            'submission_token' => 'required|string',
-        ]);
+        $validated = $request->validate($this->rules(includeToken: true));
 
         if (! $this->consumeCreateToken($validated['submission_token'])) {
             return redirect()
@@ -60,14 +50,15 @@ class PromoController extends Controller
         }
 
         $data = collect($validated)->except('submission_token')->all();
-        
+        $data = $this->normalizePayload($data, $request);
+
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('promos', 'public');
         }
 
         Promo::create($data);
 
-        return redirect()->route('admin.promos.index')->with('success', 'Banner Promo berhasil ditambahkan! 🚀');
+        return redirect()->route('admin.promos.index')->with('success', 'Banner Promo berhasil ditambahkan.');
     }
 
     public function edit(Promo $promo)
@@ -77,40 +68,25 @@ class PromoController extends Controller
 
     public function update(Request $request, Promo $promo)
     {
-        $request->validate([
-            'badge_text'  => 'required|string|max:50',
-            'title'       => 'required|string|max:255',
-            'description' => 'required|string',
-            'emoji'       => 'nullable|string|max:10',
-            'theme'       => 'required|in:blue,teal,orange,rose',
-            'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
-            'link'        => 'nullable|url|max:500',
-            'is_active'   => 'required|boolean',
-        ]);
+        $validated = $request->validate($this->rules());
+        $data = $this->normalizePayload($validated, $request);
 
-        // Gunakan except agar remove_image tidak ikut ter-assign secara otomatis
-        $data = $request->except(['image', 'remove_image']);
-
-        // LOGIKA MENGHAPUS GAMBAR JIKA CHECKBOX "HAPUS" DICENTANG
-        if ($request->has('remove_image') && $request->remove_image == 1) {
-            if ($promo->image) {
-                Storage::disk('public')->delete($promo->image);
-            }
-            $data['image'] = null; // Set image jadi null di database
+        if ($request->boolean('remove_image') && $promo->image) {
+            Storage::disk('public')->delete($promo->image);
+            $data['image'] = null;
         }
 
-        // LOGIKA UPLOAD GAMBAR BARU
         if ($request->hasFile('image')) {
-            // Hapus gambar yang lama agar file server tidak menumpuk
             if ($promo->image) {
                 Storage::disk('public')->delete($promo->image);
             }
+
             $data['image'] = $request->file('image')->store('promos', 'public');
         }
 
         $promo->update($data);
 
-        return redirect()->route('admin.promos.index')->with('success', 'Banner Promo berhasil diperbarui! ✨');
+        return redirect()->route('admin.promos.index')->with('success', 'Banner Promo berhasil diperbarui.');
     }
 
     public function destroy(Promo $promo)
@@ -118,10 +94,43 @@ class PromoController extends Controller
         if ($promo->image) {
             Storage::disk('public')->delete($promo->image);
         }
-        
+
         $promo->delete();
-        
-        return back()->with('success', 'Banner Promo berhasil dihapus! 🗑️');
+
+        return back()->with('success', 'Banner Promo berhasil dihapus.');
+    }
+
+    protected function rules(bool $includeToken = false): array
+    {
+        $rules = [
+            'badge_text' => 'nullable|string|max:50',
+            'title' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'emoji' => 'nullable|string|max:10',
+            'theme' => 'nullable|in:blue,teal,orange,rose',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'link' => 'nullable|url|max:500',
+            'is_active' => 'nullable|boolean',
+        ];
+
+        if ($includeToken) {
+            $rules['submission_token'] = 'required|string';
+        }
+
+        return $rules;
+    }
+
+    protected function normalizePayload(array $data, Request $request): array
+    {
+        return [
+            'badge_text' => trim((string) ($data['badge_text'] ?? '')),
+            'title' => trim((string) ($data['title'] ?? '')),
+            'description' => trim((string) ($data['description'] ?? '')),
+            'emoji' => trim((string) ($data['emoji'] ?? '')),
+            'theme' => ($data['theme'] ?? '') ?: 'blue',
+            'link' => $data['link'] ?? null,
+            'is_active' => $request->boolean('is_active', true),
+        ];
     }
 
     protected function consumeCreateToken(string $token): bool

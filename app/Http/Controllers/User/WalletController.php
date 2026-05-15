@@ -47,7 +47,7 @@ class WalletController extends Controller
                     return view('user.wallet.checkout', compact('deposit', 'paymentUrl'));
                 }
 
-                return back()->with('error', 'Tagihan Tripay sedang disiapkan. Tunggu sebentar lalu cek ulang halaman dompet.');
+                    return back()->with('error', 'Tagihan QRIS sedang disiapkan. Tunggu sebentar lalu cek ulang halaman dompet.');
             }
 
             $deposit = $this->findReusableDeposit($amount) ?: Deposit::create([
@@ -93,8 +93,7 @@ class WalletController extends Controller
             $deposit->delete();
 
             return redirect()
-                ->route('user.wallet.index')
-                ->with('success', 'Checkout Tripay dibatalkan. Deposit pending tidak dimasukkan ke riwayat.');
+                ->route('user.wallet.index');
         }
 
         return redirect()->route('user.wallet.index');

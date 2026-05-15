@@ -9,7 +9,7 @@
                 Reset Kata Sandi
             </div>
             <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm">
-                Lupa Kata Sandi?</span>
+                Lupa Kata Sandi?
             </h2>
             <p class="mt-2 text-sm font-bold text-[#8faaf3]">Masukkan email kamu dan kami akan kirimkan tautan untuk membuat kata sandi baru!</p>
         </div>
@@ -33,8 +33,8 @@
                 @enderror
             </div>
 
-            <button type="submit" class="w-full rounded-full border-4 border-white bg-[#5a76c8] px-5 py-4 text-base font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9] flex items-center justify-center gap-2 mt-2">
-                Kirim Tautan Reset ✉️
+            <button type="submit" class="w-full rounded-full border-4 border-white bg-[#5a76c8] px-5 py-4 text-base font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9] flex items-center justify-center mt-2">
+                Kirim Tautan Reset
             </button>
         </form>
 

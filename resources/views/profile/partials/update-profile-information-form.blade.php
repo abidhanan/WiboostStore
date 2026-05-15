@@ -1,9 +1,7 @@
 <section>
-    <header class="mb-6">
-        <h3 class="text-xl md:text-2xl font-black text-[#2b3a67] flex items-center gap-2">
-            <span class="text-3xl drop-shadow-sm">👤</span> Informasi Profil
-        </h3>
-        <p class="mt-1 text-sm font-bold text-[#8faaf3] ml-1">Perbarui informasi profil dan alamat email akunmu.</p>
+    <header class="mb-6 text-left">
+        <h3 class="text-xl md:text-2xl font-black text-[#2b3a67]">Informasi Profil</h3>
+        <p class="mt-1 text-sm font-bold text-[#8faaf3]">Perbarui informasi profil dan alamat email akunmu.</p>
     </header>
 
     <form id="send-verification" method="post" action="{{ route('verification.send') }}">
@@ -37,7 +35,7 @@
                     </p>
                     @if (session('status') === 'verification-link-sent')
                         <p class="mt-3 font-black text-xs text-emerald-500 uppercase tracking-widest bg-[#e6fff7] inline-block px-3 py-1 rounded-md border border-white shadow-sm">
-                            Link verifikasi baru telah dikirim! 📨
+                            Link verifikasi baru telah dikirim.
                         </p>
                     @endif
                 </div>
@@ -48,18 +46,18 @@
             <label for="whatsapp" class="block text-sm font-black text-[#5a76c8] mb-2 ml-2">Nomor WhatsApp</label>
             <input id="whatsapp" name="whatsapp" type="text" value="{{ old('whatsapp', $user->whatsapp) }}" required
                    class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition shadow-inner placeholder-[#a3bbfb]"
-                   placeholder="Contoh: 081234567890">
+                   placeholder="6281234567890">
             <x-input-error class="mt-2 text-[#ff6b6b] text-xs font-bold pl-2" :messages="$errors->get('whatsapp')" />
         </div>
 
-        <div class="flex items-center gap-4 pt-2">
-            <button type="submit" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black px-8 py-4 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex items-center gap-2">
-                Simpan Profil ✨
+        <div class="flex flex-col items-center justify-center gap-4 pt-2">
+            <button type="submit" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black px-8 py-4 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white">
+                Simpan Profil
             </button>
 
             @if (session('status') === 'profile-updated')
                 <p x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 2500)" class="text-sm font-black text-emerald-500 bg-[#e6fff7] px-5 py-2.5 rounded-full border-2 border-white shadow-sm">
-                    Tersimpan! ✅
+                    Tersimpan.
                 </p>
             @endif
         </div>

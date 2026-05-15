@@ -53,6 +53,7 @@ class OrderController extends Controller
         $isSuntikSosmedOrder = $rootCategorySlug === 'suntik-sosmed'
             && $products->contains(fn (Product $product) => $product->is_ordersosmed_service);
         $isTopUpGameOrder = $rootCategorySlug === 'top-up-game';
+        $isCompactServiceCardOrder = in_array($rootCategorySlug, ['top-up-game', 'kuota-murah', 'aplikasi-premium'], true);
 
         if ($isSuntikSosmedOrder) {
             $products = $this->sortSuntikSosmedProducts($products);
@@ -60,7 +61,7 @@ class OrderController extends Controller
             $this->attachSuccessfulAverageTimes($products);
         }
 
-        return view('user.order', compact('category', 'products', 'isSuntikSosmedOrder', 'isTopUpGameOrder'));
+        return view('user.order', compact('category', 'products', 'isSuntikSosmedOrder', 'isTopUpGameOrder', 'isCompactServiceCardOrder'));
     }
 
     public function processCheckout(
@@ -93,8 +94,9 @@ class OrderController extends Controller
         }
 
         $validated = $request->validate($rules, [], $attributes);
-        $targetData = $product->summarizeOrderInput($validated);
-        $orderInputData = $product->buildOrderInputData($validated);
+        $targetData = (string) ($product->summarizeOrderInput($validated) ?? '');
+        $builtOrderInputData = $product->buildOrderInputData($validated);
+        $orderInputData = is_array($builtOrderInputData) ? $builtOrderInputData : [];
         $checkoutAmount = $product->calculateCheckoutAmount($validated);
 
         try {
@@ -174,7 +176,7 @@ class OrderController extends Controller
 
                 return back()
                     ->withInput()
-                    ->with('error', 'Tagihan Tripay sedang disiapkan. Tunggu sebentar lalu cek riwayat pesanan.');
+                    ->with('error', 'Tagihan QRIS sedang disiapkan. Tunggu sebentar lalu cek riwayat pesanan.');
             }
 
             $transaction = Transaction::create([
@@ -218,8 +220,7 @@ class OrderController extends Controller
             $transaction->delete();
 
             return redirect()
-                ->route('user.dashboard')
-                ->with('success', 'Checkout Tripay dibatalkan. Invoice pending tidak dimasukkan ke riwayat.');
+                ->route('user.dashboard');
         }
 
         return redirect()->route('user.history', ['auto_open' => $transaction->id]);
@@ -277,8 +278,9 @@ class OrderController extends Controller
         Product $product,
         $checkoutAmount,
         string $targetData,
-        array $orderInputData
+        ?array $orderInputData
     ): ?Transaction {
+        $orderInputData = $orderInputData ?? [];
         $expiresInMinutes = max(1, (int) config('tripay.expired_minutes', 60));
 
         return Transaction::query()

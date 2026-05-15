@@ -10,13 +10,31 @@
     .bg-wiboost-sky { background: linear-gradient(180deg, #bde0fe 0%, #e0fbfc 100%); }
     .hide-scroll::-webkit-scrollbar { display: none; }
     .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-    .modal-active { opacity: 1 !important; pointer-events: auto !important; }
-    .modal-content-active { transform: scale(1) !important; }
+    .tutorial-accordion > summary { list-style: none; }
+    .tutorial-accordion > summary::-webkit-details-marker { display: none; }
+    .tutorial-accordion[open] summary .faq-icon { transform: rotate(180deg); }
+    .faq-icon { transition: transform 0.25s ease-in-out; }
     .tut-filter-btn.is-active {
         background: #5a76c8 !important;
         color: #ffffff !important;
         border-color: #ffffff !important;
-        box-shadow: 0 10px 18px rgba(90, 118, 200, 0.28) !important;
+        box-shadow: 0 8px 18px rgba(90, 118, 200, 0.18) !important;
+    }
+    .tutorial-sub-filter.is-active {
+        border-color: #bde0fe !important;
+        background: #f8fbff !important;
+        box-shadow: 0 12px 24px rgba(189, 224, 254, 0.32) !important;
+        transform: translateY(-2px);
+    }
+    .promo-slide {
+        aspect-ratio: 16 / 7;
+        min-height: 210px;
+        max-height: 320px;
+    }
+    @media (max-width: 640px) {
+        .promo-slide {
+            min-height: 190px;
+        }
     }
     
     .animate-float { animation: float 6s ease-in-out infinite; }
@@ -31,11 +49,6 @@
 <div class="wiboost-font relative">
     <div class="relative overflow-hidden bg-wiboost-sky rounded-[2.5rem] p-8 md:p-10 mb-8 shadow-xl shadow-[#bde0fe]/50 border-4 border-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         
-        <div class="absolute top-4 left-6 text-3xl animate-float opacity-70 pointer-events-none">☁️</div>
-        <div class="absolute bottom-6 left-1/3 text-2xl animate-float-delayed opacity-70 pointer-events-none">✨</div>
-        <div class="absolute top-1/2 right-1/4 text-4xl animate-float opacity-60 pointer-events-none">☁️</div>
-        <div class="absolute top-10 right-10 text-2xl animate-float-delayed opacity-80 pointer-events-none">⭐</div>
-
         <div class="relative z-10">
             <div class="inline-block px-4 py-1 bg-white/80 backdrop-blur-sm text-[#5a76c8] font-black rounded-full mb-3 text-xs border-2 border-white shadow-sm">
                 Area Pengguna
@@ -79,7 +92,10 @@
     <div class="mb-10 relative rounded-[2.5rem] overflow-hidden shadow-xl shadow-[#bde0fe]/30 border-4 border-white group bg-white">
         <div id="promo-slider" class="flex overflow-x-auto snap-x snap-mandatory hide-scroll scroll-smooth">
             @forelse($promos as $promo)
-                <div class="snap-center shrink-0 w-full p-8 md:p-12 text-white relative overflow-hidden flex items-center h-[250px] md:h-[300px] group/slide
+                @php
+                    $hasPromoText = filled($promo->badge_text) || filled($promo->title) || filled($promo->description);
+                @endphp
+                <div class="promo-slide snap-center shrink-0 w-full p-8 md:p-12 text-white relative overflow-hidden flex items-center group/slide
                     @if(!$promo->image)
                         @if($promo->theme == 'teal') bg-gradient-to-r from-[#4bc6b9] to-[#3ba398]
                         @elseif($promo->theme == 'orange') bg-gradient-to-r from-[#fbbf24] to-[#d97706]
@@ -95,24 +111,34 @@
                     @endif
 
                     @if($promo->image)
-                        <img src="{{ Storage::url($promo->image) }}" class="absolute inset-0 w-full h-full object-cover z-0 opacity-70 group-hover/slide:scale-105 transition-transform duration-700">
-                        <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent z-10"></div>
+                        <img src="{{ Storage::url($promo->image) }}" class="absolute inset-0 w-full h-full object-cover z-0 {{ $hasPromoText ? 'opacity-70 group-hover/slide:scale-105' : 'opacity-100' }} transition-transform duration-700" alt="{{ $promo->title ?: 'Banner promo Wiboost Store' }}">
+                        @if($hasPromoText)
+                            <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent z-10"></div>
+                        @endif
                     @endif
 
-                    <div class="relative z-20 pointer-events-none">
-                        <span class="bg-white/90 backdrop-blur-sm text-[#5a76c8] text-xs md:text-sm font-black px-4 py-1.5 rounded-full mb-3 inline-block shadow-sm uppercase tracking-widest border-2 border-white">{{ $promo->badge_text }}</span>
-                        <h2 class="text-3xl md:text-6xl font-black mb-3 drop-shadow-md tracking-tight">{{ $promo->title }}</h2>
-                        <p class="font-bold text-white/90 text-sm md:text-xl max-w-2xl drop-shadow-md">{{ $promo->description }}</p>
-                    </div>
+                    @if($hasPromoText)
+                        <div class="relative z-20 pointer-events-none">
+                            @if(filled($promo->badge_text))
+                                <span class="bg-white/90 backdrop-blur-sm text-[#5a76c8] text-xs md:text-sm font-black px-4 py-1.5 rounded-full mb-3 inline-block shadow-sm uppercase tracking-widest border-2 border-white">{{ $promo->badge_text }}</span>
+                            @endif
+                            @if(filled($promo->title))
+                                <h2 class="text-3xl md:text-6xl font-black mb-3 drop-shadow-md tracking-tight">{{ $promo->title }}</h2>
+                            @endif
+                            @if(filled($promo->description))
+                                <p class="font-bold text-white/90 text-sm md:text-xl max-w-2xl drop-shadow-md">{{ $promo->description }}</p>
+                            @endif
+                        </div>
+                    @endif
 
-                    @if(!$promo->image)
+                    @if(!$promo->image && filled($promo->emoji))
                         <div class="text-7xl md:text-8xl opacity-50 absolute right-10 transform {{ $loop->iteration % 2 == 0 ? '-rotate-12' : 'rotate-12' }} pointer-events-none group-hover/slide:scale-110 transition-transform duration-500 drop-shadow-xl">
                             {{ $promo->emoji }}
                         </div>
                     @endif
                 </div>
             @empty
-                <div class="snap-center shrink-0 w-full bg-gradient-to-r from-[#8faaf3] to-[#5a76c8] p-8 md:p-12 text-white relative overflow-hidden flex items-center justify-center h-[250px] md:h-[300px]">
+                <div class="promo-slide snap-center shrink-0 w-full bg-gradient-to-r from-[#8faaf3] to-[#5a76c8] p-8 md:p-12 text-white relative overflow-hidden flex items-center justify-center">
                     <div class="text-center relative z-20">
                         <span class="text-6xl mb-4 block animate-float">🎁</span>
                         <h2 class="text-3xl md:text-5xl font-black mb-3 drop-shadow-md">Belum Ada Promo</h2>
@@ -152,21 +178,48 @@
         @endforelse
     </div>
 
-    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 pl-2 gap-4">
-        <div>
-            <div class="inline-block px-4 py-1 bg-[#fff0f0] text-[#ff6b6b] font-black rounded-full mb-2 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">Pusat Bantuan</div>
-            <h3 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pusat Tutorial</h3>
+    <div class="text-center md:text-left mb-6 max-w-5xl mx-auto">
+        <div class="inline-block px-4 py-1 bg-[#fff0f0] text-[#ff6b6b] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">Pusat Bantuan</div>
+        <h3 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pusat Tutorial</h3>
+    </div>
+
+    @if(($tutorialGroups ?? collect())->isNotEmpty())
+        <div class="flex gap-3 overflow-x-auto hide-scroll mb-8 pb-2 max-w-5xl mx-auto">
+            @foreach($tutorialGroups as $group)
+                <button type="button" onclick="filterTutorialMain(@js($group['name']))" data-main-filter="{{ $group['name'] }}" class="tut-filter-btn {{ $loop->first ? 'is-active' : '' }} px-6 py-2.5 rounded-full font-extrabold text-sm transition-transform active:scale-95 bg-white text-[#5a76c8] hover:bg-[#f0f5ff] shadow-sm shadow-[#bde0fe]/20 border-2 border-transparent shrink-0">
+                    {{ $group['name'] }}
+                </button>
+            @endforeach
         </div>
-    </div>
 
-    <div class="flex gap-3 overflow-x-auto hide-scroll mb-8 pl-2 pb-2">
-        <button onclick="filterTutorial('all')" id="btn-tut-all" data-category-filter="all" class="tut-filter-btn is-active px-6 py-2.5 rounded-full font-extrabold text-sm transition-transform active:scale-95 bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white shrink-0">Semua Kategori</button>
-        @foreach($tutorialCategories ?? [] as $cat)
-            <button onclick="filterTutorial(@js($cat))" id="btn-tut-{{ Str::slug($cat) }}" data-category-filter="{{ $cat }}" class="tut-filter-btn px-6 py-2.5 rounded-full font-extrabold text-sm transition-transform active:scale-95 bg-white text-[#5a76c8] hover:bg-[#f0f5ff] shadow-md shadow-[#bde0fe]/20 border-2 border-transparent shrink-0">{{ $cat }}</button>
-        @endforeach
-    </div>
+        <div class="max-w-5xl mx-auto mb-12">
+            @foreach($tutorialGroups as $group)
+                <div data-main-panel="{{ $group['name'] }}" class="{{ $loop->first ? '' : 'hidden' }}">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        @foreach($group['subcategories'] as $sub)
+                            <a href="{{ route('user.tutorials.category', ['main' => $group['name'], 'sub' => $sub['name']]) }}" class="tutorial-sub-filter group flex flex-col items-center justify-center gap-3 rounded-[2rem] border-4 border-white bg-white p-5 text-center shadow-lg shadow-[#bde0fe]/20 transition-all hover:-translate-y-1 hover:border-[#bde0fe] active:scale-95">
+                                <span class="flex h-16 w-16 items-center justify-center rounded-[1.25rem] border-2 border-white bg-[#f4f9ff] shadow-inner overflow-hidden">
+                                    @if($sub['image'])
+                                        <img src="{{ Storage::url($sub['image']) }}" alt="{{ $sub['name'] }}" class="h-full w-full object-contain p-2">
+                                    @else
+                                        <span class="text-2xl font-black text-[#5a76c8]">{{ Str::upper(Str::substr($sub['name'], 0, 1)) }}</span>
+                                    @endif
+                                </span>
+                                <span class="text-xs md:text-sm font-black text-[#2b3a67] leading-tight">{{ $sub['name'] }}</span>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @else
+        <div class="max-w-5xl mx-auto mb-12 text-center py-16 bg-white rounded-[2rem] border-4 border-dashed border-[#bde0fe]">
+            <p class="text-[#8faaf3] font-black text-lg">Belum ada tutorial tersedia.</p>
+        </div>
+    @endif
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mb-12" id="tutorial-grid">
+    @if(false)
+    <div class="hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mb-12" id="tutorial-grid">
         @forelse($tutorials ?? [] as $tutorial)
             <div class="tutorial-card bg-white p-6 rounded-[2rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 transition-all flex flex-col h-full group" data-category="{{ $tutorial->category }}">
                 <div class="flex items-start justify-between mb-4">
@@ -194,8 +247,10 @@
             </div>
         @endforelse
     </div>
+    @endif
 </div>
 
+@if(false)
 @foreach($tutorials ?? [] as $tutorial)
     <div id="tut-{{ $tutorial->id }}" class="fixed inset-0 flex items-center justify-center bg-[#2b3a67]/80 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300 p-4" style="z-index: 999999;">
         <div class="absolute inset-0 w-full h-full" onclick="closeTutorialModal('tut-{{ $tutorial->id }}')"></div>
@@ -238,11 +293,10 @@
         </div>
     </div>
 @endforeach
+@endif
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('[id^="tut-"]').forEach(modal => document.body.appendChild(modal));
-
         const slider = document.getElementById('promo-slider');
         if (slider && slider.children.length > 1) {
             let autoSlide = setInterval(() => slidePromo(1), 5000);
@@ -263,43 +317,15 @@
         }
     });
 
-    function filterTutorial(category) {
-        document.querySelectorAll('.tut-filter-btn').forEach(btn => {
-            btn.classList.remove('is-active');
-            btn.classList.remove('bg-[#5a76c8]', 'text-white', 'shadow-lg', 'shadow-[#5a76c8]/30', 'border-white');
-            btn.classList.add('bg-white', 'text-[#5a76c8]', 'shadow-md', 'shadow-[#bde0fe]/20', 'border-transparent');
+    function filterTutorialMain(mainCategory) {
+        document.querySelectorAll('[data-main-filter]').forEach(btn => {
+            btn.classList.toggle('is-active', btn.dataset.mainFilter === mainCategory);
         });
 
-        const activeBtn = Array.from(document.querySelectorAll('.tut-filter-btn'))
-            .find(btn => btn.dataset.categoryFilter === category);
-
-        if (activeBtn) {
-            activeBtn.classList.add('is-active');
-            activeBtn.classList.remove('bg-white', 'text-[#5a76c8]', 'shadow-md', 'shadow-[#bde0fe]/20', 'border-transparent');
-            activeBtn.classList.add('bg-[#5a76c8]', 'text-white', 'shadow-lg', 'shadow-[#5a76c8]/30', 'border-white');
-        }
-
-        document.querySelectorAll('.tutorial-card').forEach(card => {
-            card.style.display = category === 'all' || card.getAttribute('data-category') === category ? 'flex' : 'none';
+        document.querySelectorAll('[data-main-panel]').forEach(panel => {
+            const isActive = panel.dataset.mainPanel === mainCategory;
+            panel.classList.toggle('hidden', !isActive);
         });
-    }
-
-    function openTutorialModal(id) {
-        const modal = document.getElementById(id);
-        if (modal) {
-            modal.classList.add('modal-active');
-            modal.querySelector('.transform').classList.add('modal-content-active');
-            document.body.style.overflow = 'hidden';
-        }
-    }
-
-    function closeTutorialModal(id) {
-        const modal = document.getElementById(id);
-        if (modal) {
-            modal.classList.remove('modal-active');
-            modal.querySelector('.transform').classList.remove('modal-content-active');
-            document.body.style.overflow = '';
-        }
     }
 </script>
 @endsection

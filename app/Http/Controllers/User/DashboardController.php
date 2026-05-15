@@ -43,9 +43,26 @@ class DashboardController extends Controller
                             ->sum('amount');
 
         $tutorials = Tutorial::where('is_active', true)->latest()->get();
-        
-        // Ambil daftar kategori unik untuk menu Filter di Dashboard User
-        $tutorialCategories = Tutorial::where('is_active', true)->select('category')->distinct()->pluck('category');
+        $tutorialGroups = $tutorials
+            ->groupBy(fn (Tutorial $tutorial) => $tutorial->main_category ?: ($tutorial->category ?: 'Umum'))
+            ->map(function ($mainTutorials, $mainCategory) {
+                return [
+                    'name' => $mainCategory,
+                    'subcategories' => $mainTutorials
+                        ->groupBy(fn (Tutorial $tutorial) => $tutorial->sub_category ?: ($tutorial->category ?: 'Umum'))
+                        ->map(function ($subTutorials, $subCategory) {
+                            $firstTutorial = $subTutorials->first();
+
+                            return [
+                                'name' => $subCategory,
+                                'image' => $firstTutorial?->sub_category_image ?: $firstTutorial?->image,
+                                'tutorials' => $subTutorials->values(),
+                            ];
+                        })
+                        ->values(),
+                ];
+            })
+            ->values();
 
         return view('user.dashboard', compact(
             'categories', 
@@ -53,7 +70,46 @@ class DashboardController extends Controller
             'totalThisMonth', 
             'totalSpent', 
             'tutorials',
-            'tutorialCategories'
+            'tutorialGroups'
+        ));
+    }
+
+    public function tutorialCategory(Request $request)
+    {
+        $mainCategory = trim((string) $request->query('main', ''));
+        $subCategory = trim((string) $request->query('sub', ''));
+
+        abort_if($mainCategory === '' || $subCategory === '', 404);
+
+        $tutorials = Tutorial::query()
+            ->where('is_active', true)
+            ->where(function ($query) use ($mainCategory) {
+                $query->where('main_category', $mainCategory)
+                    ->orWhere(function ($fallbackQuery) use ($mainCategory) {
+                        $fallbackQuery->whereNull('main_category')
+                            ->where('category', $mainCategory);
+                    });
+            })
+            ->where(function ($query) use ($subCategory) {
+                $query->where('sub_category', $subCategory)
+                    ->orWhere(function ($fallbackQuery) use ($subCategory) {
+                        $fallbackQuery->whereNull('sub_category')
+                            ->where('category', $subCategory);
+                    });
+            })
+            ->latest()
+            ->get();
+
+        abort_if($tutorials->isEmpty(), 404);
+
+        $firstTutorial = $tutorials->first();
+        $subCategoryImage = $firstTutorial?->sub_category_image ?: $firstTutorial?->image;
+
+        return view('user.tutorial-category', compact(
+            'mainCategory',
+            'subCategory',
+            'subCategoryImage',
+            'tutorials'
         ));
     }
 }
