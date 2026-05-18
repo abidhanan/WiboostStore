@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Transaction;
 use App\Services\OrderFulfillmentService;
 use Illuminate\Console\Command;
+use Throwable;
 
 class CheckProviderOrderStatuses extends Command
 {
@@ -21,7 +22,10 @@ class CheckProviderOrderStatuses extends Command
             ->whereIn('order_status', ['pending', 'processing'])
             ->whereHas('product', function ($query) {
                 $query->where('process_type', 'api')
-                    ->whereIn('provider_source', ['digiflazz', 'ordersosmed']);
+                    ->where(function ($providerQuery) {
+                        $providerQuery->whereIn('provider_source', ['digiflazz', 'ordersosmed'])
+                            ->orWhereIn('provider_id', ['digiflazz', 'ordersosmed']);
+                    });
             })
             ->oldest('updated_at')
             ->limit($limit)
@@ -41,7 +45,13 @@ class CheckProviderOrderStatuses extends Command
         ];
 
         foreach ($transactions as $transaction) {
-            $result = $orderFulfillmentService->syncProviderStatus($transaction);
+            try {
+                $result = $orderFulfillmentService->syncProviderStatus($transaction);
+            } catch (Throwable $exception) {
+                report($exception);
+                $result = 'skipped';
+            }
+
             $summary[$result] = ($summary[$result] ?? 0) + 1;
         }
 

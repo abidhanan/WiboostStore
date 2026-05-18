@@ -2,8 +2,6 @@
 @section('title', 'Tambah Pengguna')
 @section('content')
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
-    .wiboost-font { font-family: 'Nunito', sans-serif; }
     
     .animate-float { animation: float 6s ease-in-out infinite; }
     .animate-float-delayed { animation: float 6s ease-in-out 3s infinite; }
@@ -16,10 +14,6 @@
 
 <div class="wiboost-font pb-12 max-w-4xl mx-auto relative z-10">
     
-    <div class="absolute top-10 right-0 text-5xl animate-float opacity-30 pointer-events-none hidden md:block z-0">👤</div>
-    <div class="absolute top-1/3 -left-10 text-4xl animate-float-delayed opacity-30 pointer-events-none hidden md:block z-0">✨</div>
-    <div class="absolute bottom-20 -right-5 text-6xl animate-float opacity-20 pointer-events-none hidden md:block z-0">☁️</div>
-
     <div class="flex flex-col md:flex-row items-start md:items-center gap-5 mb-10 pl-2 relative z-10">
         <a href="{{ route('admin.users.index') }}" class="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-[1.2rem] flex items-center justify-center text-[#5a76c8] hover:bg-[#e0fbfc] transition-transform active:scale-95 border-4 border-white shadow-lg shadow-[#bde0fe]/30 shrink-0">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>

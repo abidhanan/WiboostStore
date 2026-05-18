@@ -26,14 +26,51 @@
         box-shadow: 0 12px 24px rgba(189, 224, 254, 0.32) !important;
         transform: translateY(-2px);
     }
+    .promo-banner-shell {
+        width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+    }
     .promo-slide {
-        aspect-ratio: 16 / 7;
-        min-height: 210px;
-        max-height: 320px;
+        aspect-ratio: 16 / 4;
+        height: auto;
+        min-height: 0;
+        max-height: none;
+        padding: 1.5rem !important;
+    }
+    .promo-slide h2 {
+        font-size: clamp(1.65rem, 2.1vw, 2.6rem) !important;
+        line-height: 1.08 !important;
+        margin-bottom: 0.5rem !important;
+    }
+    .promo-slide p {
+        font-size: clamp(0.85rem, 1vw, 1rem) !important;
+        line-height: 1.45 !important;
     }
     @media (max-width: 640px) {
+        .promo-banner-shell {
+            width: 100%;
+        }
         .promo-slide {
-            min-height: 190px;
+            aspect-ratio: 2.25 / 1;
+            height: auto;
+            min-height: 0;
+            max-height: none;
+        }
+    }
+    @media (min-width: 1024px) {
+        .promo-slide h2 {
+            font-size: clamp(3rem, 4vw, 5.25rem) !important;
+            line-height: 0.98 !important;
+            margin-bottom: 1rem !important;
+        }
+        .promo-slide p {
+            font-size: clamp(1.2rem, 1.35vw, 1.65rem) !important;
+            line-height: 1.35 !important;
+        }
+        .promo-slide span {
+            font-size: 1rem !important;
+            letter-spacing: 0.22em !important;
         }
     }
     
@@ -54,7 +91,6 @@
                 Area Pengguna
             </div>
             <h1 class="text-3xl md:text-5xl font-black text-[#2b3a67] mb-2 drop-shadow-sm">Halo, {{ Auth::user()->name }}! 👋</h1>
-            <p class="text-[#4a5f96] max-w-md font-bold text-base md:text-lg">Siap percepat pertumbuhan sosial media & game kamu hari ini?</p>
         </div>
 
         <div class="relative z-10 bg-white/90 backdrop-blur-md px-8 py-6 rounded-[2rem] border-4 border-white w-full md:w-auto text-center shadow-lg shadow-[#bde0fe]/30 hover:scale-105 transition-transform duration-300">
@@ -89,7 +125,7 @@
         </div>
     </div>
 
-    <div class="mb-10 relative rounded-[2.5rem] overflow-hidden shadow-xl shadow-[#bde0fe]/30 border-4 border-white group bg-white">
+    <div class="promo-banner-shell mb-10 relative rounded-[2.5rem] overflow-hidden shadow-xl shadow-[#bde0fe]/30 border-4 border-white group bg-white">
         <div id="promo-slider" class="flex overflow-x-auto snap-x snap-mandatory hide-scroll scroll-smooth">
             @forelse($promos as $promo)
                 @php
@@ -117,11 +153,14 @@
                         @endif
                     @endif
 
+                    @if($hasPromoText && filled($promo->badge_text))
+                        <div class="absolute left-4 top-4 z-40 pointer-events-none md:left-6 md:top-6">
+                            <span class="bg-white/90 backdrop-blur-sm text-[#5a76c8] text-xs md:text-sm font-black px-4 py-1.5 rounded-full inline-block shadow-sm uppercase tracking-widest border-2 border-white">{{ $promo->badge_text }}</span>
+                        </div>
+                    @endif
+
                     @if($hasPromoText)
-                        <div class="relative z-20 pointer-events-none">
-                            @if(filled($promo->badge_text))
-                                <span class="bg-white/90 backdrop-blur-sm text-[#5a76c8] text-xs md:text-sm font-black px-4 py-1.5 rounded-full mb-3 inline-block shadow-sm uppercase tracking-widest border-2 border-white">{{ $promo->badge_text }}</span>
-                            @endif
+                        <div class="relative z-20 pointer-events-none pt-8 md:pt-10">
                             @if(filled($promo->title))
                                 <h2 class="text-3xl md:text-6xl font-black mb-3 drop-shadow-md tracking-tight">{{ $promo->title }}</h2>
                             @endif
@@ -148,10 +187,6 @@
             @endforelse
         </div>
 
-        @if(count($promos) > 1)
-            <button onclick="slidePromo(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/70 hover:bg-white backdrop-blur-md rounded-full flex items-center justify-center text-[#5a76c8] transition-all shadow-lg opacity-0 group-hover:opacity-100 z-40 border-2 border-white font-black text-xl hover:scale-110">&lt;</button>
-            <button onclick="slidePromo(1)" class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/70 hover:bg-white backdrop-blur-md rounded-full flex items-center justify-center text-[#5a76c8] transition-all shadow-lg opacity-0 group-hover:opacity-100 z-40 border-2 border-white font-black text-xl hover:scale-110">&gt;</button>
-        @endif
     </div>
 
     <div class="text-center md:text-left mb-8 pl-2">
@@ -178,13 +213,13 @@
         @endforelse
     </div>
 
-    <div class="text-center md:text-left mb-6 max-w-5xl mx-auto">
+    <div class="text-center md:text-left mb-6 pl-2">
         <div class="inline-block px-4 py-1 bg-[#fff0f0] text-[#ff6b6b] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">Pusat Bantuan</div>
         <h3 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pusat Tutorial</h3>
     </div>
 
     @if(($tutorialGroups ?? collect())->isNotEmpty())
-        <div class="flex gap-3 overflow-x-auto hide-scroll mb-8 pb-2 max-w-5xl mx-auto">
+        <div class="flex gap-3 overflow-x-auto hide-scroll mb-8 pb-2">
             @foreach($tutorialGroups as $group)
                 <button type="button" onclick="filterTutorialMain(@js($group['name']))" data-main-filter="{{ $group['name'] }}" class="tut-filter-btn {{ $loop->first ? 'is-active' : '' }} px-6 py-2.5 rounded-full font-extrabold text-sm transition-transform active:scale-95 bg-white text-[#5a76c8] hover:bg-[#f0f5ff] shadow-sm shadow-[#bde0fe]/20 border-2 border-transparent shrink-0">
                     {{ $group['name'] }}
@@ -192,28 +227,67 @@
             @endforeach
         </div>
 
-        <div class="max-w-5xl mx-auto mb-12">
+        <div class="mb-12">
             @foreach($tutorialGroups as $group)
                 <div data-main-panel="{{ $group['name'] }}" class="{{ $loop->first ? '' : 'hidden' }}">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                        @foreach($group['subcategories'] as $sub)
-                            <a href="{{ route('user.tutorials.category', ['main' => $group['name'], 'sub' => $sub['name']]) }}" class="tutorial-sub-filter group flex flex-col items-center justify-center gap-3 rounded-[2rem] border-4 border-white bg-white p-5 text-center shadow-lg shadow-[#bde0fe]/20 transition-all hover:-translate-y-1 hover:border-[#bde0fe] active:scale-95">
-                                <span class="flex h-16 w-16 items-center justify-center rounded-[1.25rem] border-2 border-white bg-[#f4f9ff] shadow-inner overflow-hidden">
-                                    @if($sub['image'])
-                                        <img src="{{ Storage::url($sub['image']) }}" alt="{{ $sub['name'] }}" class="h-full w-full object-contain p-2">
-                                    @else
-                                        <span class="text-2xl font-black text-[#5a76c8]">{{ Str::upper(Str::substr($sub['name'], 0, 1)) }}</span>
-                                    @endif
-                                </span>
-                                <span class="text-xs md:text-sm font-black text-[#2b3a67] leading-tight">{{ $sub['name'] }}</span>
-                            </a>
-                        @endforeach
-                    </div>
+                    @if(collect($group['subcategories'] ?? [])->isNotEmpty())
+                        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 mb-8">
+                            @foreach($group['subcategories'] as $sub)
+                                <a href="{{ route('user.tutorials.category', ['main' => $group['name'], 'sub' => $sub['name']]) }}" class="tutorial-sub-filter group flex flex-col items-center justify-center rounded-[2rem] border-4 border-white bg-white p-6 text-center shadow-xl shadow-[#bde0fe]/30 transition-all hover:-translate-y-2 hover:border-[#bde0fe] active:scale-95 md:p-8">
+                                    <span class="mb-4 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border-2 border-white bg-[#f4f9ff] shadow-inner transition-transform duration-300 group-hover:scale-110">
+                                        @if($sub['image'])
+                                            <img src="{{ Storage::url($sub['image']) }}" alt="{{ $sub['name'] }}" class="h-full w-full object-contain p-2">
+                                        @else
+                                            <span class="text-2xl font-black text-[#5a76c8]">{{ Str::upper(Str::substr($sub['name'], 0, 1)) }}</span>
+                                        @endif
+                                    </span>
+                                    <span class="text-sm md:text-base font-black text-[#2b3a67] leading-tight">{{ $sub['name'] }}</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if(collect($group['tutorials'] ?? [])->isNotEmpty())
+                        <div class="space-y-4">
+                            @foreach($group['tutorials'] as $tutorial)
+                                <details class="tutorial-accordion w-full cursor-pointer overflow-hidden rounded-[1.75rem] border-4 border-white bg-white shadow-lg shadow-[#bde0fe]/20">
+                                    <summary class="flex items-start justify-between gap-4 p-6 text-left focus:outline-none md:p-7">
+                                        <h4 class="text-lg font-black leading-tight text-[#2b3a67] md:text-xl">{{ $tutorial->title }}</h4>
+                                        <span class="mt-1 shrink-0 text-[#5a76c8]">
+                                            <svg class="faq-icon h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                                        </span>
+                                    </summary>
+                                    <div class="border-t-2 border-[#f0f5ff] bg-white px-6 pb-6 pt-5 text-left text-sm font-bold leading-relaxed text-[#4a5f96] md:px-7">
+                                        @if($tutorial->description)
+                                            <p class="mb-4 rounded-[1.25rem] border-2 border-white bg-[#f8fbff] p-4 text-[#8faaf3] shadow-inner">{{ $tutorial->description }}</p>
+                                        @endif
+                                        @if($tutorial->content)
+                                            <div class="whitespace-pre-wrap rounded-[1.25rem] border-2 border-white bg-[#f8fbff] p-5 text-[#2b3a67] shadow-inner">{{ $tutorial->content }}</div>
+                                        @elseif(!$tutorial->youtube_url)
+                                            <p class="rounded-[1.25rem] border-2 border-dashed border-[#bde0fe] bg-[#f8fbff] p-5 text-[#8faaf3]">Isi panduan belum tersedia.</p>
+                                        @endif
+                                        @if($tutorial->youtube_url)
+                                            <div class="mt-5 flex justify-center">
+                                                <a href="{{ $tutorial->youtube_url }}" target="_blank" class="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-white bg-[#ffe5e5] px-6 py-3 font-black text-[#ff6b6b] shadow-sm transition-colors hover:bg-[#ff6b6b] hover:text-white sm:w-auto">
+                                                    <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                                                    Tonton Video Tutorial
+                                                </a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </details>
+                            @endforeach
+                        </div>
+                    @elseif(collect($group['subcategories'] ?? [])->isEmpty())
+                        <div class="rounded-[2rem] border-4 border-dashed border-[#bde0fe] bg-white px-6 py-10 text-center">
+                            <p class="text-[#8faaf3] font-black">Belum ada tutorial di kategori ini.</p>
+                        </div>
+                    @endif
                 </div>
             @endforeach
         </div>
     @else
-        <div class="max-w-5xl mx-auto mb-12 text-center py-16 bg-white rounded-[2rem] border-4 border-dashed border-[#bde0fe]">
+        <div class="mb-12 text-center py-16 bg-white rounded-[2rem] border-4 border-dashed border-[#bde0fe]">
             <p class="text-[#8faaf3] font-black text-lg">Belum ada tutorial tersedia.</p>
         </div>
     @endif

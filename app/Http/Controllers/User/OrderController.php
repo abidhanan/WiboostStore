@@ -98,9 +98,46 @@ class OrderController extends Controller
         $builtOrderInputData = $product->buildOrderInputData($validated);
         $orderInputData = is_array($builtOrderInputData) ? $builtOrderInputData : [];
         $checkoutAmount = $product->calculateCheckoutAmount($validated);
+        $checkoutFingerprint = sha1($user->id . '|' . $product->id . '|' . $checkoutAmount . '|' . $targetData . '|' . json_encode($orderInputData));
 
         try {
             if ($validated['payment_method'] === 'wallet') {
+                $existingWalletTransaction = $this->findRecentWalletTransaction(
+                    $user,
+                    $product,
+                    $checkoutAmount,
+                    $targetData,
+                    $orderInputData
+                );
+
+                if ($existingWalletTransaction) {
+                    return redirect()->route('user.history', ['auto_open' => $existingWalletTransaction->id])
+                        ->with('success', 'Pesanan yang sama baru saja dibuat. Detail pesanan sudah dibuka supaya tidak dobel.');
+                }
+
+                $walletLockKey = 'wallet-checkout:' . $checkoutFingerprint;
+
+                if (! Cache::add($walletLockKey, true, now()->addSeconds(90))) {
+                    usleep(500000);
+
+                    $existingWalletTransaction = $this->findRecentWalletTransaction(
+                        $user,
+                        $product,
+                        $checkoutAmount,
+                        $targetData,
+                        $orderInputData
+                    );
+
+                    if ($existingWalletTransaction) {
+                        return redirect()->route('user.history', ['auto_open' => $existingWalletTransaction->id])
+                            ->with('success', 'Pesanan yang sama baru saja dibuat. Detail pesanan sudah dibuka supaya tidak dobel.');
+                    }
+
+                    return back()
+                        ->withInput()
+                        ->with('error', 'Pesanan sedang diproses. Tunggu sebentar lalu cek riwayat pesanan.');
+                }
+
                 $transaction = DB::transaction(function () use ($user, $product, $targetData, $orderInputData, $checkoutAmount) {
                     $freshUser = User::query()->lockForUpdate()->findOrFail($user->id);
 
@@ -155,7 +192,7 @@ class OrderController extends Controller
                 ]);
             }
 
-            $lockKey = 'tripay-checkout:' . sha1($user->id . '|' . $product->id . '|' . $checkoutAmount . '|' . $targetData . '|' . json_encode($orderInputData));
+            $lockKey = 'tripay-checkout:' . $checkoutFingerprint;
 
             if (! Cache::add($lockKey, true, now()->addSeconds(20))) {
                 usleep(500000);
@@ -292,6 +329,28 @@ class OrderController extends Controller
             ->where('target_data', $targetData)
             ->whereNotNull('snap_token')
             ->where('created_at', '>=', now()->subMinutes($expiresInMinutes))
+            ->latest()
+            ->get()
+            ->first(fn (Transaction $transaction) => $transaction->order_input_data == $orderInputData);
+    }
+
+    protected function findRecentWalletTransaction(
+        User $user,
+        Product $product,
+        $checkoutAmount,
+        string $targetData,
+        ?array $orderInputData
+    ): ?Transaction {
+        $orderInputData = $orderInputData ?? [];
+
+        return Transaction::query()
+            ->where('user_id', $user->id)
+            ->where('product_id', $product->id)
+            ->where('payment_status', 'paid')
+            ->where('payment_method', 'wallet')
+            ->where('amount', $checkoutAmount)
+            ->where('target_data', $targetData)
+            ->where('created_at', '>=', now()->subMinutes(3))
             ->latest()
             ->get()
             ->first(fn (Transaction $transaction) => $transaction->order_input_data == $orderInputData);

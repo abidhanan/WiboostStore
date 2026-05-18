@@ -16,9 +16,9 @@
     }
 </style>
 
-<div class="wiboost-font pb-24 max-w-6xl mx-auto mt-4 px-4 relative z-10">
+<div class="wiboost-font pb-24 w-full mx-auto mt-4 relative z-10">
     
-    <div class="relative z-10 mb-10 flex flex-col items-center gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white bg-white/95 p-6 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm md:flex-row md:gap-8 md:p-8">
+    <div class="relative z-10 mb-10 flex flex-col items-center gap-6 overflow-visible rounded-[2.5rem] border-4 border-white bg-white/95 p-6 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm md:flex-row md:gap-8 md:p-8">
         <div class="relative z-10 flex w-full items-center justify-between gap-4 md:w-auto md:justify-start">
             <a href="{{ $category->parent ? route('user.order.category', $category->parent->slug) : route('user.dashboard') }}" class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.2rem] border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-110 hover:bg-[#e0fbfc] active:scale-95">
                 <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>

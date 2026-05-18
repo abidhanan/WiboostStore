@@ -53,6 +53,26 @@ class TripayService
         );
     }
 
+    public function transactionDetail(string $reference): array
+    {
+        $this->ensureConfigured();
+
+        $response = Http::acceptJson()
+            ->withToken((string) config('tripay.api_key'))
+            ->timeout(20)
+            ->get(rtrim((string) config('tripay.base_url'), '/') . '/transaction/detail', [
+                'reference' => $reference,
+            ]);
+
+        $body = $response->json() ?? [];
+
+        if (! $response->successful() || ! data_get($body, 'success')) {
+            throw new RuntimeException((string) data_get($body, 'message', 'Tripay gagal mengecek status pembayaran.'));
+        }
+
+        return $body;
+    }
+
     protected function createClosedPayment(
         string $merchantRef,
         int $amount,

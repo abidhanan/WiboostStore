@@ -56,11 +56,6 @@
     x-init="restoreSidebarScroll()"
     class="wiboost-compact-ui min-h-screen bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white relative flex"
 >
-    <!-- Background Ornaments -->
-    <div class="fixed top-20 right-10 text-4xl animate-float opacity-50 pointer-events-none z-0 hidden lg:block">🚀</div>
-    <div class="fixed bottom-20 right-1/4 text-5xl animate-float-delayed opacity-40 pointer-events-none z-0 hidden lg:block">🔥</div>
-    <div class="fixed top-1/2 right-[10%] text-3xl animate-float opacity-30 pointer-events-none z-0 hidden lg:block">💎</div>
-
     @php
         $adminNav = [
             ['route' => 'admin.dashboard', 'pattern' => 'admin.dashboard', 'label' => 'Dashboard', 'icon' => '📊'],
@@ -72,7 +67,7 @@
             ['route' => 'admin.transactions.index', 'pattern' => 'admin.transactions.*', 'label' => 'Transaksi', 'icon' => '💳'],
             ['route' => 'admin.manual-orders.index', 'pattern' => 'admin.manual-orders.*', 'label' => 'Manual Order', 'icon' => '✍️'],
             ['route' => 'admin.deposits.index', 'pattern' => 'admin.deposits.*', 'label' => 'Deposit', 'icon' => '💰'],
-            ['route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Laporan', 'icon' => '📈'],
+            ['route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Laporan', 'icon' => '📩'],
             ['route' => 'profile.edit', 'pattern' => 'profile.edit', 'label' => 'Profil', 'icon' => '👤'],
         ];
 
@@ -189,5 +184,45 @@
             </div>
         </aside>
     </div>
+
+    <script>
+        document.addEventListener('submit', function (event) {
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement) || form.dataset.noSubmitLock === 'true') {
+                return;
+            }
+
+            if (event.defaultPrevented) {
+                return;
+            }
+
+            const spoofedMethod = form.querySelector('input[name="_method"]')?.value;
+            const method = (spoofedMethod || form.method || 'get').toLowerCase();
+
+            if (method === 'get') {
+                return;
+            }
+
+            if (form.dataset.submitting === 'true') {
+                event.preventDefault();
+                return;
+            }
+
+            form.dataset.submitting = 'true';
+
+            const button = event.submitter || form.querySelector('button[type="submit"], input[type="submit"]');
+            if (!button || button.dataset.keepEnabled === 'true') {
+                return;
+            }
+
+            button.disabled = true;
+            button.classList.add('cursor-wait', 'opacity-75');
+
+            if (button.tagName === 'BUTTON' && !button.dataset.originalText) {
+                button.dataset.originalText = button.textContent.trim();
+                button.textContent = 'Memproses...';
+            }
+        });
+    </script>
 </body>
 </html>

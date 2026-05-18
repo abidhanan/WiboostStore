@@ -20,9 +20,28 @@
         50% { transform: translateY(-15px); }
         100% { transform: translateY(0px); }
     }
+
+    .checkout-step-heading {
+        display: flex !important;
+        align-items: center;
+        gap: 1rem;
+        min-width: 0;
+        position: relative;
+        z-index: 2;
+    }
+
+    @media (max-width: 640px) {
+        .checkout-step-heading {
+            gap: 0.8rem;
+        }
+    }
+
+    #page-checkout {
+        scroll-margin-top: 1rem;
+    }
 </style>
 
-<div class="wiboost-font relative mx-auto mt-4 max-w-5xl overflow-hidden px-4 pb-24 z-10">
+<div class="wiboost-font relative mx-auto mt-4 w-full overflow-visible pb-24 z-10">
     
     @if(session('error'))
         <div class="mb-8 flex items-center gap-3 rounded-[2rem] border-4 border-white bg-[#ffe5e5] px-6 py-4 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 relative z-10">
@@ -84,7 +103,7 @@
     @endphp
 
     <div id="page-product-list" class="transition-all duration-300 relative z-10">
-        <div class="relative mb-10 flex flex-col items-center gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 shadow-xl shadow-[#bde0fe]/30 md:flex-row md:gap-8 md:p-8">
+        <div class="relative mb-10 flex flex-col items-center gap-6 overflow-visible rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 shadow-xl shadow-[#bde0fe]/30 md:flex-row md:gap-8 md:p-8">
             <div class="relative z-10 flex w-full items-center justify-between md:justify-start gap-4 md:w-auto">
                 <a href="{{ $category->parent_id ? route('user.order.category', $category->parent->slug) : route('user.dashboard') }}" class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.2rem] border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-110 active:scale-95 hover:bg-[#e0fbfc]">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
@@ -290,7 +309,7 @@
     </div>
 
     <div id="page-checkout" class="hidden transition-all duration-300 relative z-10">
-        <div class="relative z-10 mb-8 flex flex-col items-center gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white bg-white/95 p-6 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm md:flex-row md:items-center md:gap-8 md:p-8">
+        <div class="relative z-10 mb-8 flex flex-col items-center gap-6 overflow-visible rounded-[2.5rem] border-4 border-white bg-white/95 p-6 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm md:flex-row md:items-center md:gap-8 md:p-8">
             <div class="relative z-10 flex w-full items-center justify-between gap-4 md:w-auto md:justify-start">
                 <button type="button" onclick="goBackToProducts()" class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.2rem] border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-110 hover:bg-[#e0fbfc] active:scale-95">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
@@ -333,9 +352,10 @@
                 </div>
             </div>
 
-            <div id="checkout_fields_section" class="relative mb-8 rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm p-8 shadow-xl shadow-[#bde0fe]/30">
-                <div class="absolute -left-4 -top-4 flex h-14 w-14 items-center justify-center rounded-[1.2rem] border-4 border-white bg-[#5a76c8] text-2xl font-black text-white shadow-lg transform -rotate-6">1</div>
-                <h4 class="mb-6 ml-8 text-2xl font-black text-[#2b3a67]">Informasi Buyer</h4>
+            <div id="checkout_fields_section" class="relative mb-8 rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 shadow-xl shadow-[#bde0fe]/30 sm:p-8">
+                <div class="checkout-step-heading mb-6">
+                    <h4 class="min-w-0 text-2xl font-black text-[#2b3a67]">Informasi Buyer</h4>
+                </div>
                 <div id="checkout_fields_wrapper" class="space-y-6"></div>
             </div>
 
@@ -349,9 +369,10 @@
                 </div>
             </div>
 
-            <div class="relative mb-8 rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm p-8 shadow-xl shadow-[#bde0fe]/30">
-                <div id="step_number_2" class="absolute -left-4 -top-4 flex h-14 w-14 items-center justify-center rounded-[1.2rem] border-4 border-white bg-[#5a76c8] text-2xl font-black text-white shadow-lg transform rotate-6">2</div>
-                <h4 class="mb-6 ml-8 text-2xl font-black text-[#2b3a67]">Metode Pembayaran</h4>
+            <div class="relative mb-8 rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 shadow-xl shadow-[#bde0fe]/30 sm:p-8">
+                <div class="checkout-step-heading mb-6">
+                    <h4 class="min-w-0 text-2xl font-black text-[#2b3a67]">Metode Pembayaran</h4>
+                </div>
 
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <label class="group relative flex cursor-pointer items-center gap-4 rounded-[2rem] border-4 border-white bg-gradient-to-r from-[#e0fbfc] to-[#f4f9ff] p-6 shadow-md transition-transform hover:scale-[1.02]">
@@ -391,7 +412,6 @@
     const checkoutFieldsSection = document.getElementById('checkout_fields_section');
     const checkoutFieldsWrapper = document.getElementById('checkout_fields_wrapper');
     const noTargetMsg = document.getElementById('no_target_msg');
-    const stepNumber2 = document.getElementById('step_number_2');
     const oldCheckoutInput = @json(old());
     const oldProductId = @json(old('product_id'));
     const socialServices = @json($socialProductsPayload);
@@ -575,20 +595,19 @@
             checkoutFieldsWrapper.innerHTML = '';
             noTargetMsg.classList.remove('hidden');
             noTargetMsg.classList.add('flex');
-            stepNumber2.innerText = '1';
         } else {
             renderCheckoutFields(fields, restoreValues);
             checkoutFieldsSection.classList.remove('hidden');
             noTargetMsg.classList.add('hidden');
             noTargetMsg.classList.remove('flex');
-            stepNumber2.innerText = '2';
         }
 
         pageProductList.classList.add('hidden');
         pageCheckout.classList.remove('hidden');
         pageCheckout.classList.add('fade-in');
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const checkoutTop = pageCheckout.getBoundingClientRect().top + window.pageYOffset - 8;
+        window.scrollTo({ top: Math.max(0, checkoutTop), behavior: 'smooth' });
     }
 
     function goBackToProducts() {

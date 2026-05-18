@@ -12,7 +12,7 @@
     .faq-icon { transition: transform 0.25s ease-in-out; }
 </style>
 
-<div class="wiboost-font pb-24 max-w-6xl mx-auto mt-4 px-4 relative z-10">
+<div class="wiboost-font pb-24 w-full mx-auto mt-4 relative z-10">
     <div class="relative z-10 mb-10 flex flex-col items-center gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white bg-white/95 p-6 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm md:flex-row md:gap-8 md:p-8">
         <div class="relative z-10 flex w-full items-center justify-between gap-4 md:w-auto md:justify-start">
             <a href="{{ route('user.dashboard') }}" class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.2rem] border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-110 hover:bg-[#e0fbfc] active:scale-95">
@@ -37,7 +37,7 @@
         </div>
     </div>
 
-    <div class="mx-auto flex max-w-5xl flex-col gap-4">
+    <div class="mx-auto flex max-w-6xl flex-col gap-4">
         @foreach($tutorials as $tutorial)
             <details class="tutorial-accordion w-full cursor-pointer overflow-hidden rounded-[1.75rem] border-4 border-white bg-white shadow-lg shadow-[#bde0fe]/20">
                 <summary class="flex items-start justify-between gap-4 p-6 focus:outline-none md:p-7">

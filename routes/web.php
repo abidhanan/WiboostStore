@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\CredentialController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
 use App\Http\Controllers\Admin\DepositController as AdminDepositController;
+use App\Http\Controllers\Admin\AdminReportController as AdminAdminReportController;
 use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Admin\TutorialController; // <-- IMPORT BARU UNTUK TUTORIAL
 
@@ -23,6 +24,7 @@ use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\User\TransactionHistoryController;
 use App\Http\Controllers\User\OrderController;
 use App\Http\Controllers\User\WalletController; 
+use App\Http\Controllers\User\AdminReportController;
 
 // Webhook Controller
 use App\Http\Controllers\PaymentCallbackController;
@@ -64,6 +66,8 @@ Route::middleware(['auth', 'role:buyer'])->prefix('user')->name('user.')->group(
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
     Route::get('/tutorials', [UserDashboardController::class, 'tutorialCategory'])->name('tutorials.category');
     Route::get('/history', [TransactionHistoryController::class, 'index'])->name('history');
+    Route::get('/report-admin', [AdminReportController::class, 'create'])->name('report.admin');
+    Route::post('/report-admin', [AdminReportController::class, 'store'])->name('report.admin.store');
     
     // Order & Checkout
     Route::get('/order/{slug}', [OrderController::class, 'showCategory'])->name('order.category');
@@ -104,16 +108,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('stocks', StockController::class);
     Route::resource('tutorials', TutorialController::class); // <-- ROUTE BARU TUTORIAL
 
-    // Transaksi & Laporan
+    // Transaksi
     Route::get('/transactions', [AdminTransactionController::class, 'index'])->name('transactions.index');
     Route::get('/transactions/export-pdf', [AdminTransactionController::class, 'exportPdf'])->name('transactions.export_pdf');
     Route::patch('/transactions/{id}/update', [AdminTransactionController::class, 'updateStatus'])->name('transactions.update');
     
-    Route::get('/reports', [AdminTransactionController::class, 'reports'])->name('reports.index');
-
     // Deposit Management
     Route::get('/deposits', [AdminDepositController::class, 'index'])->name('deposits.index');
     Route::patch('/deposits/{id}', [AdminDepositController::class, 'update'])->name('deposits.update');
+    Route::get('/reports', [AdminAdminReportController::class, 'index'])->name('reports.index');
+    Route::patch('/reports/{report}', [AdminAdminReportController::class, 'update'])->name('reports.update');
 
 });
 

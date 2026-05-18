@@ -47,6 +47,28 @@
             50% { transform: translateY(-15px); }
             100% { transform: translateY(0px); }
         }
+
+        @media (min-width: 1024px) {
+            body.wiboost-user-shell .wiboost-user-navbar > div,
+            body.wiboost-user-shell main,
+            body.wiboost-user-shell footer > div {
+                max-width: min(1600px, calc(100vw - 8rem)) !important;
+            }
+
+            body.wiboost-user-shell main {
+                padding-left: 2rem !important;
+                padding-right: 2rem !important;
+            }
+
+            body.wiboost-user-shell main > .wiboost-font {
+                max-width: 100% !important;
+            }
+
+            body.wiboost-user-shell main > [class*="max-w-"],
+            body.wiboost-user-shell main > .wiboost-font > [class*="max-w-"] {
+                max-width: 100% !important;
+            }
+        }
     </style>
 </head>
 <body x-data="{ mobileNavOpen: false }" class="wiboost-compact-ui wiboost-user-shell @yield('body_class') min-h-screen w-full max-w-full overflow-x-hidden bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white relative flex flex-col">

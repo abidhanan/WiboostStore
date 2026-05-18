@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminReport;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\User;
@@ -19,6 +20,7 @@ class DashboardController extends Controller
 
         $totalTransactionsMonth = Transaction::whereMonth('created_at', $currentMonth)
             ->whereYear('created_at', $currentYear)
+            ->where('order_status', '!=', 'failed')
             ->where(function ($query) {
                 $query->where('payment_method', '!=', 'tripay')
                     ->orWhereNull('payment_method')
@@ -28,6 +30,7 @@ class DashboardController extends Controller
             ->count();
 
         $revenueMonth = Transaction::where('payment_status', 'paid')
+            ->where('order_status', '!=', 'failed')
             ->whereMonth('created_at', $currentMonth)
             ->whereYear('created_at', $currentYear)
             ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
@@ -60,13 +63,49 @@ class DashboardController extends Controller
                 return $product->stock_reminder > 0 && $product->available_stock <= $product->stock_reminder;
             });
 
+        $chartStart = Carbon::now()->subDays(6)->startOfDay();
+        $paidTransactionsForChart = Transaction::where('created_at', '>=', $chartStart)
+            ->where('payment_status', 'paid')
+            ->where('order_status', '!=', 'failed')
+            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
+            ->get(['created_at', 'amount']);
+
+        $newUsersForChart = User::where('role_id', 2)
+            ->where('created_at', '>=', $chartStart)
+            ->get(['created_at']);
+
+        $dashboardCharts = collect(range(6, 0))->map(function (int $daysAgo) use ($paidTransactionsForChart, $newUsersForChart) {
+            $date = Carbon::now()->subDays($daysAgo);
+            $dateKey = $date->toDateString();
+
+            $dailyTransactions = $paidTransactionsForChart->filter(
+                fn ($transaction) => optional($transaction->created_at)->toDateString() === $dateKey
+            );
+
+            return [
+                'label' => $date->format('d'),
+                'transactions' => $dailyTransactions->count(),
+                'revenue' => (int) $dailyTransactions->sum('amount'),
+                'users' => $newUsersForChart->filter(
+                    fn ($user) => optional($user->created_at)->toDateString() === $dateKey
+                )->count(),
+            ];
+        })->values();
+
+        $latestReports = AdminReport::with('user')
+            ->latest()
+            ->take(5)
+            ->get();
+
         return view('admin.dashboard', compact(
             'totalTransactionsMonth',
             'revenueMonth',
             'totalUsers',
             'recentTransactions',
             'globalWalletLogs',
-            'lowStockProducts'
+            'lowStockProducts',
+            'dashboardCharts',
+            'latestReports'
         ));
     }
 }

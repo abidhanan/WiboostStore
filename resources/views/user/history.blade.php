@@ -53,7 +53,7 @@
     }
 </style>
 
-<div class="wiboost-font pb-12 max-w-4xl mx-auto mt-4 relative z-10">
+<div class="wiboost-font pb-12 max-w-6xl mx-auto mt-4 relative z-10">
     
     <div class="mb-10 text-center md:text-left pl-2">
         <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">Catatan Transaksi</div>
@@ -179,8 +179,38 @@
                                             @endif
 
                                             @if(isset($credentials['needs_otp']) && $credentials['needs_otp'] == true)
+                                                @php
+                                                    $otpLines = [
+                                                        'Halo Admin Wiboost, saya ingin meminta bantuan OTP untuk pesanan saya.',
+                                                        'Invoice: ' . $trx->invoice_number,
+                                                        'Produk: ' . ($trx->product->name ?? 'Produk Dihapus'),
+                                                        'Total Bayar: Rp ' . number_format((float) $trx->amount, 0, ',', '.'),
+                                                        'Status Pesanan: ' . strtoupper((string) $trx->order_status),
+                                                        'Waktu Transaksi: ' . $trx->created_at->format('d M Y, H:i'),
+                                                        'Nama Pembeli: ' . (auth()->user()->name ?? '-'),
+                                                        'Email Pembeli: ' . (auth()->user()->email ?? '-'),
+                                                    ];
+
+                                                    foreach (['email' => 'Email Akun', 'profile' => 'Profil', 'pin' => 'PIN', 'link' => 'Link Akses'] as $otpKey => $otpLabel) {
+                                                        if (! empty($credentials[$otpKey])) {
+                                                            $otpLines[] = $otpLabel . ': ' . $credentials[$otpKey];
+                                                        }
+                                                    }
+
+                                                    if ($trx->order_input_text) {
+                                                        $otpLines[] = "Input Pembeli:\n" . $trx->order_input_text;
+                                                    }
+
+                                                    $otpLines[] = 'Mohon dibantu kirim OTP/login untuk pesanan ini.';
+                                                    $otpUrl = \App\Support\WiboostAdminContact::whatsappUrl(implode("\n", array_filter($otpLines)));
+                                                @endphp
                                                 <div class="bg-white p-5 rounded-[1.5rem] border-4 border-amber-100 flex flex-col gap-2 shadow-sm text-center">
                                                     <p class="text-[10px] font-black text-amber-600 leading-relaxed uppercase tracking-widest">⚠️ Pesanan ini butuh bantuan login admin. Cek tutorial atau minta OTP ke admin.</p>
+                                                    @if($otpUrl)
+                                                        <a href="{{ $otpUrl }}" target="_blank" rel="noopener" class="mt-2 inline-flex w-full items-center justify-center rounded-full border-4 border-white bg-[#25D366] px-4 py-3 text-xs font-black text-white shadow-lg shadow-[#25D366]/20 transition active:scale-95">
+                                                            Minta OTP via WhatsApp
+                                                        </a>
+                                                    @endif
                                                 </div>
                                             @endif
                                         </div>

@@ -46,7 +46,7 @@ class PaymentCallbackController extends Controller
         );
 
         if (str_starts_with($merchantRef, 'DEP-')) {
-            $result = DB::transaction(function () use ($merchantRef, $status, $paidAmount, $paymentMethod) {
+            $result = DB::transaction(function () use ($merchantRef, $status, $paidAmount, $paymentMethod, $payload) {
                 $deposit = Deposit::where('invoice_number', $merchantRef)
                     ->lockForUpdate()
                     ->first();
@@ -55,7 +55,7 @@ class PaymentCallbackController extends Controller
                     return ['found' => false];
                 }
 
-                if ($status === 'PAID' && in_array($deposit->payment_status, ['unpaid', 'pending'], true)) {
+                if ($status === 'PAID' && in_array($deposit->payment_status, [null, 'unpaid', 'pending'], true)) {
                     $topupAmount = (float) $deposit->amount;
                     $actualPaidAmount = $paidAmount > 0 ? $paidAmount : $topupAmount;
 
@@ -63,17 +63,14 @@ class PaymentCallbackController extends Controller
                         'payment_status' => 'paid',
                         'payment_method' => $paymentMethod,
                         'paid_amount' => $actualPaidAmount,
+                        'tripay_reference' => data_get($payload, 'reference') ?: $deposit->tripay_reference,
+                        'payment_response' => array_merge($deposit->payment_response ?? [], [
+                            'tripay_callback' => $payload,
+                            'callback_synced_at' => now()->toDateTimeString(),
+                        ]),
                     ]);
 
-                    $user = User::whereKey($deposit->user_id)
-                        ->lockForUpdate()
-                        ->first();
-
-                    if ($user) {
-                        $user->increment('balance', $topupAmount);
-                    }
-
-                    WalletHistory::firstOrCreate(
+                    $walletHistory = WalletHistory::firstOrCreate(
                         [
                             'invoice_number' => $deposit->invoice_number,
                             'type' => 'topup',
@@ -85,10 +82,18 @@ class PaymentCallbackController extends Controller
                         ]
                     );
 
+                    $user = User::whereKey($deposit->user_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($user && $walletHistory->wasRecentlyCreated) {
+                        $user->increment('balance', $topupAmount);
+                    }
+
                     return ['found' => true, 'paid' => true, 'deposit_id' => $deposit->id];
                 }
 
-                if (in_array($status, ['FAILED', 'EXPIRED', 'REFUND'], true) && in_array($deposit->payment_status, ['unpaid', 'pending'], true)) {
+                if (in_array($status, ['FAILED', 'EXPIRED', 'REFUND'], true) && in_array($deposit->payment_status, [null, 'unpaid', 'pending'], true)) {
                     $deposit->delete();
                 }
 
@@ -202,15 +207,7 @@ class PaymentCallbackController extends Controller
                         'paid_amount' => $actualPaidAmount,
                     ]);
 
-                    $user = User::whereKey($deposit->user_id)
-                        ->lockForUpdate()
-                        ->first();
-
-                    if ($user) {
-                        $user->increment('balance', $topupAmount);
-                    }
-
-                    WalletHistory::firstOrCreate(
+                    $walletHistory = WalletHistory::firstOrCreate(
                         [
                             'invoice_number' => $deposit->invoice_number,
                             'type' => 'topup',
@@ -221,6 +218,14 @@ class PaymentCallbackController extends Controller
                             'description' => 'Top Up Saldo via ' . strtoupper($notification->payment_type),
                         ]
                     );
+
+                    $user = User::whereKey($deposit->user_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($user && $walletHistory->wasRecentlyCreated) {
+                        $user->increment('balance', $topupAmount);
+                    }
 
                     return ['found' => true, 'paid' => true, 'deposit_id' => $deposit->id];
                 }

@@ -43,6 +43,20 @@
                 padding-top: 8.5rem;
             }
         }
+        @media (min-width: 1024px) {
+            body > .fixed > div,
+            nav > div,
+            .legal-section-inner,
+            .legal-section-inner > .max-w-6xl,
+            footer > div {
+                max-width: min(1600px, calc(100vw - 8rem)) !important;
+            }
+
+            .legal-section-inner {
+                padding-left: 2rem !important;
+                padding-right: 2rem !important;
+            }
+        }
     </style>
 </head>
 <body x-data="{ mobileNavOpen: false }" class="wiboost-compact-ui bg-[#f4f9ff] text-[#2b3a67] antialiased selection:bg-[#7b9eed] selection:text-white flex min-h-screen flex-col overflow-x-hidden">
@@ -142,8 +156,8 @@
     @endauth
 
     <main class="legal-main-shell relative flex-1 overflow-hidden bg-wiboost-sky">
-        <section class="legal-section-inner relative z-10 mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
-            <div class="w-full max-w-5xl rounded-[2.5rem] border-4 border-white bg-white/90 p-8 text-center shadow-2xl shadow-[#bde0fe]/45 backdrop-blur-md md:p-12">
+        <section class="legal-section-inner relative z-10 mx-auto max-w-6xl px-4 pb-20 sm:px-6 lg:px-8">
+            <div class="w-full max-w-6xl rounded-[2.5rem] border-4 border-white bg-white/90 p-8 text-center shadow-2xl shadow-[#bde0fe]/45 backdrop-blur-md md:p-12">
                 <div class="mb-6 inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-5 py-2 text-xs font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
                     {{ $page['badge'] }}
                 </div>
@@ -216,5 +230,8 @@
             </div>
         </div>
     </footer>
+    @auth
+        @include('partials.floating-admin-report')
+    @endauth
 </body>
 </html>

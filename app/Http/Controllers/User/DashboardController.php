@@ -9,14 +9,17 @@ use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\Promo;
 use App\Models\Tutorial;
+use App\Services\TripayDepositSyncService;
 use App\Support\WiboostCatalog;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(TripayDepositSyncService $depositSyncService)
     {
-        $user = Auth::user();
+        $depositSyncService->syncForUser((int) Auth::id());
+
+        $user = Auth::user()->fresh();
         $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
         $catalogSlugs = WiboostCatalog::coreCategorySlugs();
@@ -32,12 +35,14 @@ class DashboardController extends Controller
 
         $totalThisMonth = Transaction::where('user_id', $user->id)
                             ->where('payment_status', 'paid')
+                            ->where('order_status', '!=', 'failed')
                             ->whereMonth('created_at', $currentMonth)
                             ->whereYear('created_at', $currentYear)
                             ->count();
 
         $totalSpent = Transaction::where('user_id', $user->id)
                             ->where('payment_status', 'paid')
+                            ->where('order_status', '!=', 'failed')
                             ->whereMonth('created_at', $currentMonth)
                             ->whereYear('created_at', $currentYear)
                             ->sum('amount');
@@ -46,10 +51,17 @@ class DashboardController extends Controller
         $tutorialGroups = $tutorials
             ->groupBy(fn (Tutorial $tutorial) => $tutorial->main_category ?: ($tutorial->category ?: 'Umum'))
             ->map(function ($mainTutorials, $mainCategory) {
+                $directTutorials = $mainTutorials
+                    ->filter(fn (Tutorial $tutorial) => blank($tutorial->sub_category))
+                    ->values();
+                $subcategoryTutorials = $mainTutorials
+                    ->filter(fn (Tutorial $tutorial) => filled($tutorial->sub_category));
+
                 return [
                     'name' => $mainCategory,
-                    'subcategories' => $mainTutorials
-                        ->groupBy(fn (Tutorial $tutorial) => $tutorial->sub_category ?: ($tutorial->category ?: 'Umum'))
+                    'tutorials' => $directTutorials,
+                    'subcategories' => $subcategoryTutorials
+                        ->groupBy(fn (Tutorial $tutorial) => $tutorial->sub_category)
                         ->map(function ($subTutorials, $subCategory) {
                             $firstTutorial = $subTutorials->first();
 

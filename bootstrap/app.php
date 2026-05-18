@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Mengizinkan Midtrans mengirim Webhook tanpa terkena blokir CSRF Token
         $middleware->validateCsrfTokens(except: [
             '/midtrans/callback',
+            '/tripay/callback',
         ]);
 
     })

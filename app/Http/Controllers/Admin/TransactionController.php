@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
 use App\Models\Transaction;
 use App\Services\OrderFulfillmentService;
 use App\Support\WiboostCatalog;
@@ -108,38 +107,4 @@ class TransactionController extends Controller
         }
     }
 
-    public function reports()
-    {
-        $paidTransactions = Transaction::where('payment_status', 'paid');
-        $successfulTransactions = Transaction::where('payment_status', 'paid')->where('order_status', 'success');
-        $providerOrStockOrders = Transaction::whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()));
-        $lowStockProducts = Product::where('process_type', 'account')
-            ->get()
-            ->filter(fn ($product) => $product->stock_reminder > 0 && ($product->available_stock ?? 0) <= $product->stock_reminder);
-
-        $totalRevenue = (clone $successfulTransactions)
-            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
-            ->sum('amount');
-        $totalOrders = (clone $providerOrStockOrders)->count();
-        $paidOrders = (clone $paidTransactions)
-            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
-            ->count();
-        $successfulOrders = (clone $successfulTransactions)
-            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
-            ->count();
-        $processingOrders = (clone $providerOrStockOrders)->whereIn('order_status', ['pending', 'processing'])->count();
-        $averageOrderValue = $successfulOrders > 0 ? $totalRevenue / $successfulOrders : 0;
-        $successRate = $paidOrders > 0 ? ($successfulOrders / $paidOrders) * 100 : 0;
-
-        return view('admin.transactions.reports', compact(
-            'totalRevenue',
-            'totalOrders',
-            'paidOrders',
-            'successfulOrders',
-            'processingOrders',
-            'averageOrderValue',
-            'successRate',
-            'lowStockProducts'
-        ));
-    }
 }

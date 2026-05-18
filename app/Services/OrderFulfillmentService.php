@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\WalletHistory;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -25,18 +26,61 @@ class OrderFulfillmentService
     {
         $transaction->loadMissing('product.category', 'user');
 
+        if ($transaction->payment_status !== 'paid') {
+            return;
+        }
+
         if (! $transaction->product) {
             $this->markAsFailed($transaction, 'Produk untuk transaksi ini tidak ditemukan.');
 
             return;
         }
 
+        if ($transaction->product->process_type === 'api') {
+            $this->handleApiOrderOnce($transaction);
+
+            return;
+        }
+
         match ($transaction->product->process_type) {
-            'api' => $this->handleApiOrder($transaction),
             'account', 'number' => $this->handleCredentialOrder($transaction),
             'manual' => $this->handleManualOrder($transaction),
             default => $this->markAsFailed($transaction, 'Tipe proses produk tidak dikenali.'),
         };
+    }
+
+    public function syncRecentProviderStatuses(?int $userId = null, int $limit = 5, int $cooldownSeconds = 60): int
+    {
+        $transactions = Transaction::query()
+            ->with(['product', 'user'])
+            ->where('payment_status', 'paid')
+            ->whereIn('order_status', ['pending', 'processing'])
+            ->when($userId !== null, fn ($query) => $query->where('user_id', $userId))
+            ->whereHas('product', function ($query) {
+                $query->where('process_type', 'api')
+                    ->where(function ($providerQuery) {
+                        $providerQuery->whereIn('provider_source', ['digiflazz', 'ordersosmed'])
+                            ->orWhereIn('provider_id', ['digiflazz', 'ordersosmed']);
+                    });
+            })
+            ->oldest('updated_at')
+            ->limit(max(1, $limit))
+            ->get();
+
+        $synced = 0;
+
+        foreach ($transactions as $transaction) {
+            $lockKey = 'provider-status-sync:' . $transaction->id;
+
+            if (! Cache::add($lockKey, true, now()->addSeconds(max(15, $cooldownSeconds)))) {
+                continue;
+            }
+
+            $this->syncProviderStatus($transaction);
+            $synced++;
+        }
+
+        return $synced;
     }
 
     public function assignCredential(Transaction $transaction, ProductCredential $credential): void
@@ -190,6 +234,16 @@ class OrderFulfillmentService
 
     protected function handleApiOrder(Transaction $transaction): void
     {
+        if (in_array($transaction->order_status, ['success', 'failed'], true)) {
+            return;
+        }
+
+        if ($transaction->provider_order_id || $transaction->order_status === 'processing') {
+            $this->syncProviderStatus($transaction);
+
+            return;
+        }
+
         $product = $transaction->product;
         $providerSource = $product->provider_source ?: $product->provider_id;
 
@@ -213,10 +267,11 @@ class OrderFulfillmentService
 
         $previousStatus = $transaction->order_status;
         $transaction->update([
-            'response_data' => [
+            'response_data' => array_merge($transaction->response_data ?? [], [
                 'provider_order_id' => $response['provider_order_id'] ?? null,
                 'raw' => $response['raw'] ?? $response,
-            ],
+                'provider_submitted_at' => now()->toDateTimeString(),
+            ]),
             'target_notes' => $response['message'] ?? $transaction->target_notes,
         ]);
 
@@ -243,6 +298,31 @@ class OrderFulfillmentService
             $response['message'] ?? 'Provider telah menerima pesanan dari website.',
             $nextStatus === 'success' ? 4968121 : 5922504
         );
+    }
+
+    protected function handleApiOrderOnce(Transaction $transaction): void
+    {
+        if (in_array($transaction->order_status, ['success', 'failed'], true)) {
+            return;
+        }
+
+        $lockKey = 'provider-fulfillment:' . $transaction->id;
+
+        if (! Cache::add($lockKey, true, now()->addMinutes(5))) {
+            return;
+        }
+
+        try {
+            $freshTransaction = Transaction::with(['product.category', 'user'])->find($transaction->id);
+
+            if (! $freshTransaction || $freshTransaction->payment_status !== 'paid') {
+                return;
+            }
+
+            $this->handleApiOrder($freshTransaction);
+        } finally {
+            Cache::forget($lockKey);
+        }
     }
 
     protected function handleCredentialOrder(Transaction $transaction): void

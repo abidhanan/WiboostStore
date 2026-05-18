@@ -4,8 +4,6 @@
 
 @section('content')
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
-    .wiboost-font { font-family: 'Nunito', sans-serif; }
     
     .animate-float { animation: float 6s ease-in-out infinite; }
     .animate-float-delayed { animation: float 6s ease-in-out 3s infinite; }
@@ -18,10 +16,6 @@
 
 <div class="wiboost-font pb-12 max-w-6xl mx-auto relative z-10">
     
-    <div class="absolute top-10 right-10 text-5xl animate-float opacity-30 pointer-events-none hidden md:block z-0">📦</div>
-    <div class="absolute top-1/3 -left-10 text-4xl animate-float-delayed opacity-30 pointer-events-none hidden md:block z-0">✨</div>
-    <div class="absolute bottom-20 right-0 text-6xl animate-float opacity-20 pointer-events-none hidden md:block z-0">☁️</div>
-
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-10 pl-2 relative z-10">
         <div class="flex items-center gap-5">
             <a href="{{ route('admin.products.index') }}" class="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-[1.2rem] flex items-center justify-center text-[#5a76c8] hover:bg-[#e0fbfc] transition-transform active:scale-95 border-4 border-white shadow-lg shadow-[#bde0fe]/30 shrink-0">
@@ -149,12 +143,19 @@
                         @forelse($credentials as $cred)
                         <tr class="hover:bg-[#f8faff] transition-colors group">
                             <td class="px-5 py-5 align-top">
-                                @if($cred->data_1 && $cred->data_1 !== '-')
-                                    <p class="font-black text-[#2b3a67] text-base break-all mb-3">{{ $cred->data_1 }}</p>
-                                @endif
-                                
-                                <div class="space-y-2 bg-white p-4 rounded-2xl border-2 border-[#f0f5ff] shadow-sm w-fit min-w-[200px]">
-                                    @if($cred->data_2) <p class="font-black text-amber-500 text-xs bg-amber-50 px-2 py-1 rounded border border-amber-100">🔑 {{ $cred->data_2 }}</p> @endif
+                                <div class="space-y-2 bg-white p-4 rounded-2xl border-2 border-[#f0f5ff] shadow-sm w-full min-w-[220px] max-w-[360px]">
+                                    @if($cred->data_1 && $cred->data_1 !== '-')
+                                        <div class="rounded-xl border border-[#dbeafe] bg-[#f4f9ff] px-3 py-2">
+                                            <p class="text-[8px] font-black uppercase tracking-widest text-[#8faaf3]">Email / Username</p>
+                                            <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $cred->data_1 }}</p>
+                                        </div>
+                                    @endif
+                                    @if($cred->data_2)
+                                        <div class="rounded-xl border border-amber-100 bg-amber-50 px-3 py-2">
+                                            <p class="text-[8px] font-black uppercase tracking-widest text-amber-500">Password</p>
+                                            <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $cred->data_2 }}</p>
+                                        </div>
+                                    @endif
                                     @if($cred->data_3) <p class="font-black text-indigo-500 text-xs bg-indigo-50 px-2 py-1 rounded border border-indigo-100">👤 Profil: {{ $cred->data_3 }}</p> @endif
                                     @if($cred->data_4) <p class="font-black text-rose-500 text-xs bg-rose-50 px-2 py-1 rounded border border-rose-100">🔢 PIN: {{ $cred->data_4 }}</p> @endif
                                     @if($cred->data_5) <p class="font-black text-blue-500 text-xs truncate max-w-[200px] bg-blue-50 px-2 py-1 rounded border border-blue-100">🔗 {{ $cred->data_5 }}</p> @endif

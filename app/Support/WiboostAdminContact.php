@@ -27,13 +27,18 @@ class WiboostAdminContact
 
     public static function reportUrl(): ?string
     {
+        return self::whatsappUrl(self::reportMessage());
+    }
+
+    public static function whatsappUrl(string $message): ?string
+    {
         $number = self::whatsappNumber();
 
         if ($number === null) {
             return null;
         }
 
-        return 'https://wa.me/' . $number . '?text=' . rawurlencode(self::reportMessage());
+        return 'https://wa.me/' . $number . '?text=' . rawurlencode($message);
     }
 
     public static function reportMessage(): string

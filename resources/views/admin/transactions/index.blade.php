@@ -4,8 +4,6 @@
 
 @section('content')
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
-    .wiboost-font { font-family: 'Nunito', sans-serif; }
     .table-scroll::-webkit-scrollbar { height: 8px; }
     .table-scroll::-webkit-scrollbar-track { background: #f0f5ff; border-radius: 10px; }
     .table-scroll::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; border: 2px solid #f0f5ff; }
@@ -131,11 +129,6 @@
 </style>
 
 <div class="wiboost-font pb-12 relative z-10 w-full min-w-0">
-    <!-- Floating Emojis Background -->
-    <div class="absolute top-10 right-10 text-5xl animate-float opacity-30 pointer-events-none hidden lg:block z-0">💳</div>
-    <div class="absolute top-1/3 left-5 text-4xl animate-float-delayed opacity-30 pointer-events-none hidden lg:block z-0">✨</div>
-    <div class="absolute bottom-20 right-[15%] text-6xl animate-float opacity-20 pointer-events-none hidden lg:block z-0">🧾</div>
-
     <!-- Alert Messages (Aman dari 500 Error) -->
     @if(session('success'))
         <div class="mb-6 flex items-center gap-3 rounded-[2rem] border-4 border-white bg-[#e6fff7] px-5 sm:px-6 py-4 font-black text-emerald-500 shadow-lg shadow-emerald-100/50 relative z-10 text-sm sm:text-base w-full">
@@ -358,6 +351,13 @@
                     ?: (filled($trx->target_data) && $trx->target_data !== '- (Tidak membutuhkan target tambahan)' ? $trx->target_data : null);
                 $detailTargetText = $trx->order_input_text
                     ?: ($detailTargetSummary ? 'Target: ' . $detailTargetSummary : '-');
+                $detailInputFields = collect($trx->order_input_fields ?? []);
+                $detailInputText = $detailInputFields
+                    ->reject(fn ($field) => ($field['name'] ?? '') === 'order_quantity')
+                    ->map(fn ($field) => ($field['label'] ?? 'Input') . ': ' . ($field['value'] ?? '-'))
+                    ->implode("\n");
+                $detailInputText = $detailInputText !== '' ? $detailInputText : ($detailTargetSummary ? 'Target: ' . $detailTargetSummary : '-');
+                $detailQuantity = $trx->provider_order_quantity;
                 $detailCategory = collect([
                     $trx->product?->category?->parent?->parent?->name,
                     $trx->product?->category?->parent?->name,
@@ -387,18 +387,28 @@
                             <p class="mt-1 text-xs font-bold text-[#8faaf3] break-all">{{ $trx->user->email ?? '-' }}</p>
                         </div>
                         <div class="admin-detail-panel">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Pembayaran</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Total Bayar</p>
                             <p class="mt-1 font-black text-[#4bc6b9]">Rp {{ number_format($trx->amount ?? 0, 0, ',', '.') }}</p>
-                            <p class="mt-1 text-xs font-bold text-[#8faaf3] uppercase">{{ $trx->payment_method ?? '-' }} / {{ $trx->payment_status ?? '-' }}</p>
                         </div>
                         <div class="admin-detail-panel md:col-span-2">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Layanan</p>
                             <p class="mt-1 font-black text-[#2b3a67]">{{ $trx->product->name ?? 'Produk Dihapus' }}</p>
-                            <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $detailCategory ?: 'Kategori tidak tersedia' }}</p>
                         </div>
                         <div class="admin-detail-panel md:col-span-2">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Target / Input Pembeli</p>
-                            <p class="mt-2 whitespace-pre-line break-all text-xs font-black text-[#2b3a67]">{{ $detailTargetText }}</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Metode Pembayaran</p>
+                            <p class="mt-1 text-sm font-black uppercase text-[#2b3a67]">{{ $trx->payment_method ?? '-' }}</p>
+                        </div>
+                        <div class="admin-detail-panel md:col-span-2">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Kategori</p>
+                            <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $detailCategory ?: 'Kategori tidak tersedia' }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Input Pembeli</p>
+                            <p class="mt-2 whitespace-pre-line break-all text-xs font-black text-[#2b3a67]">{{ $detailInputText }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Jumlah Pesanan</p>
+                            <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $detailQuantity ? number_format($detailQuantity, 0, ',', '.') : '-' }}</p>
                         </div>
                         <div class="admin-detail-panel">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Status Pesanan</p>

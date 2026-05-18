@@ -4,8 +4,6 @@
 
 @section('content')
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
-    .wiboost-font { font-family: 'Nunito', sans-serif; }
     .table-scroll::-webkit-scrollbar { height: 8px; }
     .table-scroll::-webkit-scrollbar-track { background: #f0f5ff; border-radius: 10px; }
     .table-scroll::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; border: 2px solid #f0f5ff; }
@@ -21,20 +19,20 @@
                         class="min-w-0 flex-1 rounded-[1.2rem] sm:rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] py-3 sm:py-4 px-5 sm:px-6 font-black text-[#2b3a67] outline-none transition shadow-inner placeholder-[#a3bbfb] focus:border-[#bde0fe] text-xs sm:text-sm truncate"
                         placeholder="Cari nama produk atau SKU provider...">
 
-                    <button type="submit" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] w-12 h-12 text-white shadow-md shadow-[#5a76c8]/25 transition-transform active:scale-95 hover:bg-[#4760a9] text-xs font-black" title="Cari Produk">
-                        Cari
+                    <button type="submit" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] w-12 h-12 text-white shadow-md shadow-[#5a76c8]/25 transition-transform active:scale-95 hover:bg-[#4760a9] text-base" title="Cari Produk">
+                        &#x1F50D;
                     </button>
 
                     @if(request('search'))
-                        <a href="{{ route('admin.products.index') }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:bg-[#ffcccc] text-xs font-black" title="Reset Pencarian">
-                            Reset
+                        <a href="{{ route('admin.products.index') }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:bg-[#ffcccc] text-base" title="Reset Pencarian">
+                            &#x2716;&#xFE0F;
                         </a>
                     @endif
                 </form>
             </div>
 
-            <a href="{{ route('admin.products.create') }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] px-5 py-3 text-sm font-black text-white shadow-md shadow-[#5a76c8]/25 transition-transform active:scale-95 hover:bg-[#4760a9] w-full md:w-auto md:h-12 min-w-0">
-                Tambah Produk
+            <a href="{{ route('admin.products.create') }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] px-5 py-3 text-sm font-black text-white shadow-md shadow-[#5a76c8]/25 transition-transform active:scale-95 hover:bg-[#4760a9] w-full md:w-auto md:min-w-[190px] md:px-8 md:py-4 md:text-base min-w-0">
+                <span class="text-base">&#x2795;</span> Tambah Produk
             </a>
         </div>
 
@@ -136,13 +134,6 @@
 
                                                         <div class="min-w-0 flex-1">
                                                             <p class="line-clamp-2 text-xs sm:text-sm font-black leading-snug text-[#2b3a67]">{{ $product->name ?? '-' }}</p>
-                                                            <span style="font-size: 9px;" class="mt-1.5 inline-block rounded-md bg-[#e0fbfc] px-2 py-1 font-black uppercase tracking-wider text-[#4bc6b9] shadow-sm border border-white line-clamp-2 leading-tight">
-                                                                {{ $product->category?->breadcrumb_name ?? 'KATEGORI KOSONG' }}
-                                                            </span>
-
-                                                            @if(isset($product->is_active) && !$product->is_active)
-                                                                <span style="font-size: 9px;" class="ml-1 font-black uppercase tracking-wider text-rose-500 bg-rose-50 border border-rose-200 px-2 py-1 rounded-md shadow-sm">[Nonaktif]</span>
-                                                            @endif
                                                         </div>
                                                     </div>
                                                 </td>
@@ -206,14 +197,14 @@
 
                                                 <td class="px-5 py-4 sm:py-5 align-middle text-center">
                                                     <div class="flex items-center justify-center gap-2">
-                                                        <a href="{{ route('admin.products.edit', $product->id) }}" class="flex h-9 w-9 items-center justify-center rounded-[1rem] border-2 border-white bg-white text-xs font-black text-[#5a76c8] shadow-md shadow-[#bde0fe]/20 transition-transform active:scale-95 hover:bg-[#f0f5ff]" title="Edit">
-                                                            Edit
+                                                        <a href="{{ route('admin.products.edit', $product->id) }}" class="flex h-9 w-9 items-center justify-center rounded-[1rem] border-2 border-white bg-white text-lg text-[#5a76c8] shadow-md shadow-[#bde0fe]/20 transition-transform active:scale-95 hover:scale-110 hover:bg-[#f0f5ff]" title="Edit">
+                                                            &#x270F;&#xFE0F;
                                                         </a>
                                                         <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus produk ini? Semua data gudang terkait juga akan hilang!');" class="m-0">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-[1rem] border-2 border-white bg-white text-xs font-black text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:bg-[#ffe5e5]" title="Hapus">
-                                                                Del
+                                                            <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-[1rem] border-2 border-white bg-white text-lg text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:scale-110 hover:bg-[#ffe5e5]" title="Hapus">
+                                                                &#x1F5D1;&#xFE0F;
                                                             </button>
                                                         </form>
                                                     </div>

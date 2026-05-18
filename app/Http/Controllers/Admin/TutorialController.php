@@ -15,6 +15,18 @@ class TutorialController extends Controller
         $search = trim((string) $request->query('search', ''));
 
         $tutorials = Tutorial::query()
+            ->select([
+                'id',
+                'title',
+                'category',
+                'main_category',
+                'sub_category',
+                'sub_category_image',
+                'youtube_url',
+                'content',
+                'is_active',
+                'created_at',
+            ])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($innerQuery) use ($search) {
                     $innerQuery->where('title', 'like', "%{$search}%")
@@ -30,10 +42,17 @@ class TutorialController extends Controller
         $tutorialSections = $tutorials
             ->groupBy(fn (Tutorial $tutorial) => $tutorial->main_category ?: ($tutorial->category ?: 'Umum'))
             ->map(function ($mainTutorials, $mainCategory) {
+                $directTutorials = $mainTutorials
+                    ->filter(fn (Tutorial $tutorial) => blank($tutorial->sub_category))
+                    ->values();
+                $subcategoryTutorials = $mainTutorials
+                    ->filter(fn (Tutorial $tutorial) => filled($tutorial->sub_category));
+
                 return [
                     'name' => $mainCategory,
-                    'subcategories' => $mainTutorials
-                        ->groupBy(fn (Tutorial $tutorial) => $tutorial->sub_category ?: ($tutorial->category ?: 'Umum'))
+                    'tutorials' => $directTutorials,
+                    'subcategories' => $subcategoryTutorials
+                        ->groupBy(fn (Tutorial $tutorial) => $tutorial->sub_category)
                         ->map(function ($subTutorials, $subCategory) {
                             $firstTutorial = $subTutorials->first();
 
@@ -70,7 +89,7 @@ class TutorialController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'main_category' => 'required|string|max:100',
-            'sub_category' => 'required|string|max:100',
+            'sub_category' => 'nullable|string|max:100',
             'sub_category_image' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:2048',
             'description' => 'nullable|string|max:255',
             'youtube_url' => 'nullable|url|max:500',
@@ -86,25 +105,18 @@ class TutorialController extends Controller
         }
 
         $data = collect($validated)->except('submission_token')->all();
+        $data['sub_category'] = trim((string) ($validated['sub_category'] ?? '')) ?: null;
         $data['category'] = $validated['main_category'];
         $data['icon'] = null;
         $data['image'] = null;
 
         if ($request->hasFile('sub_category_image')) {
             $data['sub_category_image'] = $request->file('sub_category_image')->store('tutorials/subcategories', 'public');
-        } else {
+        } elseif ($data['sub_category']) {
             $data['sub_category_image'] = $this->existingSubCategoryImage(
                 $validated['main_category'],
-                $validated['sub_category']
+                $data['sub_category']
             );
-        }
-
-        if (! $data['sub_category_image']) {
-            return back()
-                ->withInput()
-                ->withErrors([
-                    'sub_category_image' => 'Logo kategori kedua wajib diupload untuk kategori kedua baru.',
-                ]);
         }
 
         Tutorial::create($data);
@@ -126,7 +138,7 @@ class TutorialController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'main_category' => 'required|string|max:100',
-            'sub_category' => 'required|string|max:100',
+            'sub_category' => 'nullable|string|max:100',
             'sub_category_image' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:2048',
             'description' => 'nullable|string|max:255',
             'youtube_url' => 'nullable|url|max:500',
@@ -135,6 +147,7 @@ class TutorialController extends Controller
         ]);
 
         $data = collect($validated)->except('sub_category_image')->all();
+        $data['sub_category'] = trim((string) ($validated['sub_category'] ?? '')) ?: null;
         $data['category'] = $validated['main_category'];
         $data['icon'] = null;
 
@@ -143,24 +156,19 @@ class TutorialController extends Controller
 
             $data['sub_category_image'] = $request->file('sub_category_image')->store('tutorials/subcategories', 'public');
         } elseif (
-            $this->sameCategory($tutorial, $validated['main_category'], $validated['sub_category'])
+            $data['sub_category']
+            && $this->sameCategory($tutorial, $validated['main_category'], $data['sub_category'])
             && $tutorial->sub_category_image
         ) {
             $data['sub_category_image'] = $tutorial->sub_category_image;
-        } else {
+        } elseif ($data['sub_category']) {
             $data['sub_category_image'] = $this->existingSubCategoryImage(
                 $validated['main_category'],
-                $validated['sub_category'],
+                $data['sub_category'],
                 $tutorial->id
             );
-        }
-
-        if (! $data['sub_category_image']) {
-            return back()
-                ->withInput()
-                ->withErrors([
-                    'sub_category_image' => 'Logo kategori kedua wajib diupload untuk kategori kedua baru.',
-                ]);
+        } else {
+            $data['sub_category_image'] = null;
         }
 
         $tutorial->update($data);
@@ -207,7 +215,7 @@ class TutorialController extends Controller
     {
         return Tutorial::query()
             ->get(['sub_category', 'category'])
-            ->map(fn (Tutorial $tutorial) => $tutorial->sub_category ?: ($tutorial->category ?: 'Umum'))
+            ->map(fn (Tutorial $tutorial) => $tutorial->sub_category)
             ->filter()
             ->unique()
             ->sort()
@@ -224,10 +232,10 @@ class TutorialController extends Controller
             ->value('sub_category_image');
     }
 
-    protected function sameCategory(Tutorial $tutorial, string $mainCategory, string $subCategory): bool
+    protected function sameCategory(Tutorial $tutorial, string $mainCategory, ?string $subCategory): bool
     {
         return ($tutorial->main_category ?: $tutorial->category) === $mainCategory
-            && ($tutorial->sub_category ?: $tutorial->category) === $subCategory;
+            && $tutorial->sub_category === $subCategory;
     }
 
     protected function deleteTutorialFileIfUnused(?string $path, ?int $ignoreId = null): void

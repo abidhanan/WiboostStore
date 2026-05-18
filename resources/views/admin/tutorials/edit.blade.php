@@ -2,11 +2,6 @@
 @section('title', 'Edit Tutorial')
 
 @section('content')
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
-    .wiboost-font { font-family: 'Nunito', sans-serif; }
-</style>
-
 <div class="wiboost-font pb-12 max-w-4xl mx-auto relative z-10">
     <div class="flex flex-col md:flex-row items-start md:items-center gap-5 mb-10 pl-2 relative z-10">
         <a href="{{ route('admin.tutorials.index') }}" class="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-[1.2rem] flex items-center justify-center text-[#5a76c8] hover:bg-[#e0fbfc] transition-transform active:scale-95 border-4 border-white shadow-lg shadow-[#bde0fe]/30 shrink-0">
@@ -39,18 +34,6 @@
         @csrf
         @method('PUT')
 
-        <datalist id="tutorial-main-category-options">
-            @foreach($mainCategories ?? [] as $category)
-                <option value="{{ $category }}">
-            @endforeach
-        </datalist>
-
-        <datalist id="tutorial-sub-category-options">
-            @foreach($subCategories ?? [] as $category)
-                <option value="{{ $category }}">
-            @endforeach
-        </datalist>
-
         <div class="mb-8 rounded-[2rem] border-4 border-[#f0f5ff] bg-[#f8faff] p-6 shadow-sm">
             <div class="mb-5">
                 <span class="inline-flex rounded-full border-2 border-white bg-white px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-[#5a76c8] shadow-sm">
@@ -61,17 +44,17 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Kategori Utama</label>
-                    <input list="tutorial-main-category-options" type="text" name="main_category" required value="{{ old('main_category', $tutorial->main_category ?: $tutorial->category) }}" class="w-full bg-white border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]">
+                    <input type="text" name="main_category" required autocomplete="off" value="{{ old('main_category', $tutorial->main_category ?: $tutorial->category) }}" class="w-full bg-white border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Kategori Kedua</label>
-                    <input list="tutorial-sub-category-options" type="text" name="sub_category" required value="{{ old('sub_category', $tutorial->sub_category ?: $tutorial->category) }}" class="w-full bg-white border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]">
+                    <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Kategori Kedua <span class="text-[10px] text-amber-500">(Opsional)</span></label>
+                    <input type="text" name="sub_category" autocomplete="off" value="{{ old('sub_category', $tutorial->sub_category) }}" class="w-full bg-white border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" placeholder="Kosongkan agar tutorial langsung muncul di dashboard user">
                 </div>
             </div>
 
             <div class="mt-6">
-                <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Logo Kategori Kedua</label>
+                <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Logo Kategori Kedua <span class="text-[10px] text-amber-500">(Opsional)</span></label>
                 @if($tutorial->sub_category_image)
                     <div class="mb-4 flex items-center gap-4 bg-white p-4 rounded-[1.5rem] border-4 border-white shadow-sm">
                         <img src="{{ Storage::url($tutorial->sub_category_image) }}" class="h-16 w-16 object-contain rounded-xl border-2 border-[#bde0fe] shadow-sm bg-[#f4f9ff] p-2" alt="Logo kategori kedua">
@@ -79,7 +62,7 @@
                     </div>
                 @endif
                 <input type="file" name="sub_category_image" accept="image/*" class="w-full text-sm font-bold text-[#8faaf3] file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:bg-[#e0fbfc] file:text-[#4bc6b9] file:shadow-sm cursor-pointer bg-white rounded-[1.5rem] p-2 border-4 border-white shadow-inner">
-                <p class="text-[10px] font-black text-amber-500 mt-2 ml-2 uppercase tracking-widest">Upload baru hanya kalau ingin mengganti logo kategori kedua.</p>
+                <p class="text-[10px] font-black text-amber-500 mt-2 ml-2 uppercase tracking-widest">Boleh kosong. Upload baru hanya kalau ingin mengganti logo kategori kedua.</p>
             </div>
         </div>
 

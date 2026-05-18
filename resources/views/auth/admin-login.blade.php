@@ -42,9 +42,21 @@
                         <a href="{{ route('password.request') }}" class="text-xs font-black text-[#8faaf3] transition hover:text-[#5a76c8]">Lupa sandi?</a>
                     @endif
                 </div>
-                <input id="password" type="password" name="password" required autocomplete="current-password"
-                    class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 text-sm font-bold text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe] focus:bg-white"
-                    placeholder="Masukkan kata sandi admin">
+                <div class="relative">
+                    <input id="password" type="password" name="password" required autocomplete="current-password"
+                        class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 pr-14 text-sm font-bold text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe] focus:bg-white"
+                        placeholder="Masukkan kata sandi admin">
+                    <button type="button" data-password-toggle="password" aria-label="Lihat password" class="absolute right-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-white text-[#5a76c8] shadow-sm transition hover:bg-[#e0fbfc]">
+                        <svg data-eye-open class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12 18 18.75 12 18.75 2.25 12 2.25 12Z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                        </svg>
+                        <svg data-eye-closed class="hidden h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.6 5.4A9.6 9.6 0 0 1 12 5.25c6 0 9.75 6.75 9.75 6.75a16.4 16.4 0 0 1-3.1 3.8M6.1 6.8A16.5 16.5 0 0 0 2.25 12S6 18.75 12 18.75c1.55 0 2.96-.45 4.2-1.08"/>
+                        </svg>
+                    </button>
+                </div>
                 @error('password')
                     <p class="mt-2 text-xs font-bold text-[#ff6b6b]">{{ $message }}</p>
                 @enderror
@@ -61,4 +73,21 @@
         </form>
         
     </div>
+
+    <script>
+        document.querySelectorAll('[data-password-toggle]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const input = document.getElementById(button.dataset.passwordToggle);
+                if (!input) {
+                    return;
+                }
+
+                const shouldShow = input.type === 'password';
+                input.type = shouldShow ? 'text' : 'password';
+                button.setAttribute('aria-label', shouldShow ? 'Sembunyikan password' : 'Lihat password');
+                button.querySelector('[data-eye-open]')?.classList.toggle('hidden', shouldShow);
+                button.querySelector('[data-eye-closed]')?.classList.toggle('hidden', !shouldShow);
+            });
+        });
+    </script>
 @endsection

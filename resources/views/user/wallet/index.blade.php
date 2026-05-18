@@ -106,7 +106,7 @@
                             <span class="absolute inset-y-0 left-0 flex items-center pl-5 font-black text-[#5a76c8]">Rp</span>
                             <input type="number" name="amount" id="amount_input" min="10000" required
                                    class="w-full pl-12 pr-5 py-4 bg-[#f4f9ff] rounded-[1.5rem] border-4 border-white shadow-inner focus:border-[#bde0fe] outline-none font-black text-lg text-[#2b3a67] transition placeholder-[#a3bbfb]" 
-                                   placeholder="ketik nominal">
+                                   placeholder="ketik nominal tanpa titik">
                         </div>
                         <p class="text-[10px] font-black text-amber-500 mt-3 ml-3 uppercase tracking-widest">*Min. isi Rp 10.000</p>
                     </div>

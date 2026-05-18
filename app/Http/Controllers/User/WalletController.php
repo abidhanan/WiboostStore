@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\WalletHistory;
+use App\Services\TripayDepositSyncService;
 use App\Services\TripayService;
 use Exception;
 use Illuminate\Http\Request;
@@ -14,8 +15,10 @@ use Illuminate\Support\Str;
 
 class WalletController extends Controller
 {
-    public function index()
+    public function index(TripayDepositSyncService $depositSyncService)
     {
+        $depositSyncService->syncForUser((int) Auth::id());
+
         $deposits = Deposit::where('user_id', Auth::id())
             ->where(function ($query) {
                 $query->whereNull('payment_status')
@@ -34,6 +37,8 @@ class WalletController extends Controller
         ]);
 
         try {
+            app(TripayDepositSyncService::class)->syncForUser((int) Auth::id());
+
             $amount = (float) $request->amount;
             $lockKey = 'wallet-topup:' . sha1(Auth::id() . '|' . $amount);
 
@@ -150,4 +155,5 @@ class WalletController extends Controller
 
         return $payment['checkout_url'];
     }
+
 }

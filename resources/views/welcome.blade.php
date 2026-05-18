@@ -258,6 +258,18 @@
          .faq-icon {
              transition: transform 0.3s ease-in-out;
          }
+         @media (min-width: 1024px) {
+             nav > div,
+             .welcome-section-inner,
+             footer > div {
+                 max-width: min(1600px, calc(100vw - 8rem)) !important;
+             }
+
+             .welcome-section-inner {
+                 padding-left: 2rem !important;
+                 padding-right: 2rem !important;
+             }
+         }
     </style>
 </head>
 <body class="wiboost-compact-ui wiboost-welcome-page bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white flex flex-col min-h-screen">
@@ -277,7 +289,7 @@
                             <a href="{{ route('user.dashboard') }}" class="text-sm font-extrabold text-white bg-[#5a76c8] hover:bg-[#4760a9] px-6 py-2.5 rounded-full transition-transform active:scale-95 shadow-md">Dashboard</a>
                         @endif
                     @else
-                        <a href="{{ route('register') }}" class="text-sm font-extrabold text-[#5a76c8] hover:bg-[#f0f5ff] px-5 py-2.5 rounded-full transition hidden sm:block">Daftar</a>
+                        <a href="{{ route('register') }}" class="hidden rounded-full border-2 border-white bg-[#f0f5ff] px-6 py-2.5 text-sm font-extrabold text-[#5a76c8] shadow-md shadow-[#bde0fe]/30 transition-transform hover:-translate-y-0.5 hover:bg-white active:scale-95 sm:block">Daftar</a>
                         <a href="{{ route('login') }}" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white text-sm font-extrabold px-7 py-2.5 rounded-full transition-transform active:scale-95 shadow-lg shadow-[#8faaf3]/40 border-2 border-white">Masuk</a>
                     @endauth
                 </div>

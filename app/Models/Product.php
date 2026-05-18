@@ -9,8 +9,14 @@ use App\Support\WiboostCatalog;
 class Product extends Model
 {
     protected const API_SELLING_PRICE_MARKUP_RATES = [
-        'ordersosmed' => 0.10,
+        'ordersosmed' => 0.50,
         'digiflazz' => 0.05,
+    ];
+
+    protected const DIGIFLAZZ_CATEGORY_MARKUP_RATES = [
+        'top-up-game' => 0.05,
+        'kuota-murah' => 0.10,
+        'paket-data' => 0.10,
     ];
 
     protected $fillable = [
@@ -248,6 +254,12 @@ class Product extends Model
         }
 
         $provider = $this->provider_source ?: $this->provider_id;
+
+        if ($provider === 'digiflazz') {
+            $topCategorySlug = $this->resolvePrimaryCategorySlug();
+
+            return static::DIGIFLAZZ_CATEGORY_MARKUP_RATES[$topCategorySlug] ?? static::API_SELLING_PRICE_MARKUP_RATES[$provider];
+        }
 
         return static::API_SELLING_PRICE_MARKUP_RATES[$provider] ?? 0.0;
     }

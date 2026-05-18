@@ -25,6 +25,7 @@
     @if ($method !== 'POST')
         @method($method)
     @endif
+    <input type="hidden" name="is_active" value="1">
 
     <div class="space-y-8 relative z-10">
         <section class="space-y-6">
@@ -78,13 +79,6 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Status Layanan</label>
-                    <select name="is_active" required class="w-full appearance-none rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] cursor-pointer">
-                        <option value="1" {{ (string) old('is_active', $currentProduct->is_active ?? '1') === '1' ? 'selected' : '' }}>🟢 Aktif</option>
-                        <option value="0" {{ (string) old('is_active', $currentProduct->is_active ?? '1') === '0' ? 'selected' : '' }}>🔴 Nonaktif</option>
-                    </select>
-                </div>
             </div>
         </section>
 
@@ -278,17 +272,5 @@
         categorySelect.addEventListener('change', syncSections);
         syncSections();
 
-        const productForm = processTypeSelect.closest('form');
-        productForm?.addEventListener('submit', function () {
-            const submitButton = productForm.querySelector('button[type="submit"]');
-
-            if (!submitButton || submitButton.disabled) {
-                return;
-            }
-
-            submitButton.disabled = true;
-            submitButton.classList.add('cursor-not-allowed', 'opacity-70');
-            submitButton.textContent = 'Menyimpan...';
-        });
     });
 </script>

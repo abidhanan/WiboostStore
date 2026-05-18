@@ -16,21 +16,37 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with('category.parent.parent.parent');
+        $rootCategorySlug = $this->rootCategorySlugExpression();
+        $rootCategoryName = $this->rootCategoryNameExpression();
+        $categoryPath = $this->categoryPathExpression();
+
+        $query = Product::query()
+            ->select('products.*')
+            ->with('category.parent.parent.parent.parent.parent')
+            ->leftJoin('categories as product_category', 'products.category_id', '=', 'product_category.id')
+            ->leftJoin('categories as parent_category', 'product_category.parent_id', '=', 'parent_category.id')
+            ->leftJoin('categories as grandparent_category', 'parent_category.parent_id', '=', 'grandparent_category.id')
+            ->leftJoin('categories as great_grandparent_category', 'grandparent_category.parent_id', '=', 'great_grandparent_category.id')
+            ->leftJoin('categories as great_great_grandparent_category', 'great_grandparent_category.parent_id', '=', 'great_great_grandparent_category.id');
 
         $this->hideRemovedCatalogProducts($query);
-        $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes());
+        $query->whereIn('products.process_type', WiboostCatalog::activeProductProcessTypes());
+        $query->where('products.is_active', true)
+            ->where('products.status', 'active');
 
         if ($request->filled('search')) {
             $query->where(function ($innerQuery) use ($request) {
-                $innerQuery->where('name', 'like', '%' . $request->search . '%')
-                    ->orWhere('provider_product_id', 'like', '%' . $request->search . '%');
+                $innerQuery->where('products.name', 'like', '%' . $request->search . '%')
+                    ->orWhere('products.provider_product_id', 'like', '%' . $request->search . '%');
             });
         }
 
         $products = $query
-            ->orderByRaw("CASE WHEN process_type = 'account' THEN 0 ELSE 1 END")
-            ->latest()
+            ->orderByRaw($this->productRootCategoryOrderSql($rootCategorySlug))
+            ->orderByRaw($rootCategoryName)
+            ->orderByRaw($categoryPath)
+            ->orderBy('products.name')
+            ->orderByDesc('products.created_at')
             ->paginate(20)
             ->withQueryString();
 
@@ -170,8 +186,7 @@ class ProductController extends Controller
             'target_hint' => 'nullable|string|max:1000',
             'requires_buyer_email' => 'nullable|boolean',
             'stock_reminder' => 'nullable|integer|min:0',
-            'is_active' => 'required|in:0,1',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'emote' => 'nullable|string|max:50',
         ]);
     }
@@ -226,8 +241,8 @@ class ProductController extends Controller
             'stock_reminder' => $usesInventory ? ($validated['stock_reminder'] ?? 0) : 0,
             'image' => $imagePath,
             'emote' => $validated['emote'] ?? null,
-            'is_active' => $validated['is_active'],
-            'status' => ((int) $validated['is_active']) === 1 ? 'active' : 'inactive',
+            'is_active' => true,
+            'status' => 'active',
         ];
     }
 
@@ -346,6 +361,33 @@ class ProductController extends Controller
         }
 
         return strnatcasecmp($first, $second);
+    }
+
+    protected function rootCategorySlugExpression(): string
+    {
+        return "COALESCE(great_great_grandparent_category.slug, great_grandparent_category.slug, grandparent_category.slug, parent_category.slug, product_category.slug, 'kategori-kosong')";
+    }
+
+    protected function rootCategoryNameExpression(): string
+    {
+        return "COALESCE(great_great_grandparent_category.name, great_grandparent_category.name, grandparent_category.name, parent_category.name, product_category.name, 'Kategori Kosong')";
+    }
+
+    protected function categoryPathExpression(): string
+    {
+        return "CONCAT_WS(' / ', great_great_grandparent_category.name, great_grandparent_category.name, grandparent_category.name, parent_category.name, product_category.name)";
+    }
+
+    protected function productRootCategoryOrderSql(string $column): string
+    {
+        $slugs = collect(['aplikasi-premium'])
+            ->merge(WiboostCatalog::coreCategorySlugs())
+            ->unique()
+            ->values();
+
+        return 'CASE ' . $column . ' ' . $slugs
+            ->map(fn (string $slug, int $index) => "WHEN '{$slug}' THEN {$index}")
+            ->implode(' ') . ' ELSE ' . $slugs->count() . ' END';
     }
 
     protected function hideRemovedCatalogProducts($query): void

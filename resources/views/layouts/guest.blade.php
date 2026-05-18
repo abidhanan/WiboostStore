@@ -70,6 +70,8 @@
         </main>
     </div>
 
-    @include('partials.floating-admin-report')
+    @unless($isCompactAuth)
+        @include('partials.floating-admin-report')
+    @endunless
 </body>
 </html>
