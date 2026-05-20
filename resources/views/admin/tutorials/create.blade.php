@@ -101,18 +101,4 @@
     </form>
 </div>
 
-<script>
-    const tutorialCreateForm = document.getElementById('tutorial-create-form');
-    const tutorialCreateSubmit = document.getElementById('tutorial-create-submit');
-
-    tutorialCreateForm?.addEventListener('submit', function () {
-        if (!tutorialCreateSubmit || tutorialCreateSubmit.disabled) {
-            return;
-        }
-
-        tutorialCreateSubmit.disabled = true;
-        tutorialCreateSubmit.classList.add('cursor-not-allowed', 'opacity-70');
-        tutorialCreateSubmit.textContent = 'Menyimpan...';
-    });
-</script>
 @endsection

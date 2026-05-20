@@ -223,5 +223,6 @@
 
     {{-- Widget Lapor Admin --}}
     @include('partials.floating-admin-report')
+    @include('partials.page-loading')
 </body>
 </html>

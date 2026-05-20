@@ -249,7 +249,7 @@ class WiboostCatalog
                     'phone_number',
                     'Nomor handphone',
                     'tel',
-                    '6281234567890',
+                    '081234567890',
                     'Masukkan nomor handphone aktif yang akan menerima kuota atau paket data.',
                     ['required', 'string', 'min:8', 'max:20'],
                     targetSummary: true

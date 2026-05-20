@@ -220,9 +220,14 @@
 
             if (button.tagName === 'BUTTON' && !button.dataset.originalText) {
                 button.dataset.originalText = button.textContent.trim();
-                button.textContent = 'Memproses...';
+                window.setTimeout(() => {
+                    if (form.dataset.submitting === 'true' && document.body.contains(button)) {
+                        button.textContent = 'Menyimpan...';
+                    }
+                }, 700);
             }
         });
     </script>
+    @include('partials.page-loading')
 </body>
 </html>

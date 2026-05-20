@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\TripayPaymentAmounts;
 use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model
@@ -108,14 +109,36 @@ class Transaction extends Model
     public function getProviderCustomerNoAttribute(): string
     {
         $fields = collect($this->order_input_fields);
-        $gameUserId = trim((string) ($fields->firstWhere('name', 'game_user_id')['value'] ?? ''));
-        $gameZoneId = trim((string) ($fields->firstWhere('name', 'game_zone_id')['value'] ?? ''));
+        $providerFields = $fields
+            ->filter(fn ($field) => (bool) ($field['provider_customer_no'] ?? false))
+            ->pluck('value')
+            ->map(fn ($value) => trim((string) $value))
+            ->filter()
+            ->values();
 
-        if ($gameUserId !== '' && $gameZoneId !== '') {
-            return $gameUserId . $gameZoneId;
+        if ($providerFields->isNotEmpty()) {
+            return $providerFields->implode('');
         }
 
         return (string) $this->target_data;
+    }
+
+    public function getTripayPaymentAmountsAttribute(): array
+    {
+        return TripayPaymentAmounts::fromPayload(
+            data_get($this->response_data, 'tripay_create_response'),
+            $this->amount
+        );
+    }
+
+    public function getTripayAdminFeeAttribute(): int
+    {
+        return (int) ($this->tripay_payment_amounts['admin_fee'] ?? 0);
+    }
+
+    public function getTripayTotalPayableAttribute(): int
+    {
+        return (int) ($this->tripay_payment_amounts['total'] ?? round((float) $this->amount));
     }
 
     public function getProviderOrderIdAttribute(): ?string

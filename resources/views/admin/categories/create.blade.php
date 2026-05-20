@@ -124,13 +124,6 @@
     parentSelect.addEventListener('change', toggleCategoryType);
     toggleCategoryType(); 
 
-    const categoryForm = document.getElementById('category_create_form');
-    const submitButton = document.getElementById('category_submit_button');
-
-    categoryForm.addEventListener('submit', function () {
-        submitButton.disabled = true;
-        submitButton.classList.add('opacity-70', 'cursor-wait');
-        submitButton.textContent = 'Menyimpan...';
-    });
+    // Submit lock sudah ditangani layout admin agar indikator tidak terasa berat.
 </script>
 @endsection

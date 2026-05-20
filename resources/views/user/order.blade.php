@@ -204,18 +204,18 @@
                     <h4 class="mb-5 ml-2 text-xl font-black text-[#2b3a67]">Metode Pembayaran</h4>
 
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <label class="group relative flex cursor-pointer items-center gap-4 rounded-[1.5rem] border-4 border-white bg-gradient-to-r from-[#e0fbfc] to-[#f4f9ff] p-5 shadow-sm transition-all hover:border-[#bde0fe]">
+                        <label id="social_wallet_option" class="group relative flex cursor-pointer items-center gap-4 rounded-[1.5rem] border-4 border-white bg-gradient-to-r from-[#e0fbfc] to-[#f4f9ff] p-5 shadow-sm transition-all hover:border-[#bde0fe]">
                             <input type="radio" name="payment_method" value="wallet" class="peer sr-only" required>
                             <div class="h-6 w-6 shrink-0 rounded-full border-2 border-[#8faaf3] bg-white transition-all peer-checked:border-[7px] peer-checked:border-[#5a76c8]"></div>
                             <div class="flex-1">
-                                <p class="text-base font-black text-[#2b3a67]">Saldo Wiboost</p>
+                                <p class="text-base font-black text-[#2b3a67]">Saldo</p>
                                 <p class="mt-1 text-sm font-bold text-[#5a76c8]">Sisa: Rp {{ number_format(Auth::user()->balance ?? 0, 0, ',', '.') }}</p>
                             </div>
                             <div class="text-3xl drop-shadow-sm opacity-70 transition-transform group-hover:scale-110">&#128176;</div>
                             <div class="pointer-events-none absolute inset-0 rounded-[1.5rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
                         </label>
 
-                        <label class="group relative flex cursor-pointer items-center gap-4 rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] p-5 shadow-sm transition-all hover:border-[#bde0fe]">
+                        <label id="social_qris_option" class="group relative flex cursor-pointer items-center gap-4 rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] p-5 shadow-sm transition-all hover:border-[#bde0fe]">
                             <input type="radio" name="payment_method" value="tripay" class="peer sr-only" required>
                             <div class="h-6 w-6 shrink-0 rounded-full border-2 border-[#8faaf3] bg-white transition-all peer-checked:border-[7px] peer-checked:border-[#5a76c8]"></div>
                             <div class="flex-1">
@@ -226,6 +226,9 @@
                             <div class="pointer-events-none absolute inset-0 rounded-[1.5rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
                         </label>
                     </div>
+                    <p id="social_qris_minimum_note" class="mt-4 hidden rounded-[1.25rem] border-2 border-white bg-[#fff5eb] px-4 py-3 text-sm font-black text-amber-500 shadow-inner">
+                        QRIS hanya tersedia untuk pesanan minimal Rp 1.000
+                    </p>
                 </div>
 
                 <button type="submit" id="btnSocialCheckout" class="flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-[#4bc6b9] py-5 text-xl font-black text-white shadow-xl shadow-[#4bc6b9]/40 transition-transform hover:bg-[#3ba398] active:scale-95">
@@ -375,18 +378,18 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-                    <label class="group relative flex cursor-pointer items-center gap-4 rounded-[2rem] border-4 border-white bg-gradient-to-r from-[#e0fbfc] to-[#f4f9ff] p-6 shadow-md transition-transform hover:scale-[1.02]">
+                    <label id="checkout_wallet_option" class="group relative flex cursor-pointer items-center gap-4 rounded-[2rem] border-4 border-white bg-gradient-to-r from-[#e0fbfc] to-[#f4f9ff] p-6 shadow-md transition-transform hover:scale-[1.02]">
                         <input type="radio" name="payment_method" value="wallet" class="peer sr-only" required>
                         <div class="h-7 w-7 shrink-0 rounded-full border-2 border-[#8faaf3] bg-white transition-all peer-checked:border-[8px] peer-checked:border-[#5a76c8]"></div>
                         <div class="flex-1">
-                            <p class="text-xl font-black text-[#2b3a67]">Saldo Wiboost</p>
+                            <p class="text-xl font-black text-[#2b3a67]">Saldo</p>
                             <p class="mt-1 text-sm font-bold text-[#5a76c8]">Sisa: Rp {{ number_format(Auth::user()->balance ?? 0, 0, ',', '.') }}</p>
                         </div>
                         <div class="text-4xl drop-shadow-sm opacity-70 transition-transform group-hover:scale-110">&#128176;</div>
                         <div class="pointer-events-none absolute inset-0 rounded-[2rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
                     </label>
 
-                    <label class="group relative flex cursor-pointer items-center gap-4 rounded-[2rem] border-4 border-white bg-[#f4f9ff] p-6 shadow-md transition-transform hover:scale-[1.02]">
+                    <label id="checkout_qris_option" class="group relative flex cursor-pointer items-center gap-4 rounded-[2rem] border-4 border-white bg-[#f4f9ff] p-6 shadow-md transition-transform hover:scale-[1.02]">
                         <input type="radio" name="payment_method" value="tripay" class="peer sr-only" required>
                         <div class="h-7 w-7 shrink-0 rounded-full border-2 border-[#8faaf3] bg-white transition-all peer-checked:border-[8px] peer-checked:border-[#5a76c8]"></div>
                         <div class="flex-1">
@@ -397,6 +400,9 @@
                         <div class="pointer-events-none absolute inset-0 rounded-[2rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
                     </label>
                 </div>
+                <p id="checkout_qris_minimum_note" class="mt-4 hidden rounded-[1.5rem] border-2 border-white bg-[#fff5eb] px-5 py-4 text-sm font-black text-amber-500 shadow-inner">
+                    QRIS hanya tersedia untuk pesanan minimal Rp 1.000
+                </p>
             </div>
 
             <button type="submit" id="btnCheckout" class="flex w-full items-center justify-center gap-3 rounded-full border-4 border-white bg-[#4bc6b9] py-5 text-2xl font-black text-white shadow-xl shadow-[#4bc6b9]/40 transition-transform hover:bg-[#3ba398] active:scale-95">
@@ -420,6 +426,36 @@
     const checkoutProductLogoImage = document.getElementById('checkout_product_logo_image');
     const checkoutProductLogoEmote = document.getElementById('checkout_product_logo_emote');
     const rupiahFormatter = new Intl.NumberFormat('id-ID');
+
+    function syncMinimumQrisOption(prefix, total) {
+        const qrisOption = document.getElementById(prefix + '_qris_option');
+        const qrisNote = document.getElementById(prefix + '_qris_minimum_note');
+
+        if (!qrisOption) {
+            return;
+        }
+
+        const form = qrisOption.closest('form');
+        const qrisInput = qrisOption.querySelector('input[value="tripay"]');
+        const walletInput = form?.querySelector('input[value="wallet"]');
+        const shouldLockQris = Number(total) > 0 && Number(total) < 1000;
+
+        if (qrisInput) {
+            qrisInput.disabled = shouldLockQris;
+            if (shouldLockQris && walletInput) {
+                qrisInput.checked = false;
+                walletInput.checked = true;
+            }
+        }
+
+        qrisOption.classList.toggle('opacity-50', shouldLockQris);
+        qrisOption.classList.toggle('cursor-not-allowed', shouldLockQris);
+        qrisOption.classList.toggle('pointer-events-none', shouldLockQris);
+
+        if (qrisNote) {
+            qrisNote.classList.toggle('hidden', !shouldLockQris);
+        }
+    }
 
     function findSocialService() {
         if (!socialServiceSelect) {
@@ -463,6 +499,8 @@
         if (totalInput) {
             totalInput.value = rupiahFormatter.format(total);
         }
+
+        syncMinimumQrisOption('social', total);
     }
 
     function showSocialLoadingBtn() {
@@ -482,7 +520,8 @@
         }
 
         btn.disabled = true;
-        btn.innerHTML = 'Menyiapkan QRIS...';
+        const selectedPayment = form?.querySelector('input[name="payment_method"]:checked')?.value;
+        btn.innerHTML = selectedPayment === 'tripay' ? 'Menyiapkan QRIS...' : 'Memproses pesanan...';
         btn.classList.add('cursor-not-allowed', 'opacity-70');
 
         return true;
@@ -580,6 +619,7 @@
         document.getElementById('checkout_product_id').value = id;
         document.getElementById('checkout_product_name').innerText = name;
         document.getElementById('checkout_product_price').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(price);
+        syncMinimumQrisOption('checkout', Number(price));
         syncCheckoutLogo(button);
 
         if (description && description.trim() !== '') {
@@ -634,7 +674,8 @@
         }
 
         btn.disabled = true;
-        btn.innerHTML = 'Menyiapkan QRIS...';
+        const selectedPayment = form?.querySelector('input[name="payment_method"]:checked')?.value;
+        btn.innerHTML = selectedPayment === 'tripay' ? 'Menyiapkan QRIS...' : 'Memproses pesanan...';
         btn.classList.add('cursor-not-allowed', 'opacity-70');
 
         return true;

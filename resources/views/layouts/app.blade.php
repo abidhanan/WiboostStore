@@ -46,5 +46,6 @@
                 </div>
             </main>
         </div>
+        @include('partials.page-loading')
     </body>
 </html>

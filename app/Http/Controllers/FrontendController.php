@@ -16,6 +16,12 @@ class FrontendController extends Controller
      */
     public function index()
     {
+        if (auth()->check()) {
+            return auth()->user()->isAdmin()
+                ? redirect()->route('admin.dashboard')
+                : redirect()->route('user.dashboard');
+        }
+
         $catalogSlugs = WiboostCatalog::coreCategorySlugs();
         $categoryOrderSql = WiboostCatalog::categoryOrderSql();
 

@@ -90,18 +90,4 @@
         </button>
     </form>
 </div>
-<script>
-    const promoCreateForm = document.getElementById('promo-create-form');
-    const promoCreateSubmit = document.getElementById('promo-create-submit');
-
-    promoCreateForm?.addEventListener('submit', function () {
-        if (!promoCreateSubmit || promoCreateSubmit.disabled) {
-            return;
-        }
-
-        promoCreateSubmit.disabled = true;
-        promoCreateSubmit.classList.add('cursor-not-allowed', 'opacity-70');
-        promoCreateSubmit.textContent = 'Menyimpan...';
-    });
-</script>
 @endsection

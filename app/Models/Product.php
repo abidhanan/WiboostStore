@@ -97,6 +97,10 @@ class Product extends Model
             return [];
         }
 
+        if ($topCategorySlug === 'top-up-game') {
+            return $this->checkoutFieldsForTopUpGameProduct();
+        }
+
         $checkoutFields = WiboostCatalog::checkoutFieldsForTopCategory($topCategorySlug);
 
         if ($topCategorySlug === 'suntik-sosmed' && $this->is_ordersosmed_service) {
@@ -139,7 +143,7 @@ class Product extends Model
                     : 'Target pesanan (username atau link profile)',
                 'type' => 'text',
                 'placeholder' => $this->provider_source === 'digiflazz'
-                    ? 'Contoh: 12345678 (1234) atau 6281234567890'
+                    ? 'Contoh: 12345678 (1234) atau 081234567890'
                     : 'Contoh: https://instagram.com/username',
                 'hint' => $this->provider_source === 'digiflazz'
                     ? 'Pastikan ID, zone, atau nomor tujuan sudah benar agar pesanan tidak gagal.'
@@ -177,6 +181,177 @@ class Product extends Model
         return WiboostCatalog::targetMetaForTopCategory($this->resolvePrimaryCategorySlug());
     }
 
+    protected function checkoutFieldsForTopUpGameProduct(): array
+    {
+        return match ($this->resolveTopUpGameKey()) {
+            'mobile-legends' => [
+                $this->checkoutField(
+                    'game_user_id',
+                    'User ID Mobile Legends',
+                    'text',
+                    'Contoh: 123456789',
+                    'Masukkan User ID Mobile Legends dengan benar.',
+                    ['required', 'string', 'min:2', 'max:100'],
+                    targetSummary: true,
+                    providerCustomerNo: true
+                ),
+                $this->checkoutField(
+                    'game_zone_id',
+                    'Zone ID Mobile Legends',
+                    'text',
+                    'Contoh: 1234',
+                    'Masukkan Zone ID yang ada di akun Mobile Legends.',
+                    ['required', 'string', 'min:1', 'max:50'],
+                    targetSummary: true,
+                    providerCustomerNo: true
+                ),
+            ],
+            'genshin-impact' => [
+                $this->checkoutField(
+                    'game_user_id',
+                    'UID Genshin Impact',
+                    'text',
+                    'Contoh: 812345678',
+                    'Masukkan UID Genshin Impact dengan benar.',
+                    ['required', 'string', 'min:3', 'max:100'],
+                    targetSummary: true,
+                    providerCustomerNo: true
+                ),
+                $this->checkoutField(
+                    'game_server',
+                    'Server Genshin Impact',
+                    'text',
+                    'Contoh: Asia',
+                    'Isi server sesuai akun, misalnya Asia, America, Europe, atau TW/HK/MO.',
+                    ['required', 'string', 'min:2', 'max:50'],
+                    targetSummary: true
+                ),
+            ],
+            'free-fire', 'free-fire-max' => [
+                $this->singleGameIdField('Player ID Free Fire', 'Contoh: 123456789', 'Masukkan Player ID Free Fire dengan benar.'),
+            ],
+            'pubg-mobile' => [
+                $this->singleGameIdField('Character ID PUBG Mobile', 'Contoh: 5123456789', 'Masukkan Character ID PUBG Mobile dengan benar.'),
+            ],
+            'valorant' => [
+                $this->singleGameIdField('Riot ID / Username Valorant', 'Contoh: username#TAG', 'Masukkan Riot ID atau username Valorant sesuai instruksi produk.'),
+            ],
+            'lol-pc' => [
+                $this->singleGameIdField('Riot ID League of Legends', 'Contoh: username#TAG', 'Masukkan Riot ID League of Legends sesuai akun.'),
+            ],
+            'lol-wild-rift' => [
+                $this->singleGameIdField('Riot ID Wild Rift', 'Contoh: username#TAG', 'Masukkan Riot ID Wild Rift sesuai akun.'),
+            ],
+            'cod-mobile' => [
+                $this->singleGameIdField('Open ID / User ID COD Mobile', 'Contoh: 674123456789', 'Masukkan Open ID atau User ID COD Mobile dengan benar.'),
+            ],
+            'fc-mobile' => [
+                $this->singleGameIdField('User ID FC Mobile', 'Contoh: 123456789', 'Masukkan User ID FC Mobile dengan benar.'),
+            ],
+            'honor-of-kings' => [
+                $this->singleGameIdField('User ID Honor of Kings', 'Contoh: 123456789', 'Masukkan User ID Honor of Kings dengan benar.'),
+            ],
+            'arena-of-valor' => [
+                $this->singleGameIdField('User ID Arena of Valor', 'Contoh: 123456789', 'Masukkan User ID Arena of Valor dengan benar.'),
+            ],
+            default => [
+                $this->singleGameIdField('User ID / Nomor tujuan game', 'Contoh: 123456789', 'Masukkan data tujuan sesuai instruksi produk.'),
+            ],
+        };
+    }
+
+    protected function singleGameIdField(string $label, string $placeholder, string $hint): array
+    {
+        return $this->checkoutField(
+            'game_user_id',
+            $label,
+            'text',
+            $placeholder,
+            $hint,
+            ['required', 'string', 'min:2', 'max:100'],
+            targetSummary: true,
+            providerCustomerNo: true
+        );
+    }
+
+    protected function checkoutField(
+        string $name,
+        string $label,
+        string $type,
+        string $placeholder,
+        string $hint,
+        array $rules,
+        bool $targetSummary = false,
+        bool $providerCustomerNo = false
+    ): array {
+        return [
+            'name' => $name,
+            'label' => $label,
+            'type' => $type,
+            'placeholder' => $placeholder,
+            'hint' => $hint,
+            'rules' => $rules,
+            'target_summary' => $targetSummary,
+            'provider_customer_no' => $providerCustomerNo,
+        ];
+    }
+
+    protected function resolveTopUpGameKey(): ?string
+    {
+        $text = $this->normalizedTopUpGameSearchText();
+
+        return match (true) {
+            $this->containsAny($text, ['mobile legends', 'mobile legend', 'mobilelegend', 'mlbb', 'game mobile legends']) => 'mobile-legends',
+            $this->containsAny($text, ['free fire max', 'freefire max', 'ff max', 'game free fire max']) => 'free-fire-max',
+            $this->containsAny($text, ['free fire', 'freefire', 'ff', 'game free fire']) => 'free-fire',
+            $this->containsAny($text, ['pubg', 'pubg mobile', 'uc pubg', 'uc mobile']) => 'pubg-mobile',
+            $this->containsAny($text, ['valorant', 'valorant points', 'valorant point', 'vp']) => 'valorant',
+            $this->containsAny($text, ['arena of valor', ' aov ', 'game arena of valor']) => 'arena-of-valor',
+            $this->containsAny($text, ['call of duty mobile', 'call of duty', 'cod mobile', 'codm', 'cp cod']) => 'cod-mobile',
+            $this->containsAny($text, ['fc mobile', 'fifa mobile', 'fifa points', 'eafc mobile', 'ea fc mobile', 'fc points', 'fc point']) => 'fc-mobile',
+            $this->containsAny($text, ['genshin impact', 'genshin', 'genesis crystal', 'genesis crystals', 'welkin']) => 'genshin-impact',
+            $this->containsAny($text, ['honor of kings', 'hok']) => 'honor-of-kings',
+            $this->containsAny($text, ['wild rift', 'wildrift', 'wild core', 'wild cores', 'lol wild rift', 'lol wr']) => 'lol-wild-rift',
+            $this->containsAny($text, ['league of legends pc', 'league of legend pc', 'lol pc', 'league pc', 'riot points', 'riot point', 'riot cash']) => 'lol-pc',
+            default => null,
+        };
+    }
+
+    protected function normalizedTopUpGameSearchText(): string
+    {
+        $segments = [
+            $this->name,
+            $this->slug,
+            $this->description,
+            $this->provider_product_id,
+        ];
+
+        $category = $this->category;
+
+        while ($category) {
+            $segments[] = $category->name;
+            $segments[] = $category->slug;
+            $category->loadMissing('parent');
+            $category = $category->parent;
+        }
+
+        $text = Str::lower(implode(' ', array_filter($segments)));
+        $text = preg_replace('/[^a-z0-9#]+/i', ' ', $text) ?: '';
+
+        return ' ' . trim($text) . ' ';
+    }
+
+    protected function containsAny(string $text, array $keywords): bool
+    {
+        foreach ($keywords as $keyword) {
+            if (str_contains($text, ' ' . trim(Str::lower($keyword)) . ' ')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function getResolvedTargetLabelAttribute(): string
     {
         if (!empty($this->target_label)) {
@@ -211,7 +386,7 @@ class Product extends Model
 
         return match ($this->process_type) {
             'api' => $this->provider_source === 'digiflazz'
-                ? 'Contoh: 12345678 (1234) atau 6281234567890'
+                ? 'Contoh: 12345678 (1234) atau 081234567890'
                 : 'Contoh: https://instagram.com/username',
             default => 'Masukkan data tujuan pesanan',
         };
@@ -463,6 +638,7 @@ class Product extends Model
                     'label' => $field['label'],
                     'value' => $value,
                     'target_summary' => (bool) ($field['target_summary'] ?? false),
+                    'provider_customer_no' => (bool) ($field['provider_customer_no'] ?? false),
                 ];
             })
             ->filter()
@@ -479,11 +655,23 @@ class Product extends Model
     public function summarizeOrderInput(array $validated): string
     {
         if ($this->resolvePrimaryCategorySlug() === 'top-up-game') {
-            $userId = trim((string) ($validated['game_user_id'] ?? ''));
-            $zoneId = trim((string) ($validated['game_zone_id'] ?? ''));
+            $fields = data_get($this->buildOrderInputData($validated), 'fields', []);
+            $summaryFields = collect($fields)
+                ->filter(fn ($field) => (bool) ($field['target_summary'] ?? false))
+                ->values();
 
-            if ($userId !== '' && $zoneId !== '') {
-                return $userId . ' (' . $zoneId . ')';
+            if ($summaryFields->count() === 2) {
+                return $summaryFields[0]['value'] . ' (' . $summaryFields[1]['value'] . ')';
+            }
+
+            if ($summaryFields->count() === 1) {
+                return (string) $summaryFields[0]['value'];
+            }
+
+            if ($fields !== []) {
+                return collect($fields)
+                    ->map(fn ($field) => ($field['label'] ?? 'Input') . ': ' . ($field['value'] ?? '-'))
+                    ->implode(' / ');
             }
         }
 

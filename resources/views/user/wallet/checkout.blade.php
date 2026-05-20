@@ -134,6 +134,11 @@
     </style>
 </head>
 <body class="relative selection:bg-[#7b9eed] selection:text-white">
+    @php
+        $checkoutBaseAmount = (int) round((float) $deposit->amount);
+        $checkoutAdminFee = (int) $deposit->tripay_admin_fee;
+        $checkoutTotalPayable = (int) $deposit->tripay_total_payable;
+    @endphp
     
     <div class="absolute -top-20 -left-20 w-64 h-64 bg-[#bde0fe] rounded-full mix-blend-multiply filter blur-3xl opacity-50 z-0"></div>
     <div class="absolute top-20 -right-20 w-72 h-72 bg-[#e0fbfc] rounded-full mix-blend-multiply filter blur-3xl opacity-50 z-0"></div>
@@ -171,9 +176,21 @@
                 <span class="font-black text-[#2b3a67] text-right bg-[#f8faff] px-3 py-1.5 rounded-full text-xs sm:text-sm border border-white">Top Up Saldo Wiboost</span>
             </div>
 
-            <div class="flex items-center justify-between gap-3 mb-4 sm:mb-5 bg-[#f8faff] p-4 rounded-[1.5rem] border-2 border-[#f0f5ff] shadow-inner">
-                <span class="text-[#8faaf3] text-[10px] font-black uppercase tracking-widest">Total Deposit</span>
-                <span class="text-2xl sm:text-3xl font-black text-[#4bc6b9] tracking-tight drop-shadow-sm">Rp {{ number_format($deposit->amount, 0, ',', '.') }}</span>
+            <div class="mb-4 sm:mb-5 rounded-[1.5rem] border-2 border-[#f0f5ff] bg-[#f8faff] p-4 shadow-inner">
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nominal Masuk Saldo</span>
+                        <span class="text-sm font-black text-[#2b3a67]">Rp {{ number_format($checkoutBaseAmount, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3 border-y-2 border-dashed border-white py-3">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Biaya Admin QRIS</span>
+                        <span class="text-sm font-black text-[#5a76c8]">Rp {{ number_format($checkoutAdminFee, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Total Bayar</span>
+                        <span class="text-2xl sm:text-3xl font-black text-[#4bc6b9] tracking-tight drop-shadow-sm">Rp {{ number_format($checkoutTotalPayable, 0, ',', '.') }}</span>
+                    </div>
+                </div>
             </div>
 
             <a id="pay-button" href="{{ $paymentUrl }}" data-qris-pay-link class="w-full bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black py-3 sm:py-4 rounded-full shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 flex justify-center items-center gap-2 border-4 border-white text-base sm:text-lg">

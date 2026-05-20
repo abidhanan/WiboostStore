@@ -49,7 +49,7 @@ class WalletController extends Controller
                 if ($deposit && filled($deposit->payment_url)) {
                     $paymentUrl = $deposit->payment_url;
 
-                    return view('user.wallet.checkout', compact('deposit', 'paymentUrl'));
+                    return redirect()->away((string) $paymentUrl);
                 }
 
                     return back()->with('error', 'Tagihan QRIS sedang disiapkan. Tunggu sebentar lalu cek ulang halaman dompet.');
@@ -65,7 +65,7 @@ class WalletController extends Controller
 
             $paymentUrl = $this->resolveDepositPaymentUrl($deposit->fresh('user'), $tripayService);
 
-            return view('user.wallet.checkout', compact('deposit', 'paymentUrl'));
+            return redirect()->away((string) $paymentUrl);
         } catch (Exception $e) {
             return back()->with('error', 'Gagal terhubung ke server pembayaran: ' . $e->getMessage());
         }
@@ -84,7 +84,7 @@ class WalletController extends Controller
         try {
             $paymentUrl = $this->resolveDepositPaymentUrl($deposit->fresh('user'), $tripayService);
 
-            return view('user.wallet.checkout', compact('deposit', 'paymentUrl'));
+            return redirect()->away((string) $paymentUrl);
         } catch (Exception $e) {
             return back()->with('error', 'Gagal memuat ulang pembayaran: ' . $e->getMessage());
         }

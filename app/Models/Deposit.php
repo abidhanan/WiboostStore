@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\TripayPaymentAmounts;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -36,5 +37,20 @@ class Deposit extends Model
     public function getStatusAttribute(): string
     {
         return (string) $this->payment_status;
+    }
+
+    public function getTripayPaymentAmountsAttribute(): array
+    {
+        return TripayPaymentAmounts::fromPayload($this->payment_response, $this->amount);
+    }
+
+    public function getTripayAdminFeeAttribute(): int
+    {
+        return (int) ($this->tripay_payment_amounts['admin_fee'] ?? 0);
+    }
+
+    public function getTripayTotalPayableAttribute(): int
+    {
+        return (int) ($this->tripay_payment_amounts['total'] ?? round((float) $this->amount));
     }
 }

@@ -59,7 +59,7 @@
         }
     </style>
 </head>
-<body x-data="{ mobileNavOpen: false }" class="wiboost-compact-ui bg-[#f4f9ff] text-[#2b3a67] antialiased selection:bg-[#7b9eed] selection:text-white flex min-h-screen flex-col overflow-x-hidden">
+<body x-data="{ mobileNavOpen: false }" class="wiboost-compact-ui {{ Auth::check() ? 'wiboost-user-shell' : 'wiboost-welcome-page' }} bg-[#f4f9ff] text-[#2b3a67] antialiased selection:bg-[#7b9eed] selection:text-white flex min-h-screen flex-col overflow-x-hidden">
 
     @auth
         @php
@@ -70,12 +70,14 @@
             ];
         @endphp
 
-        <div class="pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-6">
+        <div class="wiboost-user-navbar pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-6">
             <div class="pointer-events-auto mx-auto max-w-6xl">
                 <div class="flex items-center justify-between rounded-[2rem] border-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/40 backdrop-blur-md transition-all hover:border-[#e0fbfc] hover:shadow-[#bde0fe]/60 sm:px-6">
-                    <a href="{{ Auth::user()->isAdmin() ? route('admin.dashboard') : route('user.dashboard') }}" class="group flex items-center gap-3">
-                        <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm transition-transform group-hover:scale-105 sm:h-14 sm:w-14">
-                        <p class="text-lg font-black leading-none text-[#2b3a67] drop-shadow-sm sm:text-2xl">Wiboost <span class="bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5] bg-clip-text text-transparent">Store</span></p>
+                    <a href="{{ Auth::user()->isAdmin() ? route('admin.dashboard') : route('user.dashboard') }}" class="flex items-center gap-3 group">
+                        <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm sm:h-14 sm:w-14 group-hover:scale-105 transition-transform">
+                        <div>
+                            <p class="text-lg font-black leading-none text-[#2b3a67] sm:text-2xl drop-shadow-sm">Wiboost <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Store</span></p>
+                        </div>
                     </a>
 
                     <div class="hidden items-center gap-2 md:flex">
@@ -138,17 +140,17 @@
             </div>
         </div>
     @else
-        <nav class="fixed top-4 z-50 w-full px-4 pointer-events-none sm:px-6 lg:px-8">
-            <div class="mx-auto max-w-7xl pointer-events-auto">
-                <div class="flex h-20 items-center justify-between rounded-[2rem] border-4 border-white bg-white/90 px-6 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-8">
-                    <a href="{{ route('home') }}" class="flex items-center gap-3">
-                        <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm sm:h-14 sm:w-14">
-                        <span class="text-2xl font-extrabold tracking-tight text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></span>
+        <nav class="fixed w-full z-50 top-4 px-4 sm:px-6 lg:px-8 pointer-events-none">
+            <div class="max-w-7xl mx-auto pointer-events-auto">
+                <div class="flex items-center justify-between rounded-[2rem] border-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-6">
+                    <a href="{{ route('home') }}" class="flex items-center gap-3 group">
+                        <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-12 w-12 shrink-0 rounded-full object-contain drop-shadow-sm transition-transform group-hover:scale-105 sm:h-14 sm:w-14">
+                        <p class="text-lg font-black leading-none text-[#2b3a67] drop-shadow-sm sm:text-2xl">Wiboost <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Store</span></p>
                     </a>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('register') }}" class="hidden rounded-full px-5 py-2.5 text-sm font-extrabold text-[#5a76c8] transition hover:bg-[#f0f5ff] sm:block">Daftar</a>
-                        <a href="{{ route('login') }}" class="rounded-full border-2 border-white bg-[#5a76c8] px-7 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-[#8faaf3]/40 transition-transform active:scale-95 hover:bg-[#4760a9]">Masuk</a>
+                        <a href="{{ route('register') }}" class="hidden rounded-full border-2 border-white bg-[#f0f5ff] px-6 py-2.5 text-sm font-extrabold text-[#5a76c8] shadow-md shadow-[#bde0fe]/30 transition-transform hover:-translate-y-0.5 hover:bg-white active:scale-95 sm:block">Daftar</a>
+                        <a href="{{ route('login') }}" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white text-sm font-extrabold px-7 py-2.5 rounded-full transition-transform active:scale-95 shadow-lg shadow-[#8faaf3]/40 border-2 border-white">Masuk</a>
                     </div>
                 </div>
             </div>
@@ -233,5 +235,6 @@
     @auth
         @include('partials.floating-admin-report')
     @endauth
+    @include('partials.page-loading')
 </body>
 </html>

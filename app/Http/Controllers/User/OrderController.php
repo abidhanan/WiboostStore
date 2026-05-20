@@ -98,6 +98,13 @@ class OrderController extends Controller
         $builtOrderInputData = $product->buildOrderInputData($validated);
         $orderInputData = is_array($builtOrderInputData) ? $builtOrderInputData : [];
         $checkoutAmount = $product->calculateCheckoutAmount($validated);
+
+        if ($validated['payment_method'] === 'tripay' && (float) $checkoutAmount < 1000) {
+            return back()
+                ->withInput()
+                ->with('error', 'QRIS hanya tersedia untuk pesanan minimal Rp 1.000');
+        }
+
         $checkoutFingerprint = sha1($user->id . '|' . $product->id . '|' . $checkoutAmount . '|' . $targetData . '|' . json_encode($orderInputData));
 
         try {
@@ -186,10 +193,7 @@ class OrderController extends Controller
             );
 
             if ($existingTransaction) {
-                return view('user.checkout', [
-                    'transaction' => $existingTransaction->fresh(['product', 'user']),
-                    'paymentUrl' => $existingTransaction->snap_token,
-                ]);
+                return redirect()->away((string) $existingTransaction->snap_token);
             }
 
             $lockKey = 'tripay-checkout:' . $checkoutFingerprint;
@@ -205,10 +209,7 @@ class OrderController extends Controller
                 );
 
                 if ($existingTransaction) {
-                    return view('user.checkout', [
-                        'transaction' => $existingTransaction->fresh(['product', 'user']),
-                        'paymentUrl' => $existingTransaction->snap_token,
-                    ]);
+                    return redirect()->away((string) $existingTransaction->snap_token);
                 }
 
                 return back()
@@ -238,10 +239,7 @@ class OrderController extends Controller
                 ]),
             ]);
 
-            return view('user.checkout', [
-                'transaction' => $transaction->fresh(['product', 'user']),
-                'paymentUrl' => $payment['checkout_url'],
-            ]);
+            return redirect()->away((string) $payment['checkout_url']);
         } catch (Throwable $e) {
             return back()
                 ->withInput()

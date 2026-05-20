@@ -46,7 +46,7 @@
             <label for="whatsapp" class="block text-sm font-black text-[#5a76c8] mb-2 ml-2">Nomor WhatsApp</label>
             <input id="whatsapp" name="whatsapp" type="text" value="{{ old('whatsapp', $user->whatsapp) }}" required
                    class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition shadow-inner placeholder-[#a3bbfb]"
-                   placeholder="6281234567890">
+                   placeholder="081234567890">
             <x-input-error class="mt-2 text-[#ff6b6b] text-xs font-bold pl-2" :messages="$errors->get('whatsapp')" />
         </div>
 

@@ -32,7 +32,7 @@
         margin-right: auto;
     }
     .promo-slide {
-        aspect-ratio: 16 / 4;
+        aspect-ratio: 8 / 3;
         height: auto;
         min-height: 0;
         max-height: none;
@@ -147,7 +147,7 @@
                     @endif
 
                     @if($promo->image)
-                        <img src="{{ Storage::url($promo->image) }}" class="absolute inset-0 w-full h-full object-cover z-0 {{ $hasPromoText ? 'opacity-70 group-hover/slide:scale-105' : 'opacity-100' }} transition-transform duration-700" alt="{{ $promo->title ?: 'Banner promo Wiboost Store' }}">
+                        <img src="{{ Storage::url($promo->image) }}" class="absolute inset-0 w-full h-full z-0 {{ $hasPromoText ? 'object-cover opacity-70 group-hover/slide:scale-105' : 'object-cover opacity-100 bg-[#f4f9ff]' }} transition-transform duration-700" alt="{{ $promo->title ?: 'Banner promo Wiboost Store' }}">
                         @if($hasPromoText)
                             <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent z-10"></div>
                         @endif
