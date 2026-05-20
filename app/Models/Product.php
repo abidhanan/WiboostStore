@@ -8,6 +8,8 @@ use App\Support\WiboostCatalog;
 
 class Product extends Model
 {
+    protected const FRIDAY_BLESSING_DISCOUNT_RATE = 0.03;
+
     protected const API_SELLING_PRICE_MARKUP_RATES = [
         'ordersosmed' => 0.50,
         'digiflazz' => 0.05,
@@ -441,12 +443,46 @@ class Product extends Model
 
     public function getSellingPriceAttribute(): float
     {
+        return $this->applyActiveDiscount($this->original_selling_price);
+    }
+
+    public function getOriginalSellingPriceAttribute(): float
+    {
         return $this->calculateSellingPrice((float) $this->price);
+    }
+
+    public function getHasActiveDiscountAttribute(): bool
+    {
+        return $this->active_discount_rate > 0;
+    }
+
+    public function getActiveDiscountRateAttribute(): float
+    {
+        return static::currentDiscountRate();
+    }
+
+    public function getActiveDiscountLabelAttribute(): ?string
+    {
+        return static::currentDiscountLabel();
+    }
+
+    public static function currentDiscountRate(): float
+    {
+        return now()->isFriday() ? static::FRIDAY_BLESSING_DISCOUNT_RATE : 0.0;
+    }
+
+    public static function currentDiscountLabel(): ?string
+    {
+        $rate = static::currentDiscountRate();
+
+        return $rate > 0
+            ? 'Diskon ' . rtrim(rtrim(number_format($rate * 100, 2, ',', '.'), '0'), ',') . '%'
+            : null;
     }
 
     public function getDisplayLogoImageAttribute(): ?string
     {
-        if ($this->usesKuotaCategoryLogo()) {
+        if ($this->usesCategoryLogo()) {
             return $this->category?->image;
         }
 
@@ -455,16 +491,20 @@ class Product extends Model
 
     public function getDisplayLogoEmoteAttribute(): ?string
     {
-        if ($this->usesKuotaCategoryLogo()) {
+        if ($this->usesCategoryLogo()) {
             return $this->category?->emote ?: $this->emote;
         }
 
         return $this->emote;
     }
 
-    protected function usesKuotaCategoryLogo(): bool
+    protected function usesCategoryLogo(): bool
     {
-        return $this->resolvePrimaryCategorySlug() === 'kuota-murah';
+        return in_array($this->resolvePrimaryCategorySlug(), [
+            'kuota-murah',
+            'paket-data',
+            'aplikasi-premium',
+        ], true);
     }
 
     public function getOrdersosmedMinQuantityAttribute(): int
@@ -500,9 +540,19 @@ class Product extends Model
         return $this->selling_price / max(1, $this->ordersosmed_min_quantity);
     }
 
+    public function getOriginalOrdersosmedUnitPriceAttribute(): float
+    {
+        return $this->original_selling_price / max(1, $this->ordersosmed_min_quantity);
+    }
+
     public function getOrdersosmedPricePerThousandAttribute(): float
     {
         return $this->ordersosmed_unit_price * 1000;
+    }
+
+    public function getOriginalOrdersosmedPricePerThousandAttribute(): float
+    {
+        return $this->original_ordersosmed_unit_price * 1000;
     }
 
     public function calculateCheckoutAmount(array $validated): float
@@ -510,7 +560,7 @@ class Product extends Model
         if ($this->is_ordersosmed_service && filled($validated['order_quantity'] ?? null)) {
             $quantity = max(1, (int) $validated['order_quantity']);
 
-            return (float) (ceil(($quantity * $this->ordersosmed_unit_price) / 100) * 100);
+            return (float) max(1, ceil($quantity * $this->ordersosmed_unit_price));
         }
 
         return $this->selling_price;
@@ -523,6 +573,15 @@ class Product extends Model
         }
 
         return (float) ceil(round($basePrice * (1 + $this->api_selling_markup_rate), 6));
+    }
+
+    protected function applyActiveDiscount(float $price): float
+    {
+        if (! $this->has_active_discount) {
+            return $price;
+        }
+
+        return (float) max(0, ceil(round($price * (1 - $this->active_discount_rate), 6)));
     }
 
     protected function extractDescriptionInteger(string $pattern): ?int

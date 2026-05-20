@@ -39,9 +39,67 @@
     #page-checkout {
         scroll-margin-top: 1rem;
     }
+
+    .discount-corner-ribbon {
+        pointer-events: none;
+        position: absolute;
+        right: -1px;
+        top: -1px;
+        z-index: 20;
+        width: 7.5rem;
+        height: 7.5rem;
+        overflow: hidden;
+        border-top-right-radius: 1.7rem;
+    }
+
+    .discount-corner-ribbon__text {
+        position: absolute;
+        right: -2.65rem;
+        top: 1.35rem;
+        display: block;
+        width: 10rem;
+        transform: rotate(45deg);
+        transform-origin: center;
+        background: #22c55e;
+        padding: 0.45rem 0;
+        text-align: center;
+        font-size: 0.55rem;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        color: white;
+        text-transform: uppercase;
+        box-shadow: 0 12px 26px rgba(34, 197, 94, 0.28);
+    }
+
+    .discount-corner-ribbon--checkout {
+        width: 7.75rem;
+        height: 7.75rem;
+        border-top-right-radius: 1.75rem;
+    }
+
+    .discount-corner-ribbon--checkout .discount-corner-ribbon__text {
+        right: -2.75rem;
+        top: 1.45rem;
+        width: 10.25rem;
+        padding: 0.45rem 0;
+        font-size: 0.55rem;
+    }
+
+    .discount-old-price {
+        text-decoration-line: line-through !important;
+        text-decoration-thickness: 2px !important;
+        text-decoration-color: #ff6b6b !important;
+    }
+
+    .discount-old-price-light {
+        text-decoration-line: line-through !important;
+        text-decoration-thickness: 2px !important;
+        text-decoration-color: rgba(255, 255, 255, 0.85) !important;
+    }
+
 </style>
 
-<div class="wiboost-font relative mx-auto mt-4 w-full overflow-visible pb-24 z-10">
+<div class="wiboost-font relative mx-auto mt-4 w-full overflow-visible pt-28 pb-24 z-10 sm:pt-32">
     
     @if(session('error'))
         <div class="mb-8 flex items-center gap-3 rounded-[2rem] border-4 border-white bg-[#ffe5e5] px-6 py-4 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 relative z-10">
@@ -68,6 +126,9 @@
         $showSuntikSosmedForm = $isSuntikSosmedOrder ?? false;
         $showTopUpGameCompactCards = ($isTopUpGameOrder ?? false) && ! $showSuntikSosmedForm;
         $showCompactServiceCards = ($isCompactServiceCardOrder ?? $showTopUpGameCompactCards) && ! $showSuntikSosmedForm;
+        $rootCategorySlugForCards = $rootCategorySlug ?? null;
+        $shouldHideServiceDescription = $rootCategorySlugForCards === 'top-up-game';
+        $shouldShowCompactServiceDescription = in_array($rootCategorySlugForCards, ['kuota-murah', 'paket-data'], true);
 
         if ($showSuntikSosmedForm) {
             $products = $products
@@ -96,6 +157,9 @@
                     'max' => $product->ordersosmed_max_quantity,
                     'unit_price' => $product->ordersosmed_unit_price,
                     'price_per_1000' => $product->ordersosmed_price_per_thousand,
+                    'original_unit_price' => $product->original_ordersosmed_unit_price,
+                    'original_price_per_1000' => $product->original_ordersosmed_price_per_thousand,
+                    'discount_label' => $product->active_discount_label,
                     'average_time' => $product->ordersosmed_average_time,
                 ];
             })->values()
@@ -193,7 +257,7 @@
                 </div>
 
                 <div class="mb-10 bg-[#f8faff] p-5 rounded-[1.5rem] border-4 border-white shadow-inner">
-                    <label class="mb-2 ml-2 block text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Total Harga</label>
+                    <label class="mb-2 ml-2 block text-xs font-black uppercase tracking-widest text-[#8faaf3]">Total Harga</label>
                     <div class="flex overflow-hidden rounded-[1.2rem] border-2 border-white bg-white shadow-sm">
                         <span class="px-5 py-3 font-black text-[#4bc6b9] text-xl bg-[#e6fff7]">Rp</span>
                         <input type="text" id="social_total_price" readonly value="0" class="min-w-0 flex-1 bg-transparent px-4 py-3 font-black text-xl text-[#2b3a67] outline-none">
@@ -244,12 +308,20 @@
             @forelse($products as $product)
                 @php
                     $isOutOfStock = in_array($product->process_type, ['account', 'number'], true) && ($product->available_stock ?? 0) <= 0;
-                    $plainDescription = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $product->description)));
+                    $rawDescription = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $product->description)));
+                    $plainDescription = $shouldHideServiceDescription ? '' : $rawDescription;
+
+                    if ($shouldShowCompactServiceDescription && $plainDescription === '') {
+                        $plainDescription = 'Paket data ' . $product->name . '. Pastikan nomor tujuan sesuai operator sebelum checkout.';
+                    }
+
+                    $compactCardHasDescription = $showCompactServiceCards && $shouldShowCompactServiceDescription && $plainDescription !== '';
+                    $compactCardMinHeight = $compactCardHasDescription ? 'min-h-[185px]' : 'min-h-[150px]';
                     $cardBaseClass = $showCompactServiceCards
-                        ? 'group flex h-full w-full flex-col items-center justify-between rounded-[1.35rem] border-4 border-white bg-white/95 p-3 text-center shadow-lg shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 min-h-[150px] sm:p-4'
-                        : 'group flex flex-col items-center justify-between w-full rounded-[2rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 text-center shadow-xl shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 min-h-[230px]';
+                        ? 'group relative flex h-full w-full flex-col items-center justify-between overflow-hidden rounded-[1.35rem] border-4 border-white bg-white/95 p-3 text-center shadow-lg shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 ' . $compactCardMinHeight . ' sm:p-4'
+                        : 'group relative flex flex-col items-center justify-between w-full overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 text-center shadow-xl shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 min-h-[230px]';
                     $disabledCardClass = $showCompactServiceCards
-                        ? 'relative flex h-full w-full cursor-not-allowed flex-col items-center justify-between overflow-hidden rounded-[1.35rem] border-4 border-white bg-gray-50 p-3 text-center opacity-60 grayscale shadow-sm min-h-[150px] sm:p-4'
+                        ? 'relative flex h-full w-full cursor-not-allowed flex-col items-center justify-between overflow-hidden rounded-[1.35rem] border-4 border-white bg-gray-50 p-3 text-center opacity-60 grayscale shadow-sm ' . $compactCardMinHeight . ' sm:p-4'
                         : 'relative flex flex-col items-center justify-between w-full cursor-not-allowed overflow-hidden rounded-[2rem] border-4 border-white bg-gray-50 p-6 text-center opacity-60 grayscale shadow-sm min-h-[230px]';
                     $logoBoxClass = $showCompactServiceCards
                         ? 'mb-3 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[1.35rem] border-4 border-white bg-[#f4f9ff] p-2 text-3xl shadow-inner transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3'
@@ -261,6 +333,8 @@
                     data-id="{{ $product->id }}"
                     data-name="{{ $product->name }}"
                     data-price="{{ $product->selling_price }}"
+                    data-original-price="{{ $product->original_selling_price }}"
+                    data-discount-label="{{ $product->active_discount_label ?? '' }}"
                     data-description="{{ $plainDescription }}"
                     data-logo-image="{{ $product->display_logo_image ? Storage::url($product->display_logo_image) : '' }}"
                     data-logo-emote="{{ $product->display_logo_emote ?? '' }}"
@@ -273,6 +347,14 @@
                         class="{{ $disabledCardClass }}"
                     @endif
                 >
+                    @if($product->has_active_discount)
+                        <span class="discount-corner-ribbon">
+                            <span class="discount-corner-ribbon__text">
+                                {{ $product->active_discount_label }}
+                            </span>
+                        </span>
+                    @endif
+
                     <div class="flex w-full flex-col items-center {{ $showCompactServiceCards ? 'mb-3' : 'mb-4' }}">
                         @if($product->display_logo_image)
                             <div class="{{ $logoBoxClass }}">
@@ -290,13 +372,18 @@
                         <span class="block font-black leading-tight text-[#2b3a67] transition-colors group-hover:text-[#5a76c8] {{ $showCompactServiceCards ? 'text-xs sm:text-sm' : 'text-lg' }}">{{ $product->name }}</span>
                     </div>
                     
-                    @if(!$showCompactServiceCards && $plainDescription !== '')
-                        <p class="mb-4 line-clamp-2 text-center text-xs font-bold text-[#8faaf3] flex-1">{{ $plainDescription }}</p>
+                    @if($plainDescription !== '' && (! $showCompactServiceCards || $shouldShowCompactServiceDescription))
+                        <p class="{{ $showCompactServiceCards ? 'mb-3 line-clamp-2 text-center text-[10px] font-bold leading-relaxed text-[#8faaf3]' : 'mb-4 line-clamp-2 text-center text-xs font-bold text-[#8faaf3] flex-1' }}">{{ $plainDescription }}</p>
                     @endif
 
                     <div class="mt-auto flex items-center justify-center w-full border-t-2 border-dashed border-[#f4f9ff] {{ $showCompactServiceCards ? 'pt-3 gap-2' : 'pt-4' }}">
                         @if($isOutOfStock)
                             <span class="shrink-0 rounded-lg border border-white bg-[#ffe5e5] px-3 py-1.5 text-xs font-black text-[#ff6b6b] shadow-sm">HABIS</span>
+                        @elseif($product->has_active_discount)
+                            <div class="w-full text-center">
+                                <span class="discount-old-price block text-sm font-black text-[#ff6b6b] line-through decoration-[#ff6b6b] decoration-2 sm:text-base">Rp {{ number_format($product->original_selling_price, 0, ',', '.') }}</span>
+                                <span class="block shrink-0 font-black text-[#4bc6b9] {{ $showCompactServiceCards ? 'text-sm sm:text-base' : 'text-lg' }}">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</span>
+                            </div>
                         @else
                             <span class="shrink-0 font-black text-[#4bc6b9] {{ $showCompactServiceCards ? 'text-sm sm:text-base' : 'text-lg' }}">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</span>
                         @endif
@@ -347,10 +434,17 @@
                     </div>
                 </div>
 
-                <div class="relative z-10 shrink-0 rounded-[2rem] border-4 border-white/50 bg-white/20 px-6 py-5 text-left backdrop-blur-md shadow-lg">
-                    <div class="text-left md:text-right">
-                        <p class="mb-1 text-[10px] font-black uppercase tracking-widest text-[#e0fbfc]">Total Harga</p>
-                        <p class="text-3xl font-black drop-shadow-md" id="checkout_product_price">Rp 0</p>
+                <div class="relative z-10 shrink-0 overflow-hidden rounded-[2rem] border-4 border-white/50 bg-white/20 px-6 py-5 text-left backdrop-blur-md shadow-lg">
+                    <span id="checkout_discount_badge" class="discount-corner-ribbon discount-corner-ribbon--checkout hidden">
+                        <span
+                            id="checkout_discount_badge_text"
+                            class="discount-corner-ribbon__text"
+                        >Diskon 3%</span>
+                    </span>
+                    <div class="text-left">
+                        <p class="mb-1 text-base font-black uppercase tracking-widest text-[#e0fbfc]">Total Harga</p>
+                        <p class="discount-old-price-light hidden text-2xl font-black text-white/75 line-through decoration-white/80 decoration-2" id="checkout_original_price">Rp 0</p>
+                        <p class="text-4xl font-black drop-shadow-md" id="checkout_product_price">Rp 0</p>
                     </div>
                 </div>
             </div>
@@ -420,12 +514,31 @@
     const noTargetMsg = document.getElementById('no_target_msg');
     const oldCheckoutInput = @json(old());
     const oldProductId = @json(old('product_id'));
+    const shouldStartAtTop = !oldProductId && !window.location.hash;
     const socialServices = @json($socialProductsPayload);
     const socialServiceSelect = document.getElementById('social_service_select');
     const socialQuantityInput = document.getElementById('social_order_quantity');
     const checkoutProductLogoImage = document.getElementById('checkout_product_logo_image');
     const checkoutProductLogoEmote = document.getElementById('checkout_product_logo_emote');
     const rupiahFormatter = new Intl.NumberFormat('id-ID');
+
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+    }
+
+    function forceOrderPageTop() {
+        if (shouldStartAtTop) {
+            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        }
+    }
+
+    function userNavbarOffset() {
+        const navbar = document.querySelector('.wiboost-user-navbar');
+        return navbar ? Math.ceil(navbar.getBoundingClientRect().height + 16) : 120;
+    }
+
+    forceOrderPageTop();
+    window.addEventListener('pageshow', forceOrderPageTop);
 
     function syncMinimumQrisOption(prefix, total) {
         const qrisOption = document.getElementById(prefix + '_qris_option');
@@ -492,7 +605,7 @@
         const service = findSocialService();
         const quantity = parseInt(socialQuantityInput?.value || '0', 10);
         const total = service && quantity > 0
-            ? Math.ceil((quantity * service.unit_price) / 100) * 100
+            ? Math.max(1, Math.ceil(quantity * service.unit_price))
             : 0;
 
         const totalInput = document.getElementById('social_total_price');
@@ -612,13 +725,31 @@
     }
 
     function goToCheckout(button, restoreValues = {}) {
-        const { id, name, price, description } = button.dataset;
+        const { id, name, price, originalPrice, discountLabel, description } = button.dataset;
         const fields = JSON.parse(button.dataset.checkoutFields || '[]');
         const descriptionNode = document.getElementById('checkout_product_description');
+        const originalPriceNode = document.getElementById('checkout_original_price');
+        const discountBadgeNode = document.getElementById('checkout_discount_badge');
+        const hasDiscount = discountLabel && Number(originalPrice) > Number(price);
 
         document.getElementById('checkout_product_id').value = id;
         document.getElementById('checkout_product_name').innerText = name;
         document.getElementById('checkout_product_price').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(price);
+
+        if (originalPriceNode) {
+            originalPriceNode.innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(originalPrice || 0);
+            originalPriceNode.classList.toggle('hidden', !hasDiscount);
+        }
+
+        if (discountBadgeNode) {
+            const discountBadgeTextNode = document.getElementById('checkout_discount_badge_text');
+            if (discountBadgeTextNode) {
+                discountBadgeTextNode.innerText = discountLabel || '';
+            }
+            discountBadgeNode.classList.toggle('hidden', !hasDiscount);
+            discountBadgeNode.classList.toggle('inline-block', hasDiscount);
+        }
+
         syncMinimumQrisOption('checkout', Number(price));
         syncCheckoutLogo(button);
 
@@ -646,8 +777,7 @@
         pageCheckout.classList.remove('hidden');
         pageCheckout.classList.add('fade-in');
 
-        const checkoutTop = pageCheckout.getBoundingClientRect().top + window.pageYOffset - 8;
-        window.scrollTo({ top: Math.max(0, checkoutTop), behavior: 'smooth' });
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     }
 
     function goBackToProducts() {
@@ -657,6 +787,10 @@
         document.getElementById('checkoutForm').reset();
         checkoutFieldsWrapper.innerHTML = '';
         resetCheckoutLogo();
+        document.getElementById('checkout_original_price')?.classList.add('hidden');
+        const checkoutDiscountBadge = document.getElementById('checkout_discount_badge');
+        checkoutDiscountBadge?.classList.add('hidden');
+        checkoutDiscountBadge?.classList.remove('inline-block');
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -688,7 +822,9 @@
             syncSocialService();
         }
 
-        if (!oldProductId) {
+        if (shouldStartAtTop) {
+            requestAnimationFrame(forceOrderPageTop);
+            setTimeout(forceOrderPageTop, 120);
             return;
         }
 

@@ -3,6 +3,9 @@
 @section('title', 'Pilih Aplikasi - ' . $category->name)
 
 @section('content')
+@php
+    $categoryDiscountLabel = \App\Models\Product::currentDiscountLabel();
+@endphp
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
     .wiboost-font { font-family: 'Nunito', sans-serif; }
@@ -13,6 +16,37 @@
         0% { transform: translateY(0px); }
         50% { transform: translateY(-15px); }
         100% { transform: translateY(0px); }
+    }
+
+    .discount-corner-ribbon {
+        pointer-events: none;
+        position: absolute;
+        right: -1px;
+        top: -1px;
+        z-index: 20;
+        width: 7.75rem;
+        height: 7.75rem;
+        overflow: hidden;
+        border-top-right-radius: 2rem;
+    }
+
+    .discount-corner-ribbon__text {
+        position: absolute;
+        right: -2.75rem;
+        top: 1.45rem;
+        display: block;
+        width: 10.25rem;
+        transform: rotate(45deg);
+        transform-origin: center;
+        background: #22c55e;
+        padding: 0.45rem 0;
+        text-align: center;
+        font-size: 0.55rem;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        color: white;
+        text-transform: uppercase;
+        box-shadow: 0 12px 26px rgba(34, 197, 94, 0.28);
     }
 </style>
 
@@ -57,10 +91,18 @@
             @endphp
 
             @if($isBrowsable)
-                <a href="{{ route('user.order.category', $child->slug) }}" class="group bg-white/95 backdrop-blur-sm p-6 md:p-8 rounded-[2.5rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 text-center flex flex-col items-center justify-center">
+                <a href="{{ route('user.order.category', $child->slug) }}" class="group relative overflow-hidden bg-white/95 backdrop-blur-sm p-6 md:p-8 rounded-[2.5rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 text-center flex flex-col items-center justify-center">
             @else
-                <div class="group bg-white/60 backdrop-blur-sm p-6 md:p-8 rounded-[2.5rem] border-4 border-white shadow-md shadow-[#bde0fe]/10 text-center flex flex-col items-center justify-center opacity-80 grayscale-[20%]">
+                <div class="group relative overflow-hidden bg-white/60 backdrop-blur-sm p-6 md:p-8 rounded-[2.5rem] border-4 border-white shadow-md shadow-[#bde0fe]/10 text-center flex flex-col items-center justify-center opacity-80 grayscale-[20%]">
             @endif
+
+                @if($categoryDiscountLabel)
+                    <span class="discount-corner-ribbon">
+                        <span class="discount-corner-ribbon__text">
+                            {{ $categoryDiscountLabel }}
+                        </span>
+                    </span>
+                @endif
 
                 <div class="w-24 h-24 bg-[#f4f9ff] rounded-[1.5rem] mb-5 flex items-center justify-center {{ $hasActiveProducts ? 'group-hover:scale-110 group-hover:-rotate-3' : '' }} transition-transform duration-300 border-4 border-white shadow-inner shrink-0 overflow-hidden p-3">
                     @if($child->image)

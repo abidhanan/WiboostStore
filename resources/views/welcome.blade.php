@@ -273,7 +273,6 @@
     </style>
 </head>
 <body class="wiboost-compact-ui wiboost-welcome-page bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white flex flex-col min-h-screen">
-
     <nav class="fixed w-full z-50 top-4 px-4 sm:px-6 lg:px-8 pointer-events-none">
         <div class="max-w-7xl mx-auto pointer-events-auto">
             <div class="flex items-center justify-between rounded-[2rem] border-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-6">
@@ -350,7 +349,7 @@
             <div class="mx-auto flex max-w-5xl flex-wrap justify-center gap-4 md:gap-5">
                 @forelse($categories as $cat)
                     @if(is_null($cat->parent_id))
-                        <a href="{{ route('login') }}" class="group block w-[calc(50%-0.5rem)] sm:w-56 md:w-60 lg:w-56 bg-[#f4f9ff] rounded-[1.5rem] p-4 border-4 border-white shadow-lg shadow-[#bde0fe]/20 hover:-translate-y-2 hover:border-[#bde0fe] transition-all duration-300 text-center relative flex flex-col items-center">
+                        <a href="{{ route('login') }}" class="group relative flex w-[calc(50%-0.5rem)] flex-col items-center overflow-hidden bg-[#f4f9ff] rounded-[1.5rem] p-4 border-4 border-white shadow-lg shadow-[#bde0fe]/20 hover:-translate-y-2 hover:border-[#bde0fe] transition-all duration-300 text-center sm:w-56 md:w-60 lg:w-56">
                             <div class="welcome-category-icon mb-3 text-[#5a76c8] transition-transform duration-300 group-hover:scale-110">
                                 @if($cat->image)
                                     <img src="{{ Storage::url($cat->image) }}" alt="{{ $cat->name }}" class="drop-shadow-sm">

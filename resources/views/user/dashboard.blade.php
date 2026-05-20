@@ -4,6 +4,9 @@
 @section('body_class', 'wiboost-user-dashboard-page')
 
 @section('content')
+@php
+    $categoryDiscountLabel = \App\Models\Product::currentDiscountLabel();
+@endphp
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
     .wiboost-font { font-family: 'Nunito', sans-serif; }
@@ -25,6 +28,35 @@
         background: #f8fbff !important;
         box-shadow: 0 12px 24px rgba(189, 224, 254, 0.32) !important;
         transform: translateY(-2px);
+    }
+    .discount-corner-ribbon {
+        pointer-events: none;
+        position: absolute;
+        right: -1px;
+        top: -1px;
+        z-index: 20;
+        width: 7rem;
+        height: 7rem;
+        overflow: hidden;
+        border-top-right-radius: 1.55rem;
+    }
+    .discount-corner-ribbon__text {
+        position: absolute;
+        right: -2.55rem;
+        top: 1.2rem;
+        display: block;
+        width: 9.75rem;
+        transform: rotate(45deg);
+        transform-origin: center;
+        background: #22c55e;
+        padding: 0.42rem 0;
+        text-align: center;
+        font-size: 0.5rem;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        color: white;
+        text-transform: uppercase;
+        box-shadow: 0 12px 26px rgba(34, 197, 94, 0.28);
     }
     .promo-banner-shell {
         width: 100%;
@@ -196,7 +228,14 @@
 
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 mb-14">
         @forelse($categories as $category)
-            <a href="{{ route('user.order.category', $category->slug) }}" class="group bg-white p-6 md:p-8 rounded-[2rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 transition-all text-center flex flex-col items-center justify-center relative">
+            <a href="{{ route('user.order.category', $category->slug) }}" class="group relative overflow-hidden bg-white p-6 md:p-8 rounded-[2rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 transition-all text-center flex flex-col items-center justify-center">
+                @if($categoryDiscountLabel)
+                    <span class="discount-corner-ribbon">
+                        <span class="discount-corner-ribbon__text">
+                            {{ $categoryDiscountLabel }}
+                        </span>
+                    </span>
+                @endif
                 <div class="w-16 h-16 bg-[#f4f9ff] rounded-2xl border-2 border-white shadow-inner flex items-center justify-center text-[#5a76c8] mb-4 group-hover:scale-110 transition-transform duration-300">
                     @if($category->image)
                         <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="h-full w-full object-contain drop-shadow-sm">

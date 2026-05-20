@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdminReport;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\User;
@@ -97,6 +98,49 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        $rootCategories = Category::whereNull('parent_id')
+            ->whereIn('slug', WiboostCatalog::coreCategorySlugs())
+            ->get()
+            ->keyBy('slug');
+
+        $paidProductSummaries = Transaction::query()
+            ->select('product_id')
+            ->selectRaw('COUNT(*) as orders_count')
+            ->selectRaw('COALESCE(SUM(amount), 0) as revenue_sum')
+            ->where('payment_status', 'paid')
+            ->where('order_status', '!=', 'failed')
+            ->whereNotNull('product_id')
+            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
+            ->groupBy('product_id')
+            ->get();
+
+        $productsById = Product::with('category.parent.parent.parent')
+            ->whereIn('id', $paidProductSummaries->pluck('product_id')->filter()->all())
+            ->get()
+            ->keyBy('id');
+
+        $topProductsByRootCategory = collect(WiboostCatalog::coreCategorySlugs())
+            ->map(function (string $rootSlug) use ($rootCategories, $paidProductSummaries, $productsById) {
+                $categoryProductSummaries = $paidProductSummaries->filter(function ($summary) use ($rootSlug, $productsById) {
+                    $product = $productsById->get($summary->product_id);
+
+                    return $this->resolveRootCategorySlug($product?->category) === $rootSlug;
+                });
+
+                $topSummary = $categoryProductSummaries
+                    ->sortByDesc(fn ($summary) => (int) $summary->orders_count)
+                    ->first();
+
+                return [
+                    'slug' => $rootSlug,
+                    'category_name' => $rootCategories->get($rootSlug)?->name ?: str($rootSlug)->replace('-', ' ')->title()->toString(),
+                    'product' => $topSummary ? $productsById->get($topSummary->product_id) : null,
+                    'orders' => $topSummary ? (int) $topSummary->orders_count : 0,
+                    'revenue' => $topSummary ? (float) $topSummary->revenue_sum : 0,
+                ];
+            })
+            ->values();
+
         return view('admin.dashboard', compact(
             'totalTransactionsMonth',
             'revenueMonth',
@@ -105,7 +149,23 @@ class DashboardController extends Controller
             'globalWalletLogs',
             'lowStockProducts',
             'dashboardCharts',
-            'latestReports'
+            'latestReports',
+            'topProductsByRootCategory'
         ));
+    }
+
+    protected function resolveRootCategorySlug(?Category $category): ?string
+    {
+        if (! $category) {
+            return null;
+        }
+
+        $category->loadMissing('parent.parent.parent');
+
+        while ($category->parent) {
+            $category = $category->parent;
+        }
+
+        return $category->slug;
     }
 }

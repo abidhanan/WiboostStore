@@ -67,22 +67,26 @@
                     <div class="text-4xl animate-bounce drop-shadow-sm">🎁</div>
                 </div>
 
+                <div class="w-full bg-[#f8faff] border-4 border-dashed border-[#bde0fe] text-[#8faaf3] p-4 rounded-[1.5rem] font-black text-center text-sm shadow-inner">
+                    <div class="mb-3 text-center text-[10px] uppercase tracking-widest">
+                        @if($currentPoints >= $targetPoints)
+                            <span>POIN Siap Ditukar!</span>
+                        @else
+                            <span>Kumpulkan {{ $remainingPoints }} POIN Lagi!</span>
+                        @endif
+                    </div>
+                    <div class="h-5 overflow-hidden rounded-full p-0.5 shadow-inner" style="background-color: #ffffff; border: 3px solid #facc15;">
+                        <div class="h-full rounded-full transition-all duration-500" style="width: {{ $pointProgress }}%; min-width: {{ $currentPoints > 0 ? '1.25rem' : '0' }}; background: linear-gradient(90deg, #fef08a 0%, #facc15 52%, #f59e0b 100%); box-shadow: 0 0 18px rgba(250, 204, 21, 0.55);"></div>
+                    </div>
+                </div>
+
                 @if($currentPoints >= $targetPoints)
                     <form action="{{ route('user.wallet.exchange') }}" method="POST">
                         @csrf
-                        <button type="submit" class="w-full bg-[#4bc6b9] hover:bg-[#3ba398] text-white py-4 rounded-full font-black transition-transform active:scale-95 shadow-lg shadow-[#4bc6b9]/30 border-4 border-white flex items-center justify-center gap-2">
+                        <button type="submit" class="mt-4 w-full bg-[#4bc6b9] hover:bg-[#3ba398] text-white py-4 rounded-full font-black transition-transform active:scale-95 shadow-lg shadow-[#4bc6b9]/30 border-4 border-white flex items-center justify-center gap-2">
                             Tukar 5 POIN &rarr; Saldo 1K
                         </button>
                     </form>
-                @else
-                    <div class="w-full bg-[#f8faff] border-4 border-dashed border-[#bde0fe] text-[#8faaf3] p-4 rounded-[1.5rem] font-black text-center text-sm shadow-inner">
-                        <div class="mb-3 text-center text-[10px] uppercase tracking-widest">
-                            <span>Kumpulkan {{ $remainingPoints }} POIN Lagi!</span>
-                        </div>
-                        <div class="h-4 overflow-hidden rounded-full border-2 border-white bg-white shadow-inner">
-                            <div class="h-full rounded-full bg-gradient-to-r from-[#4bc6b9] to-[#5a76c8] transition-all duration-500" style="width: {{ $pointProgress }}%;"></div>
-                        </div>
-                    </div>
                 @endif
                 <p class="text-[9px] font-bold text-[#8faaf3] mt-4 text-center uppercase tracking-widest">Kumpulkan POIN dan dapatkan bonus saldo.</p>
             </div>

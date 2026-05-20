@@ -53,7 +53,7 @@ class OrderController extends Controller
         $isSuntikSosmedOrder = $rootCategorySlug === 'suntik-sosmed'
             && $products->contains(fn (Product $product) => $product->is_ordersosmed_service);
         $isTopUpGameOrder = $rootCategorySlug === 'top-up-game';
-        $isCompactServiceCardOrder = in_array($rootCategorySlug, ['top-up-game', 'kuota-murah', 'aplikasi-premium'], true);
+        $isCompactServiceCardOrder = in_array($rootCategorySlug, ['top-up-game', 'kuota-murah', 'paket-data', 'aplikasi-premium'], true);
 
         if ($isSuntikSosmedOrder) {
             $products = $this->sortSuntikSosmedProducts($products);
@@ -61,7 +61,7 @@ class OrderController extends Controller
             $this->attachSuccessfulAverageTimes($products);
         }
 
-        return view('user.order', compact('category', 'products', 'isSuntikSosmedOrder', 'isTopUpGameOrder', 'isCompactServiceCardOrder'));
+        return view('user.order', compact('category', 'products', 'rootCategorySlug', 'isSuntikSosmedOrder', 'isTopUpGameOrder', 'isCompactServiceCardOrder'));
     }
 
     public function processCheckout(

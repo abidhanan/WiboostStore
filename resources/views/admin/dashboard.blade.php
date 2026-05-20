@@ -112,6 +112,44 @@
             </div>
         </section>
 
+        <section class="overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:rounded-[2.5rem]">
+            <div class="border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-7 sm:py-6">
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Produk Terlaris</p>
+                <h3 class="mt-1 text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Paling Sering Dibeli per Kategori</h3>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 sm:p-7 xl:grid-cols-4">
+                @forelse(collect($topProductsByRootCategory ?? []) as $summary)
+                    <article class="flex min-h-[230px] flex-col rounded-[1.75rem] border-4 border-white bg-[#f8fbff] p-5 shadow-inner">
+                        <p class="truncate text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">{{ $summary['category_name'] }}</p>
+                        @if($summary['product'])
+                            <a href="{{ route('admin.products.index', ['search' => $summary['product']->name]) }}" class="mt-3 block line-clamp-3 text-lg font-black leading-tight text-[#2b3a67] transition-colors hover:text-[#5a76c8]">
+                                {{ $summary['product']->name }}
+                            </a>
+                            <div class="mt-auto grid grid-cols-2 gap-3 pt-5">
+                                <div class="rounded-2xl border-2 border-white bg-white px-3 py-2 shadow-sm">
+                                    <p class="text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">Dibeli</p>
+                                    <p class="text-xl font-black text-[#5a76c8]">{{ number_format($summary['orders'], 0, ',', '.') }}</p>
+                                </div>
+                                <div class="rounded-2xl border-2 border-white bg-white px-3 py-2 shadow-sm">
+                                    <p class="text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">Omzet</p>
+                                    <p class="truncate text-sm font-black text-[#4bc6b9]">Rp {{ number_format($summary['revenue'], 0, ',', '.') }}</p>
+                                </div>
+                            </div>
+                        @else
+                            <div class="mt-auto rounded-[1.5rem] border-4 border-dashed border-[#d6e5ff] bg-white px-4 py-8 text-center">
+                                <p class="text-sm font-black text-[#8faaf3]">Belum ada pembelian.</p>
+                            </div>
+                        @endif
+                    </article>
+                @empty
+                    <div class="col-span-full rounded-[2rem] border-4 border-dashed border-[#d6e5ff] bg-[#f8fbff] px-5 py-10 text-center">
+                        <p class="text-sm font-black text-[#8faaf3]">Data produk terlaris belum tersedia.</p>
+                    </div>
+                @endforelse
+            </div>
+        </section>
+
         @if(false)
         <section class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
             <article class="overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white p-6 sm:p-7 shadow-xl shadow-[#bde0fe]/30 transition-transform duration-300 hover:-translate-y-1 relative min-w-0">

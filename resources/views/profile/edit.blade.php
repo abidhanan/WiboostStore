@@ -6,9 +6,18 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
     .wiboost-font { font-family: 'Nunito', sans-serif; }
+    [x-cloak] { display: none !important; }
 </style>
 
-<div class="wiboost-font pb-12 max-w-6xl mx-auto mt-4 relative z-10">
+@php
+    $profileHasErrors = $errors->has('name') || $errors->has('email') || $errors->has('whatsapp');
+    $passwordHasErrors = $errors->updatePassword->any();
+@endphp
+
+<div
+    class="wiboost-font pb-12 max-w-6xl mx-auto mt-4 relative z-10"
+    x-data="{ editingProfile: {{ $profileHasErrors ? 'true' : 'false' }}, editingPassword: {{ $passwordHasErrors ? 'true' : 'false' }} }"
+>
     <div class="mb-10 text-center md:text-left pl-2">
         <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">
             Area Privasi
