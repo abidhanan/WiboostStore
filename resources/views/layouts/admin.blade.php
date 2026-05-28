@@ -30,6 +30,60 @@
             50% { transform: translateY(-15px); }
             100% { transform: translateY(0px); }
         }
+
+        @media (max-width: 767px) {
+            body.wiboost-admin-shell {
+                overflow-x: hidden;
+            }
+
+            body.wiboost-admin-shell .backdrop-blur,
+            body.wiboost-admin-shell .backdrop-blur-sm,
+            body.wiboost-admin-shell .backdrop-blur-md,
+            body.wiboost-admin-shell .backdrop-blur-xl {
+                -webkit-backdrop-filter: none !important;
+                backdrop-filter: none !important;
+            }
+
+            body.wiboost-admin-shell .animate-float,
+            body.wiboost-admin-shell .animate-float-delayed {
+                animation: none !important;
+            }
+
+            body.wiboost-admin-shell .shadow-2xl,
+            body.wiboost-admin-shell .shadow-xl {
+                box-shadow: 0 8px 18px rgba(141, 174, 238, .16) !important;
+            }
+
+            body.wiboost-admin-shell main {
+                overflow: visible !important;
+                contain: layout paint;
+            }
+
+            body.wiboost-admin-shell.admin-detail-open main {
+                overflow: visible !important;
+                contain: none !important;
+            }
+
+            body.wiboost-admin-shell a,
+            body.wiboost-admin-shell button,
+            body.wiboost-admin-shell input,
+            body.wiboost-admin-shell select,
+            body.wiboost-admin-shell textarea,
+            body.wiboost-admin-shell tr {
+                transition-duration: 120ms !important;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            body.wiboost-admin-shell *,
+            body.wiboost-admin-shell *::before,
+            body.wiboost-admin-shell *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+            }
+        }
     </style>
 </head>
 <body
@@ -54,7 +108,7 @@
         }
     }"
     x-init="restoreSidebarScroll()"
-    class="wiboost-compact-ui min-h-screen bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white relative flex"
+    class="wiboost-compact-ui wiboost-admin-shell min-h-screen bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white relative flex"
 >
     @php
         $adminNav = [

@@ -186,7 +186,7 @@
                 <input type="checkbox" name="requires_buyer_email" value="1" {{ (string) $requiresBuyerEmail === '1' || $requiresBuyerEmail === true ? 'checked' : '' }}
                     class="h-6 w-6 rounded border-2 border-pink-200 text-pink-500 shadow-inner focus:ring-pink-400">
                 <div>
-                    <p class="font-black text-[#2b3a67] text-lg">Buyer wajib mengisi email khusus aplikasi</p>
+                    <p class="font-black text-[#2b3a67] text-lg">Buyer wajib mengisi email</p>
                     <p class="mt-1 text-sm font-bold text-pink-400">Kalau dimatikan, checkout langsung lanjut tanpa field tambahan.</p>
                 </div>
             </label>

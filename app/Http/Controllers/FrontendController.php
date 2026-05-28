@@ -53,7 +53,7 @@ class FrontendController extends Controller
                 'badge' => 'Aturan Transaksi',
                 'intro' => 'Panduan penggunaan layanan Wiboost Store agar transaksi berjalan aman dan jelas untuk buyer maupun admin.',
                 'sections' => [
-                    ['title' => 'Akun dan data buyer', 'body' => 'Buyer wajib mengisi data pesanan dengan benar, termasuk username, link, User ID, Zone ID, nomor handphone, atau email khusus aplikasi bila diminta oleh produk. Kesalahan input dapat menyebabkan pesanan gagal atau tertunda.'],
+                    ['title' => 'Akun dan data buyer', 'body' => 'Buyer wajib mengisi data pesanan dengan benar, termasuk username, link, User ID, Zone ID, nomor handphone, atau email bila diminta oleh produk. Kesalahan input dapat menyebabkan pesanan gagal atau tertunda.'],
                     ['title' => 'Pemrosesan pesanan', 'body' => 'Produk API diproses melalui provider seperti Digiflazz dan OrderSosmed. Produk aplikasi premium diproses dari stok kredensial yang tersedia di website.'],
                     ['title' => 'Larangan penggunaan', 'body' => 'Layanan tidak boleh digunakan untuk penipuan, spam, penyalahgunaan akun, aktivitas ilegal, atau tindakan yang merugikan pihak lain. Wiboost berhak menolak pesanan yang melanggar aturan.'],
                 ],

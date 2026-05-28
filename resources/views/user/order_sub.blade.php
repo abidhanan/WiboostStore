@@ -38,7 +38,7 @@
         width: 10.25rem;
         transform: rotate(45deg);
         transform-origin: center;
-        background: #22c55e;
+        background: #5a76c8;
         padding: 0.45rem 0;
         text-align: center;
         font-size: 0.55rem;
@@ -46,7 +46,40 @@
         letter-spacing: 0.14em;
         color: white;
         text-transform: uppercase;
-        box-shadow: 0 12px 26px rgba(34, 197, 94, 0.28);
+        box-shadow: 0 12px 26px rgba(90, 118, 200, 0.28);
+    }
+    .wiboost-square-logo-img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    .wiboost-logo-frame {
+        aspect-ratio: 1 / 1;
+        width: 6rem;
+        height: 6rem;
+        min-width: 6rem;
+    }
+
+    @media (max-width: 767px) {
+        .wiboost-suborder-logo-content {
+            width: 88%;
+            height: 88%;
+            object-fit: cover;
+            border-radius: 1rem;
+        }
+
+        .wiboost-suborder-emote {
+            font-size: 2.35rem;
+            line-height: 1;
+        }
+
+        .wiboost-suborder-emote-large {
+            font-size: 2.75rem;
+            line-height: 1;
+        }
     }
 </style>
 
@@ -58,11 +91,11 @@
                 <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
             </a>
 
-            <div class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-2 border-white bg-[#f4f9ff] p-2 text-[#5a76c8] shadow-inner">
+            <div class="wiboost-logo-frame flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-inner ring-1 ring-[#bde0fe]/60">
                 @if($category->image)
-                    <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="h-full w-full object-contain drop-shadow-sm">
+                    <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="wiboost-square-logo-img wiboost-suborder-logo-content drop-shadow-sm">
                 @else
-                    <span class="text-4xl font-black drop-shadow-sm">{{ $category->emote ?? '📦' }}</span>
+                    <span class="wiboost-suborder-emote text-4xl font-black drop-shadow-sm">{{ $category->emote ?? '📦' }}</span>
                 @endif
             </div>
         </div>
@@ -91,9 +124,9 @@
             @endphp
 
             @if($isBrowsable)
-                <a href="{{ route('user.order.category', $child->slug) }}" class="group relative overflow-hidden bg-white/95 backdrop-blur-sm p-6 md:p-8 rounded-[2.5rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 text-center flex flex-col items-center justify-center">
+                <a href="{{ route('user.order.category', $child->slug) }}" class="group relative aspect-square overflow-hidden bg-white/95 backdrop-blur-sm p-6 md:p-8 rounded-[2.5rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 text-center flex flex-col items-center justify-center">
             @else
-                <div class="group relative overflow-hidden bg-white/60 backdrop-blur-sm p-6 md:p-8 rounded-[2.5rem] border-4 border-white shadow-md shadow-[#bde0fe]/10 text-center flex flex-col items-center justify-center opacity-80 grayscale-[20%]">
+                <div class="group relative aspect-square overflow-hidden bg-white/60 backdrop-blur-sm p-6 md:p-8 rounded-[2.5rem] border-4 border-white shadow-md shadow-[#bde0fe]/10 text-center flex flex-col items-center justify-center opacity-80 grayscale-[20%]">
             @endif
 
                 @if($categoryDiscountLabel)
@@ -104,11 +137,11 @@
                     </span>
                 @endif
 
-                <div class="w-24 h-24 bg-[#f4f9ff] rounded-[1.5rem] mb-5 flex items-center justify-center {{ $hasActiveProducts ? 'group-hover:scale-110 group-hover:-rotate-3' : '' }} transition-transform duration-300 border-4 border-white shadow-inner shrink-0 overflow-hidden p-3">
+                <div class="wiboost-logo-frame h-24 w-24 bg-[#f4f9ff] rounded-[1.5rem] mb-5 flex items-center justify-center {{ $hasActiveProducts ? 'group-hover:scale-110 group-hover:-rotate-3' : '' }} transition-transform duration-300 border-4 border-white shadow-inner ring-1 ring-[#bde0fe]/60 shrink-0 overflow-hidden">
                     @if($child->image)
-                        <img src="{{ Storage::url($child->image) }}" alt="{{ $child->name }}" class="w-full h-full object-contain drop-shadow-sm">
+                        <img src="{{ Storage::url($child->image) }}" alt="{{ $child->name }}" class="wiboost-square-logo-img wiboost-suborder-logo-content drop-shadow-sm">
                     @else
-                        <span class="text-5xl drop-shadow-md">{{ $child->emote ?? '📦' }}</span>
+                        <span class="wiboost-suborder-emote-large text-5xl drop-shadow-md">{{ $child->emote ?? '📦' }}</span>
                     @endif
                 </div>
 
@@ -116,9 +149,6 @@
                 @if($child->description)
                     <p class="mt-2 text-xs font-bold text-[#8faaf3] leading-relaxed line-clamp-2">{{ $child->description }}</p>
                 @endif
-                <span class="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[9px] font-black uppercase tracking-widest border border-white shadow-sm {{ $isBrowsable ? 'bg-[#e6fff7] text-emerald-500' : 'bg-[#fff5eb] text-amber-500' }}">
-                    {{ $hasNestedChildren ? 'Lihat subkategori' : ($hasActiveProducts ? ($child->active_products_count . ' layanan aktif') : 'Segera Hadir') }}
-                </span>
 
             @if($isBrowsable)
                 </a>

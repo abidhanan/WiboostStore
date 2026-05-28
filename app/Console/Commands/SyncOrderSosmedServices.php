@@ -236,7 +236,7 @@ class SyncOrderSosmedServices extends Command
 
     protected function resolveProviderQuantity(array $service): int
     {
-        $min = (int) ($service['min'] ?? $service['minimum'] ?? 0);
+        $min = (int) round($this->parseProviderNumber($service['min'] ?? $service['minimum'] ?? 0));
 
         return max(1, $min);
     }
@@ -244,13 +244,13 @@ class SyncOrderSosmedServices extends Command
     protected function resolveBasePrice(array $service, int $providerQuantity): float
     {
         if (($service['_ordersosmed_pricing_mode'] ?? null) === 'per_1000') {
-            $rate = (float) ($service['rate'] ?? 0);
+            $rate = $this->parseProviderNumber($service['rate'] ?? 0);
 
             return $rate > 0 ? max(0, ($rate / 1000) * $providerQuantity) : 0;
         }
 
-        if (isset($service['price']) && is_numeric($service['price'])) {
-            $price = (float) $service['price'];
+        if (isset($service['price']) && $this->parseProviderNumber($service['price']) > 0) {
+            $price = $this->parseProviderNumber($service['price']);
 
             if (($service['_ordersosmed_pricing_mode'] ?? null) === 'flat') {
                 return $price;
@@ -259,13 +259,50 @@ class SyncOrderSosmedServices extends Command
             return $price > 0 ? max(0, ($price / 1000) * $providerQuantity) : 0;
         }
 
-        $rate = (float) ($service['rate'] ?? 0);
+        $rate = $this->parseProviderNumber($service['rate'] ?? 0);
 
         if ($rate <= 0) {
             return 0;
         }
 
         return max(0, ($rate / 1000) * $providerQuantity);
+    }
+
+    protected function parseProviderNumber(mixed $value): float
+    {
+        if (is_int($value) || is_float($value)) {
+            return (float) $value;
+        }
+
+        $text = trim((string) $value);
+
+        if ($text === '') {
+            return 0.0;
+        }
+
+        $text = preg_replace('/[^\d,.\-]+/', '', str_replace(["\xc2\xa0", ' '], '', $text)) ?: '';
+
+        if ($text === '' || $text === '-') {
+            return 0.0;
+        }
+
+        $negative = str_starts_with($text, '-');
+        $text = ltrim($text, '-');
+
+        if (preg_match('/^\d{1,3}(\.\d{3})+(,\d+)?$/', $text) === 1) {
+            $text = str_replace('.', '', $text);
+            $text = str_replace(',', '.', $text);
+        } elseif (preg_match('/^\d{1,3}(,\d{3})+(\.\d+)?$/', $text) === 1) {
+            $text = str_replace(',', '', $text);
+        } elseif (str_contains($text, ',') && ! str_contains($text, '.')) {
+            $text = str_replace(',', '.', $text);
+        } elseif (substr_count($text, '.') > 1) {
+            $text = str_replace('.', '', $text);
+        } elseif (substr_count($text, ',') > 1) {
+            $text = str_replace(',', '', $text);
+        }
+
+        return (float) (($negative ? '-' : '') . $text);
     }
 
     protected function resolveCategoryId(

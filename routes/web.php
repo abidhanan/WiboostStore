@@ -70,6 +70,7 @@ Route::middleware(['auth', 'role:buyer'])->prefix('user')->name('user.')->group(
     Route::post('/report-admin', [AdminReportController::class, 'store'])->name('report.admin.store');
     
     // Order & Checkout
+    Route::get('/order/service/{product}/ordersosmed', [OrderController::class, 'ordersosmedServiceMeta'])->name('order.ordersosmed-service');
     Route::get('/order/{slug}', [OrderController::class, 'showCategory'])->name('order.category');
     Route::post('/checkout/process', [OrderController::class, 'processCheckout'])->name('checkout.process');
     Route::delete('/checkout/{transaction}/cancel', [OrderController::class, 'cancelTripayCheckout'])->name('checkout.cancel');
@@ -90,6 +91,8 @@ Route::middleware(['auth', 'role:buyer'])->prefix('user')->name('user.')->group(
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/contact-numbers', fn () => redirect()->route('admin.dashboard'));
+    Route::post('/dashboard/contact-numbers', [AdminDashboardController::class, 'updateContactNumbers'])->name('dashboard.contact-numbers.update');
 
     // Master Data (CRUD)
     Route::resource('users', AdminUserController::class);
@@ -110,6 +113,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Transaksi
     Route::get('/transactions', [AdminTransactionController::class, 'index'])->name('transactions.index');
+    Route::get('/transactions/refresh-provider-statuses', fn () => redirect()->route('admin.transactions.index'));
+    Route::post('/transactions/refresh-provider-statuses', [AdminTransactionController::class, 'refreshProviderStatuses'])->name('transactions.refresh-provider-statuses');
     Route::get('/transactions/export-pdf', [AdminTransactionController::class, 'exportPdf'])->name('transactions.export_pdf');
     Route::patch('/transactions/{id}/update', [AdminTransactionController::class, 'updateStatus'])->name('transactions.update');
     

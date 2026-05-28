@@ -94,6 +94,7 @@ class OrderFulfillmentService
         $transaction->update([
             'order_status' => 'success',
             'credential_data' => [
+                'credential_id' => $credential->id,
                 'email' => ($credential->data_1 !== '-' && $credential->data_1 !== null) ? $credential->data_1 : null,
                 'password' => $credential->data_2,
                 'profile' => $credential->data_3,
@@ -343,11 +344,7 @@ class OrderFulfillmentService
             return;
         }
 
-        $credential = ProductCredential::where('product_id', $transaction->product_id)
-            ->where('is_active', true)
-            ->whereColumn('current_usage', '<', 'max_usage')
-            ->orderBy('id')
-            ->first();
+        $credential = $this->selectCredentialForTransaction($transaction);
 
         if (! $credential) {
             $transaction->update([
@@ -366,6 +363,87 @@ class OrderFulfillmentService
         }
 
         $this->assignCredential($transaction, $credential);
+    }
+
+    protected function selectCredentialForTransaction(Transaction $transaction): ?ProductCredential
+    {
+        $availableCredentials = ProductCredential::where('product_id', $transaction->product_id)
+            ->where('is_active', true)
+            ->whereColumn('current_usage', '<', 'max_usage')
+            ->orderBy('current_usage')
+            ->orderBy('id')
+            ->get();
+
+        if ($availableCredentials->isEmpty()) {
+            return null;
+        }
+
+        if ($availableCredentials->count() === 1) {
+            return $availableCredentials->first();
+        }
+
+        $usedCredentialIds = $this->previousCredentialIdsForUserProduct($transaction, $availableCredentials);
+
+        $neverUsedByThisUser = $availableCredentials
+            ->reject(fn (ProductCredential $credential) => in_array((int) $credential->id, $usedCredentialIds, true))
+            ->values();
+
+        if ($neverUsedByThisUser->isNotEmpty()) {
+            return $neverUsedByThisUser->first();
+        }
+
+        $lastCredentialId = $usedCredentialIds[0] ?? null;
+        $notLastUsed = $availableCredentials
+            ->reject(fn (ProductCredential $credential) => (int) $credential->id === $lastCredentialId)
+            ->values();
+
+        return ($notLastUsed->isNotEmpty() ? $notLastUsed : $availableCredentials)->first();
+    }
+
+    protected function previousCredentialIdsForUserProduct(Transaction $transaction, $availableCredentials): array
+    {
+        $availableByFingerprint = $availableCredentials
+            ->mapWithKeys(fn (ProductCredential $credential) => [
+                $this->credentialFingerprint([
+                    'email' => $credential->data_1 !== '-' ? $credential->data_1 : null,
+                    'password' => $credential->data_2,
+                    'profile' => $credential->data_3,
+                    'pin' => $credential->data_4,
+                    'link' => $credential->data_5,
+                ]) => (int) $credential->id,
+            ])
+            ->all();
+
+        return Transaction::query()
+            ->where('user_id', $transaction->user_id)
+            ->where('product_id', $transaction->product_id)
+            ->where('id', '<>', $transaction->id)
+            ->where('order_status', 'success')
+            ->whereNotNull('credential_data')
+            ->latest()
+            ->limit(50)
+            ->get(['credential_data'])
+            ->map(function (Transaction $history) use ($availableByFingerprint) {
+                $credentialData = $history->credential_data ?? [];
+                $credentialId = data_get($credentialData, 'credential_id');
+
+                if (filled($credentialId)) {
+                    return (int) $credentialId;
+                }
+
+                return $availableByFingerprint[$this->credentialFingerprint($credentialData)] ?? null;
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    protected function credentialFingerprint(array $credentialData): string
+    {
+        return collect(['email', 'password', 'profile', 'pin', 'link'])
+            ->map(fn (string $key) => trim((string) ($credentialData[$key] ?? '')))
+            ->implode('|');
     }
 
     protected function handleManualOrder(Transaction $transaction): void

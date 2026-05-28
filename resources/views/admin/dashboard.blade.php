@@ -633,5 +633,47 @@
                 </div>
             </article>
         </section>
+
+        <section class="mt-6 sm:mt-8 overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
+            <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 sm:px-6 py-5 sm:py-6 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3] mb-1">Kontak Admin</p>
+                    <h3 class="text-xl sm:text-2xl font-black tracking-tight text-[#2b3a67]">Nomor WhatsApp Aktif</h3>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-[9px] font-black uppercase tracking-widest text-[#5a76c8] sm:text-[10px]">
+                    <span class="min-w-0 rounded-full border-2 border-white bg-[#f4f9ff] px-3 py-2 text-center shadow-sm sm:px-4">CS: {{ filled($adminCsWhatsapp ?? null) ? '+' . $adminCsWhatsapp : '-' }}</span>
+                    <span class="min-w-0 rounded-full border-2 border-white bg-[#f4f9ff] px-3 py-2 text-center shadow-sm sm:px-4">OTP: {{ filled($adminOtpWhatsapp ?? null) ? '+' . $adminOtpWhatsapp : '-' }}</span>
+                </div>
+            </div>
+
+            <form action="{{ route('admin.dashboard.contact-numbers.update') }}" method="POST" class="p-4 sm:p-6 md:p-8">
+                @csrf
+                <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <div class="rounded-[1.6rem] border-4 border-white bg-[#f8fbff] p-4 shadow-inner">
+                        <label for="admin_cs_whatsapp" class="mb-2 ml-2 block text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">Nomor Admin CS</label>
+                        <input id="admin_cs_whatsapp" type="text" name="admin_cs_whatsapp" value="{{ old('admin_cs_whatsapp', $adminCsWhatsapp ?? '') }}" placeholder="0895611244000" class="w-full rounded-[1.25rem] border-4 border-white bg-white px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]">
+                        <p class="mt-2 ml-2 text-[10px] font-bold text-[#8faaf3]">Dipakai untuk icon WhatsApp kanan bawah dan laporan bantuan.</p>
+                        @error('admin_cs_whatsapp')
+                            <p class="mt-2 ml-2 text-[10px] font-black text-[#ff6b6b]">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="rounded-[1.6rem] border-4 border-white bg-[#f8fbff] p-4 shadow-inner">
+                        <label for="admin_otp_whatsapp" class="mb-2 ml-2 block text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">Nomor Admin OTP</label>
+                        <input id="admin_otp_whatsapp" type="text" name="admin_otp_whatsapp" value="{{ old('admin_otp_whatsapp', $adminOtpWhatsapp ?? '') }}" placeholder="0895611244000" class="w-full rounded-[1.25rem] border-4 border-white bg-white px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]">
+                        <p class="mt-2 ml-2 text-[10px] font-bold text-[#8faaf3]">Dipakai khusus tombol minta OTP di detail pesanan user.</p>
+                        @error('admin_otp_whatsapp')
+                            <p class="mt-2 ml-2 text-[10px] font-black text-[#ff6b6b]">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="mt-5 flex justify-end">
+                    <button type="submit" class="inline-flex w-full items-center justify-center rounded-full border-4 border-white bg-[#5a76c8] px-7 py-3 text-sm font-black text-white shadow-lg shadow-[#5a76c8]/25 transition-transform active:scale-95 sm:w-auto">
+                        Simpan Nomor Admin
+                    </button>
+                </div>
+            </form>
+        </section>
     </div>
 @endsection

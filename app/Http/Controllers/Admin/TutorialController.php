@@ -39,6 +39,14 @@ class TutorialController extends Controller
             ->latest()
             ->get();
 
+        $tutorialMainOrder = [
+            'suntik sosmed' => 0,
+            'top up game' => 1,
+            'paket data' => 2,
+            'kuota murah' => 2,
+            'aplikasi premium' => 3,
+        ];
+
         $tutorialSections = $tutorials
             ->groupBy(fn (Tutorial $tutorial) => $tutorial->main_category ?: ($tutorial->category ?: 'Umum'))
             ->map(function ($mainTutorials, $mainCategory) {
@@ -65,6 +73,7 @@ class TutorialController extends Controller
                         ->values(),
                 ];
             })
+            ->sortBy(fn (array $section) => $tutorialMainOrder[strtolower((string) $section['name'])] ?? 99)
             ->values();
 
         return view('admin.tutorials.index', compact('tutorials', 'tutorialSections'));

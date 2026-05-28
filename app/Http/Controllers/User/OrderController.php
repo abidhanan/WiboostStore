@@ -35,31 +35,26 @@ class OrderController extends Controller
                     },
                 ])->orderBy('name');
             },
-            'products' => function ($query) {
-                $query->where('is_active', true)
-                    ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes())
-                    ->with('category.parent.parent.parent')
-                    ->orderBy('price', 'asc')
-                    ->orderBy('name', 'asc');
-            },
         ])->where('slug', $slug)->firstOrFail();
 
         if ($category->children->count() > 0) {
             return view('user.order_sub', compact('category'));
         }
 
-        $products = $category->products;
         $rootCategorySlug = $this->resolveRootCategorySlug($category);
+        $rootCategoryName = $this->resolveRootCategoryName($category);
+        $products = $this->loadCategoryProducts($category, $rootCategorySlug);
+        $this->cacheRootCategoryForProducts($products, $rootCategorySlug, $rootCategoryName);
         $isSuntikSosmedOrder = $rootCategorySlug === 'suntik-sosmed'
             && $products->contains(fn (Product $product) => $product->is_ordersosmed_service);
         $isTopUpGameOrder = $rootCategorySlug === 'top-up-game';
         $isCompactServiceCardOrder = in_array($rootCategorySlug, ['top-up-game', 'kuota-murah', 'paket-data', 'aplikasi-premium'], true);
 
-        if ($isSuntikSosmedOrder) {
-            $products = $this->sortSuntikSosmedProducts($products);
-            $category->setRelation('products', $products);
-            $this->attachSuccessfulAverageTimes($products);
+        if (! $isSuntikSosmedOrder) {
+            $products = $this->sortProductsByDisplayPrice($products);
         }
+
+        $category->setRelation('products', $products);
 
         return view('user.order', compact('category', 'products', 'rootCategorySlug', 'isSuntikSosmedOrder', 'isTopUpGameOrder', 'isCompactServiceCardOrder'));
     }
@@ -261,6 +256,27 @@ class OrderController extends Controller
         return redirect()->route('user.history', ['auto_open' => $transaction->id]);
     }
 
+    public function ordersosmedServiceMeta(Product $product)
+    {
+        abort_if(
+            ! $product->is_active || ! in_array($product->process_type, WiboostCatalog::activeProductProcessTypes(), true),
+            404
+        );
+
+        $product->loadMissing('category.parent.parent.parent');
+        abort_if(! $product->category, 404);
+
+        $rootCategorySlug = $this->resolveRootCategorySlug($product->category);
+        $rootCategoryName = $this->resolveRootCategoryName($product->category);
+
+        abort_if($rootCategorySlug !== 'suntik-sosmed' || ! $product->is_ordersosmed_service, 404);
+
+        $product->cachePrimaryCategory($rootCategorySlug, $rootCategoryName);
+        $this->attachSuccessfulAverageTime($product);
+
+        return response()->json($this->ordersosmedProductPayload($product));
+    }
+
     protected function resolveRootCategorySlug(Category $category): ?string
     {
         $category->loadMissing('parent.parent.parent');
@@ -272,7 +288,102 @@ class OrderController extends Controller
         return $category->slug;
     }
 
-    protected function attachSuccessfulAverageTimes($products): void
+    protected function resolveRootCategoryName(Category $category): ?string
+    {
+        $category->loadMissing('parent.parent.parent');
+
+        while ($category->parent) {
+            $category = $category->parent;
+        }
+
+        return $category->name;
+    }
+
+    protected function cacheRootCategoryForProducts($products, ?string $rootCategorySlug, ?string $rootCategoryName): void
+    {
+        $products->each(function (Product $product) use ($rootCategorySlug, $rootCategoryName) {
+            $product->cachePrimaryCategory($rootCategorySlug, $rootCategoryName);
+        });
+    }
+
+    protected function loadCategoryProducts(Category $category, ?string $rootCategorySlug = null)
+    {
+        $query = Product::query()
+            ->select('products.*')
+            ->where('category_id', $category->id)
+            ->where('is_active', true)
+            ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes());
+
+        if ($rootCategorySlug === 'aplikasi-premium') {
+            $query->selectSub(function ($stockQuery) {
+                $stockQuery->from('product_credentials')
+                    ->selectRaw('COALESCE(SUM(max_usage - current_usage), 0)')
+                    ->whereColumn('product_credentials.product_id', 'products.id')
+                    ->where('is_active', true);
+            }, 'available_stock_cache');
+        }
+
+        if ($rootCategorySlug !== 'suntik-sosmed') {
+            $query->with('category.parent.parent.parent');
+        }
+
+        if ($rootCategorySlug === 'suntik-sosmed') {
+            $query->orderByRaw('CASE WHEN COALESCE(provider_quantity, 0) > 0 THEN price / provider_quantity ELSE price END ASC');
+        } else {
+            $query->orderBy('price', 'asc');
+        }
+
+        return $query->orderBy('name', 'asc')->get();
+    }
+
+    protected function ordersosmedProductPayload(Product $product): array
+    {
+        $plainDescription = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $product->description)));
+
+        return [
+            'id' => $product->id,
+            'name' => $product->name,
+            'description' => $plainDescription !== '' ? $plainDescription : '-',
+            'min' => (int) $product->ordersosmed_min_quantity,
+            'max' => (int) $product->ordersosmed_max_quantity,
+            'unit_price' => (float) $product->ordersosmed_unit_price,
+            'price_per_1000' => (float) $product->ordersosmed_price_per_thousand,
+            'original_unit_price' => (float) $product->original_ordersosmed_unit_price,
+            'original_price_per_1000' => (float) $product->original_ordersosmed_price_per_thousand,
+            'discount_label' => $product->active_discount_label,
+            'average_time' => $product->ordersosmed_average_time,
+        ];
+    }
+
+    protected function attachSuccessfulAverageTime(Product $product): void
+    {
+        $cacheKey = 'ordersosmed_success_average_time:product:' . $product->id . ':v2';
+
+        $average = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($product) {
+            $row = Transaction::query()
+                ->selectRaw('COUNT(*) as success_order_count')
+                ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, created_at, updated_at)) as average_seconds')
+                ->where('product_id', $product->id)
+                ->where('order_status', 'success')
+                ->whereNotNull('created_at')
+                ->whereNotNull('updated_at')
+                ->whereColumn('updated_at', '>=', 'created_at')
+                ->first();
+
+            return [
+                'success_order_count' => (int) ($row->success_order_count ?? 0),
+                'average_seconds' => $row && $row->average_seconds !== null ? (float) $row->average_seconds : null,
+            ];
+        });
+
+        $product->setAttribute(
+            'ordersosmed_success_average_seconds_cache',
+            is_numeric($average['average_seconds'] ?? null) ? (int) round((float) $average['average_seconds']) : null
+        );
+        $product->setAttribute('ordersosmed_success_order_count_cache', (int) ($average['success_order_count'] ?? 0));
+    }
+
+    protected function attachSuccessfulAverageTimes(Category $category, $products): void
     {
         $productIds = $products->pluck('id')->filter()->values();
 
@@ -280,31 +391,33 @@ class OrderController extends Controller
             return;
         }
 
-        $durations = Transaction::query()
-            ->whereIn('product_id', $productIds)
-            ->where('order_status', 'success')
-            ->whereNotNull('created_at')
-            ->whereNotNull('updated_at')
-            ->get(['product_id', 'created_at', 'updated_at'])
-            ->map(function (Transaction $transaction) {
-                if (! $transaction->created_at || ! $transaction->updated_at || $transaction->updated_at->lessThan($transaction->created_at)) {
-                    return null;
-                }
+        $cacheKey = 'ordersosmed_success_average_times:category:' . $category->id . ':v2';
 
-                return [
-                    'product_id' => $transaction->product_id,
-                    'seconds' => $transaction->created_at->diffInSeconds($transaction->updated_at),
-                ];
-            })
-            ->filter()
-            ->groupBy('product_id');
+        $averages = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($productIds) {
+            return Transaction::query()
+                ->select('product_id')
+                ->selectRaw('COUNT(*) as success_order_count')
+                ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, created_at, updated_at)) as average_seconds')
+                ->whereIn('product_id', $productIds)
+                ->where('order_status', 'success')
+                ->whereNotNull('created_at')
+                ->whereNotNull('updated_at')
+                ->whereColumn('updated_at', '>=', 'created_at')
+                ->groupBy('product_id')
+                ->get()
+                ->keyBy('product_id')
+                ->map(fn ($average) => [
+                    'success_order_count' => (int) $average->success_order_count,
+                    'average_seconds' => (float) $average->average_seconds,
+                ])
+                ->all();
+        });
 
-        $products->each(function (Product $product) use ($durations) {
-            $productDurations = $durations->get($product->id, collect());
-            $seconds = $productDurations->pluck('seconds');
+        $products->each(function (Product $product) use ($averages) {
+            $average = $averages[$product->id] ?? null;
 
-            $product->setAttribute('ordersosmed_success_average_seconds_cache', $seconds->isNotEmpty() ? (int) round($seconds->avg()) : null);
-            $product->setAttribute('ordersosmed_success_order_count_cache', $seconds->count());
+            $product->setAttribute('ordersosmed_success_average_seconds_cache', $average ? (int) round((float) $average['average_seconds']) : null);
+            $product->setAttribute('ordersosmed_success_order_count_cache', $average ? (int) $average['success_order_count'] : 0);
         });
     }
 
@@ -360,6 +473,22 @@ class OrderController extends Controller
             ->sort(function (Product $left, Product $right) {
                 $leftPrice = (float) $left->ordersosmed_price_per_thousand;
                 $rightPrice = (float) $right->ordersosmed_price_per_thousand;
+
+                if ($leftPrice === $rightPrice) {
+                    return strnatcasecmp($left->name, $right->name);
+                }
+
+                return $leftPrice <=> $rightPrice;
+            })
+            ->values();
+    }
+
+    protected function sortProductsByDisplayPrice($products)
+    {
+        return $products
+            ->sort(function (Product $left, Product $right) {
+                $leftPrice = (float) $left->selling_price;
+                $rightPrice = (float) $right->selling_price;
 
                 if ($leftPrice === $rightPrice) {
                     return strnatcasecmp($left->name, $right->name);

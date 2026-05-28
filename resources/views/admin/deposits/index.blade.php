@@ -11,6 +11,7 @@
     .table-scroll::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; border: 2px solid #f0f5ff; }
     .table-scroll::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
     .admin-detail-modal {
+        display: none;
         background: rgba(43, 58, 103, .58) !important;
         -webkit-backdrop-filter: blur(8px);
         backdrop-filter: blur(8px);
@@ -37,7 +38,7 @@
             padding-right: 2rem;
         }
     }
-    .admin-detail-modal.modal-active { opacity: 1 !important; pointer-events: auto !important; }
+    .admin-detail-modal.modal-active { display: flex; opacity: 1 !important; pointer-events: auto !important; }
     .admin-detail-modal.modal-active .admin-detail-card { transform: scale(1) !important; }
     .admin-detail-card {
         border-radius: 1.75rem !important;
@@ -45,7 +46,7 @@
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        width: min(100%, 42rem);
+        width: min(100%, 44rem);
         max-height: calc(100dvh - 9rem) !important;
         overflow-wrap: anywhere;
         word-break: break-word;
@@ -115,6 +116,32 @@
     }
     .admin-detail-close {
         box-shadow: 0 10px 22px rgba(255, 107, 107, .14), inset 0 1px 0 rgba(255,255,255,.85);
+    }
+
+    @media (max-width: 767px) {
+        .admin-detail-modal {
+            top: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            height: auto !important;
+            align-items: flex-start !important;
+            justify-content: center !important;
+            padding: 8.5rem .9rem 1rem !important;
+            background: rgba(43, 58, 103, .64) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+            backdrop-filter: blur(8px) !important;
+        }
+
+        .admin-detail-card {
+            width: min(100%, 36rem) !important;
+            max-height: calc(100dvh - 9.5rem) !important;
+        }
+
+        .admin-detail-body {
+            padding-right: .45rem;
+            scrollbar-gutter: stable;
+        }
     }
     
     .animate-float { animation: float 6s ease-in-out infinite; }
@@ -292,7 +319,7 @@
             @endphp
             <div id="admin-deposit-detail-{{ $deposit->id }}" class="admin-detail-modal fixed inset-0 z-[9999] flex items-center justify-center opacity-0 pointer-events-none transition-all duration-200">
                 <div class="absolute inset-0" onclick="closeAdminDepositDetail('admin-deposit-detail-{{ $deposit->id }}')"></div>
-                <div class="admin-detail-card relative flex w-full max-w-xl max-h-[calc(100dvh-8.25rem)] flex-col rounded-[1.75rem] border-4 border-white bg-white p-4 shadow-2xl shadow-[#2b3a67]/20 transform scale-95 transition-transform duration-200 sm:p-5">
+                <div class="admin-detail-card relative flex w-full max-w-2xl max-h-[calc(100dvh-8.25rem)] flex-col rounded-[1.75rem] border-4 border-white bg-white p-4 shadow-2xl shadow-[#2b3a67]/20 transform scale-95 transition-transform duration-200 sm:p-5">
                     <div class="admin-detail-header mb-3.5 flex items-start justify-between gap-3 p-3.5">
                         <div>
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Detail Deposit</p>
@@ -348,14 +375,14 @@
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.add('modal-active');
-        document.body.classList.add('overflow-hidden');
+        document.body.classList.add('overflow-hidden', 'admin-detail-open');
     }
 
     function closeAdminDepositDetail(id) {
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.remove('modal-active');
-        document.body.classList.remove('overflow-hidden');
+        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
     }
 
     document.addEventListener('keydown', (event) => {
@@ -363,7 +390,7 @@
         document.querySelectorAll('.admin-detail-modal.modal-active').forEach((modal) => {
             modal.classList.remove('modal-active');
         });
-        document.body.classList.remove('overflow-hidden');
+        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
     });
 </script>
 @endsection

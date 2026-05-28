@@ -48,7 +48,7 @@
         width: 9.75rem;
         transform: rotate(45deg);
         transform-origin: center;
-        background: #22c55e;
+        background: #5a76c8;
         padding: 0.42rem 0;
         text-align: center;
         font-size: 0.5rem;
@@ -56,7 +56,7 @@
         letter-spacing: 0.14em;
         color: white;
         text-transform: uppercase;
-        box-shadow: 0 12px 26px rgba(34, 197, 94, 0.28);
+        box-shadow: 0 12px 26px rgba(90, 118, 200, 0.28);
     }
     .promo-banner-shell {
         width: 100%;
@@ -78,6 +78,40 @@
     .promo-slide p {
         font-size: clamp(0.85rem, 1vw, 1rem) !important;
         line-height: 1.45 !important;
+    }
+    .promo-slider-dots {
+        display: flex;
+        justify-content: center;
+        gap: 0.65rem;
+        margin: 0.65rem 0 2.5rem;
+        padding: 0;
+        pointer-events: auto;
+    }
+    .promo-slider-dot {
+        width: 0.95rem;
+        height: 0.95rem;
+        border-radius: 9999px;
+        border: 2px solid #ffffff;
+        background: #cfe8ff;
+        box-shadow: 0 0.45rem 1.25rem rgba(43, 58, 103, 0.24);
+        opacity: 0.65;
+        transition: background-color 0.15s ease, opacity 0.15s ease, transform 0.15s ease, width 0.15s ease;
+    }
+    .promo-slider-dot.is-active {
+        width: 3rem;
+        background: #5a76c8;
+        opacity: 1;
+        transform: translateY(-1px);
+    }
+    .wiboost-square-logo-img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+    .wiboost-logo-frame {
+        aspect-ratio: 1 / 1;
     }
     @media (max-width: 640px) {
         .promo-banner-shell {
@@ -138,7 +172,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">
         <div class="bg-white p-6 rounded-[2rem] border-4 border-white shadow-xl shadow-[#bde0fe]/40 flex items-center gap-5 hover:-translate-y-1 transition duration-300">
             <div class="w-14 h-14 bg-[#f4f9ff] rounded-2xl flex items-center justify-center text-[#5a76c8] border-2 border-white shadow-inner shrink-0 text-2xl">
-                🛍️
+                🛒
             </div>
             <div>
                 <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Pesanan Bulan Ini</p>
@@ -157,7 +191,8 @@
         </div>
     </div>
 
-    <div class="promo-banner-shell mb-10 relative rounded-[2.5rem] overflow-hidden shadow-xl shadow-[#bde0fe]/30 border-4 border-white group bg-white">
+    <!-- WIBOOST_PATCH_PROMO_DOTS_VISIBLE_20260522 -->
+    <div class="promo-banner-shell relative rounded-[2.5rem] overflow-hidden shadow-xl shadow-[#bde0fe]/30 border-4 border-white group bg-white" data-wiboost-build="promo-slider-force-dot-20260522">
         <div id="promo-slider" class="flex overflow-x-auto snap-x snap-mandatory hide-scroll scroll-smooth">
             @forelse($promos as $promo)
                 @php
@@ -218,17 +253,29 @@
                 </div>
             @endforelse
         </div>
-
     </div>
+
+    @if($promos->count() > 0)
+        <div class="promo-slider-dots" aria-label="Navigasi banner promo">
+            @foreach($promos as $promo)
+                <button
+                    type="button"
+                    class="promo-slider-dot {{ $loop->first ? 'is-active' : '' }}"
+                    data-promo-dot="{{ $loop->index }}"
+                    aria-label="Buka banner {{ $loop->iteration }}"
+                ></button>
+            @endforeach
+        </div>
+    @endif
 
     <div class="text-center md:text-left mb-8 pl-2">
         <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">Katalog Utama</div>
         <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pilih Kategori</h2>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 mb-14">
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 md:gap-6 mb-14">
         @forelse($categories as $category)
-            <a href="{{ route('user.order.category', $category->slug) }}" class="group relative overflow-hidden bg-white p-6 md:p-8 rounded-[2rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 transition-all text-center flex flex-col items-center justify-center">
+            <a href="{{ route('user.order.category', $category->slug) }}" class="group relative aspect-square overflow-hidden bg-white p-6 md:p-8 rounded-[2rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 transition-all text-center flex flex-col items-center justify-center">
                 @if($categoryDiscountLabel)
                     <span class="discount-corner-ribbon">
                         <span class="discount-corner-ribbon__text">
@@ -236,9 +283,9 @@
                         </span>
                     </span>
                 @endif
-                <div class="w-16 h-16 bg-[#f4f9ff] rounded-2xl border-2 border-white shadow-inner flex items-center justify-center text-[#5a76c8] mb-4 group-hover:scale-110 transition-transform duration-300">
+                <div class="wiboost-logo-frame h-24 w-24 shrink-0 bg-[#f4f9ff] rounded-[1.5rem] border-4 border-white shadow-inner flex items-center justify-center text-[#5a76c8] mb-5 group-hover:scale-110 transition-transform duration-300 overflow-hidden ring-1 ring-[#bde0fe]/60">
                     @if($category->image)
-                        <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="h-full w-full object-contain drop-shadow-sm">
+                        <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="wiboost-square-logo-img drop-shadow-sm">
                     @else
                     <span class="text-4xl drop-shadow-sm">{{ $category->emote ?? '🛒' }}</span>
                     @endif
@@ -272,10 +319,10 @@
                     @if(collect($group['subcategories'] ?? [])->isNotEmpty())
                         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 mb-8">
                             @foreach($group['subcategories'] as $sub)
-                                <a href="{{ route('user.tutorials.category', ['main' => $group['name'], 'sub' => $sub['name']]) }}" class="tutorial-sub-filter group flex flex-col items-center justify-center rounded-[2rem] border-4 border-white bg-white p-6 text-center shadow-xl shadow-[#bde0fe]/30 transition-all hover:-translate-y-2 hover:border-[#bde0fe] active:scale-95 md:p-8">
-                                    <span class="mb-4 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border-2 border-white bg-[#f4f9ff] shadow-inner transition-transform duration-300 group-hover:scale-110">
+                                <a href="{{ route('user.tutorials.category', ['main' => $group['name'], 'sub' => $sub['name']]) }}" class="tutorial-sub-filter group flex aspect-square flex-col items-center justify-center rounded-[2rem] border-4 border-white bg-white p-6 text-center shadow-xl shadow-[#bde0fe]/30 transition-all hover:-translate-y-2 hover:border-[#bde0fe] active:scale-95 md:p-8">
+                                    <span class="wiboost-logo-frame mb-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] shadow-inner ring-1 ring-[#bde0fe]/60 transition-transform duration-300 group-hover:scale-110">
                                         @if($sub['image'])
-                                            <img src="{{ Storage::url($sub['image']) }}" alt="{{ $sub['name'] }}" class="h-full w-full object-contain p-2">
+                                            <img src="{{ Storage::url($sub['image']) }}" alt="{{ $sub['name'] }}" class="wiboost-square-logo-img">
                                         @else
                                             <span class="text-2xl font-black text-[#5a76c8]">{{ Str::upper(Str::substr($sub['name'], 0, 1)) }}</span>
                                         @endif
@@ -411,22 +458,93 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const slider = document.getElementById('promo-slider');
-        if (slider && slider.children.length > 1) {
-            let autoSlide = setInterval(() => slidePromo(1), 5000);
+        if (slider) {
+            const slides = Array.from(slider.children);
+            const dots = Array.from(document.querySelectorAll('[data-promo-dot]'));
+            let activeIndex = 0;
+            let rafId = null;
+
+            if (slides.length <= 1) {
+                dots[0]?.classList.add('is-active');
+                return;
+            }
+
+            const updateDots = (index) => {
+                dots.forEach((dot, dotIndex) => {
+                    dot.classList.toggle('is-active', dotIndex === index);
+                });
+            };
+
+            const updateDotProgress = () => {
+                const slideWidth = Math.max(1, slider.clientWidth);
+                const progress = slider.scrollLeft / slideWidth;
+                const nearestIndex = Math.max(0, Math.min(slides.length - 1, Math.round(progress)));
+
+                activeIndex = nearestIndex;
+                dots.forEach((dot, dotIndex) => {
+                    const distance = Math.min(1, Math.abs(progress - dotIndex));
+                    const strength = 1 - distance;
+                    const width = 0.95 + (2.05 * strength);
+
+                    dot.classList.toggle('is-active', dotIndex === nearestIndex);
+                    dot.style.width = `${width}rem`;
+                    dot.style.opacity = String(0.65 + (0.35 * strength));
+                    dot.style.transform = `translateY(${-1 * strength}px) scale(${1 + (0.08 * strength)})`;
+                });
+            };
+
+            const slideToIndex = (index, behavior = 'smooth') => {
+                activeIndex = (index + slides.length) % slides.length;
+                slider.scrollTo({ left: slider.clientWidth * activeIndex, behavior });
+                updateDots(activeIndex);
+                updateDotProgress();
+            };
+
+            const syncDotsFromScroll = () => {
+                const nextIndex = Math.max(
+                    0,
+                    Math.min(slides.length - 1, Math.round(slider.scrollLeft / Math.max(1, slider.clientWidth)))
+                );
+
+                activeIndex = nextIndex;
+                updateDotProgress();
+            };
+
+            const restartAutoSlide = () => {
+                clearInterval(autoSlide);
+                autoSlide = setInterval(() => slideToIndex(activeIndex + 1), 5000);
+            };
+
+            let autoSlide = setInterval(() => slideToIndex(activeIndex + 1), 5000);
 
             window.slidePromo = function (direction) {
-                const scrollAmount = slider.clientWidth;
-                slider.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
+                slideToIndex(activeIndex + direction);
+                restartAutoSlide();
+            };
 
-                if (direction === 1 && slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 10) {
-                    slider.scrollTo({ left: 0, behavior: 'smooth' });
-                } else if (direction === -1 && slider.scrollLeft <= 10) {
-                    slider.scrollTo({ left: slider.scrollWidth, behavior: 'smooth' });
+            dots.forEach((dot) => {
+                dot.addEventListener('click', () => {
+                    slideToIndex(Number(dot.dataset.promoDot || 0));
+                    restartAutoSlide();
+                });
+            });
+
+            slider.addEventListener('scroll', () => {
+                if (rafId) {
+                    return;
                 }
 
-                clearInterval(autoSlide);
-                autoSlide = setInterval(() => slidePromo(1), 5000);
-            };
+                rafId = window.requestAnimationFrame(() => {
+                    rafId = null;
+                    updateDotProgress();
+                });
+            }, { passive: true });
+
+            slider.addEventListener('scrollend', syncDotsFromScroll);
+            slider.addEventListener('pointerdown', () => clearInterval(autoSlide), { passive: true });
+            slider.addEventListener('pointerup', restartAutoSlide, { passive: true });
+            slider.addEventListener('touchstart', () => clearInterval(autoSlide), { passive: true });
+            slider.addEventListener('touchend', restartAutoSlide, { passive: true });
         }
     });
 

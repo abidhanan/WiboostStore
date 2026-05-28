@@ -113,7 +113,7 @@
                     @if($trx->has_order_input && filled($trx->order_input_summary))
                         <div class="mt-3 max-w-[92%] overflow-hidden rounded-xl border border-white bg-[#f8faff] px-4 py-2 shadow-inner sm:inline-block sm:max-w-full">
                             <p class="min-w-0 truncate text-xs font-bold text-[#8faaf3]">
-                                <span class="font-black">Input:</span> {{ $trx->order_input_summary }}
+                                {{ $trx->order_input_summary }}
                             </p>
                         </div>
                     @endif
@@ -182,6 +182,7 @@
                                                 @php
                                                     $otpLines = [
                                                         'Halo Admin Wiboost, saya ingin meminta bantuan OTP untuk pesanan saya.',
+                                                        '',
                                                         'Invoice: ' . $trx->invoice_number,
                                                         'Produk: ' . ($trx->product->name ?? 'Produk Dihapus'),
                                                         'Total Bayar: Rp ' . number_format((float) $trx->amount, 0, ',', '.'),
@@ -189,23 +190,16 @@
                                                         'Waktu Transaksi: ' . $trx->created_at->format('d M Y, H:i'),
                                                         'Nama Pembeli: ' . (auth()->user()->name ?? '-'),
                                                         'Email Pembeli: ' . (auth()->user()->email ?? '-'),
+                                                        'Email Akun: ' . ($credentials['email'] ?? ''),
+                                                        'Password Akun: ' . ($credentials['password'] ?? ''),
+                                                        '',
+                                                        'Mohon dibantu kirim OTP login untuk pesanan ini.',
                                                     ];
 
-                                                    foreach (['email' => 'Email Akun', 'profile' => 'Profil', 'pin' => 'PIN', 'link' => 'Link Akses'] as $otpKey => $otpLabel) {
-                                                        if (! empty($credentials[$otpKey])) {
-                                                            $otpLines[] = $otpLabel . ': ' . $credentials[$otpKey];
-                                                        }
-                                                    }
-
-                                                    if ($trx->order_input_text) {
-                                                        $otpLines[] = "Input Pembeli:\n" . $trx->order_input_text;
-                                                    }
-
-                                                    $otpLines[] = 'Mohon dibantu kirim OTP/login untuk pesanan ini.';
-                                                    $otpUrl = \App\Support\WiboostAdminContact::whatsappUrl(implode("\n", array_filter($otpLines)));
+                                                    $otpUrl = \App\Support\WiboostAdminContact::otpWhatsappUrl(implode("\n", $otpLines));
                                                 @endphp
                                                 <div class="bg-white p-5 rounded-[1.5rem] border-4 border-amber-100 flex flex-col gap-2 shadow-sm text-center">
-                                                    <p class="text-[10px] font-black text-amber-600 leading-relaxed uppercase tracking-widest">⚠️ Pesanan ini butuh bantuan login admin. Cek tutorial atau minta OTP ke admin.</p>
+                                                    <p class="text-[10px] font-black text-amber-600 leading-relaxed uppercase tracking-widest">Silahkan cek tutorial untuk login atau minta bantuan OTP ke admin.</p>
                                                     @if($otpUrl)
                                                         <a href="{{ $otpUrl }}" target="_blank" rel="noopener" class="mt-2 inline-flex w-full items-center justify-center rounded-full border-4 border-white bg-[#25D366] px-4 py-3 text-xs font-black text-white shadow-lg shadow-[#25D366]/20 transition active:scale-95">
                                                             Minta OTP via WhatsApp
@@ -255,7 +249,7 @@
                                     {{ $methodDisplay }}
                                 </span>
                             </div>
-                            <div class="bg-[#f8faff] p-5 rounded-[1.5rem] border-4 border-white shadow-sm flex flex-col justify-center text-right">
+                            <div class="bg-[#f8faff] p-5 rounded-[1.5rem] border-4 border-white shadow-sm flex flex-col justify-center text-left">
                                 <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mb-2">Total Bayar</p>
                                 <p class="font-black text-[#4bc6b9] text-xl leading-tight truncate drop-shadow-sm">Rp {{ number_format($trx->amount, 0, ',', '.') }}</p>
                             </div>
@@ -272,7 +266,6 @@
                                 <div class="space-y-3">
                                     @foreach($trx->order_input_fields as $inputField)
                                         <div class="bg-white p-4 rounded-[1.2rem] border-2 border-[#f0f5ff] shadow-inner">
-                                            <p class="text-[9px] font-black uppercase tracking-widest text-[#8faaf3] mb-1">{{ $inputField['label'] }}</p>
                                             <p class="font-black text-[#2b3a67] text-sm break-all">{{ $inputField['value'] }}</p>
                                         </div>
                                     @endforeach

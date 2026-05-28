@@ -10,6 +10,16 @@
     .tutorial-accordion > summary::-webkit-details-marker { display: none; }
     .tutorial-accordion[open] summary .faq-icon { transform: rotate(180deg); }
     .faq-icon { transition: transform 0.25s ease-in-out; }
+    .wiboost-square-logo-img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+    .wiboost-logo-frame {
+        aspect-ratio: 1 / 1;
+    }
 </style>
 
 <div class="wiboost-font pb-24 w-full mx-auto mt-4 relative z-10">
@@ -19,9 +29,9 @@
                 <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
             </a>
 
-            <div class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-2 border-white bg-[#f4f9ff] p-2 text-[#5a76c8] shadow-inner">
+            <div class="wiboost-logo-frame flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-inner ring-1 ring-[#bde0fe]/60">
                 @if($subCategoryImage)
-                    <img src="{{ Storage::url($subCategoryImage) }}" alt="{{ $subCategory }}" class="h-full w-full object-contain drop-shadow-sm">
+                    <img src="{{ Storage::url($subCategoryImage) }}" alt="{{ $subCategory }}" class="wiboost-square-logo-img drop-shadow-sm">
                 @else
                     <span class="text-4xl font-black drop-shadow-sm">{{ Str::upper(Str::substr($subCategory, 0, 1)) }}</span>
                 @endif

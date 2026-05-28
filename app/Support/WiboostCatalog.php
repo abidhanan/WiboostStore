@@ -258,10 +258,10 @@ class WiboostCatalog
             'aplikasi-premium' => [
                 self::checkoutField(
                     'app_email',
-                    'Email khusus aplikasi',
+                    'Email',
                     'email',
                     'Contoh: emailkhusus@gmail.com',
-                    'Masukkan email khusus aplikasi yang akan dipakai untuk akun premium ini.',
+                    'Masukkan email yang akan dipakai untuk akun premium ini.',
                     ['required', 'string', 'email', 'max:255'],
                     targetSummary: true
                 ),

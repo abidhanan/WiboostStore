@@ -16,6 +16,7 @@ class ProductCredential extends Model
         'data_3',
         'data_4',
         'data_5',
+        'notes',
         'tutorial_link',
         'needs_otp',
         'max_usage',

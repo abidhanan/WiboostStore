@@ -15,11 +15,39 @@ class Product extends Model
         'digiflazz' => 0.05,
     ];
 
-    protected const DIGIFLAZZ_CATEGORY_MARKUP_RATES = [
+    protected const API_CATEGORY_MARKUP_RATES = [
+        'suntik-sosmed' => 0.50,
         'top-up-game' => 0.05,
         'kuota-murah' => 0.10,
         'paket-data' => 0.10,
     ];
+
+    protected const API_PROVIDER_SOURCES = [
+        'ordersosmed',
+        'digiflazz',
+    ];
+
+    protected bool $resolvedPrimaryCategorySlugLoaded = false;
+
+    protected ?string $resolvedPrimaryCategorySlugCache = null;
+
+    protected bool $resolvedPrimaryCategoryNameLoaded = false;
+
+    protected ?string $resolvedPrimaryCategoryNameCache = null;
+
+    protected bool $apiSellingMarkupRateLoaded = false;
+
+    protected float $apiSellingMarkupRateCache = 0.0;
+
+    protected bool $checkoutFieldsLoaded = false;
+
+    protected array $checkoutFieldsCache = [];
+
+    protected bool $topUpGameKeyLoaded = false;
+
+    protected ?string $topUpGameKeyCache = null;
+
+    protected ?string $topUpGameSearchTextCache = null;
 
     protected $fillable = [
         'category_id',
@@ -80,6 +108,10 @@ class Product extends Model
     public function getAvailableStockAttribute()
     {
         if ($this->process_type !== 'account') return null;
+
+        if (array_key_exists('available_stock_cache', $this->attributes)) {
+            return max(0, (int) $this->attributes['available_stock_cache']);
+        }
         
         return $this->credentials()->where('is_active', true)->get()->sum(function($cred) {
             return $cred->max_usage - $cred->current_usage;
@@ -93,14 +125,18 @@ class Product extends Model
 
     public function getCheckoutFieldsAttribute(): array
     {
+        if ($this->checkoutFieldsLoaded) {
+            return $this->checkoutFieldsCache;
+        }
+
         $topCategorySlug = $this->resolvePrimaryCategorySlug();
 
         if ($topCategorySlug === 'aplikasi-premium' && ! $this->requires_buyer_email) {
-            return [];
+            return $this->rememberCheckoutFields([]);
         }
 
         if ($topCategorySlug === 'top-up-game') {
-            return $this->checkoutFieldsForTopUpGameProduct();
+            return $this->rememberCheckoutFields($this->checkoutFieldsForTopUpGameProduct());
         }
 
         $checkoutFields = WiboostCatalog::checkoutFieldsForTopCategory($topCategorySlug);
@@ -122,11 +158,11 @@ class Product extends Model
         }
 
         if ($checkoutFields !== []) {
-            return $checkoutFields;
+            return $this->rememberCheckoutFields($checkoutFields);
         }
 
         if (! empty($this->target_label) || ! empty($this->target_placeholder) || ! empty($this->target_hint)) {
-            return [[
+            return $this->rememberCheckoutFields([[
                 'name' => 'target_data',
                 'label' => $this->target_label ?: 'Target pesanan',
                 'type' => 'text',
@@ -134,10 +170,10 @@ class Product extends Model
                 'hint' => $this->target_hint,
                 'rules' => ['required', 'string', 'min:3', 'max:255'],
                 'target_summary' => true,
-            ]];
+            ]]);
         }
 
-        return match ($this->process_type) {
+        return $this->rememberCheckoutFields(match ($this->process_type) {
             'api' => [[
                 'name' => 'target_data',
                 'label' => $this->provider_source === 'digiflazz'
@@ -154,11 +190,23 @@ class Product extends Model
                 'target_summary' => true,
             ]],
             default => [],
-        };
+        });
+    }
+
+    protected function rememberCheckoutFields(array $fields): array
+    {
+        $this->checkoutFieldsLoaded = true;
+        $this->checkoutFieldsCache = $fields;
+
+        return $this->checkoutFieldsCache;
     }
 
     protected function resolvePrimaryCategorySlug(): ?string
     {
+        if ($this->resolvedPrimaryCategorySlugLoaded) {
+            return $this->resolvedPrimaryCategorySlugCache;
+        }
+
         if (! $this->relationLoaded('category')) {
             $this->loadMissing('category.parent.parent');
         } else {
@@ -168,6 +216,9 @@ class Product extends Model
         $category = $this->category;
 
         if (! $category) {
+            $this->resolvedPrimaryCategorySlugLoaded = true;
+            $this->resolvedPrimaryCategorySlugCache = null;
+
             return null;
         }
 
@@ -175,7 +226,23 @@ class Product extends Model
             $category = $category->parent;
         }
 
-        return $category->slug;
+        $this->resolvedPrimaryCategorySlugLoaded = true;
+        $this->resolvedPrimaryCategorySlugCache = $category->slug;
+        $this->resolvedPrimaryCategoryNameLoaded = true;
+        $this->resolvedPrimaryCategoryNameCache = $category->name;
+
+        return $this->resolvedPrimaryCategorySlugCache;
+    }
+
+    protected function resolvePrimaryCategoryName(): ?string
+    {
+        if ($this->resolvedPrimaryCategoryNameLoaded) {
+            return $this->resolvedPrimaryCategoryNameCache;
+        }
+
+        $this->resolvePrimaryCategorySlug();
+
+        return $this->resolvedPrimaryCategoryNameCache;
     }
 
     protected function resolveCategoryTargetMeta(): ?array
@@ -300,9 +367,14 @@ class Product extends Model
 
     protected function resolveTopUpGameKey(): ?string
     {
+        if ($this->topUpGameKeyLoaded) {
+            return $this->topUpGameKeyCache;
+        }
+
         $text = $this->normalizedTopUpGameSearchText();
 
-        return match (true) {
+        $this->topUpGameKeyLoaded = true;
+        $this->topUpGameKeyCache = match (true) {
             $this->containsAny($text, ['mobile legends', 'mobile legend', 'mobilelegend', 'mlbb', 'game mobile legends']) => 'mobile-legends',
             $this->containsAny($text, ['free fire max', 'freefire max', 'ff max', 'game free fire max']) => 'free-fire-max',
             $this->containsAny($text, ['free fire', 'freefire', 'ff', 'game free fire']) => 'free-fire',
@@ -317,10 +389,16 @@ class Product extends Model
             $this->containsAny($text, ['league of legends pc', 'league of legend pc', 'lol pc', 'league pc', 'riot points', 'riot point', 'riot cash']) => 'lol-pc',
             default => null,
         };
+
+        return $this->topUpGameKeyCache;
     }
 
     protected function normalizedTopUpGameSearchText(): string
     {
+        if ($this->topUpGameSearchTextCache !== null) {
+            return $this->topUpGameSearchTextCache;
+        }
+
         $segments = [
             $this->name,
             $this->slug,
@@ -340,7 +418,9 @@ class Product extends Model
         $text = Str::lower(implode(' ', array_filter($segments)));
         $text = preg_replace('/[^a-z0-9#]+/i', ' ', $text) ?: '';
 
-        return ' ' . trim($text) . ' ';
+        $this->topUpGameSearchTextCache = ' ' . trim($text) . ' ';
+
+        return $this->topUpGameSearchTextCache;
     }
 
     protected function containsAny(string $text, array $keywords): bool
@@ -426,19 +506,85 @@ class Product extends Model
 
     public function getApiSellingMarkupRateAttribute(): float
     {
-        if ($this->process_type !== 'api') {
-            return 0.0;
+        if ($this->apiSellingMarkupRateLoaded) {
+            return $this->apiSellingMarkupRateCache;
         }
 
-        $provider = $this->provider_source ?: $this->provider_id;
+        $provider = Str::lower((string) ($this->provider_source ?: $this->provider_id));
+        $isKnownApiProvider = in_array($provider, static::API_PROVIDER_SOURCES, true);
 
-        if ($provider === 'digiflazz') {
-            $topCategorySlug = $this->resolvePrimaryCategorySlug();
+        if ($this->process_type !== 'api' && ! $isKnownApiProvider) {
+            $this->apiSellingMarkupRateLoaded = true;
+            $this->apiSellingMarkupRateCache = 0.0;
 
-            return static::DIGIFLAZZ_CATEGORY_MARKUP_RATES[$topCategorySlug] ?? static::API_SELLING_PRICE_MARKUP_RATES[$provider];
+            return $this->apiSellingMarkupRateCache;
         }
+
+        $this->apiSellingMarkupRateLoaded = true;
+        $this->apiSellingMarkupRateCache = static::apiSellingMarkupRateFor(
+            $this->resolvePrimaryCategorySlug(),
+            $provider,
+            $this->resolveApiMarkupCategoryText()
+        );
+
+        return $this->apiSellingMarkupRateCache;
+    }
+
+    public static function apiSellingMarkupRateFor(?string $topCategorySlug, ?string $provider = null, ?string $categoryText = null): float
+    {
+        $slug = Str::slug((string) $topCategorySlug);
+
+        if ($slug !== '' && isset(static::API_CATEGORY_MARKUP_RATES[$slug])) {
+            return static::API_CATEGORY_MARKUP_RATES[$slug];
+        }
+
+        $text = Str::lower(trim(str_replace(['-', '_'], ' ', implode(' ', array_filter([
+            $slug,
+            $categoryText,
+        ])))));
+
+        if ($text !== '') {
+            if (str_contains($text, 'suntik sosmed')) {
+                return 0.50;
+            }
+
+            if (str_contains($text, 'top up game')) {
+                return 0.05;
+            }
+
+            if (str_contains($text, 'paket data') || str_contains($text, 'kuota murah')) {
+                return 0.10;
+            }
+        }
+
+        $provider = Str::lower((string) $provider);
 
         return static::API_SELLING_PRICE_MARKUP_RATES[$provider] ?? 0.0;
+    }
+
+    protected function resolveApiMarkupCategoryText(): string
+    {
+        $segments = [
+            $this->resolvePrimaryCategoryName(),
+            $this->name,
+            $this->slug,
+        ];
+
+        if (! $this->relationLoaded('category')) {
+            $this->loadMissing('category.parent.parent.parent');
+        } else {
+            $this->category?->loadMissing('parent.parent.parent');
+        }
+
+        $category = $this->category;
+
+        while ($category) {
+            $segments[] = $category->name;
+            $segments[] = $category->slug;
+            $category = $category->parent;
+        }
+
+        return implode(' ', array_filter($segments));
     }
 
     public function getSellingPriceAttribute(): float
@@ -507,6 +653,20 @@ class Product extends Model
         ], true);
     }
 
+    public function cachePrimaryCategory(?string $slug, ?string $name = null): self
+    {
+        $this->resolvedPrimaryCategorySlugLoaded = true;
+        $this->resolvedPrimaryCategorySlugCache = $slug ? Str::slug($slug) : null;
+        $this->resolvedPrimaryCategoryNameLoaded = true;
+        $this->resolvedPrimaryCategoryNameCache = $name;
+        $this->apiSellingMarkupRateLoaded = false;
+        $this->checkoutFieldsLoaded = false;
+        $this->topUpGameKeyLoaded = false;
+        $this->topUpGameSearchTextCache = null;
+
+        return $this;
+    }
+
     public function getOrdersosmedMinQuantityAttribute(): int
     {
         $descriptionMin = $this->extractDescriptionInteger('/Minimum order:\s*([\d.,]+)/i');
@@ -537,12 +697,17 @@ class Product extends Model
 
     public function getOrdersosmedUnitPriceAttribute(): float
     {
-        return $this->selling_price / max(1, $this->ordersosmed_min_quantity);
+        return $this->selling_price / $this->ordersosmed_pricing_quantity;
     }
 
     public function getOriginalOrdersosmedUnitPriceAttribute(): float
     {
-        return $this->original_selling_price / max(1, $this->ordersosmed_min_quantity);
+        return $this->original_selling_price / $this->ordersosmed_pricing_quantity;
+    }
+
+    public function getOrdersosmedPricingQuantityAttribute(): int
+    {
+        return max(1, (int) ($this->provider_quantity ?: $this->ordersosmed_min_quantity));
     }
 
     public function getOrdersosmedPricePerThousandAttribute(): float

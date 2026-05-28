@@ -60,7 +60,7 @@
         width: 10rem;
         transform: rotate(45deg);
         transform-origin: center;
-        background: #22c55e;
+        background: #5a76c8;
         padding: 0.45rem 0;
         text-align: center;
         font-size: 0.55rem;
@@ -68,7 +68,7 @@
         letter-spacing: 0.14em;
         color: white;
         text-transform: uppercase;
-        box-shadow: 0 12px 26px rgba(34, 197, 94, 0.28);
+        box-shadow: 0 12px 26px rgba(90, 118, 200, 0.28);
     }
 
     .discount-corner-ribbon--checkout {
@@ -86,15 +86,32 @@
     }
 
     .discount-old-price {
+        color: #111827 !important;
         text-decoration-line: line-through !important;
         text-decoration-thickness: 2px !important;
-        text-decoration-color: #ff6b6b !important;
+        text-decoration-color: #111827 !important;
     }
 
     .discount-old-price-light {
         text-decoration-line: line-through !important;
         text-decoration-thickness: 2px !important;
         text-decoration-color: rgba(255, 255, 255, 0.85) !important;
+    }
+
+    .wiboost-square-logo-img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    #checkout_product_price {
+        color: #ffffff !important;
+    }
+
+    #checkout_original_price {
+        color: rgba(255, 255, 255, 0.78) !important;
     }
 
 </style>
@@ -127,43 +144,13 @@
         $showTopUpGameCompactCards = ($isTopUpGameOrder ?? false) && ! $showSuntikSosmedForm;
         $showCompactServiceCards = ($isCompactServiceCardOrder ?? $showTopUpGameCompactCards) && ! $showSuntikSosmedForm;
         $rootCategorySlugForCards = $rootCategorySlug ?? null;
+        $forceEmoteLogoOnly = $rootCategorySlugForCards === 'top-up-game';
         $shouldHideServiceDescription = $rootCategorySlugForCards === 'top-up-game';
         $shouldShowCompactServiceDescription = in_array($rootCategorySlugForCards, ['kuota-murah', 'paket-data'], true);
 
-        if ($showSuntikSosmedForm) {
-            $products = $products
-                ->sort(function ($left, $right) {
-                    $leftPrice = (float) $left->ordersosmed_price_per_thousand;
-                    $rightPrice = (float) $right->ordersosmed_price_per_thousand;
-
-                    if ($leftPrice === $rightPrice) {
-                        return strnatcasecmp($left->name, $right->name);
-                    }
-
-                    return $leftPrice <=> $rightPrice;
-                })
-                ->values();
-        }
-
-        $socialProductsPayload = $showSuntikSosmedForm
-            ? $products->map(function ($product) {
-                $plainDescription = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $product->description)));
-
-                return [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'description' => $plainDescription !== '' ? $plainDescription : '-',
-                    'min' => $product->ordersosmed_min_quantity,
-                    'max' => $product->ordersosmed_max_quantity,
-                    'unit_price' => $product->ordersosmed_unit_price,
-                    'price_per_1000' => $product->ordersosmed_price_per_thousand,
-                    'original_unit_price' => $product->original_ordersosmed_unit_price,
-                    'original_price_per_1000' => $product->original_ordersosmed_price_per_thousand,
-                    'discount_label' => $product->active_discount_label,
-                    'average_time' => $product->ordersosmed_average_time,
-                ];
-            })->values()
-            : collect();
+        $socialServiceDetailUrlTemplate = $showSuntikSosmedForm
+            ? route('user.order.ordersosmed-service', ['product' => '__PRODUCT_ID__'])
+            : null;
     @endphp
 
     <div id="page-product-list" class="transition-all duration-300 relative z-10">
@@ -173,9 +160,9 @@
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
                 </a>
 
-                <div class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-inner p-2">
+                <div class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-inner ring-1 ring-[#bde0fe]/60">
                     @if($category->image)
-                        <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="h-full w-full object-contain drop-shadow-sm">
+                        <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="wiboost-square-logo-img drop-shadow-sm">
                     @else
                         <span class="text-4xl font-black drop-shadow-sm">{{ $category->emote ?? '📦' }}</span>
                     @endif
@@ -324,8 +311,8 @@
                         ? 'relative flex h-full w-full cursor-not-allowed flex-col items-center justify-between overflow-hidden rounded-[1.35rem] border-4 border-white bg-gray-50 p-3 text-center opacity-60 grayscale shadow-sm ' . $compactCardMinHeight . ' sm:p-4'
                         : 'relative flex flex-col items-center justify-between w-full cursor-not-allowed overflow-hidden rounded-[2rem] border-4 border-white bg-gray-50 p-6 text-center opacity-60 grayscale shadow-sm min-h-[230px]';
                     $logoBoxClass = $showCompactServiceCards
-                        ? 'mb-3 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[1.35rem] border-4 border-white bg-[#f4f9ff] p-2 text-3xl shadow-inner transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3'
-                        : 'mb-5 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] p-3 text-5xl shadow-inner transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3';
+                        ? 'mb-4 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] text-4xl shadow-inner ring-1 ring-[#bde0fe]/60 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3'
+                        : 'mb-5 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] text-5xl shadow-inner ring-1 ring-[#bde0fe]/60 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3';
                 @endphp
 
                 <button
@@ -336,8 +323,9 @@
                     data-original-price="{{ $product->original_selling_price }}"
                     data-discount-label="{{ $product->active_discount_label ?? '' }}"
                     data-description="{{ $plainDescription }}"
-                    data-logo-image="{{ $product->display_logo_image ? Storage::url($product->display_logo_image) : '' }}"
+                    data-logo-image="{{ (! $forceEmoteLogoOnly && $product->display_logo_image) ? Storage::url($product->display_logo_image) : '' }}"
                     data-logo-emote="{{ $product->display_logo_emote ?? '' }}"
+                    data-logo-mode="{{ $forceEmoteLogoOnly ? 'emote' : 'auto' }}"
                     data-checkout-fields='{{ json_encode($product->checkout_fields, JSON_UNESCAPED_UNICODE) }}'
                     @if(!$isOutOfStock)
                         onclick="goToCheckout(this)"
@@ -356,9 +344,10 @@
                     @endif
 
                     <div class="flex w-full flex-col items-center {{ $showCompactServiceCards ? 'mb-3' : 'mb-4' }}">
-                        @if($product->display_logo_image)
+                        @if(! $forceEmoteLogoOnly && $product->display_logo_image)
                             <div class="{{ $logoBoxClass }}">
-                                <img src="{{ Storage::url($product->display_logo_image) }}" alt="Logo" class="h-full w-full object-contain drop-shadow-sm">
+                                <span class="hidden text-4xl font-black text-[#5a76c8] drop-shadow-sm">{{ $product->display_logo_emote ?: Str::upper(Str::substr($product->name, 0, 1)) }}</span>
+                                <img src="{{ Storage::url($product->display_logo_image) }}" alt="" class="wiboost-square-logo-img drop-shadow-sm" onerror="this.classList.add('hidden'); this.previousElementSibling.classList.remove('hidden');">
                             </div>
                         @elseif($product->display_logo_emote)
                             <div class="{{ $logoBoxClass }} text-[#5a76c8] drop-shadow-sm">
@@ -381,8 +370,8 @@
                             <span class="shrink-0 rounded-lg border border-white bg-[#ffe5e5] px-3 py-1.5 text-xs font-black text-[#ff6b6b] shadow-sm">HABIS</span>
                         @elseif($product->has_active_discount)
                             <div class="w-full text-center">
-                                <span class="discount-old-price block text-sm font-black text-[#ff6b6b] line-through decoration-[#ff6b6b] decoration-2 sm:text-base">Rp {{ number_format($product->original_selling_price, 0, ',', '.') }}</span>
-                                <span class="block shrink-0 font-black text-[#4bc6b9] {{ $showCompactServiceCards ? 'text-sm sm:text-base' : 'text-lg' }}">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</span>
+                                <span class="discount-old-price block text-sm font-black text-[#111827] line-through decoration-[#111827] decoration-2 sm:text-base">Rp {{ number_format($product->original_selling_price, 0, ',', '.') }}</span>
+                                <span class="block shrink-0 font-black text-[#5a76c8] {{ $showCompactServiceCards ? 'text-sm sm:text-base' : 'text-lg' }}">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</span>
                             </div>
                         @else
                             <span class="shrink-0 font-black text-[#4bc6b9] {{ $showCompactServiceCards ? 'text-sm sm:text-base' : 'text-lg' }}">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</span>
@@ -423,9 +412,9 @@
 
             <div class="relative mb-8 flex flex-col justify-between gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white bg-gradient-to-br from-[#8faaf3] to-[#5a76c8] p-8 text-white shadow-xl shadow-[#bde0fe]/40 md:flex-row md:items-center">
                 <div class="relative z-10 flex flex-1 items-center gap-5">
-                    <div id="checkout_product_logo_box" class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-2 border-white/70 bg-white/20 p-2 text-white shadow-inner">
+                    <div id="checkout_product_logo_box" class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white/70 bg-white/20 text-white shadow-inner">
                         <span id="checkout_product_logo_emote" class="text-4xl font-black leading-none drop-shadow-sm">W</span>
-                        <img id="checkout_product_logo_image" src="" alt="Logo produk" class="hidden h-full w-full object-contain drop-shadow-sm">
+                        <img id="checkout_product_logo_image" src="" alt="" class="hidden wiboost-square-logo-img drop-shadow-sm">
                     </div>
                     <div>
                         <span class="mb-3 inline-block rounded-full bg-white/20 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-white shadow-inner border border-white/50">Layanan Terpilih</span>
@@ -444,7 +433,7 @@
                     <div class="text-left">
                         <p class="mb-1 text-base font-black uppercase tracking-widest text-[#e0fbfc]">Total Harga</p>
                         <p class="discount-old-price-light hidden text-2xl font-black text-white/75 line-through decoration-white/80 decoration-2" id="checkout_original_price">Rp 0</p>
-                        <p class="text-4xl font-black drop-shadow-md" id="checkout_product_price">Rp 0</p>
+                        <p class="text-4xl font-black text-white drop-shadow-md" id="checkout_product_price">Rp 0</p>
                     </div>
                 </div>
             </div>
@@ -515,7 +504,11 @@
     const oldCheckoutInput = @json(old());
     const oldProductId = @json(old('product_id'));
     const shouldStartAtTop = !oldProductId && !window.location.hash;
-    const socialServices = @json($socialProductsPayload);
+    const socialServiceDetailUrlTemplate = @json($socialServiceDetailUrlTemplate);
+    const socialServiceCache = new Map();
+    let currentSocialService = null;
+    let socialServiceRequestId = 0;
+    let currentSocialServiceLoading = false;
     const socialServiceSelect = document.getElementById('social_service_select');
     const socialQuantityInput = document.getElementById('social_order_quantity');
     const checkoutProductLogoImage = document.getElementById('checkout_product_logo_image');
@@ -570,35 +563,139 @@
         }
     }
 
-    function findSocialService() {
-        if (!socialServiceSelect) {
+    function selectedSocialServiceId() {
+        return socialServiceSelect ? String(socialServiceSelect.value || '') : '';
+    }
+
+    function socialServiceDetailUrl(productId) {
+        if (!socialServiceDetailUrlTemplate || !productId) {
             return null;
         }
 
-        return socialServices.find((service) => String(service.id) === String(socialServiceSelect.value)) || null;
+        return socialServiceDetailUrlTemplate.replace('__PRODUCT_ID__', encodeURIComponent(productId));
     }
 
-    function syncSocialService() {
-        const service = findSocialService();
-        const productInput = document.getElementById('social_product_id');
+    function socialField(id) {
+        return document.getElementById(id);
+    }
+
+    function findSocialService() {
+        return currentSocialService;
+    }
+
+    function setSocialServiceFields(service, state = 'ready') {
+        const isLoading = state === 'loading';
+        const selectedId = selectedSocialServiceId();
+        const productInput = socialField('social_product_id');
 
         if (productInput) {
-            productInput.value = service ? service.id : '';
+            productInput.value = service ? service.id : selectedId;
         }
 
-        document.getElementById('social_description').value = service ? service.description : '-';
-        document.getElementById('social_min').value = service ? rupiahFormatter.format(service.min) : '0';
-        document.getElementById('social_max').value = service ? rupiahFormatter.format(service.max) : '0';
-        document.getElementById('social_price_per_1000').value = service ? rupiahFormatter.format(Math.ceil(service.price_per_1000)) : '0';
-        document.getElementById('social_average_time').value = service ? service.average_time : 'Pilih layanan dulu';
+        const descriptionField = socialField('social_description');
+        const minField = socialField('social_min');
+        const maxField = socialField('social_max');
+        const priceField = socialField('social_price_per_1000');
+        const averageField = socialField('social_average_time');
 
-        if (socialQuantityInput && service) {
-            socialQuantityInput.min = service.min;
-            socialQuantityInput.max = service.max;
-            socialQuantityInput.placeholder = '';
+        if (descriptionField) {
+            descriptionField.value = isLoading ? 'Memuat detail layanan...' : (service ? service.description : '-');
+        }
+
+        if (minField) {
+            minField.value = isLoading ? '...' : (service ? rupiahFormatter.format(service.min) : '0');
+        }
+
+        if (maxField) {
+            maxField.value = isLoading ? '...' : (service ? rupiahFormatter.format(service.max) : '0');
+        }
+
+        if (priceField) {
+            priceField.value = isLoading ? '...' : (service ? rupiahFormatter.format(Math.ceil(service.price_per_1000)) : '0');
+        }
+
+        if (averageField) {
+            averageField.value = isLoading ? 'Memuat...' : (service ? service.average_time : 'Pilih layanan dulu');
+        }
+
+        if (socialQuantityInput) {
+            if (service) {
+                socialQuantityInput.disabled = false;
+                socialQuantityInput.min = service.min;
+                socialQuantityInput.max = service.max;
+                socialQuantityInput.placeholder = '';
+            } else {
+                socialQuantityInput.disabled = isLoading;
+                socialQuantityInput.removeAttribute('min');
+                socialQuantityInput.removeAttribute('max');
+                socialQuantityInput.placeholder = isLoading ? 'Tunggu detail layanan...' : '';
+            }
         }
 
         updateSocialTotal();
+    }
+
+    async function syncSocialService() {
+        const selectedId = selectedSocialServiceId();
+        currentSocialService = null;
+        currentSocialServiceLoading = false;
+
+        if (!selectedId || !socialServiceDetailUrlTemplate) {
+            setSocialServiceFields(null);
+            return;
+        }
+
+        if (socialServiceCache.has(selectedId)) {
+            currentSocialService = socialServiceCache.get(selectedId);
+            setSocialServiceFields(currentSocialService);
+            return;
+        }
+
+        const detailUrl = socialServiceDetailUrl(selectedId);
+        if (!detailUrl) {
+            setSocialServiceFields(null);
+            return;
+        }
+
+        const requestId = ++socialServiceRequestId;
+        currentSocialServiceLoading = true;
+        setSocialServiceFields(null, 'loading');
+
+        try {
+            const response = await fetch(detailUrl, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const service = await response.json();
+
+            if (requestId !== socialServiceRequestId || selectedSocialServiceId() !== selectedId) {
+                return;
+            }
+
+            socialServiceCache.set(selectedId, service);
+            currentSocialService = service;
+            currentSocialServiceLoading = false;
+            setSocialServiceFields(service);
+        } catch (error) {
+            if (requestId !== socialServiceRequestId) {
+                return;
+            }
+
+            currentSocialServiceLoading = false;
+            setSocialServiceFields(null);
+
+            const descriptionField = socialField('social_description');
+            if (descriptionField) {
+                descriptionField.value = 'Gagal memuat detail layanan. Pilih ulang layanan atau refresh halaman.';
+            }
+        }
     }
 
     function updateSocialTotal() {
@@ -608,7 +705,7 @@
             ? Math.max(1, Math.ceil(quantity * service.unit_price))
             : 0;
 
-        const totalInput = document.getElementById('social_total_price');
+        const totalInput = socialField('social_total_price');
         if (totalInput) {
             totalInput.value = rupiahFormatter.format(total);
         }
@@ -621,6 +718,11 @@
         const btn = document.getElementById('btnSocialCheckout');
 
         if (form?.dataset.submitted === '1') {
+            return false;
+        }
+
+        if (socialServiceSelect && selectedSocialServiceId() && (!currentSocialService || currentSocialServiceLoading)) {
+            syncSocialService();
             return false;
         }
 
@@ -649,10 +751,27 @@
             return;
         }
 
-        checkoutProductLogoImage.src = '';
+        checkoutProductLogoImage.onerror = null;
+        checkoutProductLogoImage.onload = null;
+        checkoutProductLogoImage.removeAttribute('src');
+        checkoutProductLogoImage.style.display = 'none';
         checkoutProductLogoImage.classList.add('hidden');
         checkoutProductLogoEmote.textContent = 'W';
+        checkoutProductLogoEmote.style.display = '';
         checkoutProductLogoEmote.classList.remove('hidden');
+    }
+
+    function showCheckoutLogoFallback(logoEmote, fallbackName = 'W') {
+        if (!checkoutProductLogoImage || !checkoutProductLogoEmote) {
+            return;
+        }
+
+        checkoutProductLogoImage.classList.add('hidden');
+        checkoutProductLogoImage.removeAttribute('src');
+        checkoutProductLogoImage.style.display = 'none';
+        checkoutProductLogoEmote.style.display = '';
+        checkoutProductLogoEmote.classList.remove('hidden');
+        checkoutProductLogoEmote.textContent = logoEmote !== '' ? logoEmote : fallbackName.trim().charAt(0).toUpperCase();
     }
 
     function syncCheckoutLogo(button) {
@@ -662,18 +781,34 @@
 
         const logoImage = (button.dataset.logoImage || '').trim();
         const logoEmote = (button.dataset.logoEmote || '').trim();
+        const logoMode = (button.dataset.logoMode || 'auto').trim();
+
+        checkoutProductLogoImage.onerror = null;
+        checkoutProductLogoImage.onload = null;
+
+        if (logoMode === 'emote') {
+            showCheckoutLogoFallback(logoEmote, button.dataset.name || 'W');
+            return;
+        }
 
         if (logoImage !== '') {
+            checkoutProductLogoImage.onerror = () => showCheckoutLogoFallback(logoEmote, button.dataset.name || 'W');
+            checkoutProductLogoImage.onload = () => {
+                checkoutProductLogoImage.style.display = '';
+                checkoutProductLogoImage.classList.remove('hidden');
+                checkoutProductLogoEmote.style.display = 'none';
+                checkoutProductLogoEmote.classList.add('hidden');
+            };
             checkoutProductLogoImage.src = logoImage;
-            checkoutProductLogoImage.alt = button.dataset.name || 'Logo produk';
+            checkoutProductLogoImage.alt = '';
+            checkoutProductLogoImage.style.display = '';
             checkoutProductLogoImage.classList.remove('hidden');
+            checkoutProductLogoEmote.style.display = 'none';
             checkoutProductLogoEmote.classList.add('hidden');
             return;
         }
 
-        checkoutProductLogoImage.classList.add('hidden');
-        checkoutProductLogoEmote.classList.remove('hidden');
-        checkoutProductLogoEmote.textContent = logoEmote !== '' ? logoEmote : (button.dataset.name || 'W').trim().charAt(0).toUpperCase();
+        showCheckoutLogoFallback(logoEmote, button.dataset.name || 'W');
     }
 
     function renderCheckoutFields(fields, values = {}) {

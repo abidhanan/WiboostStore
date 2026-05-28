@@ -73,7 +73,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Email / Username</label>
+                            <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Email</label>
                             <input type="text" name="data_1" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner placeholder-[#a3bbfb]">
                         </div>
                         <div>
@@ -95,16 +95,18 @@
                             <input type="text" name="data_5" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner placeholder-[#a3bbfb]">
                         </div>
                         <div>
+                            <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Catatan</label>
+                            <textarea name="notes" rows="3" class="w-full resize-none bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner placeholder-[#a3bbfb]"></textarea>
+                        </div>
+                        <div>
                             <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Batas Penggunaan <span class="text-rose-500">*</span></label>
                             <input type="number" name="max_usage" required min="1" value="1" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner">
-                            <p class="text-[10px] font-black text-[#8faaf3] mt-2 ml-2 uppercase tracking-widest bg-white inline-block px-2 py-1 border border-white rounded shadow-sm">Berapa orang yang boleh beli?</p>
                         </div>
                     @endif
 
                     <div class="mt-6 pt-6 border-t-4 border-dashed border-[#f4f9ff]">
-                        <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Link Tutorial Login (Ops)</label>
-                        <input type="url" name="tutorial_link" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner placeholder-[#a3bbfb]" placeholder="https://youtube.com/...">
-                        <p class="text-[10px] font-black text-[#8faaf3] mt-2 ml-2 uppercase tracking-widest">Tutorial khusus data ini.</p>
+                        <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Link Tutorial</label>
+                        <input type="url" name="tutorial_link" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner placeholder-[#a3bbfb]">
                     </div>
 
                     <div class="mt-4 bg-[#fffcf0] p-5 rounded-[1.5rem] border-4 border-white flex items-center justify-between shadow-md">
@@ -146,7 +148,7 @@
                                 <div class="space-y-2 bg-white p-4 rounded-2xl border-2 border-[#f0f5ff] shadow-sm w-full min-w-[220px] max-w-[360px]">
                                     @if($cred->data_1 && $cred->data_1 !== '-')
                                         <div class="rounded-xl border border-[#dbeafe] bg-[#f4f9ff] px-3 py-2">
-                                            <p class="text-[8px] font-black uppercase tracking-widest text-[#8faaf3]">Email / Username</p>
+                                            <p class="text-[8px] font-black uppercase tracking-widest text-[#8faaf3]">Email</p>
                                             <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $cred->data_1 }}</p>
                                         </div>
                                     @endif
@@ -156,9 +158,30 @@
                                             <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $cred->data_2 }}</p>
                                         </div>
                                     @endif
-                                    @if($cred->data_3) <p class="font-black text-indigo-500 text-xs bg-indigo-50 px-2 py-1 rounded border border-indigo-100">👤 Profil: {{ $cred->data_3 }}</p> @endif
-                                    @if($cred->data_4) <p class="font-black text-rose-500 text-xs bg-rose-50 px-2 py-1 rounded border border-rose-100">🔢 PIN: {{ $cred->data_4 }}</p> @endif
-                                    @if($cred->data_5) <p class="font-black text-blue-500 text-xs truncate max-w-[200px] bg-blue-50 px-2 py-1 rounded border border-blue-100">🔗 {{ $cred->data_5 }}</p> @endif
+                                    @if($cred->data_3)
+                                        <div class="rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2">
+                                            <p class="text-[8px] font-black uppercase tracking-widest text-indigo-500">Profil</p>
+                                            <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $cred->data_3 }}</p>
+                                        </div>
+                                    @endif
+                                    @if($cred->data_4)
+                                        <div class="rounded-xl border border-rose-100 bg-rose-50 px-3 py-2">
+                                            <p class="text-[8px] font-black uppercase tracking-widest text-rose-500">PIN</p>
+                                            <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $cred->data_4 }}</p>
+                                        </div>
+                                    @endif
+                                    @if($cred->data_5)
+                                        <div class="rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
+                                            <p class="text-[8px] font-black uppercase tracking-widest text-blue-500">Link Akses</p>
+                                            <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $cred->data_5 }}</p>
+                                        </div>
+                                    @endif
+                                    @if($cred->notes)
+                                        <div class="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+                                            <p class="text-[8px] font-black uppercase tracking-widest text-slate-500">Catatan</p>
+                                            <p class="mt-1 whitespace-pre-line break-words text-sm font-black text-[#2b3a67]">{{ $cred->notes }}</p>
+                                        </div>
+                                    @endif
                                     
                                     <div class="flex gap-2 pt-2 flex-wrap">
                                         @if($cred->tutorial_link)

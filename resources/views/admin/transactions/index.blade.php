@@ -9,6 +9,7 @@
     .table-scroll::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; border: 2px solid #f0f5ff; }
     .table-scroll::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
     .admin-detail-modal {
+        display: none;
         background: rgba(43, 58, 103, .58) !important;
         -webkit-backdrop-filter: blur(8px);
         backdrop-filter: blur(8px);
@@ -35,7 +36,7 @@
             padding-right: 2rem;
         }
     }
-    .admin-detail-modal.modal-active { opacity: 1 !important; pointer-events: auto !important; }
+    .admin-detail-modal.modal-active { display: flex; opacity: 1 !important; pointer-events: auto !important; }
     .admin-detail-modal.modal-active .admin-detail-card { transform: scale(1) !important; }
     .admin-detail-card {
         border-radius: 1.75rem !important;
@@ -118,6 +119,45 @@
     .admin-detail-close {
         box-shadow: 0 10px 22px rgba(255, 107, 107, .14), inset 0 1px 0 rgba(255,255,255,.85);
     }
+
+    .table-scroll {
+        contain: layout paint;
+        overscroll-behavior-x: contain;
+    }
+
+    @media (max-width: 767px) {
+        .admin-detail-modal {
+            top: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            height: auto !important;
+            align-items: flex-start !important;
+            justify-content: center !important;
+            padding: 8.5rem .9rem 1rem !important;
+            background: rgba(43, 58, 103, .64) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+            backdrop-filter: blur(8px) !important;
+        }
+
+        .admin-detail-card {
+            width: min(100%, 36rem) !important;
+            max-height: calc(100dvh - 9.5rem) !important;
+        }
+
+        .admin-detail-body {
+            padding-right: .45rem;
+            scrollbar-gutter: stable;
+        }
+
+        .table-scroll {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-scroll table {
+            transform: translateZ(0);
+        }
+    }
     
     .animate-float { animation: float 6s ease-in-out infinite; }
     .animate-float-delayed { animation: float 6s ease-in-out 3s infinite; }
@@ -167,7 +207,7 @@
                 </div>
                 
                 <!-- Tombol Segarkan (Samping Search di Desktop) -->
-                <a href="{{ route('admin.transactions.index') }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#8faaf3] px-6 py-3 h-12 text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#6f8ddc] w-full md:w-auto">
+                <a href="{{ route('admin.transactions.index', array_filter(['refresh_api' => 1, 'search' => request('search'), 'month' => $selectedMonth ?? date('m'), 'year' => $selectedYear ?? date('Y')])) }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#8faaf3] px-6 py-3 h-12 text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#6f8ddc] w-full md:w-auto">
                     <span class="text-base">🔄</span> <span class="whitespace-nowrap">Segarkan</span>
                 </a>
             </div>
@@ -193,10 +233,11 @@
 
                 <!-- Tombol Cetak PDF -->
                 <a href="{{ route('admin.transactions.export_pdf', ['month' => $selectedMonth ?? date('m'), 'year' => $selectedYear ?? date('Y')]) }}" target="_blank" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#4bc6b9] px-6 py-2 h-auto min-h-[2.8rem] sm:min-h-[3rem] text-xs sm:text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#3ba398] w-full md:w-auto">
-                    <span class="text-base">🖨️</span> <span class="whitespace-nowrap">Cetak PDF</span>
+                    <span class="whitespace-nowrap">Cetak PDF</span>
                 </a>
             </div>
         </form>
+
     </div>
 
     <!-- Tabel Data Transaksi -->
@@ -221,7 +262,7 @@
                             $adminTargetSummary = $trx->order_input_summary
                                 ?: (filled($trx->target_data) && $trx->target_data !== '- (Tidak membutuhkan target tambahan)' ? $trx->target_data : null);
                             $adminTargetText = $trx->order_input_text
-                                ?: ($adminTargetSummary ? 'Target: ' . $adminTargetSummary : null);
+                                ?: $adminTargetSummary;
                             $canManualUpdate = $trx->payment_status === 'paid'
                                 && ($trx->product?->process_type === 'account')
                                 && (bool) ($trx->product?->requires_buyer_email);
@@ -350,13 +391,14 @@
                 $detailTargetSummary = $trx->order_input_summary
                     ?: (filled($trx->target_data) && $trx->target_data !== '- (Tidak membutuhkan target tambahan)' ? $trx->target_data : null);
                 $detailTargetText = $trx->order_input_text
-                    ?: ($detailTargetSummary ? 'Target: ' . $detailTargetSummary : '-');
+                    ?: ($detailTargetSummary ?: '-');
                 $detailInputFields = collect($trx->order_input_fields ?? []);
                 $detailInputText = $detailInputFields
                     ->reject(fn ($field) => ($field['name'] ?? '') === 'order_quantity')
-                    ->map(fn ($field) => ($field['label'] ?? 'Input') . ': ' . ($field['value'] ?? '-'))
+                    ->map(fn ($field) => trim((string) ($field['value'] ?? '')))
+                    ->filter()
                     ->implode("\n");
-                $detailInputText = $detailInputText !== '' ? $detailInputText : ($detailTargetSummary ? 'Target: ' . $detailTargetSummary : '-');
+                $detailInputText = $detailInputText !== '' ? $detailInputText : ($detailTargetSummary ?: '-');
                 $detailQuantity = $trx->provider_order_quantity;
                 $detailCategory = collect([
                     $trx->product?->category?->parent?->parent?->name,
@@ -457,14 +499,14 @@
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.add('modal-active');
-        document.body.classList.add('overflow-hidden');
+        document.body.classList.add('overflow-hidden', 'admin-detail-open');
     }
 
     function closeAdminDetailModal(id) {
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.remove('modal-active');
-        document.body.classList.remove('overflow-hidden');
+        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
     }
 
     document.addEventListener('keydown', (event) => {
@@ -472,7 +514,7 @@
         document.querySelectorAll('.admin-detail-modal.modal-active').forEach((modal) => {
             modal.classList.remove('modal-active');
         });
-        document.body.classList.remove('overflow-hidden');
+        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
     });
 </script>
 @endsection

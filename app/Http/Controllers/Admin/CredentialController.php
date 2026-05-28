@@ -35,6 +35,7 @@ class CredentialController extends Controller
             'data_3' => 'nullable|string',
             'data_4' => 'nullable|string',
             'data_5' => 'nullable|string',
+            'notes' => 'nullable|string|max:2000',
             'tutorial_link' => 'nullable|url|max:500',
         ]);
 
@@ -47,6 +48,7 @@ class CredentialController extends Controller
             'data_3' => $request->data_3,
             'data_4' => $request->data_4,
             'data_5' => $request->data_5,
+            'notes' => $request->notes,
             'tutorial_link' => $request->tutorial_link,
             'needs_otp' => $request->boolean('needs_otp'),
             'max_usage' => $maxUsage,
@@ -63,13 +65,11 @@ class CredentialController extends Controller
         $fulfilledCount = 0;
 
         foreach ($pendingTransactions as $transaction) {
-            if ($credential->current_usage >= $credential->max_usage) {
-                break;
-            }
+            $orderFulfillmentService->handlePaidTransaction($transaction->fresh(['product', 'user']));
 
-            $orderFulfillmentService->assignCredential($transaction, $credential->fresh());
-            $credential->refresh();
-            $fulfilledCount++;
+            if ($transaction->fresh()?->order_status === 'success') {
+                $fulfilledCount++;
+            }
         }
 
         $message = 'Stok data berhasil ditambahkan ke gudang.';

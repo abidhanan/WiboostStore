@@ -33,7 +33,7 @@
 
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <x-dropdown-link :href="route('logout')"
+                                <x-dropdown-link href="#"
                                         onclick="event.preventDefault(); this.closest('form').submit();"
                                         class="rounded-xl font-black text-[#ff6b6b] hover:bg-[#ffe5e5] mt-1">
                                     🚪 {{ __('Keluar') }}

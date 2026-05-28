@@ -111,17 +111,18 @@
             box-sizing: border-box;
         }
          .welcome-category-icon {
-             width: 4.25rem;
-             height: 4.25rem;
+             width: 6rem;
+             height: 6rem;
+             flex: 0 0 6rem;
              display: flex;
              align-items: center;
              justify-content: center;
              overflow: hidden;
              border-radius: 1.25rem;
-             border: 2px solid #ffffff;
+             border: 4px solid #ffffff;
              background: #ffffff;
-             box-shadow: inset 0 0 0 1px rgba(189, 224, 254, 0.35), 0 8px 18px rgba(189, 224, 254, 0.28);
-             padding: 0.25rem;
+             box-shadow: inset 0 0 0 2px rgba(189, 224, 254, 0.45), 0 8px 18px rgba(189, 224, 254, 0.28);
+             padding: 0;
          }
          .welcome-category-icon img {
              width: 100%;
@@ -130,11 +131,33 @@
              object-position: center;
              border-radius: 0.95rem;
          }
-         .welcome-feature-icon {
-             width: 4.5rem;
-             height: 4.5rem;
-             object-fit: cover;
+
+         @media (pointer: coarse) {
+             .welcome-category-card {
+                 width: calc(50% - 0.5rem) !important;
+                 max-width: 16rem;
+             }
+         }
+         .welcome-feature-icon-wrap {
+             width: 6rem;
+             height: 6rem;
+             flex: 0 0 6rem;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             overflow: hidden;
              border-radius: 1.25rem;
+             border: 4px solid #ffffff;
+             background: #ffffff;
+             box-shadow: inset 0 0 0 2px rgba(189, 224, 254, 0.45), 0 8px 18px rgba(189, 224, 254, 0.28);
+             padding: 0;
+         }
+         .welcome-feature-icon {
+             width: 100%;
+             height: 100%;
+             object-fit: contain;
+             object-position: center;
+             border-radius: 0.95rem;
          }
          @media (max-width: 767px) {
              .welcome-live-stats {
@@ -346,10 +369,10 @@
                 <h2 class="text-3xl md:text-5xl font-black text-[#2b3a67] tracking-tight">Pilih Kategori</h2>
             </div>
 
-            <div class="mx-auto flex max-w-5xl flex-wrap justify-center gap-4 md:gap-5">
+            <div class="welcome-category-grid mx-auto flex max-w-5xl flex-wrap justify-center gap-4 md:gap-5">
                 @forelse($categories as $cat)
                     @if(is_null($cat->parent_id))
-                        <a href="{{ route('login') }}" class="group relative flex w-[calc(50%-0.5rem)] flex-col items-center overflow-hidden bg-[#f4f9ff] rounded-[1.5rem] p-4 border-4 border-white shadow-lg shadow-[#bde0fe]/20 hover:-translate-y-2 hover:border-[#bde0fe] transition-all duration-300 text-center sm:w-56 md:w-60 lg:w-56">
+                        <a href="{{ route('login') }}" class="welcome-category-card group relative flex aspect-square w-[calc(50%-0.5rem)] flex-col items-center justify-center overflow-hidden bg-[#f4f9ff] rounded-[1.5rem] p-4 border-4 border-white shadow-lg shadow-[#bde0fe]/20 hover:-translate-y-2 hover:border-[#bde0fe] transition-all duration-300 text-center sm:w-56 md:w-60 lg:w-56">
                             <div class="welcome-category-icon mb-3 text-[#5a76c8] transition-transform duration-300 group-hover:scale-110">
                                 @if($cat->image)
                                     <img src="{{ Storage::url($cat->image) }}" alt="{{ $cat->name }}" class="drop-shadow-sm">
@@ -383,28 +406,28 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
                 <div class="bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
-                    <div class="w-20 h-20 bg-[#f4f9ff] rounded-2xl border-2 border-[#e0fbfc] flex items-center justify-center mb-5 mx-auto shadow-sm overflow-hidden p-1">
+                    <div class="welcome-feature-icon-wrap mb-5 mx-auto">
                         <img src="{{ asset('images/feature-lightning.jpeg') }}?v=20260513" alt="Proses otomatis" class="welcome-feature-icon">
                     </div>
                     <h3 class="font-black text-[#2b3a67] text-lg mb-3">Proses Otomatis</h3>
                     <p class="text-sm text-[#4a5f96] font-bold leading-relaxed">Sistem kami berjalan 24/7. Transaksi diproses seketika tanpa perlu konfirmasi manual dari admin.</p>
                 </div>
                 <div class="bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
-                    <div class="w-20 h-20 bg-[#f4f9ff] rounded-2xl border-2 border-[#e0fbfc] flex items-center justify-center mb-5 mx-auto shadow-sm overflow-hidden p-1">
+                    <div class="welcome-feature-icon-wrap mb-5 mx-auto">
                         <img src="{{ asset('images/feature-shield.jpeg') }}?v=20260513" alt="Aman dan terpercaya" class="welcome-feature-icon">
                     </div>
                     <h3 class="font-black text-[#2b3a67] text-lg mb-3">Aman & Terpercaya</h3>
                     <p class="text-sm text-[#4a5f96] font-bold leading-relaxed">Pembayaran menggunakan QRIS resmi yang aman, serta privasi akun media sosial Anda terjamin 100%.</p>
                 </div>
                 <div class="bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
-                    <div class="w-20 h-20 bg-[#f4f9ff] rounded-2xl border-2 border-[#e0fbfc] flex items-center justify-center mb-5 mx-auto shadow-sm overflow-hidden p-1">
+                    <div class="welcome-feature-icon-wrap mb-5 mx-auto">
                         <img src="{{ asset('images/feature-boxes.jpeg') }}?v=20260513" alt="Layanan terlengkap" class="welcome-feature-icon">
                     </div>
                     <h3 class="font-black text-[#2b3a67] text-lg mb-3">Layanan Terlengkap</h3>
                     <p class="text-sm text-[#4a5f96] font-bold leading-relaxed">Mulai dari Top Up Game, SMM Panel, hingga Aplikasi Premium tersedia lengkap dalam satu platform.</p>
                 </div>
                 <div class="bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
-                    <div class="w-20 h-20 bg-[#f4f9ff] rounded-2xl border-2 border-[#e0fbfc] flex items-center justify-center mb-5 mx-auto shadow-sm overflow-hidden p-1">
+                    <div class="welcome-feature-icon-wrap mb-5 mx-auto">
                         <img src="{{ asset('images/feature-wallet.jpeg') }}?v=20260513" alt="Harga kompetitif" class="welcome-feature-icon">
                     </div>
                     <h3 class="font-black text-[#2b3a67] text-lg mb-3">Harga Kompetitif</h3>

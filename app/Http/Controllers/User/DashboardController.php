@@ -31,7 +31,7 @@ class DashboardController extends Controller
             ->orderByRaw($categoryOrderSql)
             ->get();
 
-        $promos = Promo::where('is_active', true)->latest()->get();
+        $promos = Promo::where('is_active', true)->oldest()->get();
 
         $totalThisMonth = Transaction::where('user_id', $user->id)
                             ->where('payment_status', 'paid')
@@ -48,6 +48,14 @@ class DashboardController extends Controller
                             ->sum('amount');
 
         $tutorials = Tutorial::where('is_active', true)->latest()->get();
+        $tutorialMainOrder = [
+            'suntik sosmed' => 0,
+            'top up game' => 1,
+            'paket data' => 2,
+            'kuota murah' => 2,
+            'aplikasi premium' => 3,
+        ];
+
         $tutorialGroups = $tutorials
             ->groupBy(fn (Tutorial $tutorial) => $tutorial->main_category ?: ($tutorial->category ?: 'Umum'))
             ->map(function ($mainTutorials, $mainCategory) {
@@ -74,6 +82,7 @@ class DashboardController extends Controller
                         ->values(),
                 ];
             })
+            ->sortBy(fn (array $group) => $tutorialMainOrder[strtolower((string) $group['name'])] ?? 99)
             ->values();
 
         return view('user.dashboard', compact(

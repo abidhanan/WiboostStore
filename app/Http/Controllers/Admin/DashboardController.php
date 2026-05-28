@@ -6,11 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminReport;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\SiteSetting;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\WalletHistory;
+use App\Support\WiboostAdminContact;
 use App\Support\WiboostCatalog;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
@@ -141,6 +144,9 @@ class DashboardController extends Controller
             })
             ->values();
 
+        $adminCsWhatsapp = WiboostAdminContact::csWhatsappNumber();
+        $adminOtpWhatsapp = WiboostAdminContact::otpWhatsappNumber();
+
         return view('admin.dashboard', compact(
             'totalTransactionsMonth',
             'revenueMonth',
@@ -150,8 +156,42 @@ class DashboardController extends Controller
             'lowStockProducts',
             'dashboardCharts',
             'latestReports',
-            'topProductsByRootCategory'
+            'topProductsByRootCategory',
+            'adminCsWhatsapp',
+            'adminOtpWhatsapp'
         ));
+    }
+
+    public function updateContactNumbers(Request $request)
+    {
+        $validated = $request->validate([
+            'admin_cs_whatsapp' => ['nullable', 'string', 'max:40'],
+            'admin_otp_whatsapp' => ['nullable', 'string', 'max:40'],
+        ]);
+
+        SiteSetting::setValue('admin_cs_whatsapp', self::normalizeWhatsappInput($validated['admin_cs_whatsapp'] ?? null));
+        SiteSetting::setValue('admin_otp_whatsapp', self::normalizeWhatsappInput($validated['admin_otp_whatsapp'] ?? null));
+
+        return back()->with('success', 'Nomor admin CS dan OTP berhasil diperbarui.');
+    }
+
+    protected static function normalizeWhatsappInput(?string $value): ?string
+    {
+        $digits = preg_replace('/\D+/', '', (string) $value);
+
+        if ($digits === '') {
+            return null;
+        }
+
+        if (str_starts_with($digits, '0')) {
+            return '62' . substr($digits, 1);
+        }
+
+        if (str_starts_with($digits, '8')) {
+            return '62' . $digits;
+        }
+
+        return $digits;
     }
 
     protected function resolveRootCategorySlug(?Category $category): ?string

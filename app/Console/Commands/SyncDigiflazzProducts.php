@@ -88,7 +88,7 @@ class SyncDigiflazzProducts extends Command
                     continue;
                 }
 
-                $hargaModal = (float) ($item['price'] ?? 0);
+                $hargaModal = $this->parseProviderNumber($item['price'] ?? 0);
 
                 $categoryId = $matchLocalCategories
                     ? $this->resolveStrictLocalCategoryId($item, $topCategorySlug)
@@ -168,6 +168,43 @@ class SyncDigiflazzProducts extends Command
         $this->info('--- SELESAI ---');
 
         return $failed > 0 ? self::FAILURE : self::SUCCESS;
+    }
+
+    protected function parseProviderNumber(mixed $value): float
+    {
+        if (is_int($value) || is_float($value)) {
+            return (float) $value;
+        }
+
+        $text = trim((string) $value);
+
+        if ($text === '') {
+            return 0.0;
+        }
+
+        $text = preg_replace('/[^\d,.\-]+/', '', str_replace(["\xc2\xa0", ' '], '', $text)) ?: '';
+
+        if ($text === '' || $text === '-') {
+            return 0.0;
+        }
+
+        $negative = str_starts_with($text, '-');
+        $text = ltrim($text, '-');
+
+        if (preg_match('/^\d{1,3}(\.\d{3})+(,\d+)?$/', $text) === 1) {
+            $text = str_replace('.', '', $text);
+            $text = str_replace(',', '.', $text);
+        } elseif (preg_match('/^\d{1,3}(,\d{3})+(\.\d+)?$/', $text) === 1) {
+            $text = str_replace(',', '', $text);
+        } elseif (str_contains($text, ',') && ! str_contains($text, '.')) {
+            $text = str_replace(',', '.', $text);
+        } elseif (substr_count($text, '.') > 1) {
+            $text = str_replace('.', '', $text);
+        } elseif (substr_count($text, ',') > 1) {
+            $text = str_replace(',', '', $text);
+        }
+
+        return (float) (($negative ? '-' : '') . $text);
     }
 
     protected function resolveDefaultCategoryId(array $item, string $topCategorySlug, int $defaultCategoryId): int

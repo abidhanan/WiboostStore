@@ -9,7 +9,12 @@
     .table-scroll::-webkit-scrollbar-track { background: #f0f5ff; border-radius: 10px; }
     .table-scroll::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; border: 2px solid #f0f5ff; }
     .table-scroll::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
-    .admin-report-detail-modal {
+    .admin-detail-modal {
+        display: none;
+        top: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
         background: rgba(43, 58, 103, .58) !important;
         -webkit-backdrop-filter: blur(8px);
         backdrop-filter: blur(8px);
@@ -20,30 +25,72 @@
         padding: 7rem .85rem 1rem;
     }
     @media (min-width: 640px) {
-        .admin-report-detail-modal { padding: 7.25rem 1.5rem 1.25rem; }
+        .admin-detail-modal { padding: 7.25rem 1.5rem 1.25rem; }
     }
     @media (min-width: 1280px) {
-        .admin-report-detail-modal {
+        .admin-detail-modal {
+            left: 0 !important;
             padding-top: 7.5rem;
             padding-left: 26rem;
             padding-right: 2rem;
         }
     }
-    .admin-report-detail-modal.modal-active { opacity: 1 !important; pointer-events: auto !important; }
-    .admin-report-detail-modal.modal-active .admin-report-detail-card { transform: scale(1) !important; }
-    .admin-report-detail-card {
+    .admin-detail-modal.modal-active { display: flex; opacity: 1 !important; pointer-events: auto !important; }
+    .admin-detail-modal.modal-active .admin-detail-card { transform: scale(1) !important; }
+    .admin-detail-card {
         border-radius: 1.75rem !important;
         background: #ffffff;
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        width: min(100%, 46rem);
+        width: min(100%, 44rem);
         max-height: calc(100dvh - 9rem) !important;
         overflow-wrap: anywhere;
         word-break: break-word;
     }
-    .admin-report-detail-card * { min-width: 0; }
-    .admin-report-detail-body {
+    @media (min-width: 640px) {
+        .admin-detail-card { max-height: calc(100dvh - 9.5rem) !important; }
+    }
+    @media (max-width: 767px) {
+        .admin-detail-modal {
+            top: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            z-index: 99999 !important;
+            height: auto !important;
+            padding: 8.5rem .9rem 1rem !important;
+            background: rgba(43, 58, 103, .64) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+            backdrop-filter: blur(8px) !important;
+            align-items: flex-start !important;
+            justify-content: center !important;
+        }
+        .admin-detail-card {
+            width: min(100%, 36rem) !important;
+            max-height: calc(100dvh - 9.5rem) !important;
+        }
+        .admin-detail-body {
+            padding-right: .45rem;
+            scrollbar-gutter: stable;
+        }
+    }
+    .admin-detail-card * { min-width: 0; }
+    .admin-detail-card p,
+    .admin-detail-card h3,
+    .admin-detail-card span {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    .admin-detail-header {
+        border-radius: 0;
+        border: 0;
+        border-bottom: 3px dashed #f4f9ff;
+        background: transparent;
+        box-shadow: none;
+        padding-bottom: .85rem;
+    }
+    .admin-detail-body {
         min-height: 0;
         flex: 1 1 auto;
         overflow-y: auto;
@@ -54,20 +101,28 @@
         scrollbar-width: thin;
         scrollbar-gutter: stable both-edges;
     }
-    .admin-report-detail-body::-webkit-scrollbar { width: 8px; }
-    .admin-report-detail-body::-webkit-scrollbar-track { background: transparent; border-radius: 999px; margin: .75rem 0; }
-    .admin-report-detail-body::-webkit-scrollbar-thumb {
+    .admin-detail-body::-webkit-scrollbar { width: 8px; }
+    .admin-detail-body::-webkit-scrollbar-track { background: transparent; border-radius: 999px; margin: .75rem 0; }
+    .admin-detail-body::-webkit-scrollbar-thumb {
         background: linear-gradient(180deg, #d8ecff, #8faaf3);
         border: 2px solid #ffffff;
         border-radius: 999px;
     }
-    .admin-report-detail-panel {
+    .admin-detail-body::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
+    .admin-detail-panel {
         border-radius: 1.2rem;
         border: 1px solid #eaf2ff;
         background: #f8faff;
         box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
         padding: .85rem 1rem;
         overflow: hidden;
+    }
+    .admin-detail-panel-soft {
+        border-color: #fff1d6;
+        background: #fffdf7;
+    }
+    .admin-detail-close {
+        box-shadow: 0 10px 22px rgba(255,107,107,.14), inset 0 1px 0 rgba(255,255,255,.85);
     }
 </style>
 
@@ -193,44 +248,44 @@
                 $statusText = $isHandled ? 'Sudah Ditangani' : 'Belum Ditangani';
                 $statusClass = $isHandled ? 'bg-[#e6fff7] text-emerald-500' : 'bg-[#fff5eb] text-amber-500';
             @endphp
-            <div id="admin-report-detail-{{ $report->id }}" class="admin-report-detail-modal fixed inset-0 z-[9999] flex items-center justify-center opacity-0 pointer-events-none transition-all duration-200">
+            <div id="admin-report-detail-{{ $report->id }}" class="admin-detail-modal fixed inset-0 z-[9999] items-center justify-center opacity-0 pointer-events-none transition-all duration-200">
                 <div class="absolute inset-0" onclick="closeAdminReportDetail('admin-report-detail-{{ $report->id }}')"></div>
-                <div class="admin-report-detail-card relative flex w-full max-w-3xl max-h-[calc(100dvh-8.25rem)] flex-col rounded-[1.75rem] border-4 border-white bg-white p-4 shadow-2xl shadow-[#2b3a67]/20 transform scale-95 transition-transform duration-200 sm:p-5">
-                    <div class="mb-3.5 flex items-start justify-between gap-3 border-b-4 border-dashed border-[#f4f9ff] pb-3.5">
+                <div class="admin-detail-card relative flex w-full max-w-2xl max-h-[calc(100dvh-8.25rem)] flex-col rounded-[1.75rem] border-4 border-white bg-white p-4 shadow-2xl shadow-[#2b3a67]/20 transform scale-95 transition-transform duration-200 sm:p-5">
+                    <div class="admin-detail-header mb-3.5 flex items-start justify-between gap-3 p-3.5">
                         <div>
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Detail Laporan</p>
                             <h3 class="mt-1 break-all text-xl font-black text-[#2b3a67]">{{ $report->related_invoice ?: 'LAP-' . str_pad((string) $report->id, 5, '0', STR_PAD_LEFT) }}</h3>
                             <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $report->created_at?->format('d M Y, H:i') }}</p>
                         </div>
-                        <button type="button" onclick="closeAdminReportDetail('admin-report-detail-{{ $report->id }}')" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#ffe5e5] text-lg font-black text-[#ff6b6b]">
+                        <button type="button" onclick="closeAdminReportDetail('admin-report-detail-{{ $report->id }}')" class="admin-detail-close flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#ffe5e5] text-lg font-black text-[#ff6b6b]">
                             &times;
                         </button>
                     </div>
 
-                    <div class="admin-report-detail-body">
+                    <div class="admin-detail-body">
                         <div class="grid gap-3.5 md:grid-cols-2">
-                            <div class="admin-report-detail-panel">
+                            <div class="admin-detail-panel">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Pelanggan</p>
                                 <p class="mt-1 font-black text-[#2b3a67]">{{ $report->user?->name ?: '-' }}</p>
                                 <p class="mt-1 break-all text-xs font-bold text-[#8faaf3]">{{ $report->user?->email ?: '-' }}</p>
                             </div>
-                            <div class="admin-report-detail-panel">
+                            <div class="admin-detail-panel">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Status</p>
                                 <span class="{{ $statusClass }} mt-2 inline-flex rounded-full border-2 border-white px-4 py-1.5 text-[10px] font-black uppercase tracking-widest shadow-sm">{{ $statusText }}</span>
                             </div>
-                            <div class="admin-report-detail-panel">
+                            <div class="admin-detail-panel">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Jenis</p>
                                 <p class="mt-1 font-black text-[#2b3a67]">{{ $report->category_label }}</p>
                             </div>
-                            <div class="admin-report-detail-panel">
+                            <div class="admin-detail-panel">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Produk / Judul</p>
                                 <p class="mt-1 break-words font-black text-[#2b3a67]">{{ $report->related_title ?: '-' }}</p>
                             </div>
-                            <div class="admin-report-detail-panel md:col-span-2">
+                            <div class="admin-detail-panel md:col-span-2">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Kendala</p>
                                 <p class="mt-2 whitespace-pre-wrap break-words text-sm font-bold leading-relaxed text-[#2b3a67]">{{ $report->issue }}</p>
                             </div>
-                            <div class="admin-report-detail-panel md:col-span-2">
+                            <div class="admin-detail-panel md:col-span-2">
                                 <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                     <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Bukti Kendala</p>
                                     @if($proofUrl)
@@ -246,7 +301,7 @@
                                     <p class="mt-2 text-sm font-bold text-[#8faaf3]">Tidak ada bukti.</p>
                                 @endif
                             </div>
-                            <div class="admin-report-detail-panel md:col-span-2">
+                            <div class="admin-detail-panel admin-detail-panel-soft md:col-span-2">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Data Terkait</p>
                                 <div class="mt-3 grid gap-3 md:grid-cols-2">
                                     <div>
@@ -281,22 +336,22 @@
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.add('modal-active');
-        document.body.classList.add('overflow-hidden');
+        document.body.classList.add('overflow-hidden', 'admin-detail-open');
     }
 
     function closeAdminReportDetail(id) {
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.remove('modal-active');
-        document.body.classList.remove('overflow-hidden');
+        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
     }
 
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') return;
-        document.querySelectorAll('.admin-report-detail-modal.modal-active').forEach((modal) => {
+        document.querySelectorAll('.admin-detail-modal.modal-active').forEach((modal) => {
             modal.classList.remove('modal-active');
         });
-        document.body.classList.remove('overflow-hidden');
+        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
     });
 </script>
 @endsection

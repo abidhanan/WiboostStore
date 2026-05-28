@@ -10,11 +10,17 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Str;
 
 class TransactionController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->boolean('refresh_api')) {
+            return $this->refreshProviderStatusesFromIndex($request);
+        }
+
         // Pastikan memuat relasi product.category agar bisa mengecek slug kategori
         $query = Transaction::with(['user', 'product.category.parent.parent'])->latest();
         $query->whereHas('product', fn ($productQuery) => $productQuery->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()));
@@ -68,15 +74,71 @@ class TransactionController extends Controller
         return back()->with('success', 'Status pesanan ' . $transaction->invoice_number . ' berhasil diperbarui!');
     }
 
+    public function refreshProviderStatuses()
+    {
+        try {
+            $message = $this->runProviderStatusRefresh(afterResponse: true);
+
+            return back()->with('success', $message);
+        } catch (Exception $e) {
+            return back()->with('error', 'Gagal refresh status pesanan API: ' . $e->getMessage());
+        }
+    }
+
+    private function refreshProviderStatusesFromIndex(Request $request)
+    {
+        $query = $request->query();
+        unset($query['refresh_api']);
+
+        try {
+            $message = $this->runProviderStatusRefresh(afterResponse: true);
+
+            return redirect()
+                ->route('admin.transactions.index', $query)
+                ->with('success', $message);
+        } catch (Exception $e) {
+            return redirect()
+                ->route('admin.transactions.index', $query)
+                ->with('error', 'Gagal refresh status pesanan API: ' . $e->getMessage());
+        }
+    }
+
+    private function runProviderStatusRefresh(bool $afterResponse = false): string
+    {
+        if ($afterResponse) {
+            app()->terminating(function () {
+                Artisan::call('wiboost:check-provider-orders', [
+                    '--limit' => 200,
+                ]);
+            });
+
+            return 'Refresh status API sedang diproses. Silakan segarkan lagi sebentar lagi.';
+        }
+
+        Artisan::call('wiboost:check-provider-orders', [
+            '--limit' => 200,
+        ]);
+
+        $output = trim(Artisan::output());
+        $message = 'Status pesanan API berhasil dicek ulang.';
+
+        if ($output !== '') {
+            $message .= ' ' . Str::limit($output, 220);
+        }
+
+        return $message;
+    }
+
     public function exportPdf(Request $request)
     {
         try {
             $month = $request->input('month', date('m'));
             $year = $request->input('year', date('Y'));
 
-            // Hanya ambil transaksi yang sudah LUNAS ('paid')
+            // Laporan pendapatan hanya menghitung transaksi yang benar-benar sukses.
             $transactions = Transaction::with(['user', 'product'])
                 ->where('payment_status', 'paid')
+                ->where('order_status', 'success')
                 ->whereHas('product', fn ($productQuery) => $productQuery->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
                 ->whereMonth('created_at', $month)
                 ->whereYear('created_at', $year)
