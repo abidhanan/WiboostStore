@@ -11,7 +11,7 @@ class CleanupUnpaidTripayDeposits extends Command
         {--execute : Jalankan penghapusan. Tanpa opsi ini hanya preview}
         {--older-than=0 : Hanya hapus deposit yang lebih lama dari jumlah menit ini}';
 
-    protected $description = 'Hapus deposit Tripay unpaid/pending yang tidak jadi checkout supaya tidak terlihat dobel.';
+    protected $description = 'Hapus deposit QRIS unpaid/pending yang tidak jadi checkout supaya tidak terlihat dobel.';
 
     public function handle(): int
     {

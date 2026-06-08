@@ -85,6 +85,11 @@
         font-size: 0.55rem;
     }
 
+    .discount-corner-ribbon--sold-out .discount-corner-ribbon__text {
+        background: #ff6b6b;
+        box-shadow: 0 12px 26px rgba(255, 107, 107, 0.28);
+    }
+
     .discount-old-price {
         color: #111827 !important;
         text-decoration-line: line-through !important;
@@ -335,7 +340,13 @@
                         class="{{ $disabledCardClass }}"
                     @endif
                 >
-                    @if($product->has_active_discount)
+                    @if($isOutOfStock)
+                        <span class="discount-corner-ribbon discount-corner-ribbon--sold-out">
+                            <span class="discount-corner-ribbon__text">
+                                Habis
+                            </span>
+                        </span>
+                    @elseif($product->has_active_discount)
                         <span class="discount-corner-ribbon">
                             <span class="discount-corner-ribbon__text">
                                 {{ $product->active_discount_label }}
@@ -366,9 +377,7 @@
                     @endif
 
                     <div class="mt-auto flex items-center justify-center w-full border-t-2 border-dashed border-[#f4f9ff] {{ $showCompactServiceCards ? 'pt-3 gap-2' : 'pt-4' }}">
-                        @if($isOutOfStock)
-                            <span class="shrink-0 rounded-lg border border-white bg-[#ffe5e5] px-3 py-1.5 text-xs font-black text-[#ff6b6b] shadow-sm">HABIS</span>
-                        @elseif($product->has_active_discount)
+                        @if($product->has_active_discount)
                             <div class="w-full text-center">
                                 <span class="discount-old-price block text-sm font-black text-[#111827] line-through decoration-[#111827] decoration-2 sm:text-base">Rp {{ number_format($product->original_selling_price, 0, ',', '.') }}</span>
                                 <span class="block shrink-0 font-black text-[#5a76c8] {{ $showCompactServiceCards ? 'text-sm sm:text-base' : 'text-lg' }}">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</span>

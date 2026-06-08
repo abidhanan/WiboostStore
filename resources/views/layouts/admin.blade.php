@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') - Wiboost Store</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/wiboost-logo.png') }}?v=20260426-full">
+    @include('partials.site-icons')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.vite-fallback')
     @include('partials.ui-performance-tuning')

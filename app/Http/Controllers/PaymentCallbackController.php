@@ -22,7 +22,7 @@ class PaymentCallbackController extends Controller
         $callbackSignature = (string) $request->header('X-Callback-Signature', '');
         $expectedSignature = hash_hmac('sha256', $rawPayload, (string) config('tripay.private_key'));
 
-        if (! hash_equals($expectedSignature, $callbackSignature)) {
+        if (! hash_equals(strtolower($expectedSignature), strtolower(trim($callbackSignature)))) {
             return response()->json(['success' => false, 'message' => 'Invalid signature'], 403);
         }
 
@@ -141,6 +141,177 @@ class PaymentCallbackController extends Controller
                 }
 
                 if (in_array($status, ['FAILED', 'EXPIRED', 'REFUND'], true) && in_array($transaction->payment_status, ['unpaid', 'pending'], true)) {
+                    $transaction->delete();
+                }
+
+                return ['found' => true, 'paid' => false];
+            });
+
+            if (! $result['found']) {
+                return response()->json(['success' => false, 'message' => 'Transaction not found'], 404);
+            }
+
+            if ($result['paid'] ?? false) {
+                $transaction = Transaction::with(['product', 'user'])->find($result['transaction_id']);
+                $orderFulfillmentService->handlePaidTransaction($transaction->fresh(['product', 'user']));
+            }
+
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Unknown merchant_ref format'], 400);
+    }
+
+    public function handleXoftwareCallback(
+        Request $request,
+        OrderFulfillmentService $orderFulfillmentService,
+        DiscordWebhookService $discordWebhookService
+    ) {
+        $rawPayload = $request->getContent();
+        $callbackSignature = (string) $request->header('X-Signature', '');
+        $webhookSecret = (string) config('xoftware.webhook_secret');
+
+        if (! filled($webhookSecret)) {
+            return response()->json(['success' => false, 'message' => 'Webhook secret is not configured'], 500);
+        }
+
+        $expectedSignature = hash_hmac('sha256', $rawPayload, $webhookSecret);
+
+        if (! hash_equals(strtolower($expectedSignature), strtolower(trim($callbackSignature)))) {
+            return response()->json(['success' => false, 'message' => 'Invalid signature'], 403);
+        }
+
+        $payload = json_decode($rawPayload, true);
+
+        if (! is_array($payload)) {
+            return response()->json(['success' => false, 'message' => 'Invalid payload'], 400);
+        }
+
+        $merchantRef = (string) (
+            data_get($payload, 'order_id')
+            ?: data_get($payload, 'ref_id')
+            ?: data_get($payload, 'merchant_ref')
+        );
+        $providerReference = (string) (
+            data_get($payload, 'transaction_id')
+            ?: data_get($payload, 'reference')
+            ?: $merchantRef
+        );
+        $status = strtoupper((string) data_get($payload, 'status', ''));
+        $paymentStatus = strtoupper((string) data_get($payload, 'payment_status', ''));
+        $paidAmount = (int) round((float) data_get($payload, 'total_amount', data_get($payload, 'amount', 0)));
+        $paymentMethod = (string) (
+            data_get($payload, 'channel_code')
+            ?: data_get($payload, 'payment_method')
+            ?: 'QRIS'
+        );
+
+        $isPaid = in_array($status, ['SUCCESS', 'PAID'], true) || in_array($paymentStatus, ['SUCCEEDED', 'PAID'], true);
+        $isFailed = in_array($status, ['FAILED', 'EXPIRED', 'REFUND', 'CANCELED', 'CANCELLED'], true)
+            || in_array($paymentStatus, ['FAILED', 'EXPIRED', 'REFUND', 'CANCELED', 'CANCELLED'], true);
+
+        if (str_starts_with($merchantRef, 'DEP-')) {
+            $result = DB::transaction(function () use ($merchantRef, $providerReference, $isPaid, $isFailed, $paidAmount, $paymentMethod, $payload) {
+                $deposit = Deposit::where('invoice_number', $merchantRef)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $deposit) {
+                    return ['found' => false];
+                }
+
+                if ($isPaid && in_array($deposit->payment_status, [null, 'unpaid', 'pending'], true)) {
+                    $topupAmount = (float) $deposit->amount;
+                    $actualPaidAmount = $paidAmount > 0 ? $paidAmount : $topupAmount;
+
+                    $deposit->update([
+                        'payment_status' => 'paid',
+                        'payment_method' => $paymentMethod,
+                        'paid_amount' => $actualPaidAmount,
+                        'tripay_reference' => filled($providerReference) ? $providerReference : $deposit->tripay_reference,
+                        'payment_response' => array_merge($deposit->payment_response ?? [], [
+                            'payment_gateway' => 'xoftware',
+                            'xoftware_reference' => $providerReference,
+                            'xoftware_callback' => $payload,
+                            'tripay_reference' => $providerReference,
+                            'tripay_callback' => $payload,
+                            'callback_synced_at' => now()->toDateTimeString(),
+                        ]),
+                    ]);
+
+                    $walletHistory = WalletHistory::firstOrCreate(
+                        [
+                            'invoice_number' => $deposit->invoice_number,
+                            'type' => 'topup',
+                        ],
+                        [
+                            'user_id' => $deposit->user_id,
+                            'amount' => $topupAmount,
+                            'description' => 'Top Up Saldo via ' . strtoupper($paymentMethod),
+                        ]
+                    );
+
+                    $user = User::whereKey($deposit->user_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($user && $walletHistory->wasRecentlyCreated) {
+                        $user->increment('balance', $topupAmount);
+                    }
+
+                    return ['found' => true, 'paid' => true, 'deposit_id' => $deposit->id];
+                }
+
+                if ($isFailed && in_array($deposit->payment_status, [null, 'unpaid', 'pending'], true)) {
+                    $deposit->delete();
+                }
+
+                return ['found' => true, 'paid' => false];
+            });
+
+            if (! $result['found']) {
+                return response()->json(['success' => false, 'message' => 'Deposit not found'], 404);
+            }
+
+            if ($result['paid'] ?? false) {
+                $discordWebhookService->sendDepositAlert(
+                    Deposit::with('user')->find($result['deposit_id']),
+                    'Deposit berhasil dibayar',
+                    'Saldo user sudah otomatis ditambahkan.'
+                );
+            }
+
+            return response()->json(['success' => true]);
+        }
+
+        if (str_starts_with($merchantRef, 'WIB-')) {
+            $result = DB::transaction(function () use ($merchantRef, $providerReference, $isPaid, $isFailed, $paidAmount, $paymentMethod, $payload) {
+                $transaction = Transaction::where('invoice_number', $merchantRef)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $transaction) {
+                    return ['found' => false];
+                }
+
+                if ($isPaid && in_array($transaction->payment_status, ['unpaid', 'pending'], true)) {
+                    $transaction->update([
+                        'payment_status' => 'paid',
+                        'payment_method' => $paymentMethod,
+                        'amount' => $paidAmount > 0 ? $paidAmount : $transaction->amount,
+                        'response_data' => array_merge($transaction->response_data ?? [], [
+                            'payment_gateway' => 'xoftware',
+                            'xoftware_reference' => $providerReference,
+                            'xoftware_callback' => $payload,
+                            'tripay_reference' => $providerReference,
+                            'tripay_callback' => $payload,
+                        ]),
+                    ]);
+
+                    return ['found' => true, 'paid' => true, 'transaction_id' => $transaction->id];
+                }
+
+                if ($isFailed && in_array($transaction->payment_status, ['unpaid', 'pending'], true)) {
                     $transaction->delete();
                 }
 

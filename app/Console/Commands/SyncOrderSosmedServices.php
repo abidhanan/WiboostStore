@@ -236,6 +236,10 @@ class SyncOrderSosmedServices extends Command
 
     protected function resolveProviderQuantity(array $service): int
     {
+        if ($this->usesOrderSosmedPerThousandPricing($service)) {
+            return 1000;
+        }
+
         $min = (int) round($this->parseProviderNumber($service['min'] ?? $service['minimum'] ?? 0));
 
         return max(1, $min);
@@ -243,29 +247,28 @@ class SyncOrderSosmedServices extends Command
 
     protected function resolveBasePrice(array $service, int $providerQuantity): float
     {
-        if (($service['_ordersosmed_pricing_mode'] ?? null) === 'per_1000') {
-            $rate = $this->parseProviderNumber($service['rate'] ?? 0);
+        if (($service['_ordersosmed_pricing_mode'] ?? null) === 'flat') {
+            $price = $this->parseProviderNumber($service['price'] ?? $service['rate'] ?? 0);
 
-            return $rate > 0 ? max(0, ($rate / 1000) * $providerQuantity) : 0;
+            return max(0, $price);
         }
 
         if (isset($service['price']) && $this->parseProviderNumber($service['price']) > 0) {
-            $price = $this->parseProviderNumber($service['price']);
-
-            if (($service['_ordersosmed_pricing_mode'] ?? null) === 'flat') {
-                return $price;
-            }
-
-            return $price > 0 ? max(0, ($price / 1000) * $providerQuantity) : 0;
+            return max(0, $this->parseProviderNumber($service['price']));
         }
 
-        $rate = $this->parseProviderNumber($service['rate'] ?? 0);
+        if (isset($service['rate']) && $this->parseProviderNumber($service['rate']) > 0) {
+            $rate = $this->parseProviderNumber($service['rate'] ?? 0);
 
-        if ($rate <= 0) {
-            return 0;
+            return max(0, $rate);
         }
 
-        return max(0, ($rate / 1000) * $providerQuantity);
+        return 0;
+    }
+
+    protected function usesOrderSosmedPerThousandPricing(array $service): bool
+    {
+        return ($service['_ordersosmed_pricing_mode'] ?? null) !== 'flat';
     }
 
     protected function parseProviderNumber(mixed $value): float
@@ -575,6 +578,14 @@ class SyncOrderSosmedServices extends Command
 
         $classificationText = $this->normalizeMatchText($serviceText . ' ' . $providerCategoryText);
 
+        if ($platform !== 'youtube' && $this->isLiveSosmedServiceText($classificationText)) {
+            return [
+                'platform' => $platform,
+                'metric' => 'lainnya',
+                'region' => null,
+            ];
+        }
+
         if ($platform === 'youtube') {
             return [
                 'platform' => 'youtube',
@@ -852,6 +863,16 @@ class SyncOrderSosmedServices extends Command
             ' reply ',
             ' replies ',
             ' balasan ',
+        ]);
+    }
+
+    protected function isLiveSosmedServiceText(string $text): bool
+    {
+        return $this->containsAnyKeyword($text, [
+            ' live ',
+            ' livestream ',
+            ' live stream ',
+            ' siaran langsung ',
         ]);
     }
 

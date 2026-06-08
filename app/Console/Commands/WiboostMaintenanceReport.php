@@ -224,24 +224,23 @@ class WiboostMaintenanceReport extends Command
         }
 
         $publicUrl = rtrim((string) config('wiboost.public_url', config('app.url')), '/');
-        $callbackUrl = $publicUrl . '/tripay/callback';
-        $tripayConfigured = filled(config('tripay.api_key')) && filled(config('tripay.private_key')) && filled(config('tripay.merchant_code'));
+        $callbackUrl = $publicUrl . '/xoftware/callback';
+        $xoftwareConfigured = filled(config('xoftware.api_key')) && filled(config('xoftware.webhook_secret')) && filled(config('xoftware.merchant_id'));
 
-        if (! $tripayConfigured) {
-            $diagnostics['Tripay'] = [
+        if (! $xoftwareConfigured) {
+            $diagnostics['Xoftware QRIS'] = [
                 'status' => 'issue',
-                'message' => 'API key, private key, atau merchant code belum diatur.',
+                'message' => 'API key, webhook secret, atau merchant ID belum diatur.',
             ];
         } elseif ($this->looksLikeLocalUrl($publicUrl)) {
-            $diagnostics['Tripay'] = [
+            $diagnostics['Xoftware QRIS'] = [
                 'status' => 'issue',
                 'message' => "Public URL masih lokal ({$publicUrl}). Callback eksternal belum siap.",
             ];
         } else {
-            $mode = config('tripay.is_production') ? 'production' : 'sandbox';
-            $diagnostics['Tripay'] = [
+            $diagnostics['Xoftware QRIS'] = [
                 'status' => 'ok',
-                'message' => "Mode {$mode}. Callback {$callbackUrl}",
+                'message' => "Callback {$callbackUrl}",
             ];
         }
 

@@ -9,7 +9,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\WalletHistory;
 use App\Services\OrderFulfillmentService;
-use App\Services\TripayService;
+use App\Services\XoftwarePaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -61,7 +61,7 @@ class OrderController extends Controller
 
     public function processCheckout(
         Request $request,
-        TripayService $tripayService,
+        XoftwarePaymentService $paymentService,
         OrderFulfillmentService $orderFulfillmentService
     ) {
         $product = Product::findOrFail($request->product_id);
@@ -224,11 +224,13 @@ class OrderController extends Controller
                 'payment_method' => 'tripay',
             ]);
 
-            $payment = $tripayService->createTransactionPayment($transaction->fresh(['product', 'user']), $user);
+            $payment = $paymentService->createTransactionPayment($transaction->fresh(['product', 'user']), $user);
             $transaction->update([
                 'snap_token' => $payment['checkout_url'],
                 'response_data' => array_merge($transaction->response_data ?? [], [
-                    'payment_gateway' => 'tripay',
+                    'payment_gateway' => 'xoftware',
+                    'xoftware_reference' => $payment['reference'] ?? null,
+                    'xoftware_create_response' => $payment['raw'] ?? null,
                     'tripay_reference' => $payment['reference'] ?? null,
                     'tripay_create_response' => $payment['raw'] ?? null,
                 ]),
@@ -429,7 +431,7 @@ class OrderController extends Controller
         ?array $orderInputData
     ): ?Transaction {
         $orderInputData = $orderInputData ?? [];
-        $expiresInMinutes = max(1, (int) config('tripay.expired_minutes', 60));
+        $expiresInMinutes = max(1, (int) config('xoftware.expired_minutes', 60));
 
         return Transaction::query()
             ->where('user_id', $user->id)

@@ -309,6 +309,10 @@ class RefreshApiBasePrices extends Command
 
     protected function resolveOrderSosmedProviderQuantity(array $service): int
     {
+        if ($this->usesOrderSosmedPerThousandPricing($service)) {
+            return 1000;
+        }
+
         $min = (int) round($this->parseProviderNumber($service['min'] ?? $service['minimum'] ?? 0));
 
         return max(1, $min);
@@ -316,25 +320,28 @@ class RefreshApiBasePrices extends Command
 
     protected function resolveOrderSosmedBasePrice(array $service, int $providerQuantity): float
     {
-        if (($service['_ordersosmed_pricing_mode'] ?? null) === 'per_1000') {
-            $rate = $this->parseProviderNumber($service['rate'] ?? 0);
+        if (($service['_ordersosmed_pricing_mode'] ?? null) === 'flat') {
+            $price = $this->parseProviderNumber($service['price'] ?? $service['rate'] ?? 0);
 
-            return $rate > 0 ? max(0, ($rate / 1000) * $providerQuantity) : 0;
+            return max(0, $price);
         }
 
         if (isset($service['price']) && $this->parseProviderNumber($service['price']) > 0) {
-            $price = $this->parseProviderNumber($service['price']);
-
-            if (($service['_ordersosmed_pricing_mode'] ?? null) === 'flat') {
-                return $price;
-            }
-
-            return $price > 0 ? max(0, ($price / 1000) * $providerQuantity) : 0;
+            return max(0, $this->parseProviderNumber($service['price']));
         }
 
-        $rate = $this->parseProviderNumber($service['rate'] ?? 0);
+        if (isset($service['rate']) && $this->parseProviderNumber($service['rate']) > 0) {
+            $rate = $this->parseProviderNumber($service['rate'] ?? 0);
 
-        return $rate > 0 ? max(0, ($rate / 1000) * $providerQuantity) : 0;
+            return max(0, $rate);
+        }
+
+        return 0;
+    }
+
+    protected function usesOrderSosmedPerThousandPricing(array $service): bool
+    {
+        return ($service['_ordersosmed_pricing_mode'] ?? null) !== 'flat';
     }
 
     protected function parseProviderNumber(mixed $value): float

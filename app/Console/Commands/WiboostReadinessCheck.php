@@ -15,14 +15,14 @@ class WiboostReadinessCheck extends Command
         $checks = collect([
             $this->check('Domain publik final', $this->hasFinalPublicUrl(), 'Isi APP_URL dan WIBOOST_PUBLIC_URL dengan domain/hosting final, bukan localhost atau 127.0.0.1.'),
             $this->check('Mode production', config('app.env') === 'production' && config('app.debug') === false, 'Set APP_ENV=production dan APP_DEBUG=false saat live.'),
-            $this->check('Tripay live key', filled(config('tripay.api_key')) && filled(config('tripay.private_key')) && filled(config('tripay.merchant_code')), 'Isi TRIPAY_API_KEY, TRIPAY_PRIVATE_KEY, dan TRIPAY_MERCHANT_CODE. Gunakan production mode jika sudah menerima transaksi asli.'),
+            $this->check('Xoftware live key', filled(config('xoftware.api_key')) && filled(config('xoftware.webhook_secret')) && filled(config('xoftware.merchant_id')), 'Isi XOFTWARE_API_KEY, XOFTWARE_WEBHOOK_SECRET, dan XOFTWARE_MERCHANT_ID. XOFTWARE_SECRET_KEY opsional jika Xoftware memberi secret request terpisah.'),
             $this->check('Email SMTP', config('mail.default') !== 'log' && filled(config('mail.from.address')) && filled(config('mail.mailers.smtp.host')), 'Gunakan SMTP aktif agar reset password dan email sukses transaksi terkirim.'),
             $this->check('Digiflazz API', filled(config('services.digiflazz.username')) && filled(config('services.digiflazz.key')), 'Isi DIGIFLAZZ_USERNAME dan DIGIFLAZZ_KEY.'),
             $this->check('OrderSosmed API', filled(config('services.ordersosmed.api_url')) && filled(config('services.ordersosmed.api_id')) && filled(config('services.ordersosmed.api_key')), 'Isi ORDERSOSMED_API_URL, ORDERSOSMED_API_ID, ORDERSOSMED_API_KEY, dan secret key jika provider mewajibkan.'),
             $this->check('Discord alert', filled(config('services.discord.webhook_url')), 'Isi DISCORD_WEBHOOK_URL agar error/refund/stok bisa masuk Discord.'),
             $this->check('Queue configured', config('queue.default') !== 'sync', 'Untuk production gunakan QUEUE_CONNECTION=database/redis dan jalankan php artisan queue:work.'),
             $this->check('Scheduler command', true, 'Pasang cron server: * * * * * php /path/project/artisan schedule:run >> /dev/null 2>&1'),
-            $this->check('Secret rotation', true, 'Regenerate semua secret yang pernah dibagikan sebelum live: Tripay, Digiflazz, OrderSosmed, Gmail app password, Discord webhook.'),
+            $this->check('Secret rotation', true, 'Regenerate semua secret yang pernah dibagikan sebelum live: Xoftware, Digiflazz, OrderSosmed, Gmail app password, Discord webhook.'),
             $this->check('Testing transaksi real', true, 'Uji deposit, top up game kecil, kuota kecil, suntik sosmed kecil, reset password, dan refund provider gagal.'),
         ]);
 

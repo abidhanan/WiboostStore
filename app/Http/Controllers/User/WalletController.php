@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\WalletHistory;
 use App\Services\TripayDepositSyncService;
-use App\Services\TripayService;
+use App\Services\XoftwarePaymentService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,7 +30,7 @@ class WalletController extends Controller
         return view('user.wallet.index', compact('deposits'));
     }
 
-    public function store(Request $request, TripayService $tripayService)
+    public function store(Request $request, XoftwarePaymentService $paymentService)
     {
         $request->validate([
             'amount' => 'required|numeric|min:10000',
@@ -63,7 +63,7 @@ class WalletController extends Controller
                 'payment_method' => 'tripay',
             ]);
 
-            $paymentUrl = $this->resolveDepositPaymentUrl($deposit->fresh('user'), $tripayService);
+            $paymentUrl = $this->resolveDepositPaymentUrl($deposit->fresh('user'), $paymentService);
 
             return redirect()->away((string) $paymentUrl);
         } catch (Exception $e) {
@@ -71,7 +71,7 @@ class WalletController extends Controller
         }
     }
 
-    public function pay($invoice_number, TripayService $tripayService)
+    public function pay($invoice_number, XoftwarePaymentService $paymentService)
     {
         $deposit = Deposit::where('invoice_number', $invoice_number)
             ->where('user_id', Auth::id())
@@ -82,7 +82,7 @@ class WalletController extends Controller
         }
 
         try {
-            $paymentUrl = $this->resolveDepositPaymentUrl($deposit->fresh('user'), $tripayService);
+            $paymentUrl = $this->resolveDepositPaymentUrl($deposit->fresh('user'), $paymentService);
 
             return redirect()->away((string) $paymentUrl);
         } catch (Exception $e) {
@@ -128,7 +128,7 @@ class WalletController extends Controller
 
     protected function findReusableDeposit(float $amount): ?Deposit
     {
-        $expiresInMinutes = max(1, (int) config('tripay.expired_minutes', 60));
+        $expiresInMinutes = max(1, (int) config('xoftware.expired_minutes', 60));
 
         return Deposit::where('user_id', Auth::id())
             ->whereIn('payment_status', ['unpaid', 'pending'])
@@ -139,18 +139,22 @@ class WalletController extends Controller
             ->first();
     }
 
-    protected function resolveDepositPaymentUrl(Deposit $deposit, TripayService $tripayService): string
+    protected function resolveDepositPaymentUrl(Deposit $deposit, XoftwarePaymentService $paymentService): string
     {
         if (filled($deposit->payment_url)) {
             return (string) $deposit->payment_url;
         }
 
-        $payment = $tripayService->createDepositPayment($deposit, Auth::user());
+        $payment = $paymentService->createDepositPayment($deposit, Auth::user());
 
         $deposit->update([
             'payment_url' => $payment['checkout_url'],
             'tripay_reference' => $payment['reference'] ?? null,
-            'payment_response' => $payment['raw'] ?? null,
+            'payment_response' => array_merge($payment['raw'] ?? [], [
+                'payment_gateway' => 'xoftware',
+                'xoftware_reference' => $payment['reference'] ?? null,
+                'tripay_reference' => $payment['reference'] ?? null,
+            ]),
         ]);
 
         return $payment['checkout_url'];

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Response;
 
 // --- 1. CONTROLLER IMPORTS ---
 use App\Http\Controllers\ProfileController;
@@ -34,6 +35,52 @@ use App\Http\Controllers\PaymentCallbackController;
 | 2. PUBLIC ROUTES
 |--------------------------------------------------------------------------
 */
+Route::get('/favicon.ico', function () {
+    $path = public_path('favicon.ico');
+
+    abort_unless(is_file($path), 404);
+
+    return Response::file($path, [
+        'Content-Type' => 'image/x-icon',
+        'Cache-Control' => 'public, max-age=604800',
+    ]);
+});
+
+Route::get('/apple-touch-icon.png', function () {
+    $path = public_path('images/wiboost-icon-180.png');
+
+    abort_unless(is_file($path), 404);
+
+    return Response::file($path, [
+        'Content-Type' => 'image/png',
+        'Cache-Control' => 'public, max-age=604800',
+    ]);
+});
+
+Route::get('/apple-touch-icon-precomposed.png', function () {
+    $path = public_path('images/wiboost-icon-180.png');
+
+    abort_unless(is_file($path), 404);
+
+    return Response::file($path, [
+        'Content-Type' => 'image/png',
+        'Cache-Control' => 'public, max-age=604800',
+    ]);
+});
+
+Route::get('/images/wiboost-icon-{size}.png', function (string $size) {
+    abort_unless(in_array($size, ['16', '32', '64', '180', '192', '512'], true), 404);
+
+    $path = public_path("images/wiboost-icon-{$size}.png");
+
+    abort_unless(is_file($path), 404);
+
+    return Response::file($path, [
+        'Content-Type' => 'image/png',
+        'Cache-Control' => 'public, max-age=604800',
+    ]);
+})->whereNumber('size');
+
 Route::get('/', [FrontendController::class, 'index'])->name('home');
 Route::get('/legal/{page}', [FrontendController::class, 'legal'])
     ->whereIn('page', ['terms', 'privacy-policy', 'refund-policy', 'contact'])
@@ -135,3 +182,4 @@ require __DIR__.'/auth.php';
 */
 Route::post('/midtrans/callback', [PaymentCallbackController::class, 'handleNotification'])->name('midtrans.callback');
 Route::post('/tripay/callback', [PaymentCallbackController::class, 'handleTripayCallback'])->name('tripay.callback');
+Route::post('/xoftware/callback', [PaymentCallbackController::class, 'handleXoftwareCallback'])->name('xoftware.callback');

@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             '/midtrans/callback',
             '/tripay/callback',
+            '/xoftware/callback',
         ]);
 
     })

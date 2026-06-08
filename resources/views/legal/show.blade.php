@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="{{ asset('images/wiboost-logo.png') }}?v=20260426-full">
+    @include('partials.site-icons')
     <title>{{ $page['title'] }} - Wiboost Store</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])

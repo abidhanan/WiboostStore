@@ -11,7 +11,7 @@ class CleanupUnpaidTripayOrders extends Command
         {--execute : Jalankan penghapusan. Tanpa opsi ini hanya preview}
         {--older-than=0 : Hanya hapus invoice yang lebih lama dari jumlah menit ini}';
 
-    protected $description = 'Hapus invoice order Tripay yang masih unpaid/pending supaya tidak masuk riwayat pesanan.';
+    protected $description = 'Hapus invoice order QRIS yang masih unpaid/pending supaya tidak masuk riwayat pesanan.';
 
     public function handle(): int
     {
@@ -43,7 +43,7 @@ class CleanupUnpaidTripayOrders extends Command
             ])->all()
         );
 
-        $this->info("Total invoice Tripay unpaid/pending yang cocok: {$count}");
+        $this->info("Total invoice QRIS unpaid/pending yang cocok: {$count}");
 
         if (! $this->option('execute')) {
             $this->warn('Preview saja. Tambahkan --execute untuk benar-benar menghapus.');
@@ -52,7 +52,7 @@ class CleanupUnpaidTripayOrders extends Command
         }
 
         $deleted = $query->delete();
-        $this->info("Berhasil menghapus {$deleted} invoice Tripay unpaid/pending.");
+        $this->info("Berhasil menghapus {$deleted} invoice QRIS unpaid/pending.");
 
         return self::SUCCESS;
     }

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class TripayDepositSyncService
 {
-    public function __construct(private readonly TripayService $tripayService)
+    public function __construct(private readonly XoftwarePaymentService $paymentService)
     {
     }
 
@@ -41,19 +41,21 @@ class TripayDepositSyncService
         }
 
         try {
-            $detail = $this->tripayService->transactionDetail($tripayReference);
+            $detail = $this->paymentService->transactionDetail($tripayReference);
         } catch (Exception $exception) {
             return;
         }
 
         $data = data_get($detail, 'data', []);
         $status = strtoupper((string) data_get($data, 'status', ''));
+        $paymentStatus = strtoupper((string) data_get($data, 'payment_status', ''));
 
-        if ($status === 'PAID') {
+        if (in_array($status, ['SUCCESS', 'PAID'], true) || in_array($paymentStatus, ['SUCCEEDED', 'PAID'], true)) {
             $this->markDepositAsPaid($pendingDeposit, $data, $detail);
         }
 
-        if (in_array($status, ['FAILED', 'EXPIRED', 'REFUND'], true)) {
+        if (in_array($status, ['FAILED', 'EXPIRED', 'REFUND', 'CANCELED', 'CANCELLED'], true)
+            || in_array($paymentStatus, ['FAILED', 'EXPIRED', 'REFUND', 'CANCELED', 'CANCELLED'], true)) {
             $pendingDeposit->delete();
         }
     }
@@ -73,10 +75,17 @@ class TripayDepositSyncService
             $paidAmount = (int) round((float) data_get($data, 'total_amount', data_get($data, 'amount', $topupAmount)));
             $paymentMethod = (string) (
                 data_get($data, 'payment_method')
+                ?: data_get($data, 'channel_code')
                 ?: data_get($data, 'payment_method_code')
                 ?: 'qris'
             );
-            $tripayReference = (string) (data_get($data, 'reference') ?: $deposit->tripay_reference);
+            $tripayReference = (string) (
+                data_get($data, 'ref_id')
+                ?: data_get($data, 'merchant_ref')
+                ?: data_get($data, 'reference')
+                ?: data_get($data, 'transaction_id')
+                ?: $deposit->tripay_reference
+            );
 
             $deposit->update([
                 'payment_status' => 'paid',
@@ -84,6 +93,9 @@ class TripayDepositSyncService
                 'paid_amount' => $paidAmount > 0 ? $paidAmount : $topupAmount,
                 'tripay_reference' => filled($tripayReference) ? $tripayReference : $deposit->tripay_reference,
                 'payment_response' => array_merge($deposit->payment_response ?? [], [
+                    'payment_gateway' => 'xoftware',
+                    'xoftware_reference' => filled($tripayReference) ? $tripayReference : $deposit->tripay_reference,
+                    'xoftware_detail_sync' => $detail,
                     'tripay_detail_sync' => $detail,
                     'synced_at' => now()->toDateTimeString(),
                 ]),
@@ -118,7 +130,14 @@ class TripayDepositSyncService
         }
 
         $reference = data_get($deposit->payment_response, 'data.reference')
+            ?: data_get($deposit->payment_response, 'data.ref_id')
+            ?: data_get($deposit->payment_response, 'data.merchant_ref')
+            ?: data_get($deposit->payment_response, 'data.transaction_id')
             ?: data_get($deposit->payment_response, 'reference')
+            ?: data_get($deposit->payment_response, 'xoftware_reference')
+            ?: data_get($deposit->payment_response, 'xoftware_callback.ref_id')
+            ?: data_get($deposit->payment_response, 'xoftware_callback.order_id')
+            ?: data_get($deposit->payment_response, 'xoftware_callback.transaction_id')
             ?: data_get($deposit->payment_response, 'tripay_reference')
             ?: data_get($deposit->payment_response, 'tripay_callback.reference');
 

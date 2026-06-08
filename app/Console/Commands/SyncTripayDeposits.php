@@ -5,23 +5,27 @@ namespace App\Console\Commands;
 use App\Models\Deposit;
 use App\Models\User;
 use App\Services\TripayDepositSyncService;
-use App\Services\TripayService;
+use App\Services\XoftwarePaymentService;
 use Illuminate\Console\Command;
 
 class SyncTripayDeposits extends Command
 {
     protected $signature = 'wiboost:sync-tripay-deposits {--user_id=} {--email=} {--invoice=} {--reference=} {--limit=100}';
 
-    protected $description = 'Sinkronkan deposit QRIS/Tripay pending dengan status pembayaran provider.';
+    protected $description = 'Sinkronkan deposit QRIS/Xoftware pending dengan status pembayaran provider.';
 
-    public function handle(TripayDepositSyncService $depositSyncService, TripayService $tripayService): int
+    public function handle(TripayDepositSyncService $depositSyncService, XoftwarePaymentService $paymentService): int
     {
         if ($reference = $this->option('reference')) {
-            $detail = $tripayService->transactionDetail((string) $reference);
-            $invoice = (string) data_get($detail, 'data.merchant_ref', '');
+            $detail = $paymentService->transactionDetail((string) $reference);
+            $invoice = (string) (
+                data_get($detail, 'data.ref_id')
+                ?: data_get($detail, 'data.merchant_ref')
+                ?: data_get($detail, 'data.order_id')
+            );
 
             if ($invoice === '') {
-                $this->error('Reference ditemukan, tetapi merchant_ref/invoice kosong.');
+                $this->error('Reference ditemukan, tetapi ref_id/invoice kosong.');
 
                 return self::FAILURE;
             }

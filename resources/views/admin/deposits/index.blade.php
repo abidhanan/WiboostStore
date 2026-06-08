@@ -353,7 +353,7 @@
                             <p class="mt-1 font-black uppercase text-[#2b3a67]">{{ $deposit->payment_method ?? '-' }}</p>
                         </div>
                         <div class="admin-detail-panel">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Referensi Tripay</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Referensi QRIS</p>
                             <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $deposit->tripay_reference ?? '-' }}</p>
                         </div>
                     </div>
