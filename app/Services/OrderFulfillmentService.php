@@ -212,22 +212,60 @@ class OrderFulfillmentService
 
     public function markOrderSuccessful(Transaction $transaction, ?string $notes = null): void
     {
-        $previousStatus = $transaction->order_status;
+        $result = DB::transaction(function () use ($transaction, $notes) {
+            $lockedTransaction = Transaction::query()
+                ->lockForUpdate()
+                ->find($transaction->id);
 
-        $transaction->loadMissing('product', 'user');
-        $transaction->update([
-            'order_status' => 'success',
-            'target_notes' => $notes ?: ($transaction->target_notes ?: 'Pesanan telah selesai diproses.'),
-        ]);
+            if (! $lockedTransaction) {
+                return null;
+            }
+
+            $previousStatus = $lockedTransaction->order_status;
+            $responseData = $lockedTransaction->response_data ?? [];
+            $discordAlreadySent = (bool) data_get($responseData, 'discord_alerts.admin_success_sent');
+            $shouldSendDiscord = $previousStatus !== 'success' && ! $discordAlreadySent;
+
+            if ($shouldSendDiscord) {
+                data_set($responseData, 'discord_alerts.admin_success_sent', now()->toDateTimeString());
+            }
+
+            $lockedTransaction->update([
+                'order_status' => 'success',
+                'target_notes' => $notes ?: ($lockedTransaction->target_notes ?: 'Pesanan telah selesai diproses.'),
+                'response_data' => $responseData,
+            ]);
+
+            return [
+                'transaction_id' => $lockedTransaction->id,
+                'previous_status' => $previousStatus,
+                'should_send_discord' => $shouldSendDiscord,
+            ];
+        });
+
+        if (! $result) {
+            return;
+        }
+
+        $transaction = Transaction::with(['product', 'user'])->find($result['transaction_id']);
+
+        if (! $transaction) {
+            return;
+        }
+
+        $previousStatus = $result['previous_status'];
 
         $this->rewardUserIfNeeded($transaction, $previousStatus, 'success');
         $this->sendSuccessEmail($transaction, $previousStatus);
-        $this->discordWebhookService->sendOrderAlert(
-            $transaction,
-            'Pesanan ditandai sukses',
-            'Pesanan telah selesai diproses dan email sukses dikirim ke pelanggan.',
-            4968121
-        );
+
+        if ($result['should_send_discord']) {
+            $this->discordWebhookService->sendOrderAlert(
+                $transaction,
+                'Pesanan ditandai sukses',
+                'Pesanan telah selesai diproses dan email sukses dikirim ke pelanggan.',
+                4968121
+            );
+        }
     }
 
     public function syncProviderStatus(Transaction $transaction): string

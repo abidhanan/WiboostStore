@@ -44,7 +44,11 @@ class OrderController extends Controller
             },
         ])->where('slug', $slug)->firstOrFail();
 
-        if (! Auth::check() && $this->guestSuntikSosmedCategoryRequiresLogin($category)) {
+        $rootCategorySlug = $this->resolveRootCategorySlug($category);
+        $rootCategoryName = $this->resolveRootCategoryName($category);
+        $isSuntikSosmedOrder = $this->isSuntikSosmedCatalogCategory($category, $rootCategorySlug);
+
+        if (! Auth::check() && $this->guestSuntikSosmedCategoryRequiresLogin($category, $rootCategorySlug)) {
             return redirect()->guest(route('login'));
         }
 
@@ -52,9 +56,6 @@ class OrderController extends Controller
             return view('user.order_sub', compact('category', 'isGuestCatalog'));
         }
 
-        $rootCategorySlug = $this->resolveRootCategorySlug($category);
-        $rootCategoryName = $this->resolveRootCategoryName($category);
-        $isSuntikSosmedOrder = $rootCategorySlug === 'suntik-sosmed';
         $products = $isSuntikSosmedOrder && ! app()->environment('testing')
             ? collect()
             : $this->loadCategoryProducts($category, $rootCategorySlug);
@@ -362,12 +363,41 @@ class OrderController extends Controller
         return $category->name;
     }
 
-    protected function guestSuntikSosmedCategoryRequiresLogin(Category $category): bool
+    protected function guestSuntikSosmedCategoryRequiresLogin(Category $category, ?string $rootCategorySlug = null): bool
     {
-        $category->loadMissing('parent.parent.parent');
+        $category->loadMissing('parent.parent.parent.parent.parent');
 
         return $category->children->isEmpty()
-            && $this->resolveRootCategorySlug($category) === 'suntik-sosmed';
+            && $this->isSuntikSosmedCatalogCategory($category, $rootCategorySlug);
+    }
+
+    protected function isSuntikSosmedCatalogCategory(Category $category, ?string $rootCategorySlug = null): bool
+    {
+        if ($rootCategorySlug === 'suntik-sosmed') {
+            return true;
+        }
+
+        $category->loadMissing('parent.parent.parent.parent.parent');
+
+        $segments = [];
+        $current = $category;
+
+        while ($current) {
+            $segments[] = Str::lower((string) $current->slug);
+            $segments[] = Str::lower((string) $current->name);
+            $current = $current->parent;
+        }
+
+        $text = implode(' ', array_filter($segments));
+
+        if (preg_match('/\bsosmed-|suntik\s+sosmed\b/u', $text)) {
+            return true;
+        }
+
+        $platformPattern = '/\b(instagram|tiktok|youtube|telegram|twitter|facebook|tweet|x-twitter)\b/u';
+        $servicePattern = '/\b(followers?|likes?|views?|viewers?|subscribers?|comments?|komentar|share|save|members?|traffic|visit|rating|review)\b/u';
+
+        return (bool) (preg_match($platformPattern, $text) && preg_match($servicePattern, $text));
     }
 
     protected function cacheRootCategoryForProducts($products, ?string $rootCategorySlug, ?string $rootCategoryName): void

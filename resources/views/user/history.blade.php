@@ -351,19 +351,27 @@
                                                         '',
                                                     ];
 
-                                                    $appendOtpLine($otpLines, 'Invoice', $otpDetail['invoice'] ?? null);
-                                                    $appendOtpLine($otpLines, 'Kategori', $otpDetail['category'] ?? null);
-                                                    $appendOtpLine($otpLines, 'Produk', $otpDetail['product'] ?? null);
-                                                    $appendOtpLine($otpLines, 'Total Bayar', $otpDetail['total'] ?? null);
-                                                    $appendOtpLine($otpLines, 'Metode', $otpDetail['payment'] ?? null);
-                                                    $appendOtpLine($otpLines, 'Status Pesanan', $otpDetail['status'] ?? null);
-                                                    $appendOtpLine($otpLines, 'ID Provider', $otpDetail['provider_id'] ?? null);
-                                                    $appendOtpLine($otpLines, 'Waktu Transaksi', $otpDetail['time'] ?? null);
                                                     $appendOtpLine($otpLines, 'Nama Pembeli', $otpUser->name ?? null);
                                                     $appendOtpLine($otpLines, 'Email Pembeli', $otpUser->email ?? null);
                                                     $appendOtpLine($otpLines, 'WhatsApp Pembeli', $otpUser->whatsapp ?? null);
-                                                    $appendOtpLine($otpLines, 'Email Akun', $credentials['email'] ?? null);
-                                                    $appendOtpLine($otpLines, 'Password Akun', $credentials['password'] ?? null);
+
+                                                    $otpOrderLines = [];
+                                                    $appendOtpLine($otpOrderLines, 'Invoice', $otpDetail['invoice'] ?? null);
+                                                    $appendOtpLine($otpOrderLines, 'Kategori', $otpDetail['category'] ?? null);
+                                                    $appendOtpLine($otpOrderLines, 'Produk', $otpDetail['product'] ?? null);
+                                                    $appendOtpLine($otpOrderLines, 'Total Bayar', $otpDetail['total'] ?? null);
+                                                    $appendOtpLine($otpOrderLines, 'Metode', $otpDetail['payment'] ?? null);
+                                                    $appendOtpLine($otpOrderLines, 'Status Pesanan', $otpDetail['status'] ?? null);
+                                                    $appendOtpLine($otpOrderLines, 'ID Provider', $otpDetail['provider_id'] ?? null);
+                                                    $appendOtpLine($otpOrderLines, 'Waktu Transaksi', $otpDetail['time'] ?? null);
+                                                    $appendOtpLine($otpOrderLines, 'Email Akun', $credentials['email'] ?? null);
+                                                    $appendOtpLine($otpOrderLines, 'Password Akun', $credentials['password'] ?? null);
+
+                                                    if ($otpOrderLines !== []) {
+                                                        $otpLines[] = '';
+                                                        $otpLines[] = 'Data Pesanan:';
+                                                        array_push($otpLines, ...$otpOrderLines);
+                                                    }
 
                                                     $otpInputLines = collect($otpDetail['input_lines'] ?? [])
                                                         ->map(fn ($line) => trim((string) $line))
