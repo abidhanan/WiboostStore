@@ -57,6 +57,66 @@
         transition-duration: 150ms !important;
     }
 
+    body.wiboost-compact-ui footer .border-t-2 > div {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        justify-content: center !important;
+        gap: 0.3rem !important;
+        overflow: visible !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    body.wiboost-compact-ui footer .border-t-2 > div > a {
+        flex: 0 1 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        padding: 0.34rem 0.48rem !important;
+        font-size: 0.56rem !important;
+        line-height: 1 !important;
+        letter-spacing: 0 !important;
+        white-space: nowrap !important;
+    }
+
+    @media (min-width: 380px) {
+        body.wiboost-compact-ui footer .border-t-2 > div {
+            gap: 0.36rem !important;
+        }
+
+        body.wiboost-compact-ui footer .border-t-2 > div > a {
+            padding: 0.36rem 0.6rem !important;
+            font-size: 0.62rem !important;
+        }
+    }
+
+    @media (min-width: 768px) {
+        body.wiboost-compact-ui footer > div > div:first-child > div:first-child {
+            flex: 0 0 auto !important;
+            min-width: max-content !important;
+        }
+
+        body.wiboost-compact-ui footer > div > div:first-child > div:first-child > p {
+            width: max-content !important;
+            max-width: none !important;
+            white-space: nowrap !important;
+        }
+
+        body.wiboost-compact-ui footer .border-t-2 > div {
+            justify-content: center !important;
+            gap: 0.75rem !important;
+        }
+
+        body.wiboost-compact-ui footer .border-t-2 > div > a {
+            flex: 0 0 auto !important;
+            width: auto !important;
+            min-width: 0 !important;
+            padding: 0.45rem 1.1rem !important;
+            font-size: 0.86rem !important;
+            line-height: 1.1 !important;
+        }
+    }
+
     @media (min-width: 768px) {
         body.wiboost-compact-ui.wiboost-welcome-page,
         body.wiboost-compact-ui.wiboost-user-dashboard-page main,

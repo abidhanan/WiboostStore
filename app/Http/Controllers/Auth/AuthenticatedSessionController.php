@@ -41,8 +41,29 @@ class AuthenticatedSessionController extends Controller
         // 2. Buat sesi baru untuk keamanan
         $request->session()->regenerate();
 
-        // 3. LOGIKA REDIRECT BERDASARKAN ROLE BARU (Hanya 2 Role)
-        return redirect()->intended(route('dashboard', absolute: false));
+        $this->forgetGuestCatalogIntendedUrl($request);
+
+        // 3. Arahkan user biasa langsung ke dashboard user.
+        return redirect()->intended(route('user.dashboard', absolute: false));
+    }
+
+    protected function forgetGuestCatalogIntendedUrl(Request $request): void
+    {
+        $intendedUrl = $request->session()->get('url.intended');
+
+        if (! is_string($intendedUrl) || $intendedUrl === '') {
+            return;
+        }
+
+        $path = parse_url($intendedUrl, PHP_URL_PATH);
+
+        if (! is_string($path)) {
+            return;
+        }
+
+        if (preg_match('#^/order/[^/]+/?$#', '/' . ltrim($path, '/')) === 1) {
+            $request->session()->forget('url.intended');
+        }
     }
 
     /**

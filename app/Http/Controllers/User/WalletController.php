@@ -95,7 +95,9 @@ class WalletController extends Controller
         abort_if((int) $deposit->user_id !== (int) Auth::id(), 403);
 
         if (in_array($deposit->payment_status, ['unpaid', 'pending'], true)) {
-            $deposit->delete();
+            $deposit->update([
+                'payment_status' => 'failed',
+            ]);
 
             return redirect()
                 ->route('user.wallet.index');
@@ -145,7 +147,20 @@ class WalletController extends Controller
             return (string) $deposit->payment_url;
         }
 
-        $payment = $paymentService->createDepositPayment($deposit, Auth::user());
+        try {
+            $payment = $paymentService->createDepositPayment($deposit, Auth::user());
+        } catch (\Throwable $exception) {
+            $deposit->update([
+                'payment_status' => 'failed',
+                'payment_response' => array_merge($deposit->payment_response ?? [], [
+                    'payment_gateway' => 'xoftware',
+                    'payment_create_failed_at' => now()->toDateTimeString(),
+                    'payment_create_error' => $exception->getMessage(),
+                ]),
+            ]);
+
+            throw $exception;
+        }
 
         $deposit->update([
             'payment_url' => $payment['checkout_url'],

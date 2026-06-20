@@ -1,6 +1,7 @@
 @extends('layouts.user')
 
 @section('title', 'Lapor Admin')
+@section('body_class', 'wiboost-user-report-page')
 
 @section('content')
 @php
@@ -9,8 +10,235 @@
     $oldRecordId = old('record_id');
 @endphp
 
-<div class="wiboost-font mx-auto max-w-6xl pb-12">
-    <div class="mb-10 text-center md:text-left pl-2">
+@if(session('error') || $errors->any())
+    <script>
+        (() => {
+            const cookieName = 'wiboost_after_admin_report';
+            document.cookie = cookieName + '=; Max-Age=0; path=/; SameSite=Lax';
+
+            try {
+                window.localStorage?.removeItem(cookieName);
+                window.sessionStorage?.removeItem(cookieName);
+                window.sessionStorage?.removeItem('wiboost_admin_report_pending');
+                window.sessionStorage?.removeItem('wiboost_admin_report_left_page');
+            } catch (error) {}
+        })();
+    </script>
+@endif
+
+<style>
+    html {
+        height: auto !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+
+    body.wiboost-user-report-page {
+        height: auto !important;
+        max-height: none !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+
+    body.wiboost-user-report-page main {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    body.wiboost-user-report-page footer {
+        display: block !important;
+    }
+
+    .report-page-shell {
+        display: block;
+        height: auto;
+        min-height: auto;
+        overflow: visible;
+    }
+
+    .report-page-header {
+        margin-bottom: 2.5rem !important;
+    }
+
+    .report-category-panel {
+        margin-bottom: 2rem !important;
+    }
+
+    .report-form,
+    .report-form-grid {
+        height: auto !important;
+        min-height: auto;
+        overflow: visible !important;
+    }
+
+    .report-main-column,
+    .report-side-column {
+        display: block;
+        min-height: auto;
+        overflow: visible !important;
+    }
+
+    .report-main-column > section:not(.report-record-section),
+    .report-side-column > section,
+    .report-side-column > button {
+        flex: none;
+    }
+
+    .report-record-section {
+        display: block;
+        min-height: auto;
+        overflow: visible !important;
+    }
+
+    .report-record-section > label {
+        flex: none;
+    }
+
+    .report-record-empty {
+        flex: none;
+    }
+
+    .report-main-column textarea {
+        max-height: none;
+        min-height: 12rem;
+    }
+
+    #proof-dropzone {
+        min-height: 220px;
+    }
+
+    .report-side-column .space-y-3 {
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+    @media (max-width: 1023px) {
+        body.wiboost-user-report-page main {
+            height: auto !important;
+            max-height: none !important;
+        }
+
+        .report-form-grid {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        .report-side-column {
+            display: block;
+        }
+    }
+
+    .report-form,
+    .report-form-grid,
+    .report-main-column,
+    .report-side-column,
+    .report-side-column > section {
+        max-height: none;
+    }
+
+    .report-record-list {
+        max-height: none;
+        overflow: visible !important;
+        overscroll-behavior: auto;
+        padding-right: 0;
+    }
+
+    .report-record-list::-webkit-scrollbar {
+        display: initial;
+    }
+
+    [data-report-record-card] {
+        align-items: center;
+    }
+
+    [data-report-record-dot] {
+        align-self: center;
+        margin-top: 0 !important;
+    }
+
+    .report-record-invoice,
+    .report-record-title,
+    .report-record-meta {
+        overflow: visible;
+        overflow-wrap: anywhere;
+        text-overflow: clip;
+        white-space: normal;
+        word-break: normal;
+    }
+
+    @media (max-width: 640px) {
+        .report-record-list {
+            max-height: none;
+        }
+
+        [data-report-record-card] {
+            border-radius: 1.45rem;
+            gap: 0.65rem;
+            padding: 0.95rem 1rem;
+        }
+
+        [data-report-record-dot] {
+            height: 1rem;
+            margin-top: 0 !important;
+            width: 1rem;
+        }
+
+        .report-record-title {
+            font-size: 0.88rem;
+            line-height: 1.25;
+        }
+
+        .report-record-meta {
+            font-size: 0.62rem;
+            letter-spacing: 0.08em;
+            line-height: 1.35;
+        }
+    }
+
+    .report-proof-preview {
+        object-fit: cover;
+    }
+
+    .proof-remove-button {
+        aspect-ratio: 1 / 1;
+        height: 3rem !important;
+        min-height: 3rem;
+        min-width: 3rem;
+        padding: 0 !important;
+        width: 3rem !important;
+    }
+
+    .proof-remove-icon {
+        aspect-ratio: 1 / 1;
+        display: block;
+        flex: 0 0 auto;
+        height: 1.35rem !important;
+        width: 1.35rem !important;
+    }
+
+    .report-type-button {
+        align-items: center;
+        display: inline-flex;
+        justify-content: center;
+        min-height: 3.5rem;
+        overflow: visible;
+        text-wrap: nowrap;
+        white-space: nowrap;
+    }
+
+    @media (max-width: 430px) {
+        .report-type-button {
+            border-radius: 1.35rem;
+            font-size: clamp(0.68rem, 3.1vw, 0.78rem) !important;
+            letter-spacing: -0.01em;
+            padding-left: 0.35rem !important;
+            padding-right: 0.35rem !important;
+        }
+    }
+</style>
+
+<div class="report-page-shell wiboost-font mx-auto max-w-6xl pb-12">
+    <div class="report-page-header mb-10 text-center md:text-left pl-2">
         <div class="inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1 text-[10px] font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
             Bantuan
         </div>
@@ -32,12 +260,12 @@
         </div>
     @endif
 
-    <section class="mb-8 rounded-[2.5rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/25 md:p-6">
+    <section class="report-category-panel mb-8 rounded-[2.5rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/25 md:p-6">
         <p class="mb-4 ml-1 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Pilih Jenis Kendala</p>
         <div class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
             @foreach($categories as $category)
                 <a href="{{ route('user.report.admin', ['type' => $category['key']]) }}"
-                   class="rounded-[1.75rem] border-4 px-4 py-3 text-center text-xs font-black transition active:scale-95 {{ $selectedKey === $category['key'] ? 'border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/25' : 'border-white bg-[#f4f9ff] text-[#5a76c8] hover:bg-[#e0fbfc]' }}">
+                   class="report-type-button rounded-[1.75rem] border-4 px-4 py-3 text-center text-xs font-black transition active:scale-95 {{ $selectedKey === $category['key'] ? 'border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/25' : 'border-white bg-[#f4f9ff] text-[#5a76c8] hover:bg-[#e0fbfc]' }}">
                     {{ $category['label'] }}
                 </a>
             @endforeach
@@ -55,12 +283,12 @@
             <p class="mt-2 text-sm font-bold text-[#8faaf3]">Hubungi admin website untuk melengkapi konfigurasi kontak.</p>
         </section>
     @else
-        <form method="POST" action="{{ route('user.report.admin.store') }}" enctype="multipart/form-data" class="space-y-6" onsubmit="return lockAdminReportSubmit(this)">
+        <form method="POST" action="{{ route('user.report.admin.store') }}" enctype="multipart/form-data" class="report-form space-y-6" onsubmit="return lockAdminReportSubmit(this, event)">
             @csrf
             <input type="hidden" name="category_key" value="{{ $selectedKey }}">
 
-            <div class="grid gap-6 lg:grid-cols-[1fr_0.85fr]">
-                <div class="space-y-6">
+            <div class="report-form-grid grid gap-6 lg:grid-cols-[1fr_0.85fr]">
+                <div class="report-main-column space-y-6">
                     <section class="rounded-[2.5rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/25 md:p-6">
                         <label for="issue" class="mb-3 ml-1 block text-xs font-black uppercase tracking-widest text-[#5a76c8]">Tulis Kendala</label>
                         <textarea id="issue" name="issue" rows="8" class="w-full rounded-[2rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 text-sm font-bold leading-relaxed text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]" placeholder="Cth: Saldo belum masuk, pesanan belum sukses, atau ada error di halaman website.">{{ old('issue') }}</textarea>
@@ -68,50 +296,58 @@
 
                     <section class="rounded-[2.5rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/25 md:p-6">
                         <label for="proof" class="mb-3 ml-1 block text-xs font-black uppercase tracking-widest text-[#5a76c8]">Bukti Kendala</label>
-                        <label class="group flex cursor-pointer flex-col gap-4 rounded-[2rem] border-4 border-dashed border-[#bde0fe] bg-[#f8fbff] p-4 shadow-inner transition hover:border-[#8faaf3] hover:bg-[#e0fbfc]/60 sm:flex-row sm:items-center sm:p-5">
-                            <input id="proof" type="file" name="proof" accept="image/*" required class="sr-only" onchange="document.getElementById('proof-file-name').textContent = this.files?.[0]?.name || 'Belum ada gambar dipilih'">
-                            <span class="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.5rem] border-4 border-white bg-white text-[#5a76c8] shadow-lg shadow-[#bde0fe]/25 transition group-hover:scale-105">
-                                <svg class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5M8 10l4-4m0 0 4 4m-4-4v11" />
-                                </svg>
-                            </span>
-                            <span class="min-w-0 flex-1 text-left">
-                                <span class="block text-sm font-black text-[#2b3a67]">Upload screenshot atau foto bukti</span>
-                                <span class="mt-1 block text-xs font-bold leading-relaxed text-[#8faaf3]">Kalau tidak bisa screenshot, foto layar dari device lain juga boleh.</span>
-                                <span id="proof-file-name" class="mt-3 inline-flex max-w-full rounded-full border-2 border-white bg-white px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#5a76c8] shadow-sm">
-                                    Belum ada gambar dipilih
+                        <div class="relative">
+                            <input id="proof" type="file" name="proof" accept="image/*" required class="sr-only" onchange="handleProofPreview(this)">
+                            <label for="proof" id="proof-dropzone" class="group relative flex min-h-[220px] cursor-pointer items-center justify-center overflow-hidden rounded-[2rem] border-4 border-dashed border-[#bde0fe] bg-[#f8fbff] p-5 text-center shadow-inner transition hover:border-[#8faaf3] hover:bg-[#e0fbfc]/60">
+                                <img id="proof-preview" src="" alt="Preview bukti kendala" class="report-proof-preview absolute inset-0 hidden h-full w-full">
+                                <span id="proof-empty-state" class="relative z-10 flex max-w-md flex-col items-center gap-3">
+                                    <span class="flex h-16 w-16 items-center justify-center rounded-[1.5rem] border-4 border-white bg-white text-[#5a76c8] shadow-lg shadow-[#bde0fe]/25 transition group-hover:scale-105">
+                                        <svg class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5M8 10l4-4m0 0 4 4m-4-4v11" />
+                                        </svg>
+                                    </span>
+                                    <span class="block text-sm font-black text-[#2b3a67]">Upload screenshot atau foto bukti</span>
+                                    <span class="block text-xs font-bold leading-relaxed text-[#8faaf3]">Kalau tidak bisa screenshot, foto layar dari device lain juga boleh.</span>
                                 </span>
-                            </span>
-                        </label>
+                            </label>
+                            <button id="proof-remove" type="button" onclick="clearProofPreview(event)" class="proof-remove-button absolute right-4 top-4 z-20 hidden shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-[#ffe5e5] text-[#ff4d4d] shadow-lg shadow-[#ff6b6b]/20 transition hover:scale-105 hover:bg-[#ffcccc]" aria-label="Hapus gambar bukti">
+                                <svg class="proof-remove-icon" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 11v6M14 11v6" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m6 7 .75 12A2.2 2.2 0 0 0 8.95 21h6.1a2.2 2.2 0 0 0 2.2-2L18 7" />
+                                </svg>
+                            </button>
+                        </div>
                     </section>
 
                     @if($needsRecord)
-                        <section class="rounded-[2.5rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/25 md:p-6">
+                        <section class="report-record-section rounded-[2.5rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/25 md:p-6">
                             <label class="mb-3 ml-1 block text-xs font-black uppercase tracking-widest text-[#5a76c8]">
-                                {{ $selectedKey === 'deposit' ? 'Pilih Mutasi Saldo / Deposit' : 'Pilih Riwayat Pesanan' }}
+                                {{ $selectedKey === 'deposit' ? 'Pilih Riwayat Deposit' : 'Pilih Riwayat Pesanan' }}
                             </label>
 
                             @if($records->isEmpty())
-                                <div class="rounded-[2rem] border-4 border-dashed border-[#bde0fe] bg-[#f4f9ff] p-6 text-center">
+                                <div class="report-record-empty rounded-[2rem] border-4 border-dashed border-[#bde0fe] bg-[#f4f9ff] p-6 text-center">
                                     <p class="text-sm font-black text-[#5a76c8]">Belum ada data terkait yang bisa dipilih.</p>
                                     <p class="mt-2 text-xs font-bold text-[#8faaf3]">Kamu tetap bisa mengirim laporan dengan menjelaskan kendalanya.</p>
                                 </div>
                             @else
-                                <div class="max-h-[28rem] space-y-3 overflow-y-auto pr-1">
+                                <div class="report-record-list space-y-3">
                                     @foreach($records as $record)
                                         @php
                                             $recordInputId = 'report-record-' . $loop->index;
                                         @endphp
                                         <label for="{{ $recordInputId }}" class="block cursor-pointer" data-report-record-option onclick="selectReportRecord(this)">
                                             <input id="{{ $recordInputId }}" type="radio" name="record_id" value="{{ $record['id'] }}" class="sr-only" data-report-record-input onchange="selectReportRecord(this.closest('[data-report-record-option]'))" @checked($oldRecordId === $record['id'])>
-                                            <span data-report-record-card class="flex items-start gap-3 rounded-[1.75rem] border-4 {{ $oldRecordId === $record['id'] ? 'border-[#25D366] bg-[#e9fff0]' : 'border-white bg-[#f8fbff]' }} px-5 py-4 text-left shadow-sm transition">
-                                                <span data-report-record-dot class="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 {{ $oldRecordId === $record['id'] ? 'border-[#25D366] bg-[#25D366]' : 'border-[#bde0fe] bg-white' }}">
+                                            <span data-report-record-card class="flex items-center gap-3 rounded-[1.75rem] border-4 {{ $oldRecordId === $record['id'] ? 'border-[#25D366] bg-[#e9fff0]' : 'border-white bg-[#f8fbff]' }} px-5 py-4 text-left shadow-sm transition">
+                                                <span data-report-record-dot class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 {{ $oldRecordId === $record['id'] ? 'border-[#25D366] bg-[#25D366]' : 'border-[#bde0fe] bg-white' }}">
                                                     <span class="h-2 w-2 rounded-full bg-white"></span>
                                                 </span>
                                                 <span class="min-w-0 flex-1">
-                                                    <span class="block text-xs font-black text-[#5a76c8]">{{ $record['invoice'] }}</span>
-                                                    <span class="mt-1 block text-base font-black leading-tight text-[#2b3a67]">{{ $record['title'] }}</span>
-                                                    <span class="mt-2 block text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">{{ $record['meta'] }}</span>
+                                                    <span class="report-record-invoice block text-xs font-black text-[#5a76c8]">{{ $record['invoice'] }}</span>
+                                                    <span class="report-record-title mt-1 block text-base font-black leading-tight text-[#2b3a67]">{{ $record['title'] }}</span>
+                                                    <span class="report-record-meta mt-2 block text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">{{ $record['meta'] }}</span>
                                                 </span>
                                             </span>
                                         </label>
@@ -122,7 +358,7 @@
                     @endif
                 </div>
 
-                <aside class="space-y-6">
+                <aside class="report-side-column space-y-6">
                     <section class="rounded-[2.5rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/25 md:p-6">
                         <p class="mb-3 ml-1 text-xs font-black uppercase tracking-widest text-[#5a76c8]">Alur Laporan</p>
                         <div class="space-y-3 rounded-[2rem] border-4 border-white bg-[#f4f9ff] p-5 text-sm font-bold leading-relaxed text-[#5a76c8] shadow-inner">
@@ -152,6 +388,53 @@
 </div>
 
 <script>
+    let proofPreviewObjectUrl = null;
+
+    function handleProofPreview(input) {
+        const file = input?.files?.[0] || null;
+        const preview = document.getElementById('proof-preview');
+        const emptyState = document.getElementById('proof-empty-state');
+        const removeButton = document.getElementById('proof-remove');
+
+        if (!preview || !emptyState || !removeButton) {
+            return;
+        }
+
+        if (proofPreviewObjectUrl) {
+            URL.revokeObjectURL(proofPreviewObjectUrl);
+            proofPreviewObjectUrl = null;
+        }
+
+        if (!file) {
+            preview.removeAttribute('src');
+            preview.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            removeButton.classList.add('hidden');
+            removeButton.classList.remove('flex');
+            return;
+        }
+
+        proofPreviewObjectUrl = URL.createObjectURL(file);
+        preview.src = proofPreviewObjectUrl;
+        preview.classList.remove('hidden');
+        emptyState.classList.add('hidden');
+        removeButton.classList.remove('hidden');
+        removeButton.classList.add('flex');
+    }
+
+    function clearProofPreview(event) {
+        event?.preventDefault();
+        event?.stopPropagation();
+
+        const input = document.getElementById('proof');
+
+        if (input) {
+            input.value = '';
+        }
+
+        handleProofPreview(input);
+    }
+
     function selectReportRecord(option) {
         if (!option) {
             return;
@@ -183,20 +466,128 @@
         });
     }
 
-    function lockAdminReportSubmit(form) {
+    function setReportSubmitLoading(form, isLoading) {
+        const button = form?.querySelector('[data-report-submit]');
+
+        if (!button) {
+            return;
+        }
+
+        if (isLoading) {
+            button.disabled = true;
+            button.dataset.originalText = button.dataset.originalText || button.textContent.trim();
+            button.textContent = button.dataset.submitLabel || 'Mengirim Laporan...';
+            button.classList.add('cursor-not-allowed', 'opacity-70');
+            return;
+        }
+
+        button.disabled = false;
+        button.textContent = button.dataset.originalText || 'Kirim Laporan';
+        button.classList.remove('cursor-not-allowed', 'opacity-70');
+    }
+
+    async function compressProofFile(file) {
+        if (!file || !file.type.startsWith('image/')) {
+            return null;
+        }
+
+        const imageUrl = URL.createObjectURL(file);
+
+        try {
+            const image = await new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = imageUrl;
+            });
+
+            const maxEdge = 1600;
+            const scale = Math.min(1, maxEdge / Math.max(image.naturalWidth || image.width, image.naturalHeight || image.height));
+
+            if (scale >= 1 && file.size <= 3 * 1024 * 1024 && /image\/(jpe?g|png|webp)/i.test(file.type)) {
+                return null;
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round((image.naturalWidth || image.width) * scale));
+            canvas.height = Math.max(1, Math.round((image.naturalHeight || image.height) * scale));
+            canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+
+            const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+
+            if (!blob || blob.size >= file.size) {
+                return null;
+            }
+
+            const baseName = file.name.replace(/\.[^.]+$/, '') || 'bukti-kendala';
+            return new File([blob], baseName + '.jpg', { type: 'image/jpeg', lastModified: Date.now() });
+        } catch (error) {
+            return null;
+        } finally {
+            URL.revokeObjectURL(imageUrl);
+        }
+    }
+
+    async function prepareProofUpload(form) {
+        const input = form?.querySelector('#proof');
+        const file = input?.files?.[0] || null;
+
+        if (!input || !file) {
+            return true;
+        }
+
+        const compressedFile = await compressProofFile(file);
+
+        if (!compressedFile) {
+            return true;
+        }
+
+        try {
+            const transfer = new DataTransfer();
+            transfer.items.add(compressedFile);
+            input.files = transfer.files;
+            handleProofPreview(input);
+        } catch (error) {
+            return true;
+        }
+
+        return true;
+    }
+
+    function lockAdminReportSubmit(form, event) {
         if (!form || form.dataset.submitting === 'true') {
             return false;
         }
 
-        form.dataset.submitting = 'true';
-
-        const button = form.querySelector('[data-report-submit]');
-        if (button) {
-            button.disabled = true;
-            button.dataset.originalText = button.textContent.trim();
-            button.textContent = button.dataset.submitLabel || 'Mengirim Laporan...';
-            button.classList.add('cursor-not-allowed', 'opacity-70');
+        if (typeof form.checkValidity === 'function' && !form.checkValidity()) {
+            return true;
         }
+
+        if (form.dataset.proofPrepared !== 'true') {
+            event?.preventDefault();
+            setReportSubmitLoading(form, true);
+
+            prepareProofUpload(form)
+                .then(() => {
+                    form.dataset.proofPrepared = 'true';
+                    if (typeof form.requestSubmit === 'function') {
+                        form.requestSubmit();
+                    } else {
+                        HTMLFormElement.prototype.submit.call(form);
+                    }
+                })
+                .catch(() => {
+                    form.dataset.proofPrepared = '';
+                    form.dataset.submitting = '';
+                    setReportSubmitLoading(form, false);
+                    alert('Bukti kendala gagal diproses. Coba pilih screenshot yang lebih kecil.');
+                });
+
+            return false;
+        }
+
+        form.dataset.submitting = 'true';
+        setReportSubmitLoading(form, true);
 
         return true;
     }

@@ -1,7 +1,11 @@
-<div id="wiboost-page-loader" class="fixed inset-0 z-[9999] hidden items-center justify-center backdrop-blur-sm" style="background: rgba(15, 23, 42, 0.72);">
+<div id="wiboost-page-loader" class="fixed inset-0 z-[9999] hidden items-center justify-center backdrop-blur-sm" style="background: rgba(15, 23, 42, 0.72);" aria-hidden="true">
     <style>
         @keyframes wiboost-loader-orbit {
             to { transform: rotate(360deg); }
+        }
+
+        #wiboost-page-loader.wiboost-page-loader-active {
+            display: flex !important;
         }
 
         .wiboost-loader-mark {
@@ -14,12 +18,24 @@
         }
 
         .wiboost-loader-ring {
-            animation: wiboost-loader-orbit 1s linear infinite;
+            animation: wiboost-loader-orbit 0.72s linear infinite !important;
             border: 5px solid rgba(255, 255, 255, 0.26);
             border-top-color: #ffffff;
             border-right-color: #ffffff;
             border-radius: 9999px;
             inset: 0;
+            position: absolute;
+            transform-origin: 50% 50%;
+            will-change: transform;
+        }
+
+        .wiboost-loader-ring::after {
+            border: 3px solid transparent;
+            border-bottom-color: #e0fbfc;
+            border-left-color: #e0fbfc;
+            border-radius: 9999px;
+            content: "";
+            inset: 0.72rem;
             position: absolute;
         }
 
@@ -35,7 +51,7 @@
     <div class="text-center">
         <div class="wiboost-loader-mark mx-auto mb-4">
             <div class="wiboost-loader-ring"></div>
-            <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Loading Wiboost Store" class="wiboost-loader-logo drop-shadow-lg">
+            <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" onerror="this.onerror=null;this.src='{{ asset('images/wiboost-logo.png') }}?v=20260426-full';" alt="Loading Wiboost Store" width="192" height="192" loading="eager" decoding="async" class="wiboost-loader-logo drop-shadow-lg">
         </div>
         <p class="text-sm font-black tracking-wide text-white">Memuat...</p>
     </div>
@@ -51,24 +67,57 @@
             }
 
             loader.dataset.ready = '1';
-            let submitLoaderTimer = null;
+            let loaderFrame = null;
 
             const showLoader = () => {
+                if (loader.dataset.visible === '1') {
+                    return;
+                }
+
+                loader.dataset.visible = '1';
+                loader.setAttribute('aria-hidden', 'false');
                 loader.classList.remove('hidden');
-                loader.classList.add('flex');
+                loader.classList.add('flex', 'wiboost-page-loader-active');
+
+                if (loaderFrame) {
+                    window.cancelAnimationFrame(loaderFrame);
+                }
+
+                loaderFrame = window.requestAnimationFrame(() => {
+                    const ring = loader.querySelector('.wiboost-loader-ring');
+
+                    if (ring) {
+                        ring.style.animation = 'none';
+                        ring.offsetHeight;
+                        ring.style.animation = '';
+                    }
+                });
             };
 
             const hideLoader = () => {
-                if (submitLoaderTimer) {
-                    window.clearTimeout(submitLoaderTimer);
-                    submitLoaderTimer = null;
+                if (loaderFrame) {
+                    window.cancelAnimationFrame(loaderFrame);
+                    loaderFrame = null;
                 }
 
+                loader.dataset.visible = '0';
+                loader.setAttribute('aria-hidden', 'true');
                 loader.classList.add('hidden');
-                loader.classList.remove('flex');
+                loader.classList.remove('flex', 'wiboost-page-loader-active');
+            };
+
+            window.wiboostShowPageLoader = showLoader;
+            window.wiboostHidePageLoader = hideLoader;
+
+            const shouldIgnoreModifiedClick = (event) => {
+                return event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
             };
 
             document.addEventListener('click', (event) => {
+                if (shouldIgnoreModifiedClick(event)) {
+                    return;
+                }
+
                 const link = event.target.closest('a[href]');
 
                 if (!link || link.target === '_blank' || link.hasAttribute('download') || link.dataset.noPageLoader === 'true') {
@@ -99,7 +148,7 @@
                 }
 
                 showLoader();
-            });
+            }, true);
 
             document.addEventListener('submit', (event) => {
                 const form = event.target;
@@ -110,12 +159,25 @@
 
                 window.setTimeout(() => {
                     if (!event.defaultPrevented) {
-                        submitLoaderTimer = window.setTimeout(showLoader, 700);
+                        showLoader();
                     }
                 }, 0);
-            });
+            }, true);
 
             window.addEventListener('pageshow', hideLoader);
+            window.addEventListener('load', hideLoader);
+            window.addEventListener('focus', hideLoader);
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    hideLoader();
+                }
+            });
+            window.addEventListener('beforeunload', showLoader);
+            window.addEventListener('pagehide', (event) => {
+                if (!event.persisted) {
+                    showLoader();
+                }
+            });
         };
 
         if (document.readyState === 'loading') {

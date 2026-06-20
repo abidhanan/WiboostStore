@@ -1,4 +1,4 @@
-@extends('layouts.user')
+@extends(($isGuestCatalog ?? false) ? 'layouts.catalog_guest' : 'layouts.user')
 
 @section('title', 'Order - ' . $category->name)
 
@@ -109,6 +109,332 @@
         height: 100%;
         object-fit: cover;
         object-position: center;
+        border-radius: 1rem;
+    }
+
+    .wiboost-header-logo-img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        border-radius: 1rem;
+    }
+
+    .wiboost-header-logo-frame {
+        aspect-ratio: 1 / 1;
+        flex: 0 0 4.25rem;
+        height: 4.25rem !important;
+        min-height: 4.25rem;
+        min-width: 4.25rem;
+        width: 4.25rem !important;
+    }
+
+    .wiboost-order-header-title {
+        font-size: clamp(1.05rem, 5.5vw, 1.55rem);
+        line-height: 1.08;
+        max-width: 100%;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: nowrap;
+    }
+
+    .wiboost-service-select-wrap {
+        position: relative;
+    }
+
+    .wiboost-service-native-select {
+        clip: rect(0 0 0 0) !important;
+        clip-path: inset(50%) !important;
+        height: 1px !important;
+        opacity: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+        position: absolute !important;
+        white-space: nowrap !important;
+        width: 1px !important;
+    }
+
+    .wiboost-service-trigger {
+        align-items: center;
+        background: #f4f9ff;
+        border: 4px solid #ffffff;
+        border-radius: 1.5rem;
+        box-shadow: inset 0 2px 8px rgba(90, 118, 200, 0.08), 0 12px 28px rgba(189, 224, 254, 0.22);
+        color: #2b3a67;
+        display: flex;
+        font-weight: 900;
+        gap: 1rem;
+        justify-content: space-between;
+        min-height: 4.25rem;
+        padding: 1rem 1.25rem;
+        text-align: left;
+        transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+        width: 100%;
+    }
+
+    .wiboost-service-trigger:hover,
+    .wiboost-service-trigger:focus {
+        background: #f8faff;
+        border-color: #bde0fe;
+        box-shadow: inset 0 2px 8px rgba(90, 118, 200, 0.08), 0 16px 34px rgba(189, 224, 254, 0.34);
+        outline: 0;
+    }
+
+    .wiboost-service-select-wrap.is-open .wiboost-service-trigger {
+        background: #ffffff;
+        border-color: #8faaf3;
+    }
+
+    .wiboost-service-select-wrap.has-error .wiboost-service-trigger {
+        border-color: #ffb3b3;
+        box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.12), inset 0 2px 8px rgba(90, 118, 200, 0.08);
+    }
+
+    .wiboost-service-trigger-text {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .wiboost-service-select-arrow {
+        flex: 0 0 auto;
+        height: 1.15rem;
+        width: 1.15rem;
+        color: #5a76c8;
+        transform: rotate(0deg);
+        transition: transform 0.18s ease;
+    }
+
+    .wiboost-service-select-wrap.is-open .wiboost-service-select-arrow {
+        transform: rotate(180deg);
+    }
+
+    .wiboost-service-dropdown {
+        background: rgba(255, 255, 255, 0.98);
+        border: 4px solid #ffffff;
+        border-radius: 1.75rem;
+        box-shadow: 0 24px 60px rgba(90, 118, 200, 0.22);
+        contain: layout paint;
+        display: none;
+        left: 0;
+        max-height: min(24rem, 52vh);
+        overflow-y: auto;
+        padding: 0.5rem;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 0.65rem);
+        z-index: 80;
+    }
+
+    .wiboost-service-select-wrap.is-open .wiboost-service-dropdown {
+        display: block;
+    }
+
+    .wiboost-service-dropdown::-webkit-scrollbar {
+        width: 0.55rem;
+    }
+
+    .wiboost-service-dropdown::-webkit-scrollbar-thumb {
+        background: #bde0fe;
+        border-radius: 9999px;
+    }
+
+    .wiboost-service-option {
+        align-items: center;
+        background: transparent;
+        border: 2px solid transparent;
+        border-radius: 1.15rem;
+        color: #2b3a67;
+        display: flex;
+        font-weight: 800;
+        gap: 0.75rem;
+        justify-content: space-between;
+        line-height: 1.25;
+        padding: 0.85rem 1rem;
+        text-align: left;
+        transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+        width: 100%;
+    }
+
+    .wiboost-service-option:hover,
+    .wiboost-service-option:focus {
+        background: #f4f9ff;
+        border-color: #e0ebff;
+        outline: 0;
+    }
+
+    .wiboost-service-option.is-selected {
+        background: #e0fbfc;
+        border-color: #bde0fe;
+        color: #5a76c8;
+        font-weight: 900;
+    }
+
+    .wiboost-service-option-label {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .wiboost-service-option-check {
+        align-items: center;
+        background: #5a76c8;
+        border-radius: 9999px;
+        color: #ffffff;
+        display: none;
+        flex: 0 0 auto;
+        height: 1.4rem;
+        justify-content: center;
+        width: 1.4rem;
+    }
+
+    .wiboost-service-option.is-selected .wiboost-service-option-check {
+        display: inline-flex;
+    }
+
+    .wiboost-service-load-more {
+        border-radius: 1rem;
+        color: #5a76c8;
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 900;
+        padding: 0.8rem 1rem;
+        text-align: center;
+    }
+
+    @media (max-width: 640px) {
+        .wiboost-service-dropdown {
+            max-height: 20rem;
+        }
+
+        .wiboost-service-option {
+            font-size: 0.86rem;
+            padding: 0.8rem 0.85rem;
+        }
+    }
+
+    .wiboost-money-field {
+        isolation: isolate;
+    }
+
+    .wiboost-money-field input,
+    .wiboost-money-input {
+        -webkit-appearance: none !important;
+        appearance: none !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        outline: 0 !important;
+    }
+
+    .wiboost-money-field input:focus,
+    .wiboost-money-input:focus {
+        border: 0 !important;
+        box-shadow: none !important;
+        outline: 0 !important;
+    }
+
+    .wiboost-order-header-description {
+        font-size: clamp(0.78rem, 3.25vw, 0.9rem);
+        line-height: 1.45;
+    }
+
+    .wiboost-product-square {
+        aspect-ratio: 1 / 1.18;
+        align-content: stretch !important;
+        display: grid !important;
+        grid-template-rows: minmax(0, 1fr) auto;
+        height: auto !important;
+        min-height: clamp(12.75rem, 56vw, 14.25rem) !important;
+    }
+
+    .wiboost-product-square--with-description {
+        min-height: clamp(13.5rem, 60vw, 15.25rem) !important;
+    }
+
+    .wiboost-compact-logo {
+        height: clamp(4.15rem, 18vw, 4.75rem) !important;
+        margin-bottom: 0.5rem;
+        width: clamp(4.15rem, 18vw, 4.75rem) !important;
+    }
+
+    .wiboost-compact-price-zone {
+        align-self: end;
+        min-height: 3rem;
+        width: 100%;
+    }
+
+    .wiboost-compact-card-main {
+        justify-content: center;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    .wiboost-compact-card-title {
+        display: block;
+        font-size: clamp(0.7rem, 2.72vw, 0.9rem);
+        line-height: 1.16;
+        min-height: 0;
+        overflow: visible;
+        overflow-wrap: anywhere;
+        white-space: normal;
+        word-break: normal;
+    }
+
+    @media (max-width: 380px) {
+        .wiboost-compact-logo {
+            height: clamp(3.85rem, 17vw, 4.35rem) !important;
+            width: clamp(3.85rem, 17vw, 4.35rem) !important;
+        }
+
+        .wiboost-compact-card-title {
+            font-size: clamp(0.66rem, 2.85vw, 0.78rem);
+        }
+    }
+
+    @media (min-width: 640px) {
+        .wiboost-header-logo-frame {
+            flex-basis: 6rem;
+            height: 6rem !important;
+            min-height: 6rem;
+            min-width: 6rem;
+            width: 6rem !important;
+        }
+
+        .wiboost-order-header-title {
+            font-size: clamp(1.75rem, 2.6vw, 2.25rem);
+        }
+
+        .wiboost-order-header-description {
+            font-size: 0.95rem;
+        }
+
+        .wiboost-product-square {
+            aspect-ratio: 1 / 1;
+            align-content: stretch !important;
+            min-height: 0 !important;
+        }
+
+        .wiboost-product-square--with-description {
+            min-height: 0 !important;
+        }
+
+        .wiboost-compact-logo {
+            height: 6rem !important;
+            margin-bottom: 1rem;
+            width: 6rem !important;
+        }
+
+        .wiboost-compact-price-zone {
+            min-height: 0;
+        }
+
+        .wiboost-compact-card-title {
+            font-size: 0.9rem;
+            min-height: 0;
+        }
     }
 
     #checkout_product_price {
@@ -121,7 +447,7 @@
 
 </style>
 
-<div class="wiboost-font relative mx-auto mt-4 w-full overflow-visible pt-28 pb-24 z-10 sm:pt-32">
+<div class="wiboost-font relative mx-auto mt-0 w-full overflow-visible pt-0 pb-24 z-10">
     
     @if(session('error'))
         <div class="mb-8 flex items-center gap-3 rounded-[2rem] border-4 border-white bg-[#ffe5e5] px-6 py-4 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 relative z-10">
@@ -145,46 +471,53 @@
     @endif
 
     @php
+        $isGuestCatalog = $isGuestCatalog ?? false;
+        $categoryRouteName = $isGuestCatalog ? 'guest.order.category' : 'user.order.category';
+        $categoryHomeUrl = $isGuestCatalog ? route('home') . '#kategori' : route('user.dashboard');
+        $loginUrl = route('login');
         $showSuntikSosmedForm = $isSuntikSosmedOrder ?? false;
+        $showSuntikSosmedForm = $isGuestCatalog ? false : $showSuntikSosmedForm;
         $showTopUpGameCompactCards = ($isTopUpGameOrder ?? false) && ! $showSuntikSosmedForm;
         $showCompactServiceCards = ($isCompactServiceCardOrder ?? $showTopUpGameCompactCards) && ! $showSuntikSosmedForm;
         $rootCategorySlugForCards = $rootCategorySlug ?? null;
-        $forceEmoteLogoOnly = $rootCategorySlugForCards === 'top-up-game';
-        $shouldHideServiceDescription = $rootCategorySlugForCards === 'top-up-game';
-        $shouldShowCompactServiceDescription = in_array($rootCategorySlugForCards, ['kuota-murah', 'paket-data'], true);
+        $forceEmoteLogoOnly = false;
+        $shouldShowCompactServiceDescription = false;
+        $compactProductGridClass = 'grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-4';
+        $checkoutNonce = (string) \Illuminate\Support\Str::uuid();
 
         $socialServiceDetailUrlTemplate = $showSuntikSosmedForm
             ? route('user.order.ordersosmed-service', ['product' => '__PRODUCT_ID__'])
             : null;
+        $socialServiceListUrl = $showSuntikSosmedForm
+            ? route('user.order.ordersosmed-services', ['category' => $category->id])
+            : null;
     @endphp
 
     <div id="page-product-list" class="transition-all duration-300 relative z-10">
-        <div class="relative mb-10 flex flex-col items-center gap-6 overflow-visible rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 shadow-xl shadow-[#bde0fe]/30 md:flex-row md:gap-8 md:p-8">
-            <div class="relative z-10 flex w-full items-center justify-between md:justify-start gap-4 md:w-auto">
-                <a href="{{ $category->parent_id ? route('user.order.category', $category->parent->slug) : route('user.dashboard') }}" class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.2rem] border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-110 active:scale-95 hover:bg-[#e0fbfc]">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
-                </a>
-
-                <div class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-inner ring-1 ring-[#bde0fe]/60">
-                    @if($category->image)
-                        <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="wiboost-square-logo-img drop-shadow-sm">
-                    @else
-                        <span class="text-4xl font-black drop-shadow-sm">{{ $category->emote ?? '📦' }}</span>
-                    @endif
-                </div>
+        <div class="relative mb-10 grid grid-cols-[auto,minmax(0,1fr)] gap-x-4 gap-y-3 overflow-visible rounded-[2.5rem] border-4 border-white bg-white/95 p-5 text-left shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:gap-x-6 sm:p-6 md:gap-x-8 md:p-8">
+            <a href="{{ $category->parent_id ? route($categoryRouteName, $category->parent->slug) : $categoryHomeUrl }}" aria-label="Kembali" class="col-start-1 row-start-1 flex h-9 w-9 shrink-0 items-center justify-center self-center justify-self-center rounded-xl border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-105 hover:bg-[#e0fbfc] active:scale-95">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+            </a>
+            <div class="col-start-2 row-start-1 inline-block self-center justify-self-start rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1 text-[10px] font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
+                Katalog
             </div>
 
-            <div class="relative z-10 flex-1 text-center md:text-left">
-                <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">
-                    Katalog
-                </div>
-                <h2 class="mb-2 text-3xl font-black tracking-tight text-[#2b3a67] md:text-4xl drop-shadow-sm">{{ $category->name }}</h2>
+            <div class="wiboost-header-logo-frame col-start-1 row-start-2 flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] bg-[#f4f9ff] text-[#5a76c8] shadow-inner sm:h-24 sm:w-24">
+                @if($category->image)
+                    <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="wiboost-header-logo-img drop-shadow-sm">
+                @else
+                    <span class="text-4xl font-black drop-shadow-sm">{{ $category->emote ?? '📦' }}</span>
+                @endif
+            </div>
+
+            <div class="relative z-10 col-start-2 row-start-2 min-w-0 self-center text-left">
+                <h2 class="wiboost-order-header-title mb-2 font-black tracking-tight text-[#2b3a67] drop-shadow-sm">{{ $category->name }}</h2>
                 @if($category->description)
-                    <p class="inline-block rounded-2xl border-2 border-white bg-[#f8faff] p-4 text-left text-sm font-bold leading-relaxed text-[#4a5f96] shadow-inner w-full md:w-auto">
+                    <p class="wiboost-order-header-description inline-block rounded-2xl border-2 border-white bg-[#f8faff] p-3 text-left font-bold text-[#4a5f96] shadow-inner w-full md:w-auto md:p-4">
                         {!! nl2br(e($category->description)) !!}
                     </p>
                 @else
-                    <p class="font-bold text-[#8faaf3]">Pilih layanan di bawah ini lalu lanjutkan ke checkout.</p>
+                    <p class="wiboost-order-header-description font-bold text-[#8faaf3]">Pilih layanan di bawah ini lalu lanjutkan ke checkout.</p>
                 @endif
             </div>
         </div>
@@ -192,6 +525,7 @@
         @if($showSuntikSosmedForm)
             <form action="{{ route('user.checkout.process') }}" method="POST" id="socialCheckoutForm" onsubmit="return showSocialLoadingBtn()" class="rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 shadow-xl shadow-[#bde0fe]/30 md:p-10 relative overflow-hidden">
                 @csrf
+                <input type="hidden" name="checkout_nonce" value="{{ $checkoutNonce }}">
                 <input type="hidden" name="product_id" id="social_product_id" value="{{ old('product_id') }}">
 
                 <div class="flex items-center gap-3 mb-6 border-b-4 border-dashed border-[#f4f9ff] pb-4">
@@ -200,12 +534,21 @@
 
                 <div class="mb-6">
                     <label class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Layanan <span class="text-[#ff6b6b]">*</span></label>
-                    <select id="social_service_select" required class="w-full appearance-none rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 font-black text-[#2b3a67] outline-none shadow-inner transition focus:border-[#bde0fe]">
-                        <option value="">Pilih layanan...</option>
-                        @foreach($products as $product)
-                            <option value="{{ $product->id }}" {{ (string) old('product_id') === (string) $product->id ? 'selected' : '' }}>{{ $product->name }}</option>
-                        @endforeach
-                    </select>
+                    <div id="social_service_select_wrap" class="wiboost-service-select-wrap">
+                        <select id="social_service_select" tabindex="-1" aria-hidden="true" class="wiboost-service-native-select">
+                            <option value="">{{ $products->isEmpty() ? 'Memuat layanan...' : 'Pilih layanan...' }}</option>
+                            @foreach($products as $product)
+                                <option value="{{ $product->id }}" {{ (string) old('product_id') === (string) $product->id ? 'selected' : '' }}>{{ $product->name }}</option>
+                            @endforeach
+                        </select>
+                        <button type="button" id="social_service_dropdown_button" class="wiboost-service-trigger" aria-haspopup="listbox" aria-expanded="false">
+                            <span id="social_service_selected_text" class="wiboost-service-trigger-text">{{ $products->isEmpty() ? 'Memuat layanan...' : 'Pilih layanan...' }}</span>
+                            <svg class="wiboost-service-select-arrow" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="social_service_dropdown_panel" class="wiboost-service-dropdown" role="listbox" aria-label="Pilih layanan"></div>
+                    </div>
                 </div>
 
                 <div class="mb-6">
@@ -226,9 +569,9 @@
 
                     <div>
                         <label class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Harga / 1000</label>
-                        <div class="flex overflow-hidden rounded-[1.5rem] border-4 border-white bg-[#eef2f7] shadow-inner">
+                        <div class="wiboost-money-field flex overflow-hidden rounded-[1.5rem] border-4 border-white bg-[#eef2f7] shadow-inner">
                             <span class="border-r-2 border-[#cbd7ea] px-5 py-4 font-black text-[#4a5f96] bg-[#e2e8f0]">Rp</span>
-                            <input type="text" id="social_price_per_1000" readonly value="0" class="min-w-0 flex-1 bg-transparent px-4 py-4 font-black text-[#4a5f96] outline-none">
+                            <input type="text" id="social_price_per_1000" readonly value="0" class="wiboost-money-input min-w-0 flex-1 appearance-none border-0 bg-transparent px-4 py-4 font-black text-[#4a5f96] shadow-none outline-none focus:border-0 focus:ring-0">
                         </div>
                     </div>
                 </div>
@@ -250,9 +593,9 @@
 
                 <div class="mb-10 bg-[#f8faff] p-5 rounded-[1.5rem] border-4 border-white shadow-inner">
                     <label class="mb-2 ml-2 block text-xs font-black uppercase tracking-widest text-[#8faaf3]">Total Harga</label>
-                    <div class="flex overflow-hidden rounded-[1.2rem] border-2 border-white bg-white shadow-sm">
+                    <div class="wiboost-money-field flex overflow-hidden rounded-[1.2rem] border-2 border-white bg-white shadow-sm">
                         <span class="px-5 py-3 font-black text-[#4bc6b9] text-xl bg-[#e6fff7]">Rp</span>
-                        <input type="text" id="social_total_price" readonly value="0" class="min-w-0 flex-1 bg-transparent px-4 py-3 font-black text-xl text-[#2b3a67] outline-none">
+                        <input type="text" id="social_total_price" readonly value="0" class="wiboost-money-input min-w-0 flex-1 appearance-none border-0 bg-transparent px-4 py-3 font-black text-xl text-[#2b3a67] shadow-none outline-none focus:border-0 focus:ring-0">
                     </div>
                 </div>
 
@@ -296,28 +639,26 @@
             <h3 class="text-2xl font-black text-[#2b3a67]">Daftar Layanan</h3>
         </div>
 
-        <div class="{{ $showCompactServiceCards ? 'grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5' }}">
+        <div class="{{ $showCompactServiceCards ? $compactProductGridClass : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5' }}">
             @forelse($products as $product)
                 @php
                     $isOutOfStock = in_array($product->process_type, ['account', 'number'], true) && ($product->available_stock ?? 0) <= 0;
                     $rawDescription = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $product->description)));
-                    $plainDescription = $shouldHideServiceDescription ? '' : $rawDescription;
+                    $checkoutDescription = $rawDescription;
+                    $cardDescription = $showCompactServiceCards ? '' : $rawDescription;
 
-                    if ($shouldShowCompactServiceDescription && $plainDescription === '') {
-                        $plainDescription = 'Paket data ' . $product->name . '. Pastikan nomor tujuan sesuai operator sebelum checkout.';
-                    }
-
-                    $compactCardHasDescription = $showCompactServiceCards && $shouldShowCompactServiceDescription && $plainDescription !== '';
+                    $compactCardHasDescription = $showCompactServiceCards && $shouldShowCompactServiceDescription && $cardDescription !== '';
                     $compactCardMinHeight = $compactCardHasDescription ? 'min-h-[185px]' : 'min-h-[150px]';
+                    $compactCardShape = $showCompactServiceCards ? ' wiboost-product-square' . ($compactCardHasDescription ? ' wiboost-product-square--with-description' : '') : '';
                     $cardBaseClass = $showCompactServiceCards
-                        ? 'group relative flex h-full w-full flex-col items-center justify-between overflow-hidden rounded-[1.35rem] border-4 border-white bg-white/95 p-3 text-center shadow-lg shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 ' . $compactCardMinHeight . ' sm:p-4'
+                        ? 'group relative flex h-full w-full flex-col items-stretch justify-stretch overflow-hidden rounded-[1.35rem] border-4 border-white bg-white/95 p-2 text-center shadow-lg shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 ' . $compactCardMinHeight . ' sm:p-4' . $compactCardShape
                         : 'group relative flex flex-col items-center justify-between w-full overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 text-center shadow-xl shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 min-h-[230px]';
                     $disabledCardClass = $showCompactServiceCards
-                        ? 'relative flex h-full w-full cursor-not-allowed flex-col items-center justify-between overflow-hidden rounded-[1.35rem] border-4 border-white bg-gray-50 p-3 text-center opacity-60 grayscale shadow-sm ' . $compactCardMinHeight . ' sm:p-4'
+                        ? 'relative flex h-full w-full cursor-not-allowed flex-col items-stretch justify-stretch overflow-hidden rounded-[1.35rem] border-4 border-white bg-gray-50 p-2 text-center opacity-60 grayscale shadow-sm ' . $compactCardMinHeight . ' sm:p-4' . $compactCardShape
                         : 'relative flex flex-col items-center justify-between w-full cursor-not-allowed overflow-hidden rounded-[2rem] border-4 border-white bg-gray-50 p-6 text-center opacity-60 grayscale shadow-sm min-h-[230px]';
                     $logoBoxClass = $showCompactServiceCards
-                        ? 'mb-4 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] text-4xl shadow-inner ring-1 ring-[#bde0fe]/60 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3'
-                        : 'mb-5 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] text-5xl shadow-inner ring-1 ring-[#bde0fe]/60 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3';
+                        ? 'wiboost-compact-logo flex shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] bg-[#f4f9ff] text-4xl shadow-inner transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3'
+                        : 'mb-5 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] bg-[#f4f9ff] text-5xl shadow-inner transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3';
                 @endphp
 
                 <button
@@ -327,13 +668,16 @@
                     data-price="{{ $product->selling_price }}"
                     data-original-price="{{ $product->original_selling_price }}"
                     data-discount-label="{{ $product->active_discount_label ?? '' }}"
-                    data-description="{{ $plainDescription }}"
+                    data-description="{{ $checkoutDescription }}"
                     data-logo-image="{{ (! $forceEmoteLogoOnly && $product->display_logo_image) ? Storage::url($product->display_logo_image) : '' }}"
                     data-logo-emote="{{ $product->display_logo_emote ?? '' }}"
                     data-logo-mode="{{ $forceEmoteLogoOnly ? 'emote' : 'auto' }}"
                     data-checkout-fields='{{ json_encode($product->checkout_fields, JSON_UNESCAPED_UNICODE) }}'
-                    @if(!$isOutOfStock)
+                    @if(!$isOutOfStock && ! $isGuestCatalog)
                         onclick="goToCheckout(this)"
+                        class="{{ $cardBaseClass }}"
+                    @elseif(!$isOutOfStock && $isGuestCatalog)
+                        onclick="window.location.href='{{ $loginUrl }}'"
                         class="{{ $cardBaseClass }}"
                     @else
                         disabled
@@ -354,7 +698,7 @@
                         </span>
                     @endif
 
-                    <div class="flex w-full flex-col items-center {{ $showCompactServiceCards ? 'mb-3' : 'mb-4' }}">
+                    <div class="flex w-full flex-col items-center {{ $showCompactServiceCards ? 'wiboost-compact-card-main justify-center py-1' : 'mb-4' }}">
                         @if(! $forceEmoteLogoOnly && $product->display_logo_image)
                             <div class="{{ $logoBoxClass }}">
                                 <span class="hidden text-4xl font-black text-[#5a76c8] drop-shadow-sm">{{ $product->display_logo_emote ?: Str::upper(Str::substr($product->name, 0, 1)) }}</span>
@@ -369,17 +713,16 @@
                                 {{ $product->process_type }}
                             </div>
                         @endif
-                        <span class="block font-black leading-tight text-[#2b3a67] transition-colors group-hover:text-[#5a76c8] {{ $showCompactServiceCards ? 'text-xs sm:text-sm' : 'text-lg' }}">{{ $product->name }}</span>
+                        <span class="block max-w-full break-words px-1 font-black text-[#2b3a67] transition-colors group-hover:text-[#5a76c8] {{ $showCompactServiceCards ? 'wiboost-compact-card-title' : 'text-lg leading-tight' }}">{{ $product->name }}</span>
+                        @if($cardDescription !== '')
+                            <p class="{{ $showCompactServiceCards ? 'mt-1 max-w-full break-words px-1 text-center text-[10px] font-bold leading-snug text-[#8faaf3] sm:mt-2' : 'mt-2 text-center text-xs font-bold text-[#8faaf3]' }}">{{ $cardDescription }}</p>
+                        @endif
                     </div>
-                    
-                    @if($plainDescription !== '' && (! $showCompactServiceCards || $shouldShowCompactServiceDescription))
-                        <p class="{{ $showCompactServiceCards ? 'mb-3 line-clamp-2 text-center text-[10px] font-bold leading-relaxed text-[#8faaf3]' : 'mb-4 line-clamp-2 text-center text-xs font-bold text-[#8faaf3] flex-1' }}">{{ $plainDescription }}</p>
-                    @endif
 
-                    <div class="mt-auto flex items-center justify-center w-full border-t-2 border-dashed border-[#f4f9ff] {{ $showCompactServiceCards ? 'pt-3 gap-2' : 'pt-4' }}">
+                    <div class="flex items-center justify-center w-full border-t-2 border-dashed border-[#f4f9ff] {{ $showCompactServiceCards ? 'wiboost-compact-price-zone shrink-0 flex-col gap-1 py-2 sm:py-3' : 'mt-auto pt-4' }}">
                         @if($product->has_active_discount)
                             <div class="w-full text-center">
-                                <span class="discount-old-price block text-sm font-black text-[#111827] line-through decoration-[#111827] decoration-2 sm:text-base">Rp {{ number_format($product->original_selling_price, 0, ',', '.') }}</span>
+                                <span class="discount-old-price block text-xs font-black text-[#111827] line-through decoration-[#111827] decoration-2 sm:text-base">Rp {{ number_format($product->original_selling_price, 0, ',', '.') }}</span>
                                 <span class="block shrink-0 font-black text-[#5a76c8] {{ $showCompactServiceCards ? 'text-sm sm:text-base' : 'text-lg' }}">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</span>
                             </div>
                         @else
@@ -397,16 +740,15 @@
     </div>
 
     <div id="page-checkout" class="hidden transition-all duration-300 relative z-10">
-        <div class="relative z-10 mb-8 flex flex-col items-center gap-6 overflow-visible rounded-[2.5rem] border-4 border-white bg-white/95 p-6 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm md:flex-row md:items-center md:gap-8 md:p-8">
-            <div class="relative z-10 flex w-full items-center justify-between gap-4 md:w-auto md:justify-start">
-                <button type="button" onclick="goBackToProducts()" class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.2rem] border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-110 hover:bg-[#e0fbfc] active:scale-95">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
-                </button>
-            </div>
-
-            <div class="relative z-10 flex-1 text-center md:text-left">
-                <div class="mb-3 inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1 text-[10px] font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
-                    Checkout
+        <div class="relative z-10 mb-8 overflow-visible rounded-[2.5rem] border-4 border-white bg-white/95 p-5 text-left shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:p-6 md:p-8">
+            <div class="relative z-10 min-w-0 flex-1 text-left">
+                <div class="mb-3 flex items-center justify-start gap-2">
+                    <button type="button" onclick="goBackToProducts()" aria-label="Kembali" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-105 hover:bg-[#e0fbfc] active:scale-95">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <div class="inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1 text-[10px] font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
+                        Checkout
+                    </div>
                 </div>
                 <h2 class="text-3xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm md:text-4xl">Pesanan Anda</h2>
                 <p class="mt-2 text-sm font-bold leading-relaxed text-[#8faaf3] md:text-base">
@@ -417,11 +759,12 @@
 
         <form action="{{ route('user.checkout.process') }}" method="POST" id="checkoutForm" onsubmit="return showLoadingBtn()">
             @csrf
+            <input type="hidden" name="checkout_nonce" value="{{ $checkoutNonce }}">
             <input type="hidden" name="product_id" id="checkout_product_id">
 
             <div class="relative mb-8 flex flex-col justify-between gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white bg-gradient-to-br from-[#8faaf3] to-[#5a76c8] p-8 text-white shadow-xl shadow-[#bde0fe]/40 md:flex-row md:items-center">
                 <div class="relative z-10 flex flex-1 items-center gap-5">
-                    <div id="checkout_product_logo_box" class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white/70 bg-white/20 text-white shadow-inner">
+                    <div id="checkout_product_logo_box" class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] bg-[#f4f9ff] text-[#5a76c8] shadow-inner">
                         <span id="checkout_product_logo_emote" class="text-4xl font-black leading-none drop-shadow-sm">W</span>
                         <img id="checkout_product_logo_image" src="" alt="" class="hidden wiboost-square-logo-img drop-shadow-sm">
                     </div>
@@ -514,11 +857,22 @@
     const oldProductId = @json(old('product_id'));
     const shouldStartAtTop = !oldProductId && !window.location.hash;
     const socialServiceDetailUrlTemplate = @json($socialServiceDetailUrlTemplate);
+    const socialServiceListUrl = @json($socialServiceListUrl);
     const socialServiceCache = new Map();
+    let socialServicesLoaded = false;
+    let socialServiceDropdownRendered = false;
+    const socialServiceDropdownOptions = new Map();
+    let socialServiceDropdownRows = [];
+    const socialServiceDropdownBatchSize = 80;
+    let socialServiceDropdownVisibleCount = socialServiceDropdownBatchSize;
     let currentSocialService = null;
     let socialServiceRequestId = 0;
     let currentSocialServiceLoading = false;
     const socialServiceSelect = document.getElementById('social_service_select');
+    const socialServiceSelectWrap = document.getElementById('social_service_select_wrap');
+    const socialServiceDropdownButton = document.getElementById('social_service_dropdown_button');
+    const socialServiceSelectedText = document.getElementById('social_service_selected_text');
+    const socialServiceDropdownPanel = document.getElementById('social_service_dropdown_panel');
     const socialQuantityInput = document.getElementById('social_order_quantity');
     const checkoutProductLogoImage = document.getElementById('checkout_product_logo_image');
     const checkoutProductLogoEmote = document.getElementById('checkout_product_logo_emote');
@@ -576,12 +930,208 @@
         return socialServiceSelect ? String(socialServiceSelect.value || '') : '';
     }
 
+    function selectedSocialServiceLabel() {
+        if (!socialServiceSelect) {
+            return 'Pilih layanan...';
+        }
+
+        return socialServiceSelect.options[socialServiceSelect.selectedIndex]?.textContent?.trim() || 'Pilih layanan...';
+    }
+
+    function syncSocialServiceDropdownLabel() {
+        if (socialServiceSelectedText) {
+            socialServiceSelectedText.textContent = selectedSocialServiceLabel();
+        }
+
+        if (socialServiceDropdownButton) {
+            socialServiceDropdownButton.disabled = Boolean(socialServiceSelect?.disabled);
+        }
+    }
+
+    function syncSocialServiceDropdownSelection() {
+        if (!socialServiceDropdownPanel) {
+            return;
+        }
+
+        const selectedId = selectedSocialServiceId();
+
+        socialServiceDropdownOptions.forEach((item, value) => {
+            const isSelected = value === selectedId;
+            item.classList.toggle('is-selected', isSelected);
+            item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+        });
+
+        syncSocialServiceDropdownLabel();
+    }
+
+    function socialServiceOptionRows() {
+        if (!socialServiceSelect) {
+            return [];
+        }
+
+        if (socialServiceDropdownRows.length > 0) {
+            return socialServiceDropdownRows;
+        }
+
+        socialServiceDropdownRows = Array.from(socialServiceSelect.options).map((option) => ({
+            value: option.value,
+            label: option.textContent || '-',
+        }));
+
+        return socialServiceDropdownRows;
+    }
+
+    function renderSocialServiceDropdown() {
+        if (!socialServiceDropdownPanel || !socialServiceSelect) {
+            return;
+        }
+
+        const selectedId = selectedSocialServiceId();
+        const rows = socialServiceOptionRows();
+        const visibleRows = rows.slice(0, socialServiceDropdownVisibleCount);
+        socialServiceDropdownPanel.innerHTML = '';
+        socialServiceDropdownOptions.clear();
+
+        const fragment = document.createDocumentFragment();
+
+        visibleRows.forEach((option) => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'wiboost-service-option';
+            item.dataset.value = option.value;
+            item.setAttribute('role', 'option');
+            item.setAttribute('aria-selected', option.value === selectedId ? 'true' : 'false');
+
+            if (option.value === selectedId) {
+                item.classList.add('is-selected');
+            }
+
+            const label = document.createElement('span');
+            label.className = 'wiboost-service-option-label';
+            label.textContent = option.label;
+
+            const check = document.createElement('span');
+            check.className = 'wiboost-service-option-check';
+            check.innerHTML = '<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="3.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>';
+
+            item.appendChild(label);
+            item.appendChild(check);
+
+            socialServiceDropdownOptions.set(option.value, item);
+            fragment.appendChild(item);
+        });
+
+        if (visibleRows.length < rows.length) {
+            const loadMore = document.createElement('span');
+            loadMore.className = 'wiboost-service-load-more';
+            loadMore.textContent = 'Scroll untuk memuat layanan lainnya';
+            fragment.appendChild(loadMore);
+        }
+
+        socialServiceDropdownPanel.appendChild(fragment);
+        socialServiceDropdownRendered = true;
+        syncSocialServiceDropdownSelection();
+    }
+
+    function appendMoreSocialServiceOptions() {
+        if (!socialServiceDropdownPanel || !socialServiceSelect) {
+            return;
+        }
+
+        const rows = socialServiceOptionRows();
+        if (socialServiceDropdownVisibleCount >= rows.length) {
+            return;
+        }
+
+        const previousScrollTop = socialServiceDropdownPanel.scrollTop;
+        socialServiceDropdownVisibleCount = Math.min(rows.length, socialServiceDropdownVisibleCount + socialServiceDropdownBatchSize);
+        renderSocialServiceDropdown();
+        socialServiceDropdownPanel.scrollTop = previousScrollTop;
+    }
+
+    function setSocialServiceSelectOpen(isOpen) {
+        const shouldOpen = Boolean(isOpen) && !socialServiceSelect?.disabled;
+        socialServiceSelectWrap?.classList.toggle('is-open', shouldOpen);
+        socialServiceDropdownButton?.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+
+        if (shouldOpen) {
+            if (!socialServiceDropdownRendered) {
+                socialServiceDropdownVisibleCount = socialServiceDropdownBatchSize;
+                renderSocialServiceDropdown();
+            } else {
+                syncSocialServiceDropdownSelection();
+            }
+        }
+    }
+
     function socialServiceDetailUrl(productId) {
         if (!socialServiceDetailUrlTemplate || !productId) {
             return null;
         }
 
         return socialServiceDetailUrlTemplate.replace('__PRODUCT_ID__', encodeURIComponent(productId));
+    }
+
+    async function loadSocialServices() {
+        if (!socialServiceSelect || !socialServiceListUrl || socialServicesLoaded) {
+            return;
+        }
+
+        socialServiceSelect.disabled = true;
+        socialServiceSelect.innerHTML = '<option value="">Memuat layanan...</option>';
+        socialServiceDropdownRendered = false;
+        socialServiceDropdownRows = [{ value: '', label: 'Memuat layanan...' }];
+        socialServiceDropdownVisibleCount = socialServiceDropdownBatchSize;
+        if (socialServiceDropdownPanel) {
+            socialServiceDropdownPanel.innerHTML = '';
+        }
+        syncSocialServiceDropdownLabel();
+
+        try {
+            const response = await fetch(socialServiceListUrl, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const payload = await response.json();
+            const selectedId = String(oldProductId || '');
+            const services = Array.isArray(payload.services) ? payload.services : [];
+            const options = ['<option value="">Pilih layanan...</option>'];
+
+            services.forEach((service) => {
+                const id = String(service.id || '');
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = service.name || '-';
+                if (id === selectedId) {
+                    option.selected = true;
+                }
+                options.push(option.outerHTML);
+            });
+
+            socialServiceSelect.innerHTML = options.join('');
+            socialServiceDropdownRows = Array.from(socialServiceSelect.options).map((option) => ({
+                value: option.value,
+                label: option.textContent || '-',
+            }));
+            socialServicesLoaded = true;
+            socialServiceDropdownRendered = false;
+            socialServiceDropdownVisibleCount = socialServiceDropdownBatchSize;
+        } catch (error) {
+            socialServiceSelect.innerHTML = '<option value="">Gagal memuat layanan. Refresh halaman.</option>';
+            socialServiceDropdownRows = [{ value: '', label: 'Gagal memuat layanan. Refresh halaman.' }];
+            socialServiceDropdownRendered = false;
+            socialServiceDropdownVisibleCount = socialServiceDropdownBatchSize;
+        } finally {
+            socialServiceSelect.disabled = false;
+            syncSocialServiceDropdownLabel();
+        }
     }
 
     function socialField(id) {
@@ -727,6 +1277,13 @@
         const btn = document.getElementById('btnSocialCheckout');
 
         if (form?.dataset.submitted === '1') {
+            return false;
+        }
+
+        if (socialServiceSelect && !selectedSocialServiceId()) {
+            socialServiceSelectWrap?.classList.add('has-error');
+            setSocialServiceSelectOpen(true);
+            socialServiceDropdownButton?.focus();
             return false;
         }
 
@@ -961,9 +1518,74 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         if (socialServiceSelect) {
-            socialServiceSelect.addEventListener('change', syncSocialService);
+            socialServiceDropdownButton?.addEventListener('click', function () {
+                setSocialServiceSelectOpen(!socialServiceSelectWrap?.classList.contains('is-open'));
+            });
+
+            socialServiceDropdownButton?.addEventListener('keydown', function (event) {
+                if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) {
+                    event.preventDefault();
+                    setSocialServiceSelectOpen(true);
+                    socialServiceDropdownPanel?.querySelector('.wiboost-service-option')?.focus();
+                }
+
+                if (event.key === 'Escape') {
+                    setSocialServiceSelectOpen(false);
+                }
+            });
+
+            socialServiceDropdownPanel?.addEventListener('keydown', function (event) {
+                const options = Array.from(socialServiceDropdownPanel.querySelectorAll('.wiboost-service-option'));
+                const currentIndex = options.indexOf(document.activeElement);
+
+                if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    options[Math.min(currentIndex + 1, options.length - 1)]?.focus();
+                }
+
+                if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    options[Math.max(currentIndex - 1, 0)]?.focus();
+                }
+
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    setSocialServiceSelectOpen(false);
+                    socialServiceDropdownButton?.focus();
+                }
+            });
+
+            socialServiceDropdownPanel?.addEventListener('click', function (event) {
+                const item = event.target instanceof Element ? event.target.closest('.wiboost-service-option') : null;
+                if (!item || socialServiceSelect.disabled) {
+                    return;
+                }
+
+                socialServiceSelect.value = item.dataset.value || '';
+                socialServiceSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                socialServiceDropdownButton?.focus();
+            });
+
+            socialServiceDropdownPanel?.addEventListener('scroll', function () {
+                const distanceToBottom = socialServiceDropdownPanel.scrollHeight - socialServiceDropdownPanel.scrollTop - socialServiceDropdownPanel.clientHeight;
+                if (distanceToBottom < 120) {
+                    appendMoreSocialServiceOptions();
+                }
+            }, { passive: true });
+
+            socialServiceSelect.addEventListener('change', function () {
+                socialServiceSelectWrap?.classList.remove('has-error');
+                syncSocialServiceDropdownSelection();
+                setSocialServiceSelectOpen(false);
+                syncSocialService();
+            });
+            document.addEventListener('pointerdown', function (event) {
+                if (socialServiceSelectWrap && !socialServiceSelectWrap.contains(event.target)) {
+                    setSocialServiceSelectOpen(false);
+                }
+            });
             socialQuantityInput?.addEventListener('input', updateSocialTotal);
-            syncSocialService();
+            loadSocialServices().then(syncSocialService);
         }
 
         if (shouldStartAtTop) {

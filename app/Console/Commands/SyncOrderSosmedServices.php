@@ -124,7 +124,6 @@ class SyncOrderSosmedServices extends Command
 
                 $providerQuantity = $this->resolveProviderQuantity($service);
                 $basePrice = $this->resolveBasePrice($service, $providerQuantity);
-
                 $categoryId = $this->resolveCategoryId($service, $defaultCategoryId, $allowedProviderCategoryIds, $targetCategoryId, $matchLocalCategories);
 
                 if (! $categoryId) {
@@ -141,7 +140,15 @@ class SyncOrderSosmedServices extends Command
                 $targetMeta = $this->resolveTargetMeta($service, $syncMode);
                 $processType = 'api';
 
-                $product = $this->findExistingProduct($providerProductId, $name, $syncMode);
+                $product = $this->findExistingProduct($providerProductId, $name);
+                $shouldPreserveExistingCategory = $product->exists
+                    && filled($product->category_id)
+                    && ! $matchLocalCategories
+                    && $targetCategoryId === null
+                    && $allowedProviderCategoryIds === [];
+                $categoryId = $shouldPreserveExistingCategory
+                    ? (int) $product->category_id
+                    : $categoryId;
 
                 if (! $product->exists && blank($product->slug)) {
                     $product->slug = Str::slug($name) . '-' . Str::random(5);
@@ -236,13 +243,9 @@ class SyncOrderSosmedServices extends Command
 
     protected function resolveProviderQuantity(array $service): int
     {
-        if ($this->usesOrderSosmedPerThousandPricing($service)) {
-            return 1000;
-        }
-
         $min = (int) round($this->parseProviderNumber($service['min'] ?? $service['minimum'] ?? 0));
 
-        return max(1, $min);
+        return max(1, $min ?: 1000);
     }
 
     protected function resolveBasePrice(array $service, int $providerQuantity): float
@@ -253,17 +256,19 @@ class SyncOrderSosmedServices extends Command
             return max(0, $price);
         }
 
+        $perThousandPrice = 0.0;
+
         if (isset($service['price']) && $this->parseProviderNumber($service['price']) > 0) {
-            return max(0, $this->parseProviderNumber($service['price']));
+            $perThousandPrice = $this->parseProviderNumber($service['price']);
+        } elseif (isset($service['rate']) && $this->parseProviderNumber($service['rate']) > 0) {
+            $perThousandPrice = $this->parseProviderNumber($service['rate']);
         }
 
-        if (isset($service['rate']) && $this->parseProviderNumber($service['rate']) > 0) {
-            $rate = $this->parseProviderNumber($service['rate'] ?? 0);
-
-            return max(0, $rate);
+        if ($perThousandPrice <= 0) {
+            return 0;
         }
 
-        return 0;
+        return max(0, ceil(($perThousandPrice / 1000) * max(1, $providerQuantity)));
     }
 
     protected function usesOrderSosmedPerThousandPricing(array $service): bool
@@ -914,7 +919,7 @@ class SyncOrderSosmedServices extends Command
         return trim(Str::substr($name, 0, 255));
     }
 
-    protected function findExistingProduct(string $providerProductId, string $name, string $syncMode): Product
+    protected function findExistingProduct(string $providerProductId, string $name): Product
     {
         $exactMatch = Product::query()
             ->where('provider_source', 'ordersosmed')
@@ -925,21 +930,64 @@ class SyncOrderSosmedServices extends Command
             return $exactMatch;
         }
 
-        if ($syncMode === 'api') {
-            $suffixMatches = Product::query()
-                ->where('provider_source', 'ordersosmed')
-                ->where('provider_product_id', 'like', '%:' . $providerProductId)
-                ->get();
+        $suffixMatches = Product::query()
+            ->where('provider_source', 'ordersosmed')
+            ->where('provider_product_id', 'like', '%:' . $providerProductId)
+            ->get()
+            ->filter(fn (Product $product) => $this->ordersosmedNamesCompatible((string) $product->name, $name))
+            ->values();
 
-            if ($suffixMatches->count() === 1) {
-                return $suffixMatches->first();
-            }
+        if ($suffixMatches->count() === 1) {
+            return $suffixMatches->first();
         }
 
         return new Product([
             'provider_source' => 'ordersosmed',
             'provider_product_id' => $providerProductId,
         ]);
+    }
+
+    protected function ordersosmedNamesCompatible(string $existingName, string $providerName): bool
+    {
+        $existing = trim($this->normalizeMatchText($existingName));
+        $provider = trim($this->normalizeMatchText($providerName));
+
+        if ($existing === '' || $provider === '') {
+            return false;
+        }
+
+        if ($existing === $provider) {
+            return true;
+        }
+
+        foreach ($this->extractRiskyServiceTokens($existing) as $token) {
+            if (! str_contains(' ' . $provider . ' ', ' ' . $token . ' ')) {
+                return false;
+            }
+        }
+
+        similar_text($existing, $provider, $percent);
+
+        return $percent >= 88;
+    }
+
+    protected function extractRiskyServiceTokens(string $text): array
+    {
+        $tokens = [];
+
+        if (preg_match_all('/\b\d+(?:[.,]\d+)?\s*(?:k|m|b|d)\b/u', $text, $matches)) {
+            foreach ($matches[0] as $match) {
+                $tokens[] = preg_replace('/[^a-z0-9]+/u', '', $match) ?: '';
+            }
+        }
+
+        foreach (['bot', 'profile', 'profiles', 'hq', 'account', 'accounts', 'indo', 'indonesia', 'real', 'active', 'premium'] as $keyword) {
+            if (str_contains(' ' . $text . ' ', ' ' . $keyword . ' ')) {
+                $tokens[] = $keyword;
+            }
+        }
+
+        return collect($tokens)->filter()->unique()->values()->all();
     }
 
     protected function deactivateUnmatchedOrderSosmedProducts(array $matchedProviderProductIds): int

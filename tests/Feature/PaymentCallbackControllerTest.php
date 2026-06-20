@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Mail\OrderSuccessMail;
 use App\Models\Deposit;
+use App\Models\ProductCredential;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\User;
@@ -60,7 +61,8 @@ class PaymentCallbackControllerTest extends TestCase
         $this->assertSame('paid', $transaction->payment_status);
         $this->assertSame('processing', $transaction->order_status);
         $this->assertSame('QRIS', $transaction->payment_method);
-        $this->assertSame(15000.0, (float) $transaction->amount);
+        $this->assertSame(14000.0, (float) $transaction->amount);
+        $this->assertSame(15000.0, (float) $transaction->paid_amount);
         $this->assertStringContainsString('antrean admin', (string) $transaction->target_notes);
     }
 
@@ -88,19 +90,98 @@ class PaymentCallbackControllerTest extends TestCase
 
         $user->refresh();
 
-        $this->assertSame(50000.0, (float) $user->balance);
+        $this->assertSame(45000.0, (float) $user->balance);
         $this->assertDatabaseHas('deposits', [
             'invoice_number' => 'DEP-CALLBACK-001',
             'payment_status' => 'paid',
             'payment_method' => 'QRIS',
-            'amount' => 50000,
+            'amount' => 45000,
             'paid_amount' => 50000,
         ]);
         $this->assertSame(1, DB::table('wallet_histories')->where('invoice_number', 'DEP-CALLBACK-001')->count());
         $this->assertDatabaseHas('wallet_histories', [
             'invoice_number' => 'DEP-CALLBACK-001',
-            'amount' => 50000,
+            'amount' => 45000,
         ]);
+    }
+
+    public function test_xoftware_nested_callback_fulfills_premium_account_and_awards_points_once(): void
+    {
+        Mail::fake();
+
+        config([
+            'xoftware.webhook_secret' => 'webhook-secret-test',
+        ]);
+
+        $this->seedCategory(1, 'aplikasi-premium');
+
+        $user = User::factory()->create([
+            'points' => 0,
+        ]);
+
+        $product = Product::create([
+            'category_id' => 1,
+            'provider_id' => null,
+            'process_type' => 'account',
+            'name' => 'Netflix Premium',
+            'slug' => 'netflix-premium',
+            'description' => 'Akun premium otomatis',
+            'price' => 25000,
+            'status' => 'active',
+            'is_active' => true,
+            'requires_buyer_email' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        $credential = ProductCredential::create([
+            'product_id' => $product->id,
+            'data_1' => 'netflix@example.com',
+            'data_2' => 'rahasia',
+            'data_3' => 'Profil 1',
+            'data_4' => '1234',
+            'max_usage' => 1,
+            'current_usage' => 0,
+            'is_active' => true,
+        ]);
+
+        $transaction = Transaction::create([
+            'invoice_number' => 'WIB-XOFTWARE-NESTED',
+            'user_id' => $user->id,
+            'product_id' => $product->id,
+            'amount' => 25000,
+            'target_data' => 'buyer@example.com',
+            'payment_method' => 'tripay',
+            'payment_status' => 'unpaid',
+            'order_status' => 'pending',
+        ]);
+
+        $payload = [
+            'data' => [
+                'ref_id' => $transaction->invoice_number,
+                'transaction_id' => 'XOFTWARE-TRX-1',
+                'status' => 'SUCCESS',
+                'payment_status' => 'PAID',
+                'amount' => 25000,
+                'total_amount' => 26000,
+                'channel_code' => 'QRIS',
+            ],
+        ];
+
+        $this->postXoftwareCallback($payload)->assertOk();
+        $this->postXoftwareCallback($payload)->assertOk();
+
+        $transaction->refresh();
+        $credential->refresh();
+        $user->refresh();
+
+        $this->assertSame('paid', $transaction->payment_status);
+        $this->assertSame('success', $transaction->order_status);
+        $this->assertSame(25000.0, (float) $transaction->amount);
+        $this->assertSame(26000.0, (float) $transaction->paid_amount);
+        $this->assertSame('netflix@example.com', data_get($transaction->credential_data, 'email'));
+        $this->assertSame(1, $credential->current_usage);
+        $this->assertSame(1, $user->points);
+        $this->assertNotNull($transaction->points_awarded_at);
     }
 
     public function test_tripay_callback_rejects_invalid_signature(): void
@@ -195,6 +276,17 @@ class PaymentCallbackControllerTest extends TestCase
             'HTTP_ACCEPT' => 'application/json',
             'HTTP_X_CALLBACK_EVENT' => 'payment_status',
             'HTTP_X_CALLBACK_SIGNATURE' => hash_hmac('sha256', $rawPayload, (string) config('tripay.private_key')),
+        ], $rawPayload);
+    }
+
+    protected function postXoftwareCallback(array $payload)
+    {
+        $rawPayload = json_encode($payload);
+
+        return $this->call('POST', route('xoftware.callback'), [], [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_ACCEPT' => 'application/json',
+            'HTTP_X_SIGNATURE' => hash_hmac('sha256', $rawPayload, (string) config('xoftware.webhook_secret')),
         ], $rawPayload);
     }
 

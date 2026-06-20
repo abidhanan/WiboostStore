@@ -7,8 +7,10 @@ use App\Models\AdminReport;
 use App\Models\Deposit;
 use App\Models\Transaction;
 use App\Support\WiboostAdminContact;
+use App\Support\WiboostOrderDetailData;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -42,7 +44,11 @@ class AdminReportController extends Controller
             'category_key' => ['required', 'string', Rule::in($categories->pluck('key')->all())],
             'issue' => 'required|string|min:5|max:2000',
             'record_id' => 'nullable|string|max:100',
-            'proof' => 'required|image|max:5120',
+            'proof' => 'required|file|mimes:jpg,jpeg,png,webp,gif,heic,heif|max:12288',
+        ], [
+            'proof.uploaded' => 'Bukti kendala gagal diupload. Coba pilih gambar yang lebih kecil atau screenshot baru.',
+            'proof.mimes' => 'Bukti kendala harus berupa gambar JPG, PNG, WEBP, GIF, HEIC, atau HEIF.',
+            'proof.max' => 'Bukti kendala maksimal 12 MB.',
         ]);
 
         $selectedCategory = $categories->firstWhere('key', (string) $validated['category_key'])
@@ -73,13 +79,13 @@ class AdminReportController extends Controller
             ->first();
 
         if ($duplicateReport) {
-            $whatsappUrl = WiboostAdminContact::whatsappUrl($duplicateReport->whatsapp_message);
+            $whatsappUrl = $this->whatsappUrlForDuplicateReport($duplicateReport, $selectedCategory, $issue, $selectedRecord);
 
             if (! $whatsappUrl) {
                 return back()->with('error', 'Nomor WhatsApp admin belum diatur.');
             }
 
-            return redirect()->away($whatsappUrl);
+            return $this->redirectToWhatsapp($whatsappUrl);
         }
 
         $proofFile = $request->file('proof');
@@ -118,13 +124,13 @@ class AdminReportController extends Controller
                 throw $exception;
             }
 
-            $whatsappUrl = WiboostAdminContact::whatsappUrl($duplicateReport->whatsapp_message);
+            $whatsappUrl = $this->whatsappUrlForDuplicateReport($duplicateReport, $selectedCategory, $issue, $selectedRecord);
 
             if (! $whatsappUrl) {
                 return back()->with('error', 'Nomor WhatsApp admin belum diatur.');
             }
 
-            return redirect()->away($whatsappUrl);
+            return $this->redirectToWhatsapp($whatsappUrl);
         }
 
         $whatsappUrl = WiboostAdminContact::whatsappUrl($message);
@@ -133,7 +139,7 @@ class AdminReportController extends Controller
             return back()->with('error', 'Nomor WhatsApp admin belum diatur.');
         }
 
-        return redirect()->away($whatsappUrl);
+        return $this->redirectToWhatsapp($whatsappUrl);
     }
 
     protected function reportHash(array $category, string $issue, ?string $recordId): string
@@ -175,18 +181,22 @@ class AdminReportController extends Controller
                 ->latest()
                 ->take(30)
                 ->get()
-                ->map(fn (Deposit $deposit) => [
-                    'id' => 'deposit-' . $deposit->id,
-                    'invoice' => $deposit->invoice_number,
-                    'title' => 'Deposit Rp ' . number_format((float) ($deposit->amount ?? 0), 0, ',', '.'),
-                    'meta' => ($deposit->created_at?->format('d M Y, H:i') ?: '-') . ' - ' . strtoupper((string) ($deposit->payment_status ?: '-')),
-                    'amount' => 'Rp ' . number_format((float) ($deposit->amount ?? 0), 0, ',', '.'),
-                    'paidAmount' => $deposit->paid_amount ? 'Rp ' . number_format((float) $deposit->paid_amount, 0, ',', '.') : '-',
-                    'status' => strtoupper((string) ($deposit->payment_status ?: '-')),
-                    'method' => strtoupper((string) ((strtolower((string) $deposit->payment_method) === 'tripay') ? 'QRIS' : ($deposit->payment_method ?: 'QRIS'))),
-                    'reference' => $deposit->tripay_reference ?: '-',
-                    'created' => $deposit->created_at?->format('d M Y, H:i') ?: '-',
-                ])
+                ->map(function (Deposit $deposit) {
+                    $created = $this->formatReportDate($deposit->created_at);
+
+                    return [
+                        'id' => 'deposit-' . $deposit->id,
+                        'invoice' => $deposit->invoice_number,
+                        'title' => 'Deposit Rp ' . number_format((float) ($deposit->amount ?? 0), 0, ',', '.'),
+                        'meta' => $created,
+                        'amount' => 'Rp ' . number_format((float) ($deposit->amount ?? 0), 0, ',', '.'),
+                        'paidAmount' => $deposit->paid_amount ? 'Rp ' . number_format((float) $deposit->paid_amount, 0, ',', '.') : '-',
+                        'status' => strtoupper((string) ($deposit->payment_status ?: '-')),
+                        'method' => $deposit->display_payment_method,
+                        'reference' => $deposit->tripay_reference ?: '-',
+                        'created' => $created,
+                    ];
+                })
                 ->values();
         }
 
@@ -200,21 +210,22 @@ class AdminReportController extends Controller
             ->map(function (Transaction $transaction) {
                 $product = $transaction->product;
                 $rootCategory = $this->resolveRootCategory($product?->category);
+                $detail = WiboostOrderDetailData::forTransaction($transaction);
 
                 return [
                     'id' => 'transaction-' . $transaction->id,
                     'categoryKey' => $this->normalizeRootSlug($rootCategory?->slug ?: $rootCategory?->name),
                     'invoice' => $transaction->invoice_number,
-                    'title' => Str::limit((string) ($product?->name ?: 'Produk Dihapus'), 64),
-                    'meta' => ($transaction->created_at?->format('d M Y, H:i') ?: '-') . ' - ' . strtoupper((string) ($transaction->order_status ?: '-')),
-                    'category' => $rootCategory?->name ?: '-',
-                    'product' => $product?->name ?: 'Produk Dihapus',
-                    'amount' => 'Rp ' . number_format((float) ($transaction->amount ?? 0), 0, ',', '.'),
-                    'status' => strtoupper((string) ($transaction->order_status ?: '-')),
-                    'payment' => strtoupper((string) (strtolower((string) $transaction->payment_method) === 'tripay' ? 'QRIS' : ($transaction->payment_method ?: '-'))),
-                    'target' => $this->reportTarget($transaction),
-                    'providerId' => $transaction->provider_order_id ?: '-',
-                    'created' => $transaction->created_at?->format('d M Y, H:i') ?: '-',
+                    'title' => $detail['product'],
+                    'meta' => strtoupper($detail['time'] . ' - ' . $detail['payment'] . ' - ' . $detail['status']),
+                    'category' => $detail['category'],
+                    'product' => $detail['product'],
+                    'amount' => $detail['total'],
+                    'status' => $detail['status'],
+                    'payment' => $detail['payment'],
+                    'target' => $detail['input_text'],
+                    'providerId' => $detail['provider_id'],
+                    'created' => $detail['time'],
                 ];
             })
             ->filter(fn (array $record) => $record['categoryKey'] === ($category['record_type'] ?? null))
@@ -226,52 +237,57 @@ class AdminReportController extends Controller
         $lines = [
             'Halo Admin Wiboost, saya ingin melaporkan kendala.',
             '',
-            'Jenis Laporan: ' . ($category['label'] ?? 'Umum'),
-            'Nama: ' . (auth()->user()->name ?? '-'),
-            'Email: ' . (auth()->user()->email ?? '-'),
-            '',
-            'Kendala:',
-            trim($issue),
         ];
 
+        $this->appendFilledLine($lines, 'Jenis Laporan', $category['label'] ?? 'Umum');
+        $this->appendFilledLine($lines, 'Nama', auth()->user()->name ?? null);
+        $this->appendFilledLine($lines, 'Email', auth()->user()->email ?? null);
+        $this->appendFilledLine($lines, 'WhatsApp', auth()->user()->whatsapp ?? null);
+
         $lines[] = '';
-        $lines[] = 'Bukti Kendala: ' . ($proofUrl ?: '-');
+        $lines[] = 'Kendala:';
+        $lines[] = trim($issue);
+
+        if ($this->hasFilledValue($proofUrl)) {
+            $lines[] = '';
+            $lines[] = 'Bukti Kendala: ' . trim((string) $proofUrl);
+        }
 
         if (($category['key'] ?? null) === 'deposit') {
-            $lines[] = '';
-            $lines[] = 'Data Deposit:';
             if ($record) {
-                array_push(
-                    $lines,
-                    'Invoice: ' . ($record['invoice'] ?? '-'),
-                    'Nominal Masuk Saldo: ' . ($record['amount'] ?? '-'),
-                    'Jumlah Dibayar: ' . ($record['paidAmount'] ?? '-'),
-                    'Metode: ' . ($record['method'] ?? '-'),
-                    'Status: ' . ($record['status'] ?? '-'),
-                    'Referensi QRIS: ' . ($record['reference'] ?? '-'),
-                    'Waktu: ' . ($record['created'] ?? '-')
-                );
-            } else {
-                $lines[] = '-';
+                $depositLines = [];
+                $this->appendFilledLine($depositLines, 'Invoice', $record['invoice'] ?? null);
+                $this->appendFilledLine($depositLines, 'Nominal Masuk Saldo', $record['amount'] ?? null);
+                $this->appendFilledLine($depositLines, 'Jumlah Dibayar', $record['paidAmount'] ?? null);
+                $this->appendFilledLine($depositLines, 'Metode', $record['method'] ?? null);
+                $this->appendFilledLine($depositLines, 'Referensi QRIS', $record['reference'] ?? null);
+                $this->appendFilledLine($depositLines, 'Waktu', $record['created'] ?? null);
+
+                if ($depositLines !== []) {
+                    $lines[] = '';
+                    $lines[] = 'Data Deposit:';
+                    array_push($lines, ...$depositLines);
+                }
             }
         } elseif ($category['needs_record'] ?? false) {
-            $lines[] = '';
-            $lines[] = 'Data Pesanan:';
             if ($record) {
-                array_push(
-                    $lines,
-                    'Invoice: ' . ($record['invoice'] ?? '-'),
-                    'Kategori: ' . ($record['category'] ?? '-'),
-                    'Produk: ' . ($record['product'] ?? '-'),
-                    'Total Bayar: ' . ($record['amount'] ?? '-'),
-                    'Metode: ' . ($record['payment'] ?? '-'),
-                    'Status Pesanan: ' . ($record['status'] ?? '-'),
-                    'ID Provider: ' . ($record['providerId'] ?? '-'),
-                    'Waktu: ' . ($record['created'] ?? '-'),
-                    'Input Pembeli: ' . (($record['target'] ?? '-') ?: '-')
-                );
-            } else {
-                $lines[] = '-';
+                $orderLines = [];
+                $this->appendFilledLine($orderLines, 'Invoice', $record['invoice'] ?? null);
+                $this->appendFilledLine($orderLines, 'Kategori', $record['category'] ?? null);
+                $this->appendFilledLine($orderLines, 'Produk', $record['product'] ?? null);
+                $this->appendFilledLine($orderLines, 'Total Bayar', $record['amount'] ?? null);
+                $this->appendFilledLine($orderLines, 'Metode', $record['payment'] ?? null);
+                $this->appendFilledLine($orderLines, 'Status Pesanan', $record['status'] ?? null);
+                $this->appendFilledLine($orderLines, 'ID Provider', $record['providerId'] ?? null);
+                $this->appendFilledLine($orderLines, 'Waktu', $record['created'] ?? null);
+
+                if ($orderLines !== []) {
+                    $lines[] = '';
+                    $lines[] = 'Data Pesanan:';
+                    array_push($lines, ...$orderLines);
+                }
+
+                $this->appendInputBuyerLines($lines, $record['target'] ?? '-');
             }
         }
 
@@ -282,6 +298,97 @@ class AdminReportController extends Controller
         );
 
         return implode("\n", $lines);
+    }
+
+    protected function appendFilledLine(array &$lines, string $label, mixed $value): void
+    {
+        if (! $this->hasFilledValue($value)) {
+            return;
+        }
+
+        $lines[] = $label . ': ' . trim((string) $value);
+    }
+
+    protected function hasFilledValue(mixed $value): bool
+    {
+        if ($value === null) {
+            return false;
+        }
+
+        if (is_array($value)) {
+            return collect($value)->contains(fn ($item) => $this->hasFilledValue($item));
+        }
+
+        $value = trim((string) $value);
+        $emptyValues = [
+            '',
+            '-',
+            "\xE2\x80\x94",
+            'n/a',
+            'na',
+            'null',
+            'undefined',
+            '[]',
+            '{}',
+            'tidak ada',
+            'belum ada',
+            'belum tersedia',
+        ];
+
+        return ! in_array(Str::lower($value), $emptyValues, true);
+    }
+
+    protected function whatsappUrlForDuplicateReport(AdminReport $report, array $category, string $issue, ?array $record): ?string
+    {
+        $proofUrl = $report->proof_url;
+
+        if ($this->hasFilledValue($proofUrl) && ! Str::startsWith((string) $proofUrl, ['http://', 'https://'])) {
+            $proofUrl = url($proofUrl);
+        }
+
+        $message = $this->buildWhatsappMessage($category, $issue, $record, $proofUrl);
+
+        if ($report->whatsapp_message !== $message) {
+            $report->update(['whatsapp_message' => $message]);
+        }
+
+        return WiboostAdminContact::whatsappUrl($message);
+    }
+
+    protected function redirectToWhatsapp(string $whatsappUrl)
+    {
+        return redirect()
+            ->away($whatsappUrl)
+            ->withCookie(Cookie::make('wiboost_after_admin_report', 'dashboard', 10, '/', null, false, false, false, 'Lax'));
+    }
+
+    protected function appendInputBuyerLines(array &$lines, ?string $target): void
+    {
+        $target = trim((string) $target);
+
+        if ($target === '' || $target === '-') {
+            return;
+        }
+
+        $inputLines = [];
+
+        foreach (preg_split('/\R/', $target) ?: [] as $line) {
+            $line = trim((string) $line);
+
+            $lineValue = Str::contains($line, ':') ? Str::after($line, ':') : $line;
+
+            if ($this->hasFilledValue($lineValue)) {
+                $inputLines[] = $line;
+            }
+        }
+
+        if ($inputLines === []) {
+            return;
+        }
+
+        $lines[] = '';
+        $lines[] = 'Input Pembeli:';
+        array_push($lines, ...$inputLines);
     }
 
     protected function reportTarget(Transaction $transaction): string
@@ -298,6 +405,32 @@ class AdminReportController extends Controller
         }
 
         return $targetData;
+    }
+
+    protected function formatReportDate($date): string
+    {
+        if (! $date) {
+            return '-';
+        }
+
+        $months = [
+            1 => 'JAN',
+            2 => 'FEB',
+            3 => 'MAR',
+            4 => 'APR',
+            5 => 'MEI',
+            6 => 'JUN',
+            7 => 'JUL',
+            8 => 'AGU',
+            9 => 'SEP',
+            10 => 'OKT',
+            11 => 'NOV',
+            12 => 'DES',
+        ];
+
+        return $date->format('d') . ' '
+            . ($months[(int) $date->format('n')] ?? Str::upper($date->format('M'))) . ' '
+            . $date->format('Y, H:i');
     }
 
     protected function normalizeRootSlug($slug): string

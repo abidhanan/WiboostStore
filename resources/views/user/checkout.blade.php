@@ -132,6 +132,7 @@
             100% { transform: translateY(0px); }
         }
     </style>
+    @include('partials.ios-layout-fixes')
 </head>
 <body class="relative selection:bg-[#7b9eed] selection:text-white">
     @php
@@ -213,6 +214,7 @@
     </div>
 
     @include('partials.floating-admin-report')
+    @include('partials.page-loading')
     <script>
         document.querySelectorAll('[data-qris-pay-link]').forEach((link) => {
             link.addEventListener('click', () => {

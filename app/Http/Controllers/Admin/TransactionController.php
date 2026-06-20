@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Services\OrderFulfillmentService;
+use App\Services\TransactionPaymentSyncService;
 use App\Support\WiboostCatalog;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -15,21 +16,19 @@ use Illuminate\Support\Str;
 
 class TransactionController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, TransactionPaymentSyncService $paymentSyncService)
     {
         if ($request->boolean('refresh_api')) {
             return $this->refreshProviderStatusesFromIndex($request);
         }
 
+        foreach (Transaction::whereIn('payment_status', ['unpaid', 'pending'])->get() as $transaction) {
+            $paymentSyncService->expireIfPastDue($transaction);
+        }
+
         // Pastikan memuat relasi product.category agar bisa mengecek slug kategori
         $query = Transaction::with(['user', 'product.category.parent.parent'])->latest();
         $query->whereHas('product', fn ($productQuery) => $productQuery->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()));
-        $query->where(function ($statusQuery) {
-            $statusQuery->where('payment_method', '!=', 'tripay')
-                ->orWhereNull('payment_method')
-                ->orWhereNotIn('payment_status', ['unpaid', 'pending']);
-        });
-
         // 1. Pencarian
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
@@ -65,6 +64,11 @@ class TransactionController extends Controller
 
         if ($request->order_status === 'success') {
             $orderFulfillmentService->markOrderSuccessful($transaction);
+        } elseif ($request->order_status === 'failed') {
+            $orderFulfillmentService->markAsFailed(
+                $transaction,
+                'Pesanan ditandai gagal oleh admin. Saldo otomatis dikembalikan jika pembayaran sudah lunas.'
+            );
         } else {
             $transaction->update([
                 'order_status' => $request->order_status,
@@ -145,7 +149,7 @@ class TransactionController extends Controller
                 ->latest()
                 ->get();
 
-            $totalRevenue = $transactions->sum('amount');
+            $totalRevenue = $transactions->sum('display_total_payable');
 
             // Setup bahasa ke Indonesia untuk nama bulan
             Carbon::setLocale('id');

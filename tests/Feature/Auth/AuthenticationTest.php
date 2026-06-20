@@ -28,7 +28,22 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('user.dashboard', absolute: false));
+    }
+
+    public function test_user_login_from_guest_catalog_redirects_to_user_dashboard(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->withSession(['url.intended' => route('guest.order.category', 'instagram-followers-global')])
+            ->post('/login', [
+                'email' => $user->email,
+                'password' => 'password',
+            ]);
+
+        $this->assertAuthenticatedAs($user);
+        $response->assertRedirect(route('user.dashboard', absolute: false));
     }
 
     public function test_admin_can_not_authenticate_using_the_user_login_screen(): void

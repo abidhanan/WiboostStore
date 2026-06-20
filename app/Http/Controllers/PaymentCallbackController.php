@@ -94,7 +94,13 @@ class PaymentCallbackController extends Controller
                 }
 
                 if (in_array($status, ['FAILED', 'EXPIRED', 'REFUND'], true) && in_array($deposit->payment_status, [null, 'unpaid', 'pending'], true)) {
-                    $deposit->delete();
+                    $deposit->update([
+                        'payment_status' => 'failed',
+                        'payment_response' => array_merge($deposit->payment_response ?? [], [
+                            'tripay_callback' => $payload,
+                            'callback_synced_at' => now()->toDateTimeString(),
+                        ]),
+                    ]);
                 }
 
                 return ['found' => true, 'paid' => false];
@@ -129,7 +135,7 @@ class PaymentCallbackController extends Controller
                     $transaction->update([
                         'payment_status' => 'paid',
                         'payment_method' => $paymentMethod,
-                        'amount' => $paidAmount > 0 ? $paidAmount : $transaction->amount,
+                        'paid_amount' => $paidAmount > 0 ? $paidAmount : $transaction->amount,
                         'response_data' => array_merge($transaction->response_data ?? [], [
                             'payment_gateway' => 'tripay',
                             'tripay_reference' => data_get($payload, 'reference'),
@@ -141,7 +147,15 @@ class PaymentCallbackController extends Controller
                 }
 
                 if (in_array($status, ['FAILED', 'EXPIRED', 'REFUND'], true) && in_array($transaction->payment_status, ['unpaid', 'pending'], true)) {
-                    $transaction->delete();
+                    $transaction->update([
+                        'payment_status' => 'failed',
+                        'order_status' => 'failed',
+                        'target_notes' => 'Pembayaran QRIS berstatus ' . $status . '.',
+                        'response_data' => array_merge($transaction->response_data ?? [], [
+                            'payment_gateway' => 'tripay',
+                            'tripay_callback' => $payload,
+                        ]),
+                    ]);
                 }
 
                 return ['found' => true, 'paid' => false];
@@ -187,31 +201,39 @@ class PaymentCallbackController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid payload'], 400);
         }
 
+        $callbackData = data_get($payload, 'data');
+        $event = is_array($callbackData) ? array_replace($payload, $callbackData) : $payload;
+
         $merchantRef = (string) (
-            data_get($payload, 'order_id')
-            ?: data_get($payload, 'ref_id')
-            ?: data_get($payload, 'merchant_ref')
+            data_get($event, 'order_id')
+            ?: data_get($event, 'ref_id')
+            ?: data_get($event, 'merchant_ref')
         );
         $providerReference = (string) (
-            data_get($payload, 'transaction_id')
-            ?: data_get($payload, 'reference')
+            data_get($event, 'transaction_id')
+            ?: data_get($event, 'reference')
             ?: $merchantRef
         );
-        $status = strtoupper((string) data_get($payload, 'status', ''));
-        $paymentStatus = strtoupper((string) data_get($payload, 'payment_status', ''));
-        $paidAmount = (int) round((float) data_get($payload, 'total_amount', data_get($payload, 'amount', 0)));
+        $status = strtoupper((string) data_get($event, 'status', ''));
+        $paymentStatus = strtoupper((string) data_get($event, 'payment_status', ''));
+        $paidAmount = (int) round((float) data_get(
+            $event,
+            'total_amount',
+            data_get($event, 'paid_amount', data_get($event, 'amount', 0))
+        ));
         $paymentMethod = (string) (
-            data_get($payload, 'channel_code')
-            ?: data_get($payload, 'payment_method')
+            data_get($event, 'channel_code')
+            ?: data_get($event, 'payment_method')
             ?: 'QRIS'
         );
 
-        $isPaid = in_array($status, ['SUCCESS', 'PAID'], true) || in_array($paymentStatus, ['SUCCEEDED', 'PAID'], true);
+        $isPaid = in_array($status, ['SUCCESS', 'PAID', 'SUCCEEDED', 'SETTLEMENT', 'CAPTURE'], true)
+            || in_array($paymentStatus, ['SUCCESS', 'PAID', 'SUCCEEDED', 'SETTLEMENT', 'CAPTURE'], true);
         $isFailed = in_array($status, ['FAILED', 'EXPIRED', 'REFUND', 'CANCELED', 'CANCELLED'], true)
             || in_array($paymentStatus, ['FAILED', 'EXPIRED', 'REFUND', 'CANCELED', 'CANCELLED'], true);
 
         if (str_starts_with($merchantRef, 'DEP-')) {
-            $result = DB::transaction(function () use ($merchantRef, $providerReference, $isPaid, $isFailed, $paidAmount, $paymentMethod, $payload) {
+            $result = DB::transaction(function () use ($merchantRef, $providerReference, $isPaid, $isFailed, $paidAmount, $paymentMethod, $payload, $status, $paymentStatus) {
                 $deposit = Deposit::where('invoice_number', $merchantRef)
                     ->lockForUpdate()
                     ->first();
@@ -263,7 +285,14 @@ class PaymentCallbackController extends Controller
                 }
 
                 if ($isFailed && in_array($deposit->payment_status, [null, 'unpaid', 'pending'], true)) {
-                    $deposit->delete();
+                    $deposit->update([
+                        'payment_status' => 'failed',
+                        'payment_response' => array_merge($deposit->payment_response ?? [], [
+                            'payment_gateway' => 'xoftware',
+                            'xoftware_callback' => $payload,
+                            'callback_synced_at' => now()->toDateTimeString(),
+                        ]),
+                    ]);
                 }
 
                 return ['found' => true, 'paid' => false];
@@ -285,7 +314,7 @@ class PaymentCallbackController extends Controller
         }
 
         if (str_starts_with($merchantRef, 'WIB-')) {
-            $result = DB::transaction(function () use ($merchantRef, $providerReference, $isPaid, $isFailed, $paidAmount, $paymentMethod, $payload) {
+            $result = DB::transaction(function () use ($merchantRef, $providerReference, $isPaid, $isFailed, $paidAmount, $paymentMethod, $payload, $status, $paymentStatus) {
                 $transaction = Transaction::where('invoice_number', $merchantRef)
                     ->lockForUpdate()
                     ->first();
@@ -298,7 +327,7 @@ class PaymentCallbackController extends Controller
                     $transaction->update([
                         'payment_status' => 'paid',
                         'payment_method' => $paymentMethod,
-                        'amount' => $paidAmount > 0 ? $paidAmount : $transaction->amount,
+                        'paid_amount' => $paidAmount > 0 ? $paidAmount : $transaction->amount,
                         'response_data' => array_merge($transaction->response_data ?? [], [
                             'payment_gateway' => 'xoftware',
                             'xoftware_reference' => $providerReference,
@@ -312,7 +341,18 @@ class PaymentCallbackController extends Controller
                 }
 
                 if ($isFailed && in_array($transaction->payment_status, ['unpaid', 'pending'], true)) {
-                    $transaction->delete();
+                    $failedStatus = $status ?: $paymentStatus ?: 'FAILED';
+
+                    $transaction->update([
+                        'payment_status' => 'failed',
+                        'order_status' => 'failed',
+                        'target_notes' => 'Pembayaran QRIS berstatus ' . $failedStatus . '.',
+                        'response_data' => array_merge($transaction->response_data ?? [], [
+                            'payment_gateway' => 'xoftware',
+                            'xoftware_reference' => $providerReference,
+                            'xoftware_callback' => $payload,
+                        ]),
+                    ]);
                 }
 
                 return ['found' => true, 'paid' => false];
@@ -322,9 +362,13 @@ class PaymentCallbackController extends Controller
                 return response()->json(['success' => false, 'message' => 'Transaction not found'], 404);
             }
 
-            if ($result['paid'] ?? false) {
-                $transaction = Transaction::with(['product', 'user'])->find($result['transaction_id']);
-                $orderFulfillmentService->handlePaidTransaction($transaction->fresh(['product', 'user']));
+            $transaction = Transaction::with(['product', 'user'])
+                ->where('invoice_number', $merchantRef)
+                ->first();
+
+            if ($transaction?->payment_status === 'paid'
+                && ! in_array($transaction->order_status, ['success', 'failed'], true)) {
+                $orderFulfillmentService->handlePaidTransaction($transaction);
             }
 
             return response()->json(['success' => true]);
@@ -434,7 +478,7 @@ class PaymentCallbackController extends Controller
                 $transaction->update([
                     'payment_status' => 'paid',
                     'payment_method' => $notification->payment_type,
-                    'amount' => $paidAmount,
+                    'paid_amount' => $paidAmount,
                 ]);
 
                 $orderFulfillmentService->handlePaidTransaction($transaction->fresh(['product', 'user']));

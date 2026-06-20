@@ -10,6 +10,8 @@ class TripayPaymentAmounts
         $data = self::paymentData($payload);
 
         $explicitFee = self::firstNumeric($data, [
+            'wiboost_buyer_admin_fee',
+            'buyer_admin_fee',
             'fee_customer',
             'customer_fee',
             'admin_fee',
@@ -20,6 +22,8 @@ class TripayPaymentAmounts
         ]);
 
         $totalCandidate = self::firstNumeric($data, [
+            'wiboost_total_payable',
+            'gross',
             'total_amount',
             'amount_total',
             'pay_amount',

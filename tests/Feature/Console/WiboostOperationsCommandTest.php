@@ -531,7 +531,7 @@ class WiboostOperationsCommandTest extends TestCase
         $this->assertSame(1, $product->category_id);
         $this->assertSame(100, $product->provider_quantity);
         $this->assertSame(2500.0, (float) $product->price);
-        $this->assertSame(2750.0, (float) $product->selling_price);
+        $this->assertSame(3750.0, (float) $product->selling_price);
         $this->assertStringContainsString('Waktu rata-rata: 6 jam 20 menit', $product->description);
         $this->assertSame('Belum ada order sukses', $product->ordersosmed_average_time);
     }

@@ -17,13 +17,13 @@ class OrderSuccessMail extends Mailable
 
     public function __construct(Transaction $transaction)
     {
-        $this->transaction = $transaction;
+        $this->transaction = $transaction->loadMissing('product.category.parent.parent.parent', 'user');
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Pesanan Wiboost Kamu Berhasil',
+            subject: 'Pesanan Wiboost Berhasil - ' . $this->transaction->invoice_number,
         );
     }
 

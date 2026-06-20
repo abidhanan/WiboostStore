@@ -35,6 +35,11 @@ class OrderSosmedService
         return true;
     }
 
+    public function normalizeServiceId(string $providerServiceId): string
+    {
+        return $this->normalizeProviderServiceId($providerServiceId);
+    }
+
     public function getServices(): array
     {
         if (! $this->hasBaseCredentials()) {
@@ -296,14 +301,21 @@ class OrderSosmedService
         $lastResponse = null;
         $lastBody = [];
         $lastServices = [];
+        $lastException = null;
 
         foreach ($this->resolveApiUrls($resource) as $url) {
             foreach ($payloadVariants as $payloadVariant) {
                 foreach ($this->buildAuthPayloads($payloadVariant) as $payload) {
-                    $response = Http::asForm()
-                        ->timeout(30)
-                        ->acceptJson()
-                        ->post($url, $payload);
+                    try {
+                        $response = Http::asForm()
+                            ->timeout(30)
+                            ->acceptJson()
+                            ->post($url, $payload);
+                    } catch (Throwable $exception) {
+                        $lastException = $exception;
+
+                        continue;
+                    }
 
                     $body = $this->decodeBody($response);
                     $services = $this->extractServices($body);
@@ -333,6 +345,10 @@ class OrderSosmedService
             }
         }
 
+        if (! $lastResponse && $lastException) {
+            throw $lastException;
+        }
+
         $urls = $this->resolveApiUrls($resource);
 
         return [
@@ -345,7 +361,7 @@ class OrderSosmedService
 
     protected function resolveApiUrls(?string $resource = null): array
     {
-        $urls = [$this->apiUrl];
+        $urls = [];
         $baseUrl = $this->resolveBaseUrl();
 
         if ($resource !== null) {
@@ -353,6 +369,8 @@ class OrderSosmedService
                 $urls[] = $url;
             }
         }
+
+        $urls[] = $this->apiUrl;
 
         if ($baseUrl !== '') {
             $urls[] = rtrim($baseUrl, '/') . '/api';

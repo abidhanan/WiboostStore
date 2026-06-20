@@ -125,7 +125,7 @@
             <div class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white h-full flex flex-col overflow-hidden relative">
                 
                 <div class="px-8 py-6 border-b-4 border-dashed border-[#f4f9ff] flex flex-col md:flex-row md:justify-between items-start md:items-center bg-[#ffffff] gap-3 relative z-10">
-                    <h4 class="font-black text-xl text-[#2b3a67]">Mutasi Saldo Terbaru 💸</h4>
+                    <h4 class="font-black text-xl text-[#2b3a67]">Mutasi Saldo 💸</h4>
                     <span class="text-[10px] font-black bg-[#f4f9ff] px-4 py-1.5 rounded-full text-[#8faaf3] border-2 border-white shadow-sm uppercase tracking-widest">Semua Transaksi</span>
                 </div>
                 
@@ -144,9 +144,7 @@
                                 if (class_exists('\App\Models\Deposit')) {
                                     $deposit = \App\Models\Deposit::where('invoice_number', $log->invoice_number)->first();
                                     if ($deposit && $deposit->payment_method) {
-                                        $method = ucwords(str_replace('_', ' ', $deposit->payment_method));
-                                        if (strtolower($method) == 'tripay') $method = 'QRIS';
-                                        if (strtolower($method) == 'qris') $method = 'QRIS';
+                                        $method = $deposit->display_payment_method;
                                         if (strtolower($method) == 'gopay') $method = 'GoPay';
                                         if (strtolower($method) == 'shopeepay') $method = 'ShopeePay';
                                         
@@ -155,6 +153,8 @@
                                     }
                                 }
                             }
+
+                            $displayDesc = preg_replace('/\b(QRIS\s*REAL\s*TIME|QRISREALTIME|TRIPAY)\b/i', 'QRIS', $displayDesc) ?: $displayDesc;
 
                             $iconClass = '';
                             $iconChar = '';
@@ -169,16 +169,18 @@
 
                         <div class="flex flex-col md:flex-row items-start md:items-center justify-between p-5 bg-white border-2 border-white rounded-[1.5rem] hover:border-[#bde0fe] hover:-translate-y-1 transition-all duration-300 group shadow-md shadow-[#bde0fe]/10">
                             
-                            <div class="flex items-center gap-3 mb-3 md:mb-0">
+                            <div class="flex min-w-0 items-center gap-3 mb-3 md:mb-0">
                                 <div class="w-11 h-11 md:w-12 md:h-12 shrink-0 rounded-[1rem] flex items-center justify-center text-lg md:text-xl font-black border-2 border-white shadow-inner group-hover:scale-110 transition-transform {{ $iconClass }}">
                                     {{ $iconChar }}
                                 </div>
-                                <div>
-                                    <h5 class="font-black text-[#2b3a67] text-sm md:text-base group-hover:text-[#5a76c8] transition-colors line-clamp-2 leading-tight">
+                                <div class="min-w-0">
+                                    <h5 class="font-black text-[#2b3a67] text-sm md:text-base group-hover:text-[#5a76c8] transition-colors leading-tight break-words md:line-clamp-2">
                                         {{ $displayDesc }}
                                     </h5>
-                                    <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mt-1.5 flex items-center gap-1">
-                                        <span class="bg-[#f4f9ff] px-2 py-0.5 rounded border border-white">{{ $log->invoice_number ?? '-' }}</span> &bull; {{ $log->created_at->format('d M, H:i') }}
+                                    <p class="mt-1.5 flex min-w-0 flex-nowrap items-center gap-1 whitespace-nowrap text-[8px] font-black uppercase tracking-[0.05em] text-[#8faaf3] sm:text-[9px] md:text-[10px] md:tracking-widest">
+                                        <span class="shrink-0 rounded border border-white bg-[#f4f9ff] px-1.5 py-0.5 sm:px-2">{{ $log->invoice_number ?? '-' }}</span>
+                                        <span class="shrink-0">&bull;</span>
+                                        <span class="shrink-0">{{ $log->created_at->format('d M, H:i') }}</span>
                                     </p>
                                     @if(isset($paidAmount) && $paidAmount && (float) $paidAmount !== (float) $log->amount)
                                         <p class="text-[10px] font-black text-[#4bc6b9] uppercase tracking-widest mt-1">
@@ -188,8 +190,8 @@
                                 </div>
                             </div>
                             
-                            <div class="text-left md:text-right w-full md:w-auto pl-14 md:pl-0 flex flex-row md:flex-col justify-between md:justify-end items-center md:items-end">
-                                <p class="font-black text-xl mb-1 {{ $log->type == 'purchase' ? 'text-[#ff6b6b]' : 'text-emerald-500' }} drop-shadow-sm">
+                            <div class="flex w-full shrink-0 flex-row items-center justify-between pl-14 text-left md:w-auto md:min-w-[9rem] md:flex-col md:items-end md:justify-end md:pl-0 md:text-right">
+                                <p class="mb-1 whitespace-nowrap text-lg font-black leading-none {{ $log->type == 'purchase' ? 'text-[#ff6b6b]' : 'text-emerald-500' }} drop-shadow-sm xl:text-xl">
                                     {{ $log->type == 'purchase' ? '-' : '+' }} Rp {{ number_format($log->amount, 0, ',', '.') }}
                                 </p>
                                 <span class="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-[#f4f9ff] text-[#8faaf3] border-2 border-white shadow-sm inline-block">

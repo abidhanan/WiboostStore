@@ -39,6 +39,26 @@ class Deposit extends Model
         return (string) $this->payment_status;
     }
 
+    public function getDisplayPaymentMethodAttribute(): string
+    {
+        $method = trim((string) $this->payment_method);
+        $normalizedMethod = preg_replace('/[^a-z0-9]/', '', strtolower($method));
+
+        if (($normalizedMethod === '' || $normalizedMethod === 'manual') && $this->payment_status !== 'paid') {
+            return 'BELUM PILIH';
+        }
+
+        if (in_array($normalizedMethod, ['tripay', 'qris', 'qrisrealtime'], true)) {
+            return 'QRIS';
+        }
+
+        if ($normalizedMethod === '') {
+            return '-';
+        }
+
+        return strtoupper(str_replace('_', ' ', $method));
+    }
+
     public function getTripayPaymentAmountsAttribute(): array
     {
         return TripayPaymentAmounts::fromPayload($this->payment_response, $this->amount);

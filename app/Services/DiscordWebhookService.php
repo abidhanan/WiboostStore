@@ -20,13 +20,15 @@ class DiscordWebhookService
     {
         $transaction->loadMissing('user', 'product');
 
+        $totalPayable = $this->resolveTransactionTotalPayable($transaction);
+
         $fields = [
             ['name' => 'Invoice', 'value' => (string) $transaction->invoice_number, 'inline' => true],
             ['name' => 'Produk', 'value' => (string) ($transaction->product->name ?? '-'), 'inline' => true],
             ['name' => 'User', 'value' => (string) ($transaction->user->name ?? 'Guest'), 'inline' => true],
-            ['name' => 'Nominal', 'value' => 'Rp ' . number_format((float) $transaction->amount, 0, ',', '.'), 'inline' => true],
+            ['name' => 'Nominal', 'value' => $this->formatRupiah($totalPayable), 'inline' => true],
             ['name' => 'Status', 'value' => strtoupper((string) $transaction->order_status), 'inline' => true],
-            ['name' => 'Pembayaran', 'value' => strtoupper((string) ($transaction->payment_method ?? '-')), 'inline' => true],
+            ['name' => 'Pembayaran', 'value' => strtoupper((string) ($transaction->display_payment_method ?? $transaction->payment_method ?? '-')), 'inline' => true],
         ];
 
         if ($transaction->has_order_input && filled($transaction->order_input_text)) {
@@ -52,11 +54,13 @@ class DiscordWebhookService
     {
         $deposit->loadMissing('user');
 
+        $totalPayable = $this->resolveDepositTotalPayable($deposit);
+
         $this->sendEmbed($title, $description, [
             ['name' => 'Invoice', 'value' => (string) $deposit->invoice_number, 'inline' => true],
             ['name' => 'User', 'value' => (string) ($deposit->user->name ?? 'Guest'), 'inline' => true],
-            ['name' => 'Nominal', 'value' => 'Rp ' . number_format((float) $deposit->amount, 0, ',', '.'), 'inline' => true],
-            ['name' => 'Metode', 'value' => strtoupper((string) ($deposit->payment_method ?? '-')), 'inline' => true],
+            ['name' => 'Nominal', 'value' => $this->formatRupiah($totalPayable), 'inline' => true],
+            ['name' => 'Metode', 'value' => strtoupper((string) ($deposit->display_payment_method ?? $deposit->payment_method ?? '-')), 'inline' => true],
         ], $color);
     }
 
@@ -94,5 +98,44 @@ class DiscordWebhookService
         } catch (Throwable $e) {
             Log::warning('Discord webhook send failed: ' . $e->getMessage());
         }
+    }
+
+    protected function resolveTransactionTotalPayable(Transaction $transaction): int
+    {
+        $totalPayable = (int) ($transaction->display_total_payable ?? 0);
+
+        if ($totalPayable > 0) {
+            return $totalPayable;
+        }
+
+        $paidAmount = (int) round((float) $transaction->paid_amount);
+
+        if ($paidAmount > 0) {
+            return $paidAmount;
+        }
+
+        return (int) round((float) $transaction->amount);
+    }
+
+    protected function resolveDepositTotalPayable(Deposit $deposit): int
+    {
+        $paidAmount = (int) round((float) $deposit->paid_amount);
+
+        if ($paidAmount > 0) {
+            return $paidAmount;
+        }
+
+        $totalPayable = (int) ($deposit->tripay_total_payable ?? 0);
+
+        if ($totalPayable > 0) {
+            return $totalPayable;
+        }
+
+        return (int) round((float) $deposit->amount);
+    }
+
+    protected function formatRupiah($amount): string
+    {
+        return 'Rp ' . number_format((float) $amount, 0, ',', '.');
     }
 }

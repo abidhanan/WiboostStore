@@ -4,13 +4,18 @@
 @section('content')
     @php
         $paymentMethodMeta = static function ($trx): array {
-            $rawMethod = strtolower((string) ($trx->payment_method ?? ''));
-            if ($rawMethod === 'wallet') { return ['label' => 'Saldo', 'class' => 'bg-[#e0fbfc] text-[#5a76c8] border-white']; }
-            if (($rawMethod === 'manual' || $rawMethod === '') && $trx->payment_status !== 'paid') { return ['label' => 'Menunggu', 'class' => 'bg-[#fff5eb] text-amber-500 border-white']; }
-            $methodMap = ['qris'=>'QRIS','gopay'=>'GoPay','shopeepay'=>'ShopeePay','bank_transfer'=>'Bank Transfer','cstore'=>'Indomaret/Alfamart','credit_card'=>'Kartu Kredit','echannel'=>'Mandiri Bill','permata_va'=>'Permata VA','bca_va'=>'BCA Transfer','bni_va'=>'BNI Transfer','bri_va'=>'BRI Transfer','cimb_va'=>'CIMB Transfer','other_va'=>'ATM Bersama','danamon_online'=>'Danamon Online','akulaku'=>'Akulaku','kredivo'=>'Kredivo'];
-            $label = $methodMap[$rawMethod] ?? ucwords(str_replace('_', ' ', $rawMethod));
-            if ($label === '' || $label === 'Manual') { $label = 'E-Wallet'; }
+            $label = $trx->display_payment_method;
+            if ($label === 'SALDO') { return ['label' => 'Saldo', 'class' => 'bg-[#e0fbfc] text-[#5a76c8] border-white']; }
+            if ($label === 'BELUM PILIH') { return ['label' => 'Menunggu', 'class' => 'bg-[#fff5eb] text-amber-500 border-white']; }
             return ['label' => $label, 'class' => 'bg-white text-[#5a76c8] border-[#f0f5ff]'];
+        };
+        $transactionStatusMeta = static function ($trx): array {
+            return match ($trx->display_status) {
+                'Sukses' => ['label' => 'Sukses', 'class' => 'bg-[#e6fff7] text-emerald-500 border-white'],
+                'Proses' => ['label' => 'Proses', 'class' => 'bg-[#e0fbfc] text-[#5a76c8] border-white'],
+                'Batal', 'Gagal' => ['label' => $trx->display_status, 'class' => 'bg-[#ffe5e5] text-[#ff6b6b] border-white'],
+                default => ['label' => 'Menunggu', 'class' => 'bg-[#fff5eb] text-amber-500 border-white'],
+            };
         };
         $walletLogMeta = static function ($log): array {
             $displayType = (string) ($log->type ?? '');
@@ -476,13 +481,13 @@
                     <div class="space-y-4 md:hidden w-full">
                         @forelse(collect($recentTransactions ?? [])->take(5) as $trx)
                             @php($method = $paymentMethodMeta($trx))
+                            @php($status = $transactionStatusMeta($trx))
                             <div class="rounded-2xl border-4 border-white bg-[#f8fbff] p-4 shadow-sm w-full min-w-0">
                                 <div class="flex items-start justify-between gap-2 mb-3">
                                     <div class="min-w-0 flex-1">
                                         <p class="truncate text-xs sm:text-sm font-black text-[#2b3a67]">{{ $trx->invoice_number }}</p>
                                         <p class="mt-0.5 text-[9px] font-bold text-[#8faaf3] uppercase tracking-wider">{{ optional($trx->created_at)->diffForHumans() ?? '-' }}</p>
                                     </div>
-                                    <span class="shrink-0 rounded-full px-2 py-1 text-[8px] uppercase tracking-widest border border-white shadow-sm font-black {{ $method['class'] }}">{{ $method['label'] }}</span>
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div class="rounded-xl border-2 border-white bg-white px-3 py-2 shadow-inner min-w-0">
@@ -491,7 +496,15 @@
                                     </div>
                                     <div class="rounded-xl border-2 border-white bg-white px-3 py-2 shadow-inner min-w-0">
                                         <p class="text-[8px] font-black uppercase tracking-[0.2em] text-[#8faaf3] mb-0.5 truncate">Nominal</p>
-                                        <p class="truncate text-xs font-black text-emerald-500">Rp {{ number_format($trx->amount, 0, ',', '.') }}</p>
+                                        <p class="truncate text-xs font-black text-emerald-500">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</p>
+                                    </div>
+                                    <div class="rounded-xl border-2 border-white bg-white px-3 py-2 shadow-inner min-w-0">
+                                        <p class="text-[8px] font-black uppercase tracking-[0.2em] text-[#8faaf3] mb-0.5 truncate">Status</p>
+                                        <span class="inline-flex max-w-full truncate rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-widest {{ $status['class'] }}">{{ $status['label'] }}</span>
+                                    </div>
+                                    <div class="rounded-xl border-2 border-white bg-white px-3 py-2 text-left shadow-inner min-w-0">
+                                        <p class="text-[8px] font-black uppercase tracking-[0.2em] text-[#8faaf3] mb-0.5 truncate">Metode</p>
+                                        <span class="inline-flex max-w-full truncate rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-widest {{ $method['class'] }}">{{ $method['label'] }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -508,29 +521,34 @@
                         <table class="w-full table-fixed text-left">
                             <thead>
                                 <tr class="text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">
-                                    <th class="w-[34%] px-3 py-3">Invoice</th>
-                                    <th class="w-[24%] px-3 py-3">User</th>
-                                    <th class="w-[22%] px-3 py-3">Nominal</th>
-                                    <th class="w-[20%] px-3 py-3 text-center">Metode</th>
+                                    <th class="w-[28%] px-3 py-3">Invoice</th>
+                                    <th class="w-[20%] px-3 py-3">User</th>
+                                    <th class="w-[18%] px-3 py-3">Nominal</th>
+                                    <th class="w-[17%] px-3 py-3 text-center">Status</th>
+                                    <th class="w-[17%] px-3 py-3 text-center">Metode</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
                                 @forelse(collect($recentTransactions ?? [])->take(5) as $trx)
                                     @php($method = $paymentMethodMeta($trx))
+                                    @php($status = $transactionStatusMeta($trx))
                                     <tr class="transition hover:bg-[#f8faff] group">
                                         <td class="px-3 py-3 min-w-0">
                                             <p class="truncate text-xs font-black text-[#2b3a67] xl:text-sm">{{ $trx->invoice_number }}</p>
                                             <p class="mt-0.5 text-[9px] font-bold text-[#8faaf3] uppercase tracking-wider">{{ optional($trx->created_at)->diffForHumans() ?? '-' }}</p>
                                         </td>
                                         <td class="truncate px-3 py-3 text-xs font-black text-[#2b3a67] xl:text-sm">{{ $trx->user->name ?? 'Guest' }}</td>
-                                        <td class="truncate px-3 py-3 text-xs font-black text-emerald-500 xl:text-sm">Rp {{ number_format($trx->amount, 0, ',', '.') }}</td>
+                                        <td class="truncate px-3 py-3 text-xs font-black text-emerald-500 xl:text-sm">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</td>
+                                        <td class="px-3 py-3 text-center">
+                                            <span class="inline-flex max-w-full truncate rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm xl:text-[9px] {{ $status['class'] }}">{{ $status['label'] }}</span>
+                                        </td>
                                         <td class="px-3 py-3 text-center">
                                             <span class="inline-flex max-w-full truncate rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm xl:text-[9px] {{ $method['class'] }}">{{ $method['label'] }}</span>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="px-4 py-10 text-center">
+                                        <td colspan="5" class="px-4 py-10 text-center">
                                             <span class="text-3xl opacity-50 block mb-2">📭</span>
                                             <p class="text-sm font-black text-[#2b3a67]">Belum ada transaksi.</p>
                                         </td>
@@ -547,7 +565,7 @@
                 <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#fffcf0] px-5 sm:px-6 py-5 sm:py-6 md:flex-row md:items-center md:justify-between w-full">
                     <div class="min-w-0">
                         <p class="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 mb-1 truncate">Arus Saldo</p>
-                        <h3 class="text-xl sm:text-2xl font-black tracking-tight text-[#2b3a67] truncate">Mutasi Global 🔄</h3>
+                        <h3 class="text-xl sm:text-2xl font-black tracking-tight text-[#2b3a67] truncate">Mutasi Saldo 🔄</h3>
                     </div>
                     <a href="{{ route('admin.deposits.index') }}" class="shrink-0 text-center w-full md:w-auto inline-flex items-center justify-center rounded-full border-2 border-white bg-amber-500 px-5 py-2.5 text-xs font-black text-white shadow-md shadow-amber-500/30 transition-transform hover:scale-105 active:scale-95">
                         Lihat Semua

@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\TutorialController; // <-- IMPORT BARU UNTUK TUTO
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\User\TransactionHistoryController;
 use App\Http\Controllers\User\OrderController;
+use App\Http\Controllers\User\QrisPaymentController;
 use App\Http\Controllers\User\WalletController; 
 use App\Http\Controllers\User\AdminReportController;
 
@@ -42,7 +43,7 @@ Route::get('/favicon.ico', function () {
 
     return Response::file($path, [
         'Content-Type' => 'image/x-icon',
-        'Cache-Control' => 'public, max-age=604800',
+        'Cache-Control' => 'public, max-age=0, must-revalidate',
     ]);
 });
 
@@ -53,7 +54,7 @@ Route::get('/apple-touch-icon.png', function () {
 
     return Response::file($path, [
         'Content-Type' => 'image/png',
-        'Cache-Control' => 'public, max-age=604800',
+        'Cache-Control' => 'public, max-age=0, must-revalidate',
     ]);
 });
 
@@ -64,12 +65,12 @@ Route::get('/apple-touch-icon-precomposed.png', function () {
 
     return Response::file($path, [
         'Content-Type' => 'image/png',
-        'Cache-Control' => 'public, max-age=604800',
+        'Cache-Control' => 'public, max-age=0, must-revalidate',
     ]);
 });
 
 Route::get('/images/wiboost-icon-{size}.png', function (string $size) {
-    abort_unless(in_array($size, ['16', '32', '64', '180', '192', '512'], true), 404);
+    abort_unless(in_array($size, ['16', '32', '48', '64', '180', '192', '512'], true), 404);
 
     $path = public_path("images/wiboost-icon-{$size}.png");
 
@@ -77,11 +78,12 @@ Route::get('/images/wiboost-icon-{size}.png', function (string $size) {
 
     return Response::file($path, [
         'Content-Type' => 'image/png',
-        'Cache-Control' => 'public, max-age=604800',
+        'Cache-Control' => 'public, max-age=0, must-revalidate',
     ]);
 })->whereNumber('size');
 
 Route::get('/', [FrontendController::class, 'index'])->name('home');
+Route::get('/order/{slug}', [OrderController::class, 'showGuestCategory'])->name('guest.order.category');
 Route::get('/legal/{page}', [FrontendController::class, 'legal'])
     ->whereIn('page', ['terms', 'privacy-policy', 'refund-policy', 'contact'])
     ->name('legal.show');
@@ -117,10 +119,13 @@ Route::middleware(['auth', 'role:buyer'])->prefix('user')->name('user.')->group(
     Route::post('/report-admin', [AdminReportController::class, 'store'])->name('report.admin.store');
     
     // Order & Checkout
+    Route::get('/order/category/{category}/ordersosmed-services', [OrderController::class, 'ordersosmedCategoryServices'])->name('order.ordersosmed-services');
     Route::get('/order/service/{product}/ordersosmed', [OrderController::class, 'ordersosmedServiceMeta'])->name('order.ordersosmed-service');
     Route::get('/order/{slug}', [OrderController::class, 'showCategory'])->name('order.category');
     Route::post('/checkout/process', [OrderController::class, 'processCheckout'])->name('checkout.process');
     Route::delete('/checkout/{transaction}/cancel', [OrderController::class, 'cancelTripayCheckout'])->name('checkout.cancel');
+    Route::get('/qris/{invoice_number}/status', [QrisPaymentController::class, 'status'])->name('qris.status');
+    Route::get('/qris/{invoice_number}', [QrisPaymentController::class, 'show'])->name('qris.show');
 
     // Wallet, Deposit & Loyalty Points
     Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');

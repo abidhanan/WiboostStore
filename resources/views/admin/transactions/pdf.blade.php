@@ -15,6 +15,7 @@
         tr:nth-child(even) td { background-color: #fcfdfe; }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
+        .nowrap { white-space: nowrap; }
         .total-row td { background-color: #e6fff7; font-weight: bold; color: #10b981; font-size: 14px; border-top: 3px solid #bde0fe; }
         .footer { margin-top: 30px; text-align: right; font-size: 10px; color: #8faaf3; font-weight: bold; }
     </style>
@@ -33,7 +34,7 @@
                 <th>No. Invoice</th>
                 <th>Nama Pelanggan</th>
                 <th>Layanan / Produk</th>
-                <th class="text-right">Nominal Masuk</th>
+                <th class="text-right nowrap">Nominal Masuk</th>
             </tr>
         </thead>
         <tbody>
@@ -44,7 +45,7 @@
                     <td style="font-weight: bold; color: #5a76c8;">{{ $trx->invoice_number }}</td>
                     <td style="font-weight: bold;">{{ $trx->user->name ?? 'Guest' }}</td>
                     <td style="color: #4a5f96;">{{ $trx->product->name ?? 'Produk Dihapus' }}</td>
-                    <td class="text-right" style="font-weight: bold; color: #10b981;">Rp {{ number_format($trx->amount, 0, ',', '.') }}</td>
+                    <td class="text-right nowrap" style="font-weight: bold; color: #10b981;">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</td>
                 </tr>
             @empty
                 <tr>
@@ -53,8 +54,8 @@
             @endforelse
 
             <tr class="total-row">
-                <td colspan="5" class="text-right">TOTAL PENDAPATAN BERSIH :</td>
-                <td class="text-right">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</td>
+                <td colspan="5" class="text-right nowrap">TOTAL PENDAPATAN :</td>
+                <td class="text-right nowrap">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</td>
             </tr>
         </tbody>
     </table>

@@ -9,8 +9,10 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Services\DigiflazzService;
 use App\Services\OrderSosmedService;
-use App\Services\TripayService;
+use App\Services\XoftwarePaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Mockery\MockInterface;
 use Tests\TestCase;
@@ -23,11 +25,13 @@ class UserOrderCheckoutTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->mock(TripayService::class, function (MockInterface $mock) {
+        $this->mock(XoftwarePaymentService::class, function (MockInterface $mock) {
             $mock->shouldReceive('createTransactionPayment')
                 ->andReturn([
-                    'reference' => 'TRIPAY-DEMO',
-                    'checkout_url' => 'https://tripay.test/checkout',
+                    'reference' => 'XOFTWARE-DEMO',
+                    'payment_method' => 'QRIS',
+                    'payment_name' => 'QRIS',
+                    'checkout_url' => 'https://payment.test/qris',
                     'raw' => ['success' => true],
                 ]);
         });
@@ -47,8 +51,8 @@ class UserOrderCheckoutTest extends TestCase
                 'process_type' => 'api',
                 'provider_source' => 'digiflazz',
                 'input' => ['game_user_id' => '123456789', 'game_zone_id' => '1234'],
-                'expected_target' => '123456789 (1234)',
-                'expected_label' => 'User ID game',
+                'expected_target' => '123456789',
+                'expected_label' => 'User ID / Nomor tujuan game',
                 'expected_first_value' => '123456789',
             ],
             [
@@ -89,7 +93,7 @@ class UserOrderCheckoutTest extends TestCase
                 'payment_method' => 'manual',
             ], $case['input']));
 
-            $response->assertOk();
+            $response->assertRedirect('https://payment.test/qris');
 
             $transaction = Transaction::query()->latest('id')->first();
 
@@ -158,7 +162,6 @@ class UserOrderCheckoutTest extends TestCase
         $response->assertSee('Harga / 1000');
         $response->assertSee('Jumlah Pesanan');
         $response->assertSee('Target/Link/Username');
-        $response->assertSee('2 jam dari 1 order sukses');
         $response->assertSee('Instagram Like Indonesia');
     }
 
@@ -199,7 +202,7 @@ class UserOrderCheckoutTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4', false);
-        $response->assertSee('min-h-[128px]', false);
+        $response->assertSee('min-h-[150px]', false);
         $response->assertSee('Mobile Legends 86 Diamonds');
         $response->assertSee('Rp 21.000');
         $response->assertDontSeeText('Deskripsi layanan ini tidak boleh tampil di kartu compact.');
@@ -267,11 +270,27 @@ class UserOrderCheckoutTest extends TestCase
 
     public function test_suntik_sosmed_checkout_uses_requested_quantity_for_amount_and_provider_order(): void
     {
+        $this->travelTo(Carbon::create(2026, 6, 11, 12));
+
         $user = User::factory()->create([
-            'balance' => 10000,
+            'balance' => 20000,
         ]);
 
+        Cache::forget('ordersosmed:service-validation-list');
+
         $this->mock(OrderSosmedService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('normalizeServiceId')
+                ->zeroOrMoreTimes()
+                ->andReturnUsing(fn (string $serviceId) => $serviceId);
+            $mock->shouldReceive('getServices')
+                ->once()
+                ->andReturn([
+                    'success' => true,
+                    'message' => 'OK',
+                    'data' => [
+                        ['id' => 'svc-1', 'name' => 'Instagram Like Indonesia'],
+                    ],
+                ]);
             $mock->shouldReceive('placeOrder')
                 ->once()
                 ->with('svc-1', '@wibooststore', 250)
@@ -313,27 +332,166 @@ class UserOrderCheckoutTest extends TestCase
             'order_quantity' => 250,
         ]);
 
-        $response->assertRedirect(route('user.history'));
+        $response->assertRedirect(route('user.history', ['auto_open' => Transaction::query()->latest('id')->value('id')]));
 
         $transaction = Transaction::query()->latest('id')->first();
 
-        $this->assertSame(7700.0, (float) $transaction->amount);
+        $this->assertSame(10500.0, (float) $transaction->amount);
         $this->assertSame('processing', $transaction->order_status);
         $this->assertSame(250, $transaction->provider_order_quantity);
-        $this->assertSame(2300.0, (float) $user->fresh()->balance);
+        $this->assertSame(9500.0, (float) $user->fresh()->balance);
         $this->assertSame('Jumlah Pesanan', data_get($transaction->order_input_data, 'fields.1.label'));
         $this->assertSame('250', data_get($transaction->order_input_data, 'fields.1.value'));
+    }
+
+    public function test_suntik_sosmed_checkout_blocks_mismatched_ordersosmed_service(): void
+    {
+        $user = User::factory()->create([
+            'balance' => 500000,
+        ]);
+
+        Cache::forget('ordersosmed:service-validation-list');
+
+        $this->mock(OrderSosmedService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('normalizeServiceId')
+                ->zeroOrMoreTimes()
+                ->andReturnUsing(fn (string $serviceId) => $serviceId);
+            $mock->shouldReceive('getServices')
+                ->once()
+                ->andReturn([
+                    'success' => true,
+                    'message' => 'OK',
+                    'data' => [
+                        ['id' => 'svc-tiktok', 'name' => 'TikTok Likes ~ HQ Accounts ~ Max 1M ~ 100k/Days ~ Instant ~ REFILL 30D'],
+                    ],
+                ]);
+            $mock->shouldReceive('placeOrder')->never();
+        });
+
+        $category = Category::create([
+            'name' => 'Suntik Sosmed',
+            'slug' => 'suntik-sosmed',
+            'description' => 'Kategori test',
+            'fulfillment_type' => 'auto_api',
+        ]);
+
+        $product = Product::create([
+            'category_id' => $category->id,
+            'provider_id' => 'ordersosmed',
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => 'svc-tiktok',
+            'provider_quantity' => 100,
+            'process_type' => 'api',
+            'name' => 'TikTok - Likes ~ [ Bot Profiles ] ~ Max 5M ~ 50k/Days ~ Instant ~ REFILL 30D',
+            'slug' => 'tiktok-likes-bot-profiles',
+            'description' => "Layanan TikTok test\nMinimum order: 100\nMaximum order: 10000",
+            'price' => 10000,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('user.checkout.process'), [
+            'product_id' => $product->id,
+            'payment_method' => 'wallet',
+            'target_data' => 'https://tiktok.com/@wiboost',
+            'order_quantity' => 1000,
+        ]);
+
+        $transaction = Transaction::query()->latest('id')->first();
+
+        $response->assertRedirect(route('user.history', ['auto_open' => $transaction->id]));
+        $this->assertSame('failed', $transaction->order_status);
+        $this->assertSame(500000.0, (float) $user->fresh()->balance);
+        $this->assertSame('TikTok Likes ~ HQ Accounts ~ Max 1M ~ 100k/Days ~ Instant ~ REFILL 30D', data_get($transaction->response_data, 'provider_service_name'));
+        $this->assertFalse((bool) $product->fresh()->is_active);
+        $this->assertSame('inactive', $product->fresh()->status);
+    }
+
+    public function test_suntik_sosmed_checkout_repairs_stale_ordersosmed_service_id_before_ordering(): void
+    {
+        $user = User::factory()->create([
+            'balance' => 50000,
+        ]);
+
+        Cache::forget('ordersosmed:service-validation-list');
+
+        $this->mock(OrderSosmedService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('normalizeServiceId')
+                ->zeroOrMoreTimes()
+                ->andReturnUsing(fn (string $serviceId) => $serviceId);
+            $mock->shouldReceive('getServices')
+                ->once()
+                ->andReturn([
+                    'success' => true,
+                    'message' => 'OK',
+                    'data' => [
+                        ['id' => 'svc-wrong', 'name' => 'TikTok Likes ~ HQ Accounts ~ Max 1M ~ 100k/Days ~ Instant ~ REFILL 30D'],
+                        ['id' => 'svc-right', 'name' => 'TikTok - Likes ~ [ REAL USER & Bot Accounts ] ~ Max 12M ~ 1 Minutes 10k Speed ~ Instant ~ REFILL 30D'],
+                    ],
+                ]);
+            $mock->shouldReceive('placeOrder')
+                ->once()
+                ->with('svc-right', 'https://vt.tiktok.com/ZSQqQdVTT/', 1500)
+                ->andReturn([
+                    'success' => true,
+                    'message' => 'Pesanan diterima provider.',
+                    'order_status' => 'processing',
+                    'provider_order_id' => 'OS-123',
+                    'raw' => ['order' => 'OS-123'],
+                ]);
+        });
+
+        $category = Category::create([
+            'name' => 'Suntik Sosmed',
+            'slug' => 'suntik-sosmed',
+            'description' => 'Kategori test',
+            'fulfillment_type' => 'auto_api',
+        ]);
+
+        $product = Product::create([
+            'category_id' => $category->id,
+            'provider_id' => 'ordersosmed',
+            'provider_source' => 'ordersosmed',
+            'provider_product_id' => 'svc-wrong',
+            'provider_quantity' => 1000,
+            'process_type' => 'api',
+            'name' => 'TikTok - Likes ~ [ REAL USER &amp; Bot Accounts ] ~ Max 12M ~ 1 Minutes 10k Speed ~ Instant ~ REFILL 30D',
+            'slug' => 'tiktok-likes-real-user-bot-accounts',
+            'description' => "Layanan TikTok test\nMinimum order: 100\nMaximum order: 10000",
+            'price' => 1400,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('user.checkout.process'), [
+            'product_id' => $product->id,
+            'payment_method' => 'wallet',
+            'target_data' => 'https://vt.tiktok.com/ZSQqQdVTT/',
+            'order_quantity' => 1500,
+        ]);
+
+        $transaction = Transaction::query()->latest('id')->first();
+
+        $response->assertRedirect(route('user.history', ['auto_open' => $transaction->id]));
+        $this->assertSame('processing', $transaction->order_status);
+        $this->assertSame('svc-right', data_get($transaction->response_data, 'provider_service_id'));
+        $this->assertSame('svc-wrong', data_get($transaction->response_data, 'provider_service.previous_id'));
+        $this->assertSame('svc-right', $product->fresh()->provider_product_id);
     }
 
     public function test_premium_checkout_email_requirement_can_be_enabled_per_product(): void
     {
         $user = User::factory()->create();
 
-        $this->mock(TripayService::class, function (MockInterface $mock) {
+        $this->mock(XoftwarePaymentService::class, function (MockInterface $mock) {
             $mock->shouldReceive('createTransactionPayment')
                 ->andReturn([
-                    'reference' => 'TRIPAY-DEMO',
-                    'checkout_url' => 'https://tripay.test/checkout',
+                    'reference' => 'XOFTWARE-DEMO',
+                    'payment_method' => 'QRIS',
+                    'payment_name' => 'QRIS',
+                    'checkout_url' => 'https://payment.test/qris',
                     'raw' => ['success' => true],
                 ]);
         });
@@ -375,23 +533,25 @@ class UserOrderCheckoutTest extends TestCase
             'app_email' => 'khusus.aplikasi@gmail.com',
         ]);
 
-        $validResponse->assertOk();
+        $validResponse->assertRedirect('https://payment.test/qris');
 
         $transaction = Transaction::query()->latest('id')->first();
 
         $this->assertSame('khusus.aplikasi@gmail.com', $transaction->target_data);
-        $this->assertSame('Email khusus aplikasi', data_get($transaction->order_input_data, 'fields.0.label'));
+        $this->assertSame('Email', data_get($transaction->order_input_data, 'fields.0.label'));
     }
 
     public function test_premium_checkout_email_requirement_can_be_disabled_per_product(): void
     {
         $user = User::factory()->create();
 
-        $this->mock(TripayService::class, function (MockInterface $mock) {
+        $this->mock(XoftwarePaymentService::class, function (MockInterface $mock) {
             $mock->shouldReceive('createTransactionPayment')
                 ->andReturn([
-                    'reference' => 'TRIPAY-DEMO',
-                    'checkout_url' => 'https://tripay.test/checkout',
+                    'reference' => 'XOFTWARE-DEMO',
+                    'payment_method' => 'QRIS',
+                    'payment_name' => 'QRIS',
+                    'checkout_url' => 'https://payment.test/qris',
                     'raw' => ['success' => true],
                 ]);
         });
@@ -422,12 +582,67 @@ class UserOrderCheckoutTest extends TestCase
             'payment_method' => 'manual',
         ]);
 
-        $response->assertOk();
+        $response->assertRedirect('https://payment.test/qris');
 
         $transaction = Transaction::query()->latest('id')->first();
 
         $this->assertSame('- (Tidak membutuhkan target tambahan)', $transaction->target_data);
-        $this->assertNull($transaction->order_input_data);
+        $this->assertSame([], $transaction->order_input_data);
+    }
+
+    public function test_paid_premium_buyer_input_order_waits_for_admin_processing(): void
+    {
+        Mail::fake();
+
+        $user = User::factory()->create(['balance' => 50000]);
+
+        $category = Category::create([
+            'name' => 'Aplikasi Premium',
+            'slug' => 'aplikasi-premium',
+            'description' => 'Kategori test',
+            'fulfillment_type' => 'stock_based',
+        ]);
+
+        $product = Product::create([
+            'category_id' => $category->id,
+            'provider_id' => null,
+            'process_type' => 'account',
+            'name' => 'Premium Butuh Email',
+            'slug' => 'premium-butuh-email',
+            'description' => 'Produk premium dengan input buyer',
+            'price' => 25000,
+            'status' => 'active',
+            'is_active' => true,
+            'requires_buyer_email' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        $credential = \App\Models\ProductCredential::create([
+            'product_id' => $product->id,
+            'data_1' => 'akun-ready@example.com',
+            'data_2' => 'password-ready',
+            'data_3' => 'Profile Ready',
+            'data_4' => '1234',
+            'max_usage' => 1,
+            'current_usage' => 0,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('user.checkout.process'), [
+            'product_id' => $product->id,
+            'payment_method' => 'wallet',
+            'app_email' => 'buyer@example.com',
+        ]);
+
+        $transaction = Transaction::query()->latest('id')->first();
+
+        $response->assertRedirect(route('user.history', ['auto_open' => $transaction->id]));
+        $this->assertSame('paid', $transaction->payment_status);
+        $this->assertSame('processing', $transaction->order_status);
+        $this->assertSame('buyer@example.com', $transaction->target_data);
+        $this->assertNull($transaction->credential_data);
+        $this->assertSame(0, (int) $credential->fresh()->current_usage);
+        Mail::assertNotSent(OrderSuccessMail::class);
     }
 
     public function test_order_page_renders_checkout_fields_payload_without_double_encoding(): void
@@ -468,7 +683,7 @@ class UserOrderCheckoutTest extends TestCase
 
         $response->assertOk();
         $response->assertSee("data-checkout-fields='[{&quot;name&quot;:&quot;game_user_id&quot;", false);
-        $response->assertSee('&quot;name&quot;:&quot;game_zone_id&quot;', false);
+        $response->assertDontSee('&quot;name&quot;:&quot;game_zone_id&quot;', false);
         $response->assertDontSee('&amp;quot;name&amp;quot;', false);
     }
 
@@ -521,7 +736,7 @@ class UserOrderCheckoutTest extends TestCase
             'game_zone_id' => '1234',
         ]);
 
-        $response->assertRedirect(route('user.history'));
+        $response->assertRedirect(route('user.history', ['auto_open' => Transaction::query()->latest('id')->value('id')]));
 
         $transaction = Transaction::query()->latest('id')->first();
 
@@ -580,7 +795,7 @@ class UserOrderCheckoutTest extends TestCase
             'game_zone_id' => '1234',
         ]);
 
-        $response->assertRedirect(route('user.history'));
+        $response->assertRedirect(route('user.history', ['auto_open' => Transaction::query()->latest('id')->value('id')]));
 
         $transaction = Transaction::query()->latest('id')->first();
 
@@ -660,6 +875,58 @@ class UserOrderCheckoutTest extends TestCase
             'amount' => 1000,
             'description' => 'Bonus otomatis 5 order sukses',
         ]);
+    }
+
+    public function test_wallet_checkout_allows_intentional_repeat_purchase_for_same_product(): void
+    {
+        $user = User::factory()->create(['balance' => 50000]);
+
+        $category = Category::create([
+            'name' => 'Aplikasi Premium',
+            'slug' => 'aplikasi-premium',
+            'description' => 'Kategori test',
+            'fulfillment_type' => 'stock_based',
+        ]);
+
+        $product = Product::create([
+            'category_id' => $category->id,
+            'provider_id' => null,
+            'process_type' => 'account',
+            'name' => 'Alight Motion Sharing 1 Tahun',
+            'slug' => 'alight-motion-sharing-1-tahun-repeat',
+            'description' => 'Produk repeat test',
+            'price' => 5000,
+            'status' => 'active',
+            'is_active' => true,
+            'stock_reminder' => 0,
+        ]);
+
+        foreach ([1, 2] as $index) {
+            \App\Models\ProductCredential::create([
+                'product_id' => $product->id,
+                'data_1' => 'alight' . $index . '@example.com',
+                'data_2' => 'password-' . $index,
+                'data_3' => 'Profile ' . $index,
+                'data_4' => '1234',
+                'max_usage' => 1,
+                'current_usage' => 0,
+                'is_active' => true,
+            ]);
+        }
+
+        $expectedAmount = (float) $product->calculateCheckoutAmount([]);
+
+        foreach (['first-repeat-buy', 'second-repeat-buy'] as $nonce) {
+            $this->actingAs($user)->post(route('user.checkout.process'), [
+                'product_id' => $product->id,
+                'payment_method' => 'wallet',
+                'checkout_nonce' => $nonce,
+            ])->assertRedirect();
+        }
+
+        $this->assertSame(2, Transaction::where('user_id', $user->id)->where('product_id', $product->id)->count());
+        $this->assertSame(2, \App\Models\WalletHistory::where('user_id', $user->id)->where('type', 'purchase')->count());
+        $this->assertSame(50000.0 - ($expectedAmount * 2), (float) $user->fresh()->balance);
     }
 
     public function test_removed_nomor_luar_product_cannot_be_checked_out(): void

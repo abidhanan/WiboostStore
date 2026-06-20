@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') - Wiboost Store</title>
     @include('partials.site-icons')
+    <link rel="preload" as="image" href="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" fetchpriority="high">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.vite-fallback')
     @include('partials.ui-performance-tuning')
@@ -69,7 +70,52 @@
                 max-width: 100% !important;
             }
         }
+
+        @media (max-width: 480px) {
+            .wiboost-user-navbar-card {
+                gap: 0.45rem;
+                padding-left: 0.75rem !important;
+                padding-right: 0.75rem !important;
+            }
+
+            .wiboost-user-navbar-brand {
+                flex: 1 1 auto;
+                gap: 0.5rem !important;
+                min-width: 0;
+            }
+
+            .wiboost-user-navbar-logo {
+                height: 2.65rem !important;
+                width: 2.65rem !important;
+            }
+
+            .wiboost-user-navbar-title {
+                font-size: clamp(0.88rem, 4.2vw, 1.08rem) !important;
+                letter-spacing: -0.01em;
+                line-height: 1 !important;
+                white-space: nowrap !important;
+            }
+
+            .wiboost-user-navbar-actions {
+                flex: 0 0 auto;
+                gap: 0.45rem !important;
+            }
+
+            .wiboost-user-navbar-balance {
+                font-size: clamp(0.64rem, 2.9vw, 0.74rem) !important;
+                line-height: 1 !important;
+                min-width: max-content;
+                padding: 0.58rem 0.65rem !important;
+                white-space: nowrap !important;
+            }
+
+            .wiboost-user-navbar-menu {
+                height: 2.55rem !important;
+                width: 2.55rem !important;
+            }
+        }
     </style>
+    @include('partials.ios-layout-fixes')
 </head>
 <body x-data="{ mobileNavOpen: false }" class="wiboost-compact-ui wiboost-user-shell @yield('body_class') min-h-screen w-full max-w-full overflow-x-hidden bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white relative flex flex-col">
 
@@ -83,11 +129,11 @@
 
     <div class="wiboost-user-navbar pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-6">
         <div class="pointer-events-auto mx-auto max-w-6xl">
-            <div class="flex items-center justify-between rounded-[2rem] border-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/40 backdrop-blur-md sm:px-6 transition-all hover:shadow-[#bde0fe]/60 hover:border-[#e0fbfc]">
-                <a href="{{ route('user.dashboard') }}" class="flex items-center gap-3 group">
-                    <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm sm:h-14 sm:w-14 group-hover:scale-105 transition-transform">
+            <div class="wiboost-user-navbar-card flex items-center justify-between rounded-[2rem] border-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/40 backdrop-blur-md sm:px-6 transition-all hover:shadow-[#bde0fe]/60 hover:border-[#e0fbfc]">
+                <a href="{{ route('user.dashboard') }}" class="wiboost-user-navbar-brand flex items-center gap-3 group">
+                    <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" onerror="this.onerror=null;this.src='{{ asset('images/wiboost-logo.png') }}?v=20260426-full';" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="wiboost-user-navbar-logo h-12 w-12 shrink-0 object-contain drop-shadow-sm sm:h-14 sm:w-14 group-hover:scale-105 transition-transform">
                     <div>
-                        <p class="text-lg font-black leading-none text-[#2b3a67] sm:text-2xl drop-shadow-sm">Wiboost <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Store</span></p>
+                        <p class="wiboost-user-navbar-title text-lg font-black leading-none text-[#2b3a67] sm:text-2xl drop-shadow-sm">Wiboost <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Store</span></p>
                     </div>
                 </a>
                 
@@ -109,11 +155,11 @@
                     </form>
                 </div>
 
-                <div class="flex items-center gap-2 md:hidden">
-                    <a href="{{ route('user.wallet.index') }}" class="rounded-full border-2 border-white bg-[#f0f5ff] px-3 py-2 text-xs font-black text-[#5a76c8] shadow-sm">
+                <div class="wiboost-user-navbar-actions flex items-center gap-2 md:hidden">
+                    <a href="{{ route('user.wallet.index') }}" class="wiboost-user-navbar-balance rounded-full border-2 border-white bg-[#f0f5ff] px-3 py-2 text-xs font-black text-[#5a76c8] shadow-sm">
                         Rp {{ number_format((float) (Auth::user()->balance ?? 0), 0, ',', '.') }}
                     </a>
-                    <button type="button" @click="mobileNavOpen = !mobileNavOpen" :aria-expanded="mobileNavOpen.toString()" class="flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-white bg-[#f0f5ff] text-[#5a76c8] shadow-sm hover:scale-105 transition-transform">
+                    <button type="button" @click="mobileNavOpen = !mobileNavOpen" :aria-expanded="mobileNavOpen.toString()" class="wiboost-user-navbar-menu flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-white bg-[#f0f5ff] text-[#5a76c8] shadow-sm hover:scale-105 transition-transform">
                         <svg x-show="!mobileNavOpen" x-cloak class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                         <svg x-show="mobileNavOpen" x-cloak class="h-6 w-6 text-[#ff6b6b]" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18"></path></svg>
                     </button>
@@ -183,26 +229,26 @@
     {{-- Footer User --}}
     <footer class="bg-white pt-12 pb-8 relative overflow-hidden mt-auto">
         <div class="max-w-6xl mx-auto px-6 sm:px-8 relative z-10">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-8 mb-10">
+            <div class="flex flex-col items-center gap-6 text-center md:flex-row md:justify-between md:gap-8 md:text-left mb-10">
                 
-                <div class="text-center md:text-left">
-                    <div class="flex items-center justify-center md:justify-start gap-2 mb-3">
-                        <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426-full" alt="Logo Wiboost Store" class="h-9 w-9 shrink-0 object-contain drop-shadow-sm">
-                        <span class="font-black text-xl text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></span>
+                <div class="min-w-0 text-center md:text-left">
+                    <div class="flex items-center justify-center gap-2 mb-3 md:justify-start">
+                        <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" onerror="this.onerror=null;this.src='{{ asset('images/wiboost-logo.png') }}?v=20260426-full';" alt="Logo Wiboost Store" width="192" height="192" loading="lazy" decoding="async" class="h-10 w-10 shrink-0 object-contain drop-shadow-sm md:h-12 md:w-12">
+                        <span class="whitespace-nowrap font-black text-lg text-[#2b3a67] sm:text-xl md:text-2xl">Wiboost <span class="text-[#5a76c8]">Store</span></span>
                     </div>
-                    <p class="text-xs font-bold text-[#8faaf3] max-w-xs">Pusat Kebutuhan Digitalmu!</p>
+                    <p class="mx-auto max-w-xs text-[10px] font-bold text-[#8faaf3] sm:text-xs md:mx-0 md:min-w-max md:max-w-none md:whitespace-nowrap md:text-sm">Pusat Layanan dan Produk Digital dalam Satu Platform.</p>
                 </div>
 
-                <div class="flex flex-col items-center md:items-end gap-3">
-                    <p class="text-[10px] font-black text-[#2b3a67] uppercase tracking-widest mb-1">Follow Us</p>
-                    <div class="flex items-center gap-4">
-                        <a href="https://instagram.com/ahawi_channel" target="_blank" class="w-11 h-11 bg-[#f4f9ff] text-[#e1306c] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all">
+                <div class="flex shrink-0 flex-col items-center gap-3 md:items-end">
+                    <p class="mb-1 text-xs font-black text-[#2b3a67] md:text-sm">Ikuti Kami</p>
+                    <div class="flex items-center gap-2 sm:gap-4">
+                        <a href="https://instagram.com/ahawi_channel" target="_blank" class="w-10 h-10 sm:w-12 sm:h-12 bg-[#f4f9ff] text-[#e1306c] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all md:h-14 md:w-14">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
                         </a>
-                        <a href="https://tiktok.com/@ahawi_channel" target="_blank" class="w-11 h-11 bg-[#f4f9ff] text-[#2b3a67] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all">
+                        <a href="https://tiktok.com/@ahawi_channel" target="_blank" class="w-10 h-10 sm:w-12 sm:h-12 bg-[#f4f9ff] text-[#2b3a67] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all md:h-14 md:w-14">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>
                         </a>
-                        <a href="https://youtube.com/@ahawi_channel" target="_blank" class="w-11 h-11 bg-[#f4f9ff] text-[#FF0000] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all">
+                        <a href="https://youtube.com/@ahawi_channel" target="_blank" class="w-10 h-10 sm:w-12 sm:h-12 bg-[#f4f9ff] text-[#FF0000] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all md:h-14 md:w-14">
                             <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                         </a>
                     </div>
@@ -210,13 +256,13 @@
             </div>
 
             <div class="border-t-2 border-[#f0f5ff] pt-8 text-center">
-                <div class="mb-5 flex flex-row flex-wrap items-center justify-center gap-1.5 sm:gap-3 w-full px-2">
-                    <a href="{{ route('legal.show', 'terms') }}" class="rounded-full bg-[#f4f9ff] px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] whitespace-nowrap">Syarat & Ketentuan</a>
-                    <a href="{{ route('legal.show', 'privacy-policy') }}" class="rounded-full bg-[#f4f9ff] px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] whitespace-nowrap">Privasi</a>
-                    <a href="{{ route('legal.show', 'refund-policy') }}" class="rounded-full bg-[#f4f9ff] px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] whitespace-nowrap">Refund</a>
-                    <a href="{{ route('legal.show', 'contact') }}" class="rounded-full bg-[#f4f9ff] px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] whitespace-nowrap">Kontak Admin</a>
+                <div class="mb-5 flex w-full flex-nowrap items-center justify-between gap-0.5 px-0 sm:justify-center sm:gap-2 sm:px-2">
+                    <a href="{{ route('legal.show', 'terms') }}" class="flex min-w-0 flex-1 items-center justify-center rounded-full bg-[#f4f9ff] px-0.5 py-1 text-center text-[6px] font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] min-[380px]:text-[7px] sm:flex-none sm:px-3 sm:py-1.5 sm:text-[10px] md:px-3 md:text-xs whitespace-nowrap">Syarat & Ketentuan</a>
+                    <a href="{{ route('legal.show', 'privacy-policy') }}" class="flex min-w-0 flex-1 items-center justify-center rounded-full bg-[#f4f9ff] px-0.5 py-1 text-center text-[6px] font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] min-[380px]:text-[7px] sm:flex-none sm:px-3 sm:py-1.5 sm:text-[10px] md:px-3 md:text-xs whitespace-nowrap">Privasi</a>
+                    <a href="{{ route('legal.show', 'refund-policy') }}" class="flex min-w-0 flex-1 items-center justify-center rounded-full bg-[#f4f9ff] px-0.5 py-1 text-center text-[6px] font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] min-[380px]:text-[7px] sm:flex-none sm:px-3 sm:py-1.5 sm:text-[10px] md:px-3 md:text-xs whitespace-nowrap">Refund</a>
+                    <a href="{{ route('legal.show', 'contact') }}" class="flex min-w-0 flex-1 items-center justify-center rounded-full bg-[#f4f9ff] px-0.5 py-1 text-center text-[6px] font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] min-[380px]:text-[7px] sm:flex-none sm:px-3 sm:py-1.5 sm:text-[10px] md:px-3 md:text-xs whitespace-nowrap">Kontak Admin</a>
                 </div>
-                <p class="text-[10px] font-black text-[#a3bbfb] uppercase tracking-widest">&copy; {{ date('Y') }} Wiboost Store - Hak Cipta Dilindungi.</p>
+                <p class="text-[10px] font-black text-[#a3bbfb] md:text-sm lg:text-base">&copy; {{ date('Y') }} Wiboost Store - Dibuat oleh <a href="https://www.abidhanan.my.id/" target="_blank" rel="noopener noreferrer" style="color: #5a76c8;" onmouseover="this.style.color='#4bc6b9'" onmouseout="this.style.color='#5a76c8'" class="transition">Abid Hanan Wicaksono</a>.</p>
             </div>
         </div>
     </footer>
@@ -224,5 +270,88 @@
     {{-- Widget Lapor Admin --}}
     @include('partials.floating-admin-report')
     @include('partials.page-loading')
+    <script>
+        (() => {
+            const cookieName = 'wiboost_after_admin_report';
+            const pendingKey = 'wiboost_admin_report_pending';
+            const leftPageKey = 'wiboost_admin_report_left_page';
+            const dashboardUrl = @json(route('user.dashboard'));
+
+            const readCookie = () => document.cookie
+                .split('; ')
+                .find((row) => row.startsWith(cookieName + '='))
+                ?.split('=')[1] || null;
+
+            const hasRedirectMarker = () => {
+                try {
+                    return readCookie() !== null
+                        || window.localStorage?.getItem(cookieName) === 'dashboard'
+                        || window.sessionStorage?.getItem(cookieName) === 'dashboard';
+                } catch (error) {
+                    return readCookie() !== null;
+                }
+            };
+
+            const clearCookie = () => {
+                document.cookie = cookieName + '=; Max-Age=0; path=/; SameSite=Lax';
+            };
+
+            window.markWiboostAdminChatOpened = () => {
+                document.cookie = cookieName + '=dashboard; Max-Age=600; path=/; SameSite=Lax';
+                try {
+                    window.localStorage?.setItem(cookieName, 'dashboard');
+                    window.sessionStorage?.setItem(cookieName, 'dashboard');
+                    window.sessionStorage?.removeItem(pendingKey);
+                    window.sessionStorage?.removeItem(leftPageKey);
+                } catch (error) {}
+            };
+
+            window.markWiboostAdminReportSubmit = () => {
+                try {
+                    window.sessionStorage?.removeItem(pendingKey);
+                    window.sessionStorage?.removeItem(leftPageKey);
+                } catch (error) {}
+            };
+
+            const clearMarkers = () => {
+                clearCookie();
+
+                try {
+                    window.localStorage?.removeItem(cookieName);
+                    window.sessionStorage?.removeItem(cookieName);
+                    window.sessionStorage?.removeItem(pendingKey);
+                    window.sessionStorage?.removeItem(leftPageKey);
+                } catch (error) {}
+            };
+
+            const redirectAfterAdminReport = () => {
+                if (!hasRedirectMarker()) {
+                    return;
+                }
+
+                clearMarkers();
+                window.wiboostHidePageLoader?.();
+
+                if (window.location.href !== dashboardUrl) {
+                    window.location.replace(dashboardUrl);
+                }
+            };
+
+            document.addEventListener('visibilitychange', () => {
+                try {
+                    if (document.hidden && hasRedirectMarker()) {
+                        window.sessionStorage.setItem(leftPageKey, '1');
+                    }
+                } catch (error) {}
+
+                if (!document.hidden) {
+                    redirectAfterAdminReport();
+                }
+            });
+            window.addEventListener('focus', () => redirectAfterAdminReport());
+            window.addEventListener('pageshow', () => redirectAfterAdminReport());
+            redirectAfterAdminReport();
+        })();
+    </script>
 </body>
 </html>

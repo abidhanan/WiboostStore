@@ -266,6 +266,12 @@
                             $canManualUpdate = $trx->payment_status === 'paid'
                                 && ($trx->product?->process_type === 'account')
                                 && (bool) ($trx->product?->requires_buyer_email);
+                            $adminStatusClass = match ($trx->display_status) {
+                                'Sukses' => ['bg-[#e6fff7]', 'text-emerald-500'],
+                                'Proses' => ['bg-[#e0fbfc]', 'text-[#5a76c8]'],
+                                'Batal', 'Gagal' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]'],
+                                default => ['bg-[#fff5eb]', 'text-amber-500'],
+                            };
                         @endphp
                         <tr onclick="openAdminDetailModal('admin-trx-detail-{{ $trx->id }}')" class="transition-colors hover:bg-[#f8faff] group cursor-pointer">
                             
@@ -288,7 +294,7 @@
                             
                             <!-- Harga -->
                             <td class="px-5 py-4 sm:py-5 align-top">
-                                <p class="font-black text-[#4bc6b9] text-xs sm:text-sm drop-shadow-sm">Rp {{ number_format($trx->amount ?? 0, 0, ',', '.') }}</p>
+                                <p class="font-black text-[#4bc6b9] text-xs sm:text-sm drop-shadow-sm">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</p>
                             </td>
                             
                             <!-- Target Input -->
@@ -305,34 +311,12 @@
                             <!-- Metode Pembayaran -->
                             <td class="px-5 py-4 sm:py-5 align-top text-center">
                                 @php
-                                    $rawMethod = strtolower($trx->payment_method ?? '');
-                                    if ($rawMethod == 'wallet') {
-                                        $methodDisplay = 'SALDO';
+                                    $methodDisplay = $trx->display_payment_method;
+                                    if ($methodDisplay === 'SALDO') {
                                         $colorClass = 'bg-[#e0fbfc] text-[#5a76c8] border-white';
-                                    } elseif (($rawMethod == 'manual' || empty($rawMethod)) && ($trx->payment_status ?? '') != 'paid') {
-                                        $methodDisplay = 'BELUM PILIH';
+                                    } elseif ($methodDisplay === 'BELUM PILIH') {
                                         $colorClass = 'bg-[#fff5eb] text-amber-500 border-white';
                                     } else {
-                                        $methodMap = [
-                                            'qris'           => 'QRIS',
-                                            'gopay'          => 'GoPay',
-                                            'shopeepay'      => 'ShopeePay',
-                                            'bank_transfer'  => 'Bank Transfer',
-                                            'cstore'         => 'Indomaret/ALFA',
-                                            'credit_card'    => 'Kartu Kredit',
-                                            'echannel'       => 'Mandiri Bill',
-                                            'permata_va'     => 'Permata VA',
-                                            'bca_va'         => 'BCA Transfer',
-                                            'bni_va'         => 'BNI Transfer',
-                                            'bri_va'         => 'BRI Transfer',
-                                            'cimb_va'        => 'CIMB Transfer',
-                                            'other_va'       => 'ATM Bersama',
-                                            'danamon_online' => 'Danamon Online',
-                                            'akulaku'        => 'Akulaku',
-                                            'kredivo'        => 'Kredivo',
-                                        ];
-                                        $methodDisplay = $methodMap[$rawMethod] ?? ucwords(str_replace('_', ' ', $rawMethod));
-                                        if ($methodDisplay == 'Manual' || $methodDisplay == '') $methodDisplay = 'E-WALLET';
                                         $colorClass = 'bg-[#f4f9ff] text-[#8faaf3] border-white';
                                     }
                                 @endphp
@@ -348,7 +332,7 @@
                                         @csrf
                                         @method('PATCH')
                                         <select name="order_status" style="font-size: 9px;" class="bg-[#f8faff] border-4 border-white text-[#2b3a67] uppercase tracking-widest rounded-full focus:border-[#bde0fe] block px-3 py-1.5 font-black outline-none shadow-sm cursor-pointer hover:bg-[#e0fbfc] transition-colors appearance-none text-center w-full min-w-[85px]">
-                                            <option value="pending" {{ ($trx->order_status ?? '') == 'pending' ? 'selected' : '' }}>Pending</option>
+                                            <option value="pending" {{ ($trx->order_status ?? '') == 'pending' ? 'selected' : '' }}>Menunggu</option>
                                             <option value="processing" {{ ($trx->order_status ?? '') == 'processing' ? 'selected' : '' }}>Proses</option>
                                             <option value="success" {{ ($trx->order_status ?? '') == 'success' ? 'selected' : '' }}>Sukses</option>
                                             <option value="failed" {{ ($trx->order_status ?? '') == 'failed' ? 'selected' : '' }}>Gagal</option>
@@ -359,13 +343,7 @@
                                     </form>
                                 @else
                                     @php
-                                        $statusLabels = [
-                                            'success' => ['bg-[#e6fff7]', 'text-emerald-500', 'Sukses'],
-                                            'processing' => ['bg-[#e0fbfc]', 'text-[#5a76c8]', 'Proses'],
-                                            'pending' => ['bg-[#fff5eb]', 'text-amber-500', 'Pending'],
-                                            'failed' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]', 'Gagal'],
-                                        ];
-                                        $st = $statusLabels[$trx->order_status ?? 'pending'] ?? ['bg-gray-100', 'text-gray-500', $trx->order_status ?? '-'];
+                                        $st = [$adminStatusClass[0], $adminStatusClass[1], $trx->display_status];
                                     @endphp
                                     <span style="font-size: 9px;" class="{{ $st[0] }} {{ $st[1] }} px-4 py-1.5 rounded-full font-black uppercase tracking-widest border-2 border-white shadow-sm inline-block w-full text-center">
                                         {{ $st[2] }}
@@ -430,7 +408,7 @@
                         </div>
                         <div class="admin-detail-panel">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Total Bayar</p>
-                            <p class="mt-1 font-black text-[#4bc6b9]">Rp {{ number_format($trx->amount ?? 0, 0, ',', '.') }}</p>
+                            <p class="mt-1 font-black text-[#4bc6b9]">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</p>
                         </div>
                         <div class="admin-detail-panel md:col-span-2">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Layanan</p>
@@ -438,7 +416,7 @@
                         </div>
                         <div class="admin-detail-panel md:col-span-2">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Metode Pembayaran</p>
-                            <p class="mt-1 text-sm font-black uppercase text-[#2b3a67]">{{ $trx->payment_method ?? '-' }}</p>
+                            <p class="mt-1 text-sm font-black uppercase text-[#2b3a67]">{{ $trx->display_payment_method }}</p>
                         </div>
                         <div class="admin-detail-panel md:col-span-2">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Kategori</p>
@@ -454,7 +432,7 @@
                         </div>
                         <div class="admin-detail-panel">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Status Pesanan</p>
-                            <p class="mt-1 font-black uppercase text-[#5a76c8]">{{ $trx->order_status ?? '-' }}</p>
+                            <p class="mt-1 font-black uppercase text-[#5a76c8]">{{ $trx->display_status }}</p>
                         </div>
                         <div class="admin-detail-panel">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">ID Provider</p>
@@ -473,7 +451,7 @@
                             @csrf
                             @method('PATCH')
                             <select name="order_status" class="flex-1 rounded-full border-4 border-white bg-white px-4 py-2.5 text-xs font-black uppercase text-[#2b3a67] outline-none">
-                                <option value="pending" {{ ($trx->order_status ?? '') == 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="pending" {{ ($trx->order_status ?? '') == 'pending' ? 'selected' : '' }}>Menunggu</option>
                                 <option value="processing" {{ ($trx->order_status ?? '') == 'processing' ? 'selected' : '' }}>Proses</option>
                                 <option value="success" {{ ($trx->order_status ?? '') == 'success' ? 'selected' : '' }}>Sukses</option>
                                 <option value="failed" {{ ($trx->order_status ?? '') == 'failed' ? 'selected' : '' }}>Gagal</option>

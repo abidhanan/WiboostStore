@@ -3,7 +3,7 @@
         <div class="flex justify-between h-20">
             <div class="flex items-center gap-4">
                 <a href="{{ route('dashboard') }}" class="shrink-0 flex items-center gap-3 group hover:scale-105 transition-transform">
-                    <img src="{{ asset('images/wiboost-logo.png') }}?v=20260426" class="block h-12 w-12 drop-shadow-sm" alt="Logo" />
+                    <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" onerror="this.onerror=null;this.src='{{ asset('images/wiboost-logo.png') }}?v=20260426-full';" width="192" height="192" loading="eager" decoding="async" class="block h-12 w-12 drop-shadow-sm" alt="Logo" />
                     <span class="text-2xl font-black tracking-tight text-[#2b3a67] hidden sm:block">Wiboost <span class="text-[#5a76c8]">Store</span></span>
                 </a>
 

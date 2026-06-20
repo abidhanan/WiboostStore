@@ -46,17 +46,26 @@ class TripayDepositSyncService
             return;
         }
 
-        $data = data_get($detail, 'data', []);
-        $status = strtoupper((string) data_get($data, 'status', ''));
-        $paymentStatus = strtoupper((string) data_get($data, 'payment_status', ''));
+        $data = data_get($detail, 'data');
+        $event = is_array($data) ? array_replace($detail, $data) : $detail;
+        $status = strtoupper((string) data_get($event, 'status', ''));
+        $paymentStatus = strtoupper((string) data_get($event, 'payment_status', ''));
 
-        if (in_array($status, ['SUCCESS', 'PAID'], true) || in_array($paymentStatus, ['SUCCEEDED', 'PAID'], true)) {
-            $this->markDepositAsPaid($pendingDeposit, $data, $detail);
+        if (in_array($status, ['SUCCESS', 'PAID', 'SUCCEEDED', 'SETTLEMENT', 'CAPTURE'], true)
+            || in_array($paymentStatus, ['SUCCESS', 'PAID', 'SUCCEEDED', 'SETTLEMENT', 'CAPTURE'], true)) {
+            $this->markDepositAsPaid($pendingDeposit, $event, $detail);
         }
 
         if (in_array($status, ['FAILED', 'EXPIRED', 'REFUND', 'CANCELED', 'CANCELLED'], true)
             || in_array($paymentStatus, ['FAILED', 'EXPIRED', 'REFUND', 'CANCELED', 'CANCELLED'], true)) {
-            $pendingDeposit->delete();
+            $pendingDeposit->update([
+                'payment_status' => 'failed',
+                'payment_response' => array_merge($pendingDeposit->payment_response ?? [], [
+                    'payment_gateway' => 'xoftware',
+                    'xoftware_detail_sync' => $detail,
+                    'synced_at' => now()->toDateTimeString(),
+                ]),
+            ]);
         }
     }
 
@@ -125,6 +134,10 @@ class TripayDepositSyncService
 
     protected function resolveTripayReference(Deposit $deposit): ?string
     {
+        if (filled($deposit->invoice_number)) {
+            return (string) $deposit->invoice_number;
+        }
+
         if (filled($deposit->tripay_reference)) {
             return (string) $deposit->tripay_reference;
         }

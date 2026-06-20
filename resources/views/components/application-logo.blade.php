@@ -1,1 +1,1 @@
-<img src="{{ asset('images/wiboost-logo.png') }}?v=20260426" {{ $attributes->merge(['class' => 'drop-shadow-sm object-contain']) }} alt="Wiboost Store Logo">
+<img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" onerror="this.onerror=null;this.src='{{ asset('images/wiboost-logo.png') }}?v=20260426-full';" width="192" height="192" loading="eager" decoding="async" {{ $attributes->merge(['class' => 'drop-shadow-sm object-contain']) }} alt="Wiboost Store Logo">

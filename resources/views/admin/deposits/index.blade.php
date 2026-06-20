@@ -240,29 +240,10 @@
                             <!-- Metode Pembayaran -->
                             <td class="px-5 py-4 sm:py-5 align-middle text-center">
                                 @php
-                                    $rawMethod = strtolower($deposit->payment_method ?? '');
-                                    if (($rawMethod == 'manual' || empty($rawMethod)) && ($deposit->payment_status ?? '') != 'paid') {
-                                        $methodDisplay = 'BELUM PILIH';
+                                    $methodDisplay = $deposit->display_payment_method;
+                                    if ($methodDisplay === 'BELUM PILIH') {
                                         $colorClass = 'bg-[#fff5eb] text-amber-500 border-white';
                                     } else {
-                                        $methodMap = [
-                                            'qris'           => 'QRIS',
-                                            'gopay'          => 'GoPay',
-                                            'shopeepay'      => 'ShopeePay',
-                                            'bank_transfer'  => 'Bank Transfer',
-                                            'cstore'         => 'Indomaret/ALFA',
-                                            'credit_card'    => 'Kartu Kredit',
-                                            'echannel'       => 'Mandiri Bill',
-                                            'permata_va'     => 'Permata VA',
-                                            'bca_va'         => 'BCA Transfer',
-                                            'bni_va'         => 'BNI Transfer',
-                                            'bri_va'         => 'BRI Transfer',
-                                            'cimb_va'        => 'CIMB Transfer',
-                                            'other_va'       => 'ATM Bersama',
-                                            'danamon_online' => 'Danamon Online',
-                                        ];
-                                        $methodDisplay = $methodMap[$rawMethod] ?? ucwords(str_replace('_', ' ', $rawMethod));
-                                        if ($methodDisplay == 'Manual' || $methodDisplay == '') $methodDisplay = 'MANUAL';
                                         $colorClass = 'bg-[#f4f9ff] text-[#8faaf3] border-white';
                                     }
                                 @endphp
@@ -350,7 +331,7 @@
                         </div>
                         <div class="admin-detail-panel">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Metode</p>
-                            <p class="mt-1 font-black uppercase text-[#2b3a67]">{{ $deposit->payment_method ?? '-' }}</p>
+                            <p class="mt-1 font-black uppercase text-[#2b3a67]">{{ $deposit->display_payment_method }}</p>
                         </div>
                         <div class="admin-detail-panel">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Referensi QRIS</p>

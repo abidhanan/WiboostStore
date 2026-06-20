@@ -1,9 +1,12 @@
-@extends('layouts.user')
+@extends(($isGuestCatalog ?? false) ? 'layouts.catalog_guest' : 'layouts.user')
 
 @section('title', 'Pilih Aplikasi - ' . $category->name)
 
 @section('content')
 @php
+    $isGuestCatalog = $isGuestCatalog ?? false;
+    $categoryRouteName = $isGuestCatalog ? 'guest.order.category' : 'user.order.category';
+    $categoryHomeUrl = $isGuestCatalog ? route('home') . '#kategori' : route('user.dashboard');
     $categoryDiscountLabel = \App\Models\Product::currentDiscountLabel();
 @endphp
 <style>
@@ -54,20 +57,95 @@
         height: 100%;
         object-fit: cover;
         object-position: center;
+        border-radius: 1rem;
     }
 
-    .wiboost-logo-frame {
+    .wiboost-header-logo-img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        border-radius: 1rem;
+    }
+
+    .wiboost-suborder-logo-content {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        border-radius: 1rem;
+    }
+
+    .wiboost-header-logo-frame {
         aspect-ratio: 1 / 1;
-        width: 6rem;
-        height: 6rem;
-        min-width: 6rem;
+        flex: 0 0 4.25rem;
+        height: 4.25rem !important;
+        min-height: 4.25rem;
+        min-width: 4.25rem;
+        width: 4.25rem !important;
+    }
+
+    .wiboost-order-header-title {
+        font-size: clamp(1.05rem, 5.5vw, 1.55rem);
+        line-height: 1.08;
+        max-width: 100%;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: nowrap;
+    }
+
+    .wiboost-order-header-description {
+        font-size: clamp(0.78rem, 3.25vw, 0.9rem);
+        line-height: 1.45;
+    }
+
+    .wiboost-category-card {
+        aspect-ratio: 1 / 1;
+        min-height: auto;
+    }
+
+    .wiboost-category-logo {
+        height: 4.75rem !important;
+        margin-bottom: 0.75rem;
+        width: 4.75rem !important;
+    }
+
+    @media (min-width: 640px) {
+        .wiboost-header-logo-frame {
+            flex-basis: 6rem;
+            height: 6rem !important;
+            min-height: 6rem;
+            min-width: 6rem;
+            width: 6rem !important;
+        }
+
+        .wiboost-category-card {
+            aspect-ratio: 1 / 1;
+            min-height: 0;
+        }
+
+        .wiboost-category-logo {
+            height: 6rem !important;
+            margin-bottom: 1.25rem;
+            width: 6rem !important;
+        }
+
+        .wiboost-order-header-title {
+            font-size: clamp(1.75rem, 2.6vw, 2.25rem);
+        }
+
+        .wiboost-order-header-description {
+            font-size: 0.95rem;
+        }
     }
 
     @media (max-width: 767px) {
         .wiboost-suborder-logo-content {
-            width: 88%;
-            height: 88%;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
+            object-position: center;
             border-radius: 1rem;
         }
 
@@ -83,35 +161,36 @@
     }
 </style>
 
-<div class="wiboost-font pb-24 w-full mx-auto mt-4 relative z-10">
+<div class="wiboost-font pb-24 w-full mx-auto mt-0 relative z-10">
     
-    <div class="relative z-10 mb-10 flex flex-col items-center gap-6 overflow-visible rounded-[2.5rem] border-4 border-white bg-white/95 p-6 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm md:flex-row md:gap-8 md:p-8">
-        <div class="relative z-10 flex w-full items-center justify-between gap-4 md:w-auto md:justify-start">
-            <a href="{{ $category->parent ? route('user.order.category', $category->parent->slug) : route('user.dashboard') }}" class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.2rem] border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-110 hover:bg-[#e0fbfc] active:scale-95">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+    <div class="relative z-10 mb-10 grid grid-cols-[auto,minmax(0,1fr)] gap-x-4 gap-y-3 overflow-visible rounded-[2.5rem] border-4 border-white bg-white/95 p-5 text-left shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:gap-x-6 sm:p-6 md:gap-x-8 md:p-8">
+        <div class="contents">
+            <a href="{{ $category->parent ? route($categoryRouteName, $category->parent->slug) : $categoryHomeUrl }}" aria-label="Kembali" class="col-start-1 row-start-1 flex h-9 w-9 shrink-0 items-center justify-center self-center justify-self-center rounded-xl border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-105 hover:bg-[#e0fbfc] active:scale-95">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
             </a>
-
-            <div class="wiboost-logo-frame flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-inner ring-1 ring-[#bde0fe]/60">
+            <div class="wiboost-header-logo-frame col-start-1 row-start-2 flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] bg-[#f4f9ff] text-[#5a76c8] shadow-inner sm:h-24 sm:w-24">
                 @if($category->image)
-                    <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="wiboost-square-logo-img wiboost-suborder-logo-content drop-shadow-sm">
+                    <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="wiboost-header-logo-img drop-shadow-sm">
                 @else
                     <span class="wiboost-suborder-emote text-4xl font-black drop-shadow-sm">{{ $category->emote ?? '📦' }}</span>
                 @endif
             </div>
         </div>
 
-        <div class="relative z-10 flex-1 text-center md:text-left">
-            <div class="mb-3 inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1 text-[10px] font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
+        <div class="contents">
+            <div class="col-start-2 row-start-1 inline-block self-center justify-self-start rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1 text-[10px] font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
                 Katalog
             </div>
-            <h2 class="mb-2 text-3xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm md:text-4xl">{{ $category->name }}</h2>
+            <div class="col-start-2 row-start-2 min-w-0 self-center text-left">
+            <h2 class="wiboost-order-header-title mb-2 font-black tracking-tight text-[#2b3a67] drop-shadow-sm">{{ $category->name }}</h2>
             @if($category->description)
-                <p class="inline-block w-full rounded-2xl border-2 border-white bg-[#f8faff] p-4 text-left text-sm font-bold leading-relaxed text-[#4a5f96] shadow-inner md:w-auto">
+                <p class="wiboost-order-header-description inline-block w-full rounded-2xl border-2 border-white bg-[#f8faff] p-3 text-left font-bold text-[#4a5f96] shadow-inner md:w-auto md:p-4">
                     {!! nl2br(e($category->description)) !!}
                 </p>
             @else
-                <p class="font-bold text-[#8faaf3]">Pilih kategori di bawah ini untuk lanjut.</p>
+                <p class="wiboost-order-header-description font-bold text-[#8faaf3]">Pilih kategori di bawah ini untuk lanjut.</p>
             @endif
+            </div>
         </div>
     </div>
 
@@ -124,9 +203,9 @@
             @endphp
 
             @if($isBrowsable)
-                <a href="{{ route('user.order.category', $child->slug) }}" class="group relative aspect-square overflow-hidden bg-white/95 backdrop-blur-sm p-6 md:p-8 rounded-[2.5rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 text-center flex flex-col items-center justify-center">
+                <a href="{{ route($categoryRouteName, $child->slug) }}" class="wiboost-category-card group relative overflow-hidden bg-white/95 backdrop-blur-sm p-2 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 text-center flex flex-col items-center justify-center">
             @else
-                <div class="group relative aspect-square overflow-hidden bg-white/60 backdrop-blur-sm p-6 md:p-8 rounded-[2.5rem] border-4 border-white shadow-md shadow-[#bde0fe]/10 text-center flex flex-col items-center justify-center opacity-80 grayscale-[20%]">
+                <div class="wiboost-category-card group relative overflow-hidden bg-white/60 backdrop-blur-sm p-2 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border-4 border-white shadow-md shadow-[#bde0fe]/10 text-center flex flex-col items-center justify-center opacity-80 grayscale-[20%]">
             @endif
 
                 @if($categoryDiscountLabel)
@@ -137,7 +216,7 @@
                     </span>
                 @endif
 
-                <div class="wiboost-logo-frame h-24 w-24 bg-[#f4f9ff] rounded-[1.5rem] mb-5 flex items-center justify-center {{ $hasActiveProducts ? 'group-hover:scale-110 group-hover:-rotate-3' : '' }} transition-transform duration-300 border-4 border-white shadow-inner ring-1 ring-[#bde0fe]/60 shrink-0 overflow-hidden">
+                <div class="wiboost-category-logo bg-[#f4f9ff] rounded-[1.25rem] sm:rounded-[1.5rem] flex items-center justify-center {{ $hasActiveProducts ? 'group-hover:scale-110 group-hover:-rotate-3' : '' }} transition-transform duration-300 shadow-inner shrink-0 overflow-hidden">
                     @if($child->image)
                         <img src="{{ Storage::url($child->image) }}" alt="{{ $child->name }}" class="wiboost-square-logo-img wiboost-suborder-logo-content drop-shadow-sm">
                     @else
@@ -145,10 +224,7 @@
                     @endif
                 </div>
 
-                <span class="text-lg md:text-xl font-black text-[#2b3a67] leading-tight">{{ $child->name }}</span>
-                @if($child->description)
-                    <p class="mt-2 text-xs font-bold text-[#8faaf3] leading-relaxed line-clamp-2">{{ $child->description }}</p>
-                @endif
+                <span class="max-w-full break-words px-1 text-xs font-black leading-tight text-[#2b3a67] sm:text-lg md:text-xl">{{ $child->name }}</span>
 
             @if($isBrowsable)
                 </a>

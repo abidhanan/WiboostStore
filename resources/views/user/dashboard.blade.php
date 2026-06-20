@@ -113,6 +113,34 @@
     .wiboost-logo-frame {
         aspect-ratio: 1 / 1;
     }
+    .wiboost-dashboard-greeting,
+    .wiboost-dashboard-subtitle {
+        display: block;
+        max-width: 100%;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: nowrap;
+    }
+    .wiboost-dashboard-greeting {
+        font-size: clamp(1.45rem, 7vw, 3rem);
+        line-height: 1.08;
+    }
+    .wiboost-dashboard-subtitle {
+        font-size: clamp(0.82rem, 3.8vw, 1rem);
+        line-height: 1.25;
+    }
+    .wiboost-main-category-card {
+        aspect-ratio: 1 / 1;
+    }
+    .wiboost-main-category-logo {
+        height: 4.75rem !important;
+        margin-bottom: 0.75rem;
+        width: 4.75rem !important;
+    }
+    .wiboost-main-category-title {
+        font-size: 0.75rem;
+        line-height: 1.15;
+    }
     @media (max-width: 640px) {
         .promo-banner-shell {
             width: 100%;
@@ -122,6 +150,21 @@
             height: auto;
             min-height: 0;
             max-height: none;
+        }
+    }
+    @media (min-width: 640px) {
+        .wiboost-main-category-logo {
+            height: 6rem !important;
+            margin-bottom: 1.25rem;
+            width: 6rem !important;
+        }
+        .wiboost-main-category-title {
+            font-size: 1.125rem;
+        }
+    }
+    @media (min-width: 768px) {
+        .wiboost-main-category-title {
+            font-size: 1.25rem;
         }
     }
     @media (min-width: 1024px) {
@@ -154,9 +197,10 @@
         
         <div class="relative z-10">
             <div class="inline-block px-4 py-1 bg-white/80 backdrop-blur-sm text-[#5a76c8] font-black rounded-full mb-3 text-xs border-2 border-white shadow-sm">
-                Area Pengguna
+                Dashboard
             </div>
-            <h1 class="text-3xl md:text-5xl font-black text-[#2b3a67] mb-2 drop-shadow-sm">Halo, {{ Auth::user()->name }}! 👋</h1>
+            <h1 class="wiboost-dashboard-greeting font-black text-[#2b3a67] mb-2 drop-shadow-sm" data-fit-single-line>Halo, {{ Auth::user()->name }}! 👋</h1>
+            <p class="wiboost-dashboard-subtitle font-extrabold text-[#5a76c8]" data-fit-single-line>Mau beli apa hari ini?</p>
         </div>
 
         <div class="relative z-10 bg-white/90 backdrop-blur-md px-8 py-6 rounded-[2rem] border-4 border-white w-full md:w-auto text-center shadow-lg shadow-[#bde0fe]/30 hover:scale-105 transition-transform duration-300">
@@ -275,7 +319,7 @@
 
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 md:gap-6 mb-14">
         @forelse($categories as $category)
-            <a href="{{ route('user.order.category', $category->slug) }}" class="group relative aspect-square overflow-hidden bg-white p-6 md:p-8 rounded-[2rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 transition-all text-center flex flex-col items-center justify-center">
+            <a href="{{ route('user.order.category', $category->slug) }}" class="wiboost-main-category-card group relative overflow-hidden bg-white p-2 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 transition-all text-center flex flex-col items-center justify-center">
                 @if($categoryDiscountLabel)
                     <span class="discount-corner-ribbon">
                         <span class="discount-corner-ribbon__text">
@@ -283,14 +327,14 @@
                         </span>
                     </span>
                 @endif
-                <div class="wiboost-logo-frame h-24 w-24 shrink-0 bg-[#f4f9ff] rounded-[1.5rem] border-4 border-white shadow-inner flex items-center justify-center text-[#5a76c8] mb-5 group-hover:scale-110 transition-transform duration-300 overflow-hidden ring-1 ring-[#bde0fe]/60">
+                <div class="wiboost-logo-frame wiboost-main-category-logo shrink-0 bg-[#f4f9ff] rounded-[1.25rem] sm:rounded-[1.5rem] shadow-inner flex items-center justify-center text-[#5a76c8] group-hover:scale-110 transition-transform duration-300 overflow-hidden">
                     @if($category->image)
                         <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="wiboost-square-logo-img drop-shadow-sm">
                     @else
                     <span class="text-4xl drop-shadow-sm">{{ $category->emote ?? '🛒' }}</span>
                     @endif
                 </div>
-                <span class="text-sm md:text-base font-black text-[#2b3a67] leading-tight">{{ $category->name }}</span>
+                <span class="wiboost-main-category-title max-w-full break-words px-1 font-black text-[#2b3a67]">{{ $category->name }}</span>
             </a>
         @empty
             <div class="col-span-full text-center py-16 bg-white rounded-[2rem] border-4 border-dashed border-[#bde0fe]">
@@ -300,7 +344,7 @@
     </div>
 
     <div class="text-center md:text-left mb-6 pl-2">
-        <div class="inline-block px-4 py-1 bg-[#fff0f0] text-[#ff6b6b] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">Pusat Bantuan</div>
+        <div class="inline-block px-4 py-1 bg-[#fff0f0] text-[#ff6b6b] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">Tutorial</div>
         <h3 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pusat Tutorial</h3>
     </div>
 
@@ -317,17 +361,17 @@
             @foreach($tutorialGroups as $group)
                 <div data-main-panel="{{ $group['name'] }}" class="{{ $loop->first ? '' : 'hidden' }}">
                     @if(collect($group['subcategories'] ?? [])->isNotEmpty())
-                        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 mb-8">
+                        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
                             @foreach($group['subcategories'] as $sub)
-                                <a href="{{ route('user.tutorials.category', ['main' => $group['name'], 'sub' => $sub['name']]) }}" class="tutorial-sub-filter group flex aspect-square flex-col items-center justify-center rounded-[2rem] border-4 border-white bg-white p-6 text-center shadow-xl shadow-[#bde0fe]/30 transition-all hover:-translate-y-2 hover:border-[#bde0fe] active:scale-95 md:p-8">
-                                    <span class="wiboost-logo-frame mb-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] shadow-inner ring-1 ring-[#bde0fe]/60 transition-transform duration-300 group-hover:scale-110">
+                                <a href="{{ route('user.tutorials.category', ['main' => $group['name'], 'sub' => $sub['name']]) }}" class="tutorial-sub-filter wiboost-main-category-card group relative flex flex-col items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white bg-white p-2 text-center shadow-xl shadow-[#bde0fe]/30 transition-all hover:-translate-y-2 hover:border-[#bde0fe] active:scale-95 sm:rounded-[2rem] sm:p-6 md:p-8">
+                                    <span class="wiboost-logo-frame wiboost-main-category-logo flex shrink-0 items-center justify-center overflow-hidden rounded-[1.25rem] bg-[#f4f9ff] shadow-inner transition-transform duration-300 group-hover:scale-110 sm:rounded-[1.5rem]">
                                         @if($sub['image'])
                                             <img src="{{ Storage::url($sub['image']) }}" alt="{{ $sub['name'] }}" class="wiboost-square-logo-img">
                                         @else
                                             <span class="text-2xl font-black text-[#5a76c8]">{{ Str::upper(Str::substr($sub['name'], 0, 1)) }}</span>
                                         @endif
                                     </span>
-                                    <span class="text-sm md:text-base font-black text-[#2b3a67] leading-tight">{{ $sub['name'] }}</span>
+                                    <span class="wiboost-main-category-title max-w-full break-words px-1 font-black text-[#2b3a67]">{{ $sub['name'] }}</span>
                                 </a>
                             @endforeach
                         </div>
@@ -457,6 +501,31 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const fitSingleLineText = (element, minSize = 14) => {
+            if (!element) {
+                return;
+            }
+
+            element.style.fontSize = '';
+            const computed = window.getComputedStyle(element);
+            let size = parseFloat(computed.fontSize || '16');
+
+            while (element.scrollWidth > element.clientWidth && size > minSize) {
+                size -= 0.5;
+                element.style.fontSize = `${size}px`;
+            }
+        };
+
+        const fitDashboardTexts = () => {
+            document.querySelectorAll('[data-fit-single-line]').forEach((element) => {
+                fitSingleLineText(element, element.classList.contains('wiboost-dashboard-subtitle') ? 11 : 16);
+            });
+        };
+
+        fitDashboardTexts();
+        document.fonts?.ready?.then(fitDashboardTexts).catch(() => {});
+        window.addEventListener('resize', fitDashboardTexts, { passive: true });
+
         const slider = document.getElementById('promo-slider');
         if (slider) {
             const slides = Array.from(slider.children);
