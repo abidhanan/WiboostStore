@@ -11,6 +11,7 @@ class ProductCredential extends Model
 
     protected $fillable = [
         'product_id',
+        'created_by_user_id',
         'data_1',
         'data_2',
         'data_3',
@@ -19,6 +20,7 @@ class ProductCredential extends Model
         'notes',
         'tutorial_link',
         'needs_otp',
+        'requires_login_proof',
         'max_usage',
         'current_usage',
         'is_active',
@@ -26,11 +28,17 @@ class ProductCredential extends Model
 
     protected $casts = [
         'needs_otp' => 'boolean',
+        'requires_login_proof' => 'boolean',
         'is_active' => 'boolean',
     ];
 
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
     }
 }

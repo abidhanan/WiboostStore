@@ -119,6 +119,17 @@
                             <div class="w-14 h-8 bg-amber-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-amber-300 after:border-2 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-amber-500 shadow-inner"></div>
                         </label>
                     </div>
+
+                    <div class="mt-4 bg-[#eef6ff] p-5 rounded-[1.5rem] border-4 border-white flex items-center justify-between shadow-md">
+                        <div>
+                            <p class="text-sm font-black text-[#5a76c8] mb-1">Perlu Upload Bukti Login?</p>
+                            <p class="text-[10px] font-bold text-[#8faaf3] leading-tight pr-4">Aktifkan jika pembeli wajib upload bukti login dari detail pesanan.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input type="checkbox" name="requires_login_proof" class="sr-only peer" value="1">
+                            <div class="w-14 h-8 bg-[#bde0fe] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-[#8faaf3] after:border-2 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-[#5a76c8] shadow-inner"></div>
+                        </label>
+                    </div>
                 </div>
 
                 <button type="submit" class="w-full bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black text-lg py-4 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white mt-8 flex justify-center items-center gap-2">
@@ -190,9 +201,14 @@
                                         @if($cred->needs_otp)
                                             <span class="bg-[#fff5eb] text-amber-500 px-3 py-1 rounded-md text-[9px] font-black uppercase shadow-sm border border-white">Butuh OTP</span>
                                         @endif
+                                        @if($cred->requires_login_proof)
+                                            <span class="bg-[#eef6ff] text-[#5a76c8] px-3 py-1 rounded-md text-[9px] font-black uppercase shadow-sm border border-white">Perlu Bukti Login</span>
+                                        @endif
                                     </div>
                                 </div>
-                                <p class="text-[9px] font-black text-[#8faaf3] mt-3 uppercase tracking-widest">Added: {{ $cred->created_at->format('d M Y') }}</p>
+                                <p class="text-[9px] font-black text-[#8faaf3] mt-3 uppercase tracking-widest">
+                                    Ditambahkan oleh {{ $cred->createdBy->name ?? 'Admin' }} • {{ $cred->created_at?->timezone(config('app.timezone', 'Asia/Jakarta'))->locale('id')->translatedFormat('d F Y, H:i') }}
+                                </p>
                             </td>
                             
                             <td class="px-5 py-5 align-middle text-center">

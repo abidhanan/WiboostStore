@@ -196,7 +196,7 @@
                                     </span>
                                 </td>
                                 <td class="min-w-[260px] max-w-[330px] whitespace-normal px-5 py-5 align-middle">
-                                    <p class="line-clamp-2 text-xs font-bold leading-relaxed text-[#2b3a67]">{{ $report->issue }}</p>
+                                    <p class="admin-clamp-3 text-xs font-bold leading-relaxed text-[#2b3a67]">{{ $report->issue }}</p>
                                 </td>
                                 <td class="px-5 py-5 text-center align-middle">
                                     @if($proofUrl)

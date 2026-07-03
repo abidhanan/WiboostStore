@@ -23,6 +23,8 @@ class Transaction extends Model
         'payment_method',
         'snap_token',
         'credential_data', // Untuk menyimpan data akun premium yang dikirim otomatis.
+        'login_proof_path',
+        'login_proof_uploaded_at',
         'points_awarded_at',
         'refunded_at',
     ];
@@ -33,6 +35,7 @@ class Transaction extends Model
         'order_input_data' => 'array',
         'response_data' => 'array',
         'credential_data' => 'array',
+        'login_proof_uploaded_at' => 'datetime',
         'points_awarded_at' => 'datetime',
         'refunded_at' => 'datetime',
     ];

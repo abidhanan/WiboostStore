@@ -283,13 +283,13 @@
                             
                             <!-- User -->
                             <td class="px-5 py-4 sm:py-5 align-top min-w-[120px] max-w-[150px]">
-                                <p class="font-black text-[#2b3a67] text-xs sm:text-sm truncate">{{ $trx->user->name ?? 'Guest' }}</p>
-                                <p class="text-[9px] sm:text-[10px] font-bold text-[#8faaf3] truncate mt-1">{{ $trx->user->email ?? '-' }}</p>
+                                <p class="admin-clamp-2 font-black text-[#2b3a67] text-xs sm:text-sm">{{ $trx->user->name ?? 'Guest' }}</p>
+                                <p class="admin-clamp-2 text-[9px] sm:text-[10px] font-bold text-[#8faaf3] mt-1">{{ $trx->user->email ?? '-' }}</p>
                             </td>
                             
                             <!-- Layanan -->
                             <td class="px-5 py-4 sm:py-5 align-top whitespace-normal min-w-[180px] max-w-[250px]">
-                                <p class="font-black text-[#2b3a67] text-xs sm:text-sm line-clamp-2 leading-snug">{{ $trx->product->name ?? 'Produk Dihapus' }}</p>
+                                <p class="admin-clamp-2 font-black text-[#2b3a67] text-xs sm:text-sm leading-snug">{{ $trx->product->name ?? 'Produk Dihapus' }}</p>
                             </td>
                             
                             <!-- Harga -->
@@ -300,7 +300,7 @@
                             <!-- Target Input -->
                             <td class="px-5 py-4 sm:py-5 align-top text-center max-w-[150px]">
                                 @if($adminTargetSummary)
-                                    <span style="font-size: 9px;" class="font-black text-[#2b3a67] bg-[#f0f5ff] inline-block px-3 py-1.5 rounded-xl border-2 border-white shadow-sm truncate max-w-full" title="{{ $adminTargetText ?? '' }}">
+                                    <span style="font-size: 9px;" class="admin-clamp-1 font-black text-[#2b3a67] bg-[#f0f5ff] inline-block px-3 py-1.5 rounded-xl border-2 border-white shadow-sm max-w-full" title="{{ $adminTargetText ?? '' }}">
                                         {{ $adminTargetSummary }}
                                     </span>
                                 @else
@@ -345,7 +345,7 @@
                                     @php
                                         $st = [$adminStatusClass[0], $adminStatusClass[1], $trx->display_status];
                                     @endphp
-                                    <span style="font-size: 9px;" class="{{ $st[0] }} {{ $st[1] }} px-4 py-1.5 rounded-full font-black uppercase tracking-widest border-2 border-white shadow-sm inline-block w-full text-center">
+                                    <span style="font-size: 9px;" class="admin-clamp-1 {{ $st[0] }} {{ $st[1] }} px-4 py-1.5 rounded-full font-black uppercase tracking-widest border-2 border-white shadow-sm inline-block w-full text-center">
                                         {{ $st[2] }}
                                     </span>
                                 @endif
@@ -494,5 +494,43 @@
         });
         document.body.classList.remove('overflow-hidden', 'admin-detail-open');
     });
+
+    (() => {
+        const refreshUrl = @json(route('admin.transactions.refresh-provider-statuses'));
+        const csrfToken = @json(csrf_token());
+
+        const shouldDelayRefresh = () => {
+            const active = document.activeElement;
+
+            return document.hidden
+                || document.body.classList.contains('admin-detail-open')
+                || (active && ['INPUT', 'SELECT', 'TEXTAREA'].includes(active.tagName));
+        };
+
+        window.setInterval(async () => {
+            if (shouldDelayRefresh()) {
+                return;
+            }
+
+            try {
+                await fetch(refreshUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'text/html',
+                    },
+                    credentials: 'same-origin',
+                });
+
+                window.setTimeout(() => {
+                    if (! shouldDelayRefresh()) {
+                        window.location.reload();
+                    }
+                }, 2500);
+            } catch (error) {
+                window.location.reload();
+            }
+        }, 60000);
+    })();
 </script>
 @endsection

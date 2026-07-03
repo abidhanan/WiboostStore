@@ -82,7 +82,7 @@
                         @forelse($users as $user)
                             <tr class="hover:bg-[#f8faff] transition-colors group">
                                 <td class="px-5 py-4 sm:py-5 align-middle min-w-0 max-w-[200px]">
-                                    <p class="font-black text-[#2b3a67] text-sm mb-1 truncate">{{ $user->name }}</p>
+                                    <p class="admin-clamp-2 font-black text-[#2b3a67] text-sm mb-1">{{ $user->name }}</p>
                                     <p class="text-[10px] sm:text-[11px] font-bold text-[#8faaf3] bg-[#f4f9ff] inline-block px-3 py-1 rounded-md border border-white truncate max-w-full">{{ $user->email }}</p>
                                 </td>
                                 <td class="px-5 py-4 sm:py-5 align-middle">

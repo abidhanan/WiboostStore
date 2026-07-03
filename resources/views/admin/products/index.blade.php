@@ -133,7 +133,7 @@
                                                         @endif
 
                                                         <div class="min-w-0 flex-1">
-                                                            <p class="line-clamp-2 text-xs sm:text-sm font-black leading-snug text-[#2b3a67]">{{ $product->name ?? '-' }}</p>
+                                                            <p class="admin-clamp-2 text-xs sm:text-sm font-black leading-snug text-[#2b3a67]">{{ $product->name ?? '-' }}</p>
                                                         </div>
                                                     </div>
                                                 </td>

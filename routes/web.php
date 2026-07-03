@@ -115,6 +115,8 @@ Route::middleware(['auth', 'role:buyer'])->prefix('user')->name('user.')->group(
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
     Route::get('/tutorials', [UserDashboardController::class, 'tutorialCategory'])->name('tutorials.category');
     Route::get('/history', [TransactionHistoryController::class, 'index'])->name('history');
+    Route::post('/history/{transaction}/login-proof', [TransactionHistoryController::class, 'storeLoginProof'])->name('history.login-proof');
+    Route::delete('/history/{transaction}/login-proof', [TransactionHistoryController::class, 'destroyLoginProof'])->name('history.login-proof.destroy');
     Route::get('/report-admin', [AdminReportController::class, 'create'])->name('report.admin');
     Route::post('/report-admin', [AdminReportController::class, 'store'])->name('report.admin.store');
     

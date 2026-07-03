@@ -13,7 +13,7 @@
                 @forelse($tutorials as $tutorial)
                     <tr class="group transition-colors hover:bg-[#f8faff]">
                         <td class="min-w-[280px] px-5 py-4 align-middle sm:py-5">
-                            <p class="truncate text-sm font-black text-[#2b3a67]">{{ $tutorial->title ?? '-' }}</p>
+                            <p class="admin-clamp-2 text-sm font-black text-[#2b3a67]">{{ $tutorial->title ?? '-' }}</p>
                         </td>
                         <td class="min-w-[240px] whitespace-normal px-5 py-4 align-middle sm:py-5">
                             <div class="flex flex-wrap gap-2">

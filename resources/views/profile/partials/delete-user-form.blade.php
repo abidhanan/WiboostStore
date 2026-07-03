@@ -4,7 +4,7 @@
         <p class="text-sm font-bold text-[#ff9999] mt-2">Sekali akun dihapus, semua data riwayat pesanan dan sisa saldo <span class="font-black underline">tidak dapat dikembalikan</span>.</p>
     </header>
 
-    <div class="flex justify-center">
+    <div class="flex justify-start">
         <button
             x-data=""
             x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"

@@ -24,6 +24,11 @@
     $fields = is_array($transaction->order_input_fields ?? null) ? $transaction->order_input_fields : [];
     $productName = $transaction->product->name ?? 'Produk Wiboost';
     $detailUrl = route('user.history', ['auto_open' => $transaction->id]);
+    $isFailed = $transaction->order_status === 'failed' || $transaction->payment_status === 'failed';
+    $headline = $isFailed ? 'Pesanan Gagal' : 'Pesanan Sukses!';
+    $intro = $isFailed
+        ? 'Halo ' . ($transaction->user->name ?? 'Pelanggan Wiboost') . ', pesanan kamu gagal diproses. Silakan cek detail pesanan di Wiboost Store.'
+        : 'Halo ' . ($transaction->user->name ?? 'Pelanggan Wiboost') . ', pesanan kamu sudah sukses. Terima kasih sudah order di Wiboost Store.';
     $categoryPath = collect();
     $categoryCursor = $transaction->product?->category;
 
@@ -63,6 +68,14 @@
         'link' => 'Link Akses',
         'tutorial_link' => 'Link Tutorial',
     ];
+    $hasCredentialRows = false;
+
+    foreach (array_keys($credentialLabels) as $credentialKey) {
+        if (! empty($credential[$credentialKey])) {
+            $hasCredentialRows = true;
+            break;
+        }
+    }
 @endphp
 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#eff6ff" style="width:100%;border-collapse:collapse;background:#eff6ff;">
@@ -80,8 +93,8 @@
                             </tr>
                         </table>
 
-                        <h1 style="margin:24px 0 10px;font-size:30px;line-height:1.12;font-weight:900;color:#2b3a67;text-align:center;">Pesanan Sukses!</h1>
-                        <p style="margin:0 auto;max-width:520px;font-size:15px;line-height:1.65;font-weight:700;color:#5a76c8;text-align:center;">Halo {{ $transaction->user->name ?? 'Pelanggan Wiboost' }}, pesanan kamu sudah sukses. Terima kasih sudah order di Wiboost Store.</p>
+                        <h1 style="margin:24px 0 10px;font-size:30px;line-height:1.12;font-weight:900;color:#2b3a67;text-align:center;">{{ $headline }}</h1>
+                        <p style="margin:0 auto;max-width:520px;font-size:15px;line-height:1.65;font-weight:700;color:#5a76c8;text-align:center;">{{ $intro }}</p>
                     </td>
                 </tr>
 
@@ -141,7 +154,7 @@
                             </table>
                         @endif
 
-                        @if(array_filter($credential))
+                        @if($hasCredentialRows)
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#eaf2ff" style="width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;border:2px solid #93b4f4;border-radius:24px;background:#eaf2ff;">
                                 <tr>
                                     <td style="padding:18px 18px 8px;">
@@ -172,17 +185,6 @@
                                         </tr>
                                     @endif
                                 @endforeach
-                            </table>
-                        @endif
-
-                        @if(filled($transaction->target_notes))
-                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#eef6ff" style="width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;border:2px solid #bfdbfe;border-radius:22px;background:#eef6ff;">
-                                <tr>
-                                    <td style="padding:16px 18px;">
-                                        <p style="margin:0 0 6px;font-size:10px;line-height:1.3;font-weight:900;letter-spacing:1.6px;text-transform:uppercase;color:#5a76c8;">Catatan</p>
-                                        <p style="margin:0;font-size:15px;line-height:1.55;font-weight:800;color:#2b3a67;word-break:break-word;">{{ $transaction->target_notes }}</p>
-                                    </td>
-                                </tr>
                             </table>
                         @endif
 

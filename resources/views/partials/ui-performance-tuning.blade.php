@@ -265,4 +265,26 @@
         body.wiboost-compact-ui.wiboost-user-shell .wiboost-user-navbar .h-20,
         body.wiboost-compact-ui.wiboost-user-shell .wiboost-user-footer .h-20 { height: 5rem !important; }
     }
+
+    body.wiboost-compact-ui select:not([multiple]):not(.wiboost-service-native-select) {
+        -webkit-appearance: none !important;
+        appearance: none !important;
+        background-color: #f4f9ff !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%235a76c8' stroke-width='3' viewBox='0 0 24 24'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+        background-position: right 1rem center !important;
+        background-repeat: no-repeat !important;
+        background-size: 1rem !important;
+        border: 4px solid #ffffff !important;
+        border-radius: 1.25rem !important;
+        box-shadow: inset 0 2px 8px rgba(90, 118, 200, 0.08), 0 10px 24px rgba(189, 224, 254, 0.2) !important;
+        color: #2b3a67 !important;
+        font-weight: 900 !important;
+        outline: none !important;
+        padding-right: 2.75rem !important;
+    }
+
+    body.wiboost-compact-ui select:not([multiple]):not(.wiboost-service-native-select):focus {
+        border-color: #bde0fe !important;
+        box-shadow: 0 0 0 4px rgba(189, 224, 254, 0.35), inset 0 2px 8px rgba(90, 118, 200, 0.08) !important;
+    }
 </style>

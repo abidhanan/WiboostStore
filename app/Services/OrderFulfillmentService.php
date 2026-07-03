@@ -106,10 +106,10 @@ class OrderFulfillmentService
                 return false;
             }
 
-            if ($lockedTransaction->order_status === 'success' || ! empty($lockedTransaction->credential_data)) {
+            if (! empty($lockedTransaction->credential_data)) {
                 return [
                     'transaction_id' => $lockedTransaction->id,
-                    'previous_status' => 'success',
+                    'previous_status' => $lockedTransaction->order_status,
                     'already_fulfilled' => true,
                 ];
             }
@@ -130,17 +130,7 @@ class OrderFulfillmentService
             $lockedCredential->increment('current_usage');
             $lockedTransaction->update([
                 'order_status' => 'success',
-                'credential_data' => [
-                    'credential_id' => $lockedCredential->id,
-                    'email' => ($lockedCredential->data_1 !== '-' && $lockedCredential->data_1 !== null) ? $lockedCredential->data_1 : null,
-                    'password' => $lockedCredential->data_2,
-                    'profile' => $lockedCredential->data_3,
-                    'pin' => $lockedCredential->data_4,
-                    'link' => $lockedCredential->data_5,
-                    'tutorial_link' => $lockedCredential->tutorial_link,
-                    'needs_otp' => $lockedCredential->needs_otp,
-                    'type' => $product?->process_type,
-                ],
+                'credential_data' => $this->credentialPayload($lockedCredential, $product),
                 'target_notes' => $lockedCredential->needs_otp
                     ? 'Pesanan ini membutuhkan bantuan admin atau link tutorial tambahan untuk OTP / akses login.'
                     : 'Data pesanan berhasil dikirim ke akun kamu.',
@@ -212,6 +202,32 @@ class OrderFulfillmentService
 
     public function markOrderSuccessful(Transaction $transaction, ?string $notes = null): void
     {
+        $transaction->loadMissing('product', 'user');
+
+        if ($this->shouldAssignCredentialOnManualSuccess($transaction)) {
+            for ($attempt = 0; $attempt < 2; $attempt++) {
+                $credential = $this->selectCredentialForTransaction($transaction);
+
+                if ($credential && $this->assignCredential($transaction, $credential)) {
+                    return;
+                }
+            }
+
+            $transaction->update([
+                'order_status' => 'pending',
+                'target_notes' => 'Stok saat ini habis. Pesanan akan otomatis diproses setelah admin menambah stok.',
+            ]);
+
+            $this->discordWebhookService->sendOrderAlert(
+                $transaction,
+                'Pesanan menunggu restock',
+                'Admin mencoba menandai sukses, tetapi stok akun atau nomor belum tersedia.',
+                16433050
+            );
+
+            return;
+        }
+
         $result = DB::transaction(function () use ($transaction, $notes) {
             $lockedTransaction = Transaction::query()
                 ->lockForUpdate()
@@ -266,6 +282,15 @@ class OrderFulfillmentService
                 4968121
             );
         }
+    }
+
+    protected function shouldAssignCredentialOnManualSuccess(Transaction $transaction): bool
+    {
+        $product = $transaction->product;
+
+        return $product
+            && in_array($product->process_type, ['account', 'number'], true)
+            && empty($transaction->credential_data);
     }
 
     public function syncProviderStatus(Transaction $transaction): string
@@ -866,14 +891,41 @@ class OrderFulfillmentService
         return false;
     }
 
+    public function ensurePremiumProcessingCredential(Transaction $transaction): bool
+    {
+        $transaction->loadMissing('product.category.parent.parent.parent', 'user');
+
+        if ($transaction->payment_status !== 'paid'
+            || $transaction->order_status !== 'processing'
+            || ! empty($transaction->credential_data)
+            || ! $this->shouldQueuePremiumBuyerInputOrder($transaction)) {
+            return false;
+        }
+
+        return $this->reserveCredentialForProcessing($transaction);
+    }
+
     protected function handlePremiumBuyerInputOrder(Transaction $transaction): void
     {
         $previousStatus = $transaction->order_status;
 
-        $transaction->update([
-            'order_status' => 'processing',
-            'target_notes' => 'Pesanan sudah dibayar dan menunggu admin memproses data buyer.',
-        ]);
+        if (! $this->reserveCredentialForProcessing($transaction)) {
+            $transaction->update([
+                'order_status' => 'processing',
+                'target_notes' => 'Stok saat ini habis. Pesanan akan otomatis diproses setelah admin menambah stok.',
+            ]);
+
+            $this->discordWebhookService->sendOrderAlert(
+                $transaction->fresh(['product', 'user']) ?: $transaction,
+                'Stok akun premium habis',
+                'Pesanan sudah dibayar, tetapi stok kredensial belum tersedia. Tambahkan stok dari Gudang Stok.',
+                16761699
+            );
+
+            return;
+        }
+
+        $transaction = $transaction->fresh(['product.category', 'user']) ?: $transaction;
 
         if ($previousStatus !== 'processing') {
             $this->discordWebhookService->sendOrderAlert(
@@ -883,6 +935,70 @@ class OrderFulfillmentService
                 16433050
             );
         }
+    }
+
+    protected function reserveCredentialForProcessing(Transaction $transaction): bool
+    {
+        $credential = $this->selectCredentialForTransaction($transaction);
+
+        if (! $credential) {
+            return false;
+        }
+
+        return (bool) DB::transaction(function () use ($transaction, $credential) {
+            $lockedTransaction = Transaction::query()
+                ->with(['product', 'user'])
+                ->lockForUpdate()
+                ->find($transaction->id);
+
+            if (! $lockedTransaction) {
+                return false;
+            }
+
+            if (! empty($lockedTransaction->credential_data)) {
+                if ($lockedTransaction->order_status !== 'processing') {
+                    $lockedTransaction->update(['order_status' => 'processing']);
+                }
+
+                return true;
+            }
+
+            $lockedCredential = ProductCredential::query()
+                ->lockForUpdate()
+                ->find($credential->id);
+
+            if (! $lockedCredential
+                || ! $lockedCredential->is_active
+                || $lockedCredential->current_usage >= $lockedCredential->max_usage) {
+                return false;
+            }
+
+            $lockedCredential->increment('current_usage');
+            $lockedTransaction->update([
+                'order_status' => 'processing',
+                'credential_data' => $this->credentialPayload($lockedCredential, $lockedTransaction->product),
+                'target_notes' => 'Pesanan sudah dibayar dan menunggu admin memproses data buyer.',
+            ]);
+
+            return true;
+        });
+    }
+
+    protected function credentialPayload(ProductCredential $credential, ?Product $product): array
+    {
+        return [
+            'credential_id' => $credential->id,
+            'email' => ($credential->data_1 !== '-' && $credential->data_1 !== null) ? $credential->data_1 : null,
+            'password' => $credential->data_2,
+            'profile' => $credential->data_3,
+            'pin' => $credential->data_4,
+            'link' => $credential->data_5,
+            'notes' => $credential->notes,
+            'tutorial_link' => $credential->tutorial_link,
+            'needs_otp' => $credential->needs_otp,
+            'requires_login_proof' => $credential->requires_login_proof,
+            'type' => $product?->process_type,
+        ];
     }
 
     protected function handleCredentialOrderOnce(Transaction $transaction): void
@@ -1019,6 +1135,11 @@ class OrderFulfillmentService
         ]);
 
         $this->refundToWalletIfNeeded($transaction);
+
+        if ($freshTransaction = $transaction->fresh(['product', 'user'])) {
+            $this->sendSuccessEmail($freshTransaction, $previousStatus);
+        }
+
         $this->discordWebhookService->sendOrderAlert(
             $transaction,
             'Pesanan gagal diproses',
@@ -1130,7 +1251,7 @@ class OrderFulfillmentService
 
     protected function sendSuccessEmail(Transaction $transaction, ?string $previousStatus, bool $onlyWhenSuccess = true): void
     {
-        if ($onlyWhenSuccess && $transaction->order_status !== 'success') {
+        if ($onlyWhenSuccess && ! in_array($transaction->order_status, ['success', 'failed'], true)) {
             return;
         }
 
@@ -1138,7 +1259,7 @@ class OrderFulfillmentService
             return;
         }
 
-        if ($previousStatus === 'success') {
+        if ($previousStatus === $transaction->order_status) {
             return;
         }
 
@@ -1149,7 +1270,7 @@ class OrderFulfillmentService
         try {
             Mail::to($transaction->user->email)->send(new OrderSuccessMail($transaction->fresh(['product', 'user'])));
         } catch (\Throwable $e) {
-            Log::warning('Gagal mengirim email sukses pesanan.', [
+            Log::warning('Gagal mengirim email status pesanan.', [
                 'transaction_id' => $transaction->id,
                 'invoice_number' => $transaction->invoice_number,
                 'email' => $transaction->user->email,

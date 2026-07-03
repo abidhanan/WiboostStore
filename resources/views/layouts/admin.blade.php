@@ -32,6 +32,55 @@
             100% { transform: translateY(0px); }
         }
 
+        body.wiboost-admin-shell select:not([multiple]) {
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: #f4f9ff;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%235a76c8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-position: right 1rem center;
+            background-repeat: no-repeat;
+            background-size: 1rem 1rem;
+            border-color: #fff;
+            border-radius: 1.2rem;
+            box-shadow: inset 0 2px 8px rgba(143, 170, 243, .16), 0 8px 18px rgba(189, 224, 254, .18);
+            color: #2b3a67;
+            font-weight: 900;
+            padding-right: 2.8rem !important;
+        }
+
+        body.wiboost-admin-shell select:not([multiple]):focus,
+        body.wiboost-admin-shell select.wiboost-select-open {
+            border-color: #bde0fe !important;
+            outline: none;
+        }
+
+        body.wiboost-admin-shell select.wiboost-select-open {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%235a76c8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m18 15-6-6-6 6'/%3E%3C/svg%3E");
+        }
+
+        body.wiboost-admin-shell .admin-clamp-1,
+        body.wiboost-admin-shell .admin-clamp-2,
+        body.wiboost-admin-shell .admin-clamp-3 {
+            display: -webkit-box !important;
+            -webkit-box-orient: vertical;
+            white-space: normal !important;
+            overflow: hidden !important;
+            text-overflow: clip !important;
+            word-break: break-word;
+        }
+
+        body.wiboost-admin-shell .admin-clamp-1 { -webkit-line-clamp: 1; }
+        body.wiboost-admin-shell .admin-clamp-2 { -webkit-line-clamp: 2; }
+        body.wiboost-admin-shell .admin-clamp-3 { -webkit-line-clamp: 3; }
+
+        body.wiboost-admin-shell main .truncate,
+        body.wiboost-admin-shell main .admin-readable {
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            word-break: break-word;
+        }
+
         @media (max-width: 767px) {
             body.wiboost-admin-shell {
                 overflow-x: hidden;
@@ -241,6 +290,28 @@
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('body.wiboost-admin-shell select:not([multiple])').forEach(function (select) {
+                const open = () => select.classList.add('wiboost-select-open');
+                const close = () => select.classList.remove('wiboost-select-open');
+
+                select.addEventListener('mousedown', open);
+                select.addEventListener('focus', open);
+                select.addEventListener('touchstart', open, { passive: true });
+                select.addEventListener('change', close);
+                select.addEventListener('blur', close);
+                select.addEventListener('keydown', function (event) {
+                    if (['ArrowDown', 'ArrowUp', ' '].includes(event.key)) {
+                        open();
+                    }
+
+                    if (['Escape', 'Enter', 'Tab'].includes(event.key)) {
+                        close();
+                    }
+                });
+            });
+        });
+
         document.addEventListener('submit', function (event) {
             const form = event.target;
             if (!(form instanceof HTMLFormElement) || form.dataset.noSubmitLock === 'true') {
@@ -272,15 +343,6 @@
 
             button.disabled = true;
             button.classList.add('cursor-wait', 'opacity-75');
-
-            if (button.tagName === 'BUTTON' && !button.dataset.originalText) {
-                button.dataset.originalText = button.textContent.trim();
-                window.setTimeout(() => {
-                    if (form.dataset.submitting === 'true' && document.body.contains(button)) {
-                        button.textContent = 'Menyimpan...';
-                    }
-                }, 700);
-            }
         });
     </script>
     @include('partials.page-loading')

@@ -367,8 +367,23 @@ class OrderController extends Controller
     {
         $category->loadMissing('parent.parent.parent.parent.parent');
 
-        return $category->children->isEmpty()
-            && $this->isSuntikSosmedCatalogCategory($category, $rootCategorySlug);
+        if ($category->children->isNotEmpty()) {
+            return false;
+        }
+
+        if ($this->isSuntikSosmedCatalogCategory($category, $rootCategorySlug)) {
+            return true;
+        }
+
+        return Product::query()
+            ->where('category_id', $category->id)
+            ->where('is_active', true)
+            ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes())
+            ->where(function ($query) {
+                $query->where('provider_source', 'ordersosmed')
+                    ->orWhere('provider_id', 'ordersosmed');
+            })
+            ->exists();
     }
 
     protected function isSuntikSosmedCatalogCategory(Category $category, ?string $rootCategorySlug = null): bool

@@ -192,7 +192,7 @@
                 $statusLabel = '';
                 $statusClass = '';
                 $isUnpaid = false;
-                $credentials = null;
+                $credentials = [];
                 $isCancelled = $trx->cancelled_due_to_qris_expiry;
                 $transactionTime = $trx->created_at?->copy()->locale('id')->translatedFormat('d F Y, H:i') ?? '-';
 
@@ -211,11 +211,6 @@
                         $statusLabel = 'Sukses';
                         $statusClass = 'bg-[#e6fff7] text-emerald-500 border-emerald-200';
 
-                        if (! empty($trx->credential_data)) {
-                            $credentials = is_array($trx->credential_data)
-                                ? $trx->credential_data
-                                : json_decode($trx->credential_data, true);
-                        }
                     } elseif ($trx->order_status == 'processing') {
                         $statusLabel = 'Proses';
                         $statusClass = 'bg-[#e0fbfc] text-[#5a76c8] border-[#bde0fe]';
@@ -224,6 +219,24 @@
                         $statusClass = 'bg-[#f4f9ff] text-[#8faaf3] border-[#e0ebff]';
                     }
                 }
+
+                if (! empty($trx->credential_data)) {
+                    $decodedCredentials = is_array($trx->credential_data)
+                        ? $trx->credential_data
+                        : json_decode($trx->credential_data, true);
+
+                    $credentials = is_array($decodedCredentials) ? $decodedCredentials : [];
+                }
+
+                $credentialAccessLabels = [
+                    'email' => 'Email',
+                    'password' => 'Password',
+                    'profile' => 'Profil',
+                    'pin' => 'PIN',
+                    'link' => 'Link Akses',
+                ];
+                $hasCredentialAccess = collect($credentialAccessLabels)->keys()->contains(fn ($key) => ! empty($credentials[$key]));
+                $hasCredentialInfo = ! empty($credentials['notes']) || ! empty($credentials['requires_login_proof']);
             @endphp
 
             <div onclick="openModal('modal-{{ $trx->id }}')" class="history-order-card bg-white/95 backdrop-blur-sm rounded-[2.5rem] p-6 md:p-8 shadow-xl shadow-[#bde0fe]/30 border-4 border-white flex flex-col md:flex-row justify-between items-start md:items-center hover:border-[#bde0fe] md:hover:-translate-y-2 transition-all duration-300 group cursor-pointer relative overflow-hidden">
@@ -271,16 +284,17 @@
                             </div>
                         @endif
 
-                        @if($credentials)
+                        @if($hasCredentialAccess || !empty($credentials['tutorial_link']) || (isset($credentials['needs_otp']) && $credentials['needs_otp']))
                             <div class="bg-[#fffcf0] p-6 rounded-[2rem] border-4 border-white shadow-md shadow-amber-100/50 relative overflow-hidden">
                                 <div class="relative z-10">
+                                    @if($hasCredentialAccess)
                                     <div class="flex items-center gap-3 mb-5">
                                         <span class="text-2xl drop-shadow-sm">🔑</span>
                                         <p class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Akses Kredensial Kamu</p>
                                     </div>
 
                                     <div class="space-y-4">
-                                        @foreach(['email' => 'Email', 'password' => 'Password', 'profile' => 'Profil', 'pin' => 'PIN', 'link' => 'Link Akses'] as $key => $label)
+                                        @foreach($credentialAccessLabels as $key => $label)
                                             @if(!empty($credentials[$key]))
                                                 <div>
                                                     <p class="text-[9px] font-black text-amber-600/70 uppercase tracking-widest mb-1 ml-1">{{ $label }}</p>
@@ -294,6 +308,58 @@
                                             @endif
                                         @endforeach
                                     </div>
+
+                                    @endif
+
+                                    @if(false && !empty($credentials['notes']))
+                                        <div class="{{ $hasCredentialAccess ? 'mt-6' : '' }} rounded-[1.7rem] border-4 border-white bg-[#fff8dc] p-5 shadow-sm">
+                                            <p class="mb-3 text-[10px] font-black uppercase tracking-widest text-amber-500">Informasi Login</p>
+                                            <p class="text-[9px] font-black text-amber-600/70 uppercase tracking-widest mb-1 ml-1">Catatan</p>
+                                            <div class="bg-white px-5 py-3.5 rounded-[1.2rem] border-4 border-amber-100 flex justify-between items-center gap-3 group shadow-sm">
+                                                <p class="font-black text-[#2b3a67] text-sm break-words">{{ $credentials['notes'] }}</p>
+                                                <button onclick="copyToClipboard('{{ addslashes($credentials['notes']) }}')" class="shrink-0 text-amber-400 hover:text-amber-600 transition-colors bg-amber-50 p-2 rounded-xl border border-amber-100 active:scale-95" title="Salin">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    @if(false && !empty($credentials['requires_login_proof']))
+                                        @php
+                                            $loginProofUrl = $trx->login_proof_path
+                                                ? url(\Illuminate\Support\Facades\Storage::url($trx->login_proof_path))
+                                                : null;
+                                        @endphp
+                                        <div class="mt-6 rounded-[1.7rem] border-4 border-white bg-[#eef6ff] p-5 shadow-sm">
+                                            <div class="mb-4">
+                                                <p class="text-[10px] font-black uppercase tracking-widest text-[#5a76c8]">Bukti Login</p>
+                                                <p class="mt-1 text-xs font-bold leading-relaxed text-[#8faaf3]">Upload screenshot bukti login akun yang kamu terima.</p>
+                                            </div>
+                                            <form action="{{ route('user.history.login-proof', $trx) }}" method="POST" enctype="multipart/form-data" data-login-proof-form>
+                                                @csrf
+                                                <div class="relative">
+                                                    <label class="relative flex min-h-[10rem] cursor-pointer items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-dashed border-[#bde0fe] bg-white text-center shadow-inner transition hover:border-[#5a76c8]">
+                                                        <img data-login-proof-image src="{{ $loginProofUrl ?: '' }}" alt="Bukti login" class="{{ $loginProofUrl ? '' : 'hidden' }} absolute inset-0 h-full w-full object-cover">
+                                                        <span data-login-proof-empty class="{{ $loginProofUrl ? 'hidden' : '' }} flex flex-col items-center gap-3 px-5 text-[#5a76c8]">
+                                                            <span class="flex h-14 w-14 items-center justify-center rounded-[1.2rem] border-4 border-white bg-[#f4f9ff] shadow-sm">
+                                                                <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="2.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"></path></svg>
+                                                            </span>
+                                                            <span class="text-sm font-black">Upload Bukti Login</span>
+                                                        </span>
+                                                        <input data-login-proof-input type="file" name="login_proof" accept="image/*" class="sr-only">
+                                                    </label>
+                                                    <button type="button" data-login-proof-delete data-delete-url="{{ route('user.history.login-proof.destroy', $trx) }}" class="{{ $loginProofUrl ? '' : 'hidden' }} absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border-4 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-lg transition hover:bg-[#ff6b6b] hover:text-white active:scale-95" title="Hapus bukti login">
+                                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    </button>
+                                                </div>
+                                                <p data-login-proof-uploaded class="{{ $trx->login_proof_uploaded_at ? '' : 'hidden' }} mt-3 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">
+                                                    @if($trx->login_proof_uploaded_at)
+                                                        Diunggah {{ $trx->login_proof_uploaded_at->copy()->locale('id')->translatedFormat('d F Y, H:i') }}
+                                                    @endif
+                                                </p>
+                                            </form>
+                                        </div>
+                                    @endif
 
                                     @if(!empty($credentials['tutorial_link']) || (isset($credentials['needs_otp']) && $credentials['needs_otp']))
                                         <div class="mt-6 space-y-3">
@@ -364,13 +430,29 @@
                                                     $appendOtpLine($otpOrderLines, 'Status Pesanan', $otpDetail['status'] ?? null);
                                                     $appendOtpLine($otpOrderLines, 'ID Provider', $otpDetail['provider_id'] ?? null);
                                                     $appendOtpLine($otpOrderLines, 'Waktu Transaksi', $otpDetail['time'] ?? null);
-                                                    $appendOtpLine($otpOrderLines, 'Email Akun', $credentials['email'] ?? null);
-                                                    $appendOtpLine($otpOrderLines, 'Password Akun', $credentials['password'] ?? null);
 
                                                     if ($otpOrderLines !== []) {
                                                         $otpLines[] = '';
                                                         $otpLines[] = 'Data Pesanan:';
                                                         array_push($otpLines, ...$otpOrderLines);
+                                                    }
+
+                                                    $otpAccountLines = [];
+                                                    $appendOtpLine($otpAccountLines, 'Email', $credentials['email'] ?? null);
+                                                    $appendOtpLine($otpAccountLines, 'Password', $credentials['password'] ?? null);
+                                                    $appendOtpLine($otpAccountLines, 'Profil', $credentials['profile'] ?? null);
+                                                    $appendOtpLine($otpAccountLines, 'PIN', $credentials['pin'] ?? null);
+                                                    $appendOtpLine($otpAccountLines, 'Link Akses', $credentials['link'] ?? null);
+                                                    $appendOtpLine($otpAccountLines, 'Link Tutorial', $credentials['tutorial_link'] ?? null);
+
+                                                    if ($trx->login_proof_path) {
+                                                        $appendOtpLine($otpAccountLines, 'Bukti Login', url(\Illuminate\Support\Facades\Storage::url($trx->login_proof_path)));
+                                                    }
+
+                                                    if ($otpAccountLines !== []) {
+                                                        $otpLines[] = '';
+                                                        $otpLines[] = 'Detail Akun:';
+                                                        array_push($otpLines, ...$otpAccountLines);
                                                     }
 
                                                     $otpInputLines = collect($otpDetail['input_lines'] ?? [])
@@ -384,7 +466,9 @@
                                                         })
                                                         ->values();
 
-                                                    if ($otpInputLines->isNotEmpty()) {
+                                                    $otpCategoryText = \Illuminate\Support\Str::lower((string) ($otpDetail['category'] ?? ''));
+
+                                                    if ($otpInputLines->isNotEmpty() && ! \Illuminate\Support\Str::contains($otpCategoryText, 'aplikasi premium')) {
                                                         $otpLines[] = '';
                                                         $otpLines[] = 'Input Pembeli:';
                                                         foreach ($otpInputLines as $inputLine) {
@@ -408,6 +492,60 @@
                                             @endif
                                         </div>
                                     @endif
+                                </div>
+                            </div>
+                        @endif
+
+                        @if($hasCredentialInfo)
+                            @php
+                                $loginProofUrl = $trx->login_proof_path
+                                    ? url(\Illuminate\Support\Facades\Storage::url($trx->login_proof_path))
+                                    : null;
+                            @endphp
+                            <div class="bg-[#fffcf0] p-6 rounded-[2rem] border-4 border-white shadow-md shadow-amber-100/50 relative overflow-hidden">
+                                <div class="relative z-10">
+                                <div class="mb-5 flex items-center gap-3">
+                                    <span class="text-2xl drop-shadow-sm">📝</span>
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-amber-500">Informasi Login</p>
+                                </div>
+
+                                @if(!empty($credentials['notes']))
+                                    <div class="mb-5">
+                                        <p class="mb-1 ml-1 text-[9px] font-black uppercase tracking-widest text-amber-600/70">Catatan</p>
+                                        <div class="flex items-center justify-between gap-3 rounded-[1.2rem] border-4 border-amber-100 bg-white px-5 py-3.5 shadow-sm">
+                                            <p class="text-sm font-black text-[#2b3a67] break-words">{{ $credentials['notes'] }}</p>
+                                            <button onclick="copyToClipboard('{{ addslashes($credentials['notes']) }}')" class="shrink-0 rounded-xl border border-amber-100 bg-amber-50 p-2 text-amber-400 transition-colors hover:text-amber-600 active:scale-95" title="Salin">
+                                                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if(!empty($credentials['requires_login_proof']))
+                                    <div class="rounded-[2rem] border-4 border-white bg-white p-5 shadow-md shadow-[#bde0fe]/20">
+                                        <p class="mb-5 text-[10px] font-black uppercase tracking-[0.25em] text-[#5a76c8]">Bukti Login</p>
+                                        <form action="{{ route('user.history.login-proof', $trx) }}" method="POST" enctype="multipart/form-data" data-login-proof-form>
+                                            @csrf
+                                            <div class="relative">
+                                                <label class="relative flex min-h-[15rem] cursor-pointer items-center justify-center overflow-hidden rounded-[2rem] border-4 border-dashed border-[#bde0fe] bg-[#f8fbff] text-center shadow-inner transition hover:border-[#8faaf3] md:min-h-[18rem]" style="position:relative;min-height:240px;width:100%;overflow:hidden;border:4px dashed #bde0fe;border-radius:32px;background:#f8fbff;text-align:center;">
+                                                    <img data-login-proof-image src="{{ $loginProofUrl ?: '' }}" alt="Bukti login" class="{{ $loginProofUrl ? '' : 'hidden' }} absolute inset-0 h-full w-full object-cover" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+                                                    <span data-login-proof-empty class="{{ $loginProofUrl ? 'hidden' : '' }} flex h-full w-full flex-col items-center justify-center gap-5 px-6 py-12 text-[#5a76c8]" style="min-height:232px;width:100%;align-items:center;justify-content:center;">
+                                                        <span class="flex h-20 w-20 items-center justify-center rounded-[1.8rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/30">
+                                                            <svg class="h-10 w-10" fill="none" stroke="currentColor" stroke-width="2.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"></path></svg>
+                                                        </span>
+                                                        <span class="text-lg font-black leading-tight text-[#2b3a67] sm:text-xl">Upload screenshot atau foto bukti</span>
+                                                        <span class="max-w-sm text-sm font-bold leading-relaxed text-[#8faaf3] sm:text-base">Kalau tidak bisa screenshot, foto layar dari device lain juga boleh.</span>
+                                                    </span>
+                                                    <input data-login-proof-input type="file" name="login_proof" accept="image/*" class="sr-only">
+                                                </label>
+                                                <button type="button" data-login-proof-delete data-delete-url="{{ route('user.history.login-proof.destroy', $trx) }}" class="{{ $loginProofUrl ? '' : 'hidden' }} absolute right-4 top-4 flex h-14 w-14 items-center justify-center rounded-[1.4rem] border-4 border-white bg-[#ffe5e5] text-[#ff4d4d] shadow-xl shadow-red-100 transition hover:bg-[#ff4d4d] hover:text-white active:scale-95" title="Hapus bukti login" style="position:absolute;top:16px;right:16px;width:56px;height:56px;border-radius:22px;border:4px solid #fff;background:#ffe5e5;color:#ff4d4d;box-shadow:0 12px 24px rgba(255,77,77,.18);z-index:20;">
+                                                    <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="2.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M10 11v6m4-6v6M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m3 0v12a2 2 0 01-2 2H8a2 2 0 01-2-2V7h12z"></path></svg>
+                                                </button>
+                                            </div>
+                                            <p class="hidden" aria-hidden="true"></p>
+                                        </form>
+                                    </div>
+                                @endif
                                 </div>
                             </div>
                         @endif
@@ -687,5 +825,110 @@
             () => alert('Gagal menyalin teks.')
         );
     }
+
+    document.addEventListener('change', async function (event) {
+        const input = event.target.closest('[data-login-proof-input]');
+        if (!input || !input.files || input.files.length === 0) {
+            return;
+        }
+
+        const form = input.closest('[data-login-proof-form]');
+        if (!form) {
+            return;
+        }
+
+        const formData = new FormData(form);
+        const token = form.querySelector('input[name="_token"]')?.value || document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+        input.disabled = true;
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': token,
+                },
+                body: formData,
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Bukti login gagal diupload.');
+            }
+
+            const image = form.querySelector('[data-login-proof-image]');
+            const emptyState = form.querySelector('[data-login-proof-empty]');
+            const deleteButton = form.querySelector('[data-login-proof-delete]');
+            const uploadedText = form.querySelector('[data-login-proof-uploaded]');
+
+            if (image) {
+                image.src = data.url;
+                image.classList.remove('hidden');
+            }
+            emptyState?.classList.add('hidden');
+            deleteButton?.classList.remove('hidden');
+            if (uploadedText) {
+                uploadedText.textContent = data.uploaded_label || '';
+                uploadedText.classList.remove('hidden');
+            }
+            input.value = '';
+        } catch (error) {
+            alert(error.message || 'Bukti login gagal diupload.');
+        } finally {
+            input.disabled = false;
+        }
+    });
+
+    document.addEventListener('click', async function (event) {
+        const button = event.target.closest('[data-login-proof-delete]');
+        if (!button) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const form = button.closest('[data-login-proof-form]');
+        const token = form?.querySelector('input[name="_token"]')?.value || document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+        try {
+            const response = await fetch(button.dataset.deleteUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': token,
+                },
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.deleted) {
+                throw new Error(data.message || 'Bukti login gagal dihapus.');
+            }
+
+            const image = form?.querySelector('[data-login-proof-image]');
+            const emptyState = form?.querySelector('[data-login-proof-empty]');
+            const uploadedText = form?.querySelector('[data-login-proof-uploaded]');
+            const input = form?.querySelector('[data-login-proof-input]');
+
+            if (image) {
+                image.removeAttribute('src');
+                image.classList.add('hidden');
+            }
+            emptyState?.classList.remove('hidden');
+            button.classList.add('hidden');
+            if (uploadedText) {
+                uploadedText.textContent = '';
+                uploadedText.classList.add('hidden');
+            }
+            if (input) {
+                input.value = '';
+            }
+        } catch (error) {
+            alert(error.message || 'Bukti login gagal dihapus.');
+        }
+    });
 </script>
 @endsection

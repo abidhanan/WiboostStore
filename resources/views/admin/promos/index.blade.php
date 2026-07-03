@@ -88,9 +88,11 @@
                 
                 <!-- Card Header (Badge & Actions) -->
                 <div class="relative z-20 flex justify-between items-start mb-6">
-                    <span class="bg-white/20 backdrop-blur-md text-white text-[8px] sm:text-[10px] font-black px-3 sm:px-4 py-1.5 rounded-full shadow-inner border border-white/30 tracking-widest uppercase truncate max-w-[120px]">
-                        {{ $promo->badge_text ?? 'INFO' }}
-                    </span>
+                    @if(filled($promo->badge_text))
+                        <span class="bg-white/20 backdrop-blur-md text-white text-[8px] sm:text-[10px] font-black px-3 sm:px-4 py-1.5 rounded-full shadow-inner border border-white/30 tracking-widest uppercase truncate max-w-[120px]">
+                            {{ $promo->badge_text }}
+                        </span>
+                    @endif
                     
                     <div class="flex gap-2 shrink-0">
                         <a href="{{ route('admin.promos.edit', $promo->id) }}" class="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-[1rem] flex items-center justify-center transition-colors border border-white/30 text-sm sm:text-lg shadow-sm" title="Edit">

@@ -17,7 +17,10 @@ class CredentialController extends Controller
             return redirect()->route('admin.products.index')->with('error', 'Produk ini tidak membutuhkan manajemen stok akun premium.');
         }
 
-        $credentials = $product->credentials()->latest()->get();
+        $credentials = $product->credentials()
+            ->with('createdBy')
+            ->latest()
+            ->get();
 
         return view('admin.credentials.index', compact('product', 'credentials'));
     }
@@ -37,12 +40,14 @@ class CredentialController extends Controller
             'data_5' => 'nullable|string',
             'notes' => 'nullable|string|max:2000',
             'tutorial_link' => 'nullable|url|max:500',
+            'requires_login_proof' => 'nullable|boolean',
         ]);
 
         $data1 = $request->data_1 ?? '-';
         $maxUsage = (int) $request->max_usage;
 
         $credential = $product->credentials()->create([
+            'created_by_user_id' => $request->user()?->id,
             'data_1' => $data1,
             'data_2' => $request->data_2,
             'data_3' => $request->data_3,
@@ -51,6 +56,7 @@ class CredentialController extends Controller
             'notes' => $request->notes,
             'tutorial_link' => $request->tutorial_link,
             'needs_otp' => $request->boolean('needs_otp'),
+            'requires_login_proof' => $request->boolean('requires_login_proof'),
             'max_usage' => $maxUsage,
             'current_usage' => 0,
             'is_active' => true,

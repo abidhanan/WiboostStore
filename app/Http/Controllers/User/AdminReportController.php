@@ -226,6 +226,8 @@ class AdminReportController extends Controller
                     'target' => $detail['input_text'],
                     'providerId' => $detail['provider_id'],
                     'created' => $detail['time'],
+                    'accountLines' => $this->accountLinesForTransaction($transaction),
+                    'loginProofUrl' => $transaction->login_proof_path ? url(Storage::url($transaction->login_proof_path)) : null,
                 ];
             })
             ->filter(fn (array $record) => $record['categoryKey'] === ($category['record_type'] ?? null))
@@ -250,7 +252,8 @@ class AdminReportController extends Controller
 
         if ($this->hasFilledValue($proofUrl)) {
             $lines[] = '';
-            $lines[] = 'Bukti Kendala: ' . trim((string) $proofUrl);
+            $lines[] = 'Bukti Kendala:';
+            $lines[] = trim((string) $proofUrl);
         }
 
         if (($category['key'] ?? null) === 'deposit') {
@@ -283,8 +286,20 @@ class AdminReportController extends Controller
 
                 if ($orderLines !== []) {
                     $lines[] = '';
+                    if ($this->hasFilledValue($record['loginProofUrl'] ?? null)) {
+                        $lines[] = 'Bukti Login:';
+                        $lines[] = trim((string) $record['loginProofUrl']);
+                        $lines[] = '';
+                    }
+
                     $lines[] = 'Data Pesanan:';
                     array_push($lines, ...$orderLines);
+                }
+
+                if (! empty($record['accountLines']) && is_array($record['accountLines'])) {
+                    $lines[] = '';
+                    $lines[] = 'Detail Akun: ';
+                    array_push($lines, ...$record['accountLines']);
                 }
 
                 $this->appendInputBuyerLines($lines, $record['target'] ?? '-');
@@ -298,6 +313,30 @@ class AdminReportController extends Controller
         );
 
         return implode("\n", $lines);
+    }
+
+    protected function accountLinesForTransaction(Transaction $transaction): array
+    {
+        $credentials = is_array($transaction->credential_data)
+            ? $transaction->credential_data
+            : (json_decode((string) $transaction->credential_data, true) ?: []);
+
+        $lines = [];
+
+        foreach ([
+            'email' => 'Email',
+            'password' => 'Password',
+            'profile' => 'Profil',
+            'pin' => 'PIN',
+            'link' => 'Link Akses',
+            'tutorial_link' => 'Link Tutorial',
+        ] as $key => $label) {
+            if ($this->hasFilledValue($credentials[$key] ?? null)) {
+                $lines[] = $label . ': ' . trim((string) $credentials[$key]);
+            }
+        }
+
+        return $lines;
     }
 
     protected function appendFilledLine(array &$lines, string $label, mixed $value): void
