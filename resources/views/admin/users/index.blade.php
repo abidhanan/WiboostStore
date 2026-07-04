@@ -68,7 +68,7 @@
     <div class="bg-white/95 backdrop-blur-sm rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl shadow-[#bde0fe]/30 border-4 border-white flex flex-col overflow-hidden relative z-10 min-w-0 w-full">
         <div class="w-full overflow-x-auto table-scroll pb-2">
             <div class="inline-block min-w-full align-middle p-4 sm:p-6">
-                <table class="w-full min-w-[750px] text-left whitespace-nowrap">
+                <table class="w-full min-w-[920px] text-left whitespace-nowrap">
                     <thead>
                         <tr>
                             <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Nama & Email</th>
@@ -81,9 +81,9 @@
                     <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
                         @forelse($users as $user)
                             <tr class="hover:bg-[#f8faff] transition-colors group">
-                                <td class="px-5 py-4 sm:py-5 align-middle min-w-0 max-w-[200px]">
-                                    <p class="admin-clamp-2 font-black text-[#2b3a67] text-sm mb-1">{{ $user->name }}</p>
-                                    <p class="text-[10px] sm:text-[11px] font-bold text-[#8faaf3] bg-[#f4f9ff] inline-block px-3 py-1 rounded-md border border-white truncate max-w-full">{{ $user->email }}</p>
+                                <td class="min-w-[300px] px-5 py-4 align-middle sm:py-5">
+                                    <p class="mb-1 whitespace-nowrap text-sm font-black text-[#2b3a67]">{{ $user->name }}</p>
+                                    <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-3 py-1 text-[10px] font-bold text-[#8faaf3] sm:text-[11px]">{{ $user->email }}</p>
                                 </td>
                                 <td class="px-5 py-4 sm:py-5 align-middle">
                                     <p class="font-black text-[#5a76c8] text-sm">{{ $user->whatsapp ?? '-' }}</p>

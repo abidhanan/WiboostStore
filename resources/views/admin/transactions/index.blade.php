@@ -44,7 +44,7 @@
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        width: min(100%, 44rem);
+        width: min(100%, 52rem);
         max-height: calc(100dvh - 9rem) !important;
         overflow-wrap: anywhere;
         word-break: break-word;
@@ -89,6 +89,31 @@
         border-color: #fff1d6;
         background: #fffdf7;
     }
+    .admin-detail-panel-dropdown {
+        overflow: visible;
+        position: relative;
+        z-index: 30;
+    }
+    .admin-detail-panel-dropdown .admin-theme-select-menu {
+        top: auto;
+        bottom: calc(100% + .45rem);
+    }
+    .admin-detail-status-form {
+        display: grid !important;
+        grid-template-columns: minmax(7.75rem, 8.8rem) minmax(0, 1fr);
+        align-items: center;
+        gap: .65rem;
+    }
+    .admin-detail-status-form .admin-theme-select-status {
+        width: 100%;
+        flex: 0 1 auto;
+    }
+    .admin-detail-status-form .admin-status-save-button {
+        width: 100%;
+        min-width: 0;
+        white-space: normal;
+        line-height: 1.15;
+    }
     .admin-detail-body {
         min-height: 0;
         flex: 1 1 auto;
@@ -121,8 +146,141 @@
     }
 
     .table-scroll {
-        contain: layout paint;
+        contain: layout;
         overscroll-behavior-x: contain;
+    }
+    body.admin-detail-open .admin-transactions-table-shell {
+        z-index: 10000;
+    }
+
+    .admin-theme-select {
+        position: relative;
+        min-width: 0;
+    }
+
+    .admin-theme-select.is-open {
+        z-index: 120;
+    }
+
+    .admin-theme-select-button {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .6rem;
+        min-height: 2.75rem;
+        border: 4px solid #fff;
+        background: #f4f9ff;
+        color: #2b3a67;
+        box-shadow: inset 0 2px 8px rgba(143, 170, 243, .16), 0 8px 18px rgba(189, 224, 254, .18);
+        transition: border-color .18s ease, background .18s ease, transform .18s ease;
+    }
+
+    .admin-theme-select-button [data-admin-theme-select-label] {
+        min-width: 0;
+        flex: 1 1 auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .admin-theme-select-button:hover,
+    .admin-theme-select.is-open .admin-theme-select-button {
+        border-color: #bde0fe;
+        background: #eef8ff;
+    }
+
+    .admin-theme-select-arrow {
+        display: inline-flex;
+        flex: 0 0 .5rem;
+        width: .5rem;
+        height: .5rem;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        color: #5a76c8;
+        font-size: 0;
+        line-height: 0;
+        transform: rotate(45deg) translate(-1px, -1px);
+        transform-origin: center;
+        transition: transform .18s ease;
+    }
+
+    .admin-theme-select.is-open .admin-theme-select-arrow {
+        transform: rotate(225deg) translate(-1px, -1px);
+    }
+
+    .admin-theme-select-menu {
+        position: absolute;
+        z-index: 140;
+        left: 0;
+        right: 0;
+        top: calc(100% + .45rem);
+        min-width: 100%;
+        max-height: 16rem;
+        overflow-y: auto;
+        border: 4px solid #fff;
+        border-radius: 1.1rem;
+        background: #fff;
+        padding: .35rem;
+        box-shadow: 0 18px 40px rgba(90, 118, 200, .22);
+    }
+
+    .admin-theme-select:not(.is-open) .admin-theme-select-menu {
+        display: none;
+    }
+
+    .admin-theme-select-option {
+        width: 100%;
+        display: block;
+        border-radius: .85rem;
+        padding: .65rem .8rem;
+        text-align: left;
+        font-size: .72rem;
+        font-weight: 900;
+        color: #2b3a67;
+        white-space: nowrap;
+        transition: background .16s ease, color .16s ease;
+    }
+
+    .admin-theme-select-option:hover,
+    .admin-theme-select-option.is-selected {
+        background: #e0fbfc;
+        color: #5a76c8;
+    }
+
+    .admin-theme-select-status .admin-theme-select-menu {
+        min-width: 9.5rem;
+    }
+
+    .admin-theme-select-month {
+        flex: 1 1 0;
+        width: auto;
+    }
+
+    .admin-theme-select-year {
+        flex: 1 1 0;
+        width: auto;
+    }
+
+    .admin-theme-select-status {
+        width: 8.8rem;
+        flex: 0 0 8.8rem;
+    }
+
+    .admin-theme-select-status .admin-theme-select-button {
+        min-height: 2.25rem;
+    }
+
+    @media (min-width: 768px) {
+        .admin-theme-select-month {
+            width: 9rem;
+            flex: 0 0 9rem;
+        }
+
+        .admin-theme-select-year {
+            width: 7rem;
+            flex: 0 0 7rem;
+        }
     }
 
     @media (max-width: 767px) {
@@ -157,6 +315,27 @@
         .table-scroll table {
             transform: translateZ(0);
         }
+
+        .admin-theme-select-menu {
+            max-height: 12rem;
+        }
+
+        .admin-detail-status-form {
+            grid-template-columns: minmax(7rem, 7.9rem) minmax(0, 1fr);
+            gap: .5rem;
+        }
+
+        .admin-detail-status-form .admin-theme-select-button {
+            padding-left: .75rem;
+            padding-right: .75rem;
+            font-size: .65rem;
+        }
+
+        .admin-detail-status-form .admin-status-save-button {
+            padding-left: .65rem;
+            padding-right: .65rem;
+            font-size: .62rem;
+        }
     }
     
     .animate-float { animation: float 6s ease-in-out infinite; }
@@ -184,7 +363,7 @@
     @endif
 
     <!-- Toolbar Utama: Pencarian, Segarkan, Filter & Cetak -->
-    <div class="mb-6 sm:mb-8 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/90 backdrop-blur-sm p-4 sm:p-5 shadow-xl shadow-[#bde0fe]/30 relative z-10 w-full min-w-0 transition-transform duration-300 hover:border-[#bde0fe]">
+    <div class="mb-6 sm:mb-8 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/90 backdrop-blur-sm p-4 sm:p-5 shadow-xl shadow-[#bde0fe]/30 relative z-30 w-full min-w-0 transition-transform duration-300 hover:border-[#bde0fe]">
         <form action="{{ route('admin.transactions.index') }}" method="GET" class="flex flex-col gap-4 w-full">
             
             <!-- Baris Atas: Input Cari + Tombol Cari + Reset + Segarkan -->
@@ -217,23 +396,55 @@
                 
                 <!-- Filter Dropdown -->
                 <div class="flex items-center gap-2 w-full md:w-auto">
-                    <select name="month" onchange="this.form.submit()" class="bg-[#f4f9ff] rounded-[1rem] border-4 border-white shadow-inner text-[#2b3a67] px-4 py-2 font-black outline-none cursor-pointer text-xs sm:text-sm flex-1 md:flex-none text-center hover:border-[#bde0fe] transition-colors">
+                    @php
+                        $adminMonthNames = [
+                            1 => 'Januari',
+                            2 => 'Februari',
+                            3 => 'Maret',
+                            4 => 'April',
+                            5 => 'Mei',
+                            6 => 'Juni',
+                            7 => 'Juli',
+                            8 => 'Agustus',
+                            9 => 'September',
+                            10 => 'Oktober',
+                            11 => 'November',
+                            12 => 'Desember',
+                        ];
+                        $selectedMonthNumber = (int) ($selectedMonth ?? date('m'));
+                    @endphp
+                    <input type="hidden" name="month" value="{{ $selectedMonth ?? date('m') }}">
+                    <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
+                        <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                            <span data-admin-theme-select-label>{{ $adminMonthNames[$selectedMonthNumber] ?? '-' }}</span>
+                            <span class="admin-theme-select-arrow">⌄</span>
+                        </button>
+                        <div class="admin-theme-select-menu">
                         @for($m=1; $m<=12; $m++)
-                            <option value="{{ sprintf('%02d', $m) }}" {{ ($selectedMonth ?? '') == sprintf('%02d', $m) ? 'selected' : '' }}>
-                                {{ date('F', mktime(0, 0, 0, $m, 1)) }}
-                            </option>
+                            <button type="button" class="admin-theme-select-option {{ ($selectedMonth ?? date('m')) == sprintf('%02d', $m) ? 'is-selected' : '' }}" data-value="{{ sprintf('%02d', $m) }}" data-label="{{ $adminMonthNames[$m] }}">
+                                {{ $adminMonthNames[$m] }}
+                            </button>
                         @endfor
-                    </select>
-                    <select name="year" onchange="this.form.submit()" class="bg-[#f4f9ff] rounded-[1rem] border-4 border-white shadow-inner text-[#2b3a67] px-4 py-2 font-black outline-none cursor-pointer text-xs sm:text-sm flex-1 md:flex-none text-center hover:border-[#bde0fe] transition-colors">
+                        </div>
+                    </div>
+                    <input type="hidden" name="year" value="{{ $selectedYear ?? date('Y') }}">
+                    <div class="admin-theme-select admin-theme-select-year" data-admin-theme-select data-submit-on-change="true" data-input-name="year">
+                        <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                            <span data-admin-theme-select-label>{{ $selectedYear ?? date('Y') }}</span>
+                            <span class="admin-theme-select-arrow">⌄</span>
+                        </button>
+                        <div class="admin-theme-select-menu">
                         @for($y=date('Y'); $y>=date('Y')-3; $y--)
-                            <option value="{{ $y }}" {{ ($selectedYear ?? '') == $y ? 'selected' : '' }}>{{ $y }}</option>
+                            <button type="button" class="admin-theme-select-option {{ ($selectedYear ?? date('Y')) == $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
                         @endfor
-                    </select>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Tombol Cetak PDF -->
-                <a href="{{ route('admin.transactions.export_pdf', ['month' => $selectedMonth ?? date('m'), 'year' => $selectedYear ?? date('Y')]) }}" target="_blank" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#4bc6b9] px-6 py-2 h-auto min-h-[2.8rem] sm:min-h-[3rem] text-xs sm:text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#3ba398] w-full md:w-auto">
-                    <span class="whitespace-nowrap">Cetak PDF</span>
+                <!-- Tombol Cetak Laporan -->
+                <a href="{{ route('admin.transactions.export_excel', ['month' => $selectedMonth ?? date('m'), 'year' => $selectedYear ?? date('Y')]) }}" target="_blank" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#4bc6b9] px-6 py-2 h-auto min-h-[2.8rem] sm:min-h-[3rem] text-xs sm:text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#3ba398] w-full md:w-auto">
+                    <span class="text-base leading-none" aria-hidden="true">&#x1F4CA;</span>
+                    <span class="whitespace-nowrap">Cetak Laporan</span>
                 </a>
             </div>
         </form>
@@ -241,19 +452,20 @@
     </div>
 
     <!-- Tabel Data Transaksi -->
-    <div class="overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm shadow-2xl shadow-[#bde0fe]/30 relative z-10 min-w-0 w-full">
+    <div class="admin-transactions-table-shell overflow-visible rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 relative z-10 min-w-0 w-full">
         <div class="w-full overflow-x-auto table-scroll pb-2">
             <div class="inline-block min-w-full align-middle p-4 sm:p-6">
-                <table class="w-full min-w-[900px] text-left whitespace-nowrap">
+                <table class="w-full text-left" style="min-width:1580px;table-layout:fixed;">
                     <thead>
                         <tr>
-                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Waktu & Invoice</th>
-                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Pelanggan</th>
-                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Layanan</th>
-                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga</th>
-                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Target</th>
-                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Metode</th>
-                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Status</th>
+                            <th style="font-size: 10px; width: 210px;" class="px-6 py-4 pr-8 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Waktu & Invoice</th>
+                            <th style="font-size: 10px; width: 220px;" class="px-6 py-4 pl-8 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Pelanggan</th>
+                            <th style="font-size: 10px; width: 390px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Layanan</th>
+                            <th style="font-size: 10px; width: 130px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga</th>
+                            <th style="font-size: 10px; width: 180px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Target</th>
+                            <th style="font-size: 10px; width: 120px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Metode</th>
+                            <th style="font-size: 10px; width: 120px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Bukti Login</th>
+                            <th style="font-size: 10px; width: 180px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
@@ -272,35 +484,38 @@
                                 'Batal', 'Gagal' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]'],
                                 default => ['bg-[#fff5eb]', 'text-amber-500'],
                             };
+                            $adminLoginProofUrl = $trx->login_proof_path
+                                ? url(\Illuminate\Support\Facades\Storage::url($trx->login_proof_path))
+                                : null;
                         @endphp
                         <tr onclick="openAdminDetailModal('admin-trx-detail-{{ $trx->id }}')" class="transition-colors hover:bg-[#f8faff] group cursor-pointer">
                             
                             <!-- Invoice & Waktu -->
-                            <td class="px-5 py-4 sm:py-5 align-top min-w-[150px]">
-                                <p class="font-black text-[#5a76c8] text-xs sm:text-sm mb-1 bg-[#f4f9ff] inline-block px-2 py-1 rounded-md border border-white truncate max-w-full">{{ $trx->invoice_number ?? '-' }}</p>
-                                <p class="text-[9px] sm:text-[10px] font-bold text-[#8faaf3] ml-1">{{ isset($trx->created_at) ? $trx->created_at->format('d M Y, H:i') : '-' }}</p>
+                            <td class="px-6 py-4 pr-8 sm:py-5 align-top">
+                                <p class="mb-1 inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $trx->invoice_number ?? '-' }}</p>
+                                <p class="ml-1 whitespace-nowrap text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ isset($trx->created_at) ? $trx->created_at->format('d M Y, H:i') : '-' }}</p>
                             </td>
                             
                             <!-- User -->
-                            <td class="px-5 py-4 sm:py-5 align-top min-w-[120px] max-w-[150px]">
-                                <p class="admin-clamp-2 font-black text-[#2b3a67] text-xs sm:text-sm">{{ $trx->user->name ?? 'Guest' }}</p>
-                                <p class="admin-clamp-2 text-[9px] sm:text-[10px] font-bold text-[#8faaf3] mt-1">{{ $trx->user->email ?? '-' }}</p>
+                            <td class="px-6 py-4 pl-8 sm:py-5 align-top">
+                                <p class="admin-clamp-2 text-xs font-black leading-snug text-[#2b3a67] sm:text-sm">{{ $trx->user->name ?? 'Guest' }}</p>
+                                <p class="mt-1 whitespace-nowrap text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $trx->user->email ?? '-' }}</p>
                             </td>
                             
                             <!-- Layanan -->
-                            <td class="px-5 py-4 sm:py-5 align-top whitespace-normal min-w-[180px] max-w-[250px]">
-                                <p class="admin-clamp-2 font-black text-[#2b3a67] text-xs sm:text-sm leading-snug">{{ $trx->product->name ?? 'Produk Dihapus' }}</p>
+                            <td class="px-5 py-4 align-top sm:py-5" style="width:390px;max-width:390px;">
+                                <p class="text-[11px] font-black leading-tight text-[#2b3a67] sm:text-xs" style="display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;text-overflow:clip;white-space:normal;word-break:normal;overflow-wrap:anywhere;" title="{{ $trx->product->name ?? 'Produk Dihapus' }}">{{ $trx->product->name ?? 'Produk Dihapus' }}</p>
                             </td>
                             
                             <!-- Harga -->
                             <td class="px-5 py-4 sm:py-5 align-top">
-                                <p class="font-black text-[#4bc6b9] text-xs sm:text-sm drop-shadow-sm">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</p>
+                                <p class="whitespace-nowrap text-xs font-black text-[#4bc6b9] drop-shadow-sm sm:text-sm">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</p>
                             </td>
                             
                             <!-- Target Input -->
-                            <td class="px-5 py-4 sm:py-5 align-top text-center max-w-[150px]">
+                            <td class="px-5 py-4 sm:py-5 align-top text-center">
                                 @if($adminTargetSummary)
-                                    <span style="font-size: 9px;" class="admin-clamp-1 font-black text-[#2b3a67] bg-[#f0f5ff] inline-block px-3 py-1.5 rounded-xl border-2 border-white shadow-sm max-w-full" title="{{ $adminTargetText ?? '' }}">
+                                    <span style="font-size: 9px;" class="inline-block whitespace-nowrap rounded-xl border-2 border-white bg-[#f0f5ff] px-3 py-1.5 font-black text-[#2b3a67] shadow-sm" title="{{ $adminTargetText ?? '' }}">
                                         {{ $adminTargetSummary }}
                                     </span>
                                 @else
@@ -320,23 +535,41 @@
                                         $colorClass = 'bg-[#f4f9ff] text-[#8faaf3] border-white';
                                     }
                                 @endphp
-                                <span style="font-size: 9px;" class="font-black uppercase tracking-widest px-3 py-1.5 rounded-full border-2 shadow-sm inline-block {{ $colorClass }}">
+                                <span style="font-size: 9px;" class="inline-block whitespace-nowrap rounded-full border-2 px-3 py-1.5 font-black uppercase tracking-widest shadow-sm {{ $colorClass }}">
                                     {{ $methodDisplay }}
                                 </span>
                             </td>
+
+                            <!-- Bukti Login -->
+                            <td class="px-5 py-4 sm:py-5 align-top text-center">
+                                @if($adminLoginProofUrl)
+                                    <a href="{{ $adminLoginProofUrl }}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size: 9px;" class="inline-flex items-center justify-center whitespace-nowrap rounded-full border-2 border-white bg-[#e0fbfc] px-3 py-1.5 font-black uppercase tracking-widest text-[#5a76c8] shadow-sm transition hover:bg-[#d4f7f4]">
+                                        Lihat
+                                    </a>
+                                @else
+                                    <span class="text-sm font-black text-[#a3bbfb]">-</span>
+                                @endif
+                            </td>
                             
                             <!-- Status -->
-                            <td class="px-5 py-4 sm:py-5 align-top text-center min-w-[140px]">
+                            <td class="px-5 py-4 sm:py-5 align-top text-center">
                                 @if($canManualUpdate)
                                     <form onclick="event.stopPropagation()" action="{{ route('admin.transactions.update', $trx->id) }}" method="POST" class="flex items-center gap-1.5 justify-center w-full">
                                         @csrf
                                         @method('PATCH')
-                                        <select name="order_status" style="font-size: 9px;" class="bg-[#f8faff] border-4 border-white text-[#2b3a67] uppercase tracking-widest rounded-full focus:border-[#bde0fe] block px-3 py-1.5 font-black outline-none shadow-sm cursor-pointer hover:bg-[#e0fbfc] transition-colors appearance-none text-center w-full min-w-[85px]">
-                                            <option value="pending" {{ ($trx->order_status ?? '') == 'pending' ? 'selected' : '' }}>Menunggu</option>
-                                            <option value="processing" {{ ($trx->order_status ?? '') == 'processing' ? 'selected' : '' }}>Proses</option>
-                                            <option value="success" {{ ($trx->order_status ?? '') == 'success' ? 'selected' : '' }}>Sukses</option>
-                                            <option value="failed" {{ ($trx->order_status ?? '') == 'failed' ? 'selected' : '' }}>Gagal</option>
-                                        </select>
+                                        <input type="hidden" name="order_status" value="{{ $trx->order_status ?? 'pending' }}">
+                                        <div class="admin-theme-select admin-theme-select-status" data-admin-theme-select data-input-name="order_status">
+                                            <button type="button" style="font-size: 9px;" class="admin-theme-select-button rounded-full px-3 py-1.5 text-center font-black uppercase tracking-widest">
+                                                <span class="whitespace-nowrap" data-admin-theme-select-label>{{ match($trx->order_status ?? 'pending') { 'processing' => 'Proses', 'success' => 'Sukses', 'failed' => 'Gagal', default => 'Menunggu' } }}</span>
+                                                <span class="admin-theme-select-arrow">⌄</span>
+                                            </button>
+                                            <div class="admin-theme-select-menu">
+                                                <button type="button" class="admin-theme-select-option {{ ($trx->order_status ?? '') == 'pending' ? 'is-selected' : '' }}" data-value="pending" data-label="Menunggu">Menunggu</button>
+                                                <button type="button" class="admin-theme-select-option {{ ($trx->order_status ?? '') == 'processing' ? 'is-selected' : '' }}" data-value="processing" data-label="Proses">Proses</button>
+                                                <button type="button" class="admin-theme-select-option {{ ($trx->order_status ?? '') == 'success' ? 'is-selected' : '' }}" data-value="success" data-label="Sukses">Sukses</button>
+                                                <button type="button" class="admin-theme-select-option {{ ($trx->order_status ?? '') == 'failed' ? 'is-selected' : '' }}" data-value="failed" data-label="Gagal">Gagal</button>
+                                            </div>
+                                        </div>
                                         <button type="submit" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white p-1.5 rounded-[0.8rem] transition shadow-md active:scale-95 border-2 border-white shrink-0 text-xs" title="Simpan Status">
                                             💾
                                         </button>
@@ -345,7 +578,7 @@
                                     @php
                                         $st = [$adminStatusClass[0], $adminStatusClass[1], $trx->display_status];
                                     @endphp
-                                    <span style="font-size: 9px;" class="admin-clamp-1 {{ $st[0] }} {{ $st[1] }} px-4 py-1.5 rounded-full font-black uppercase tracking-widest border-2 border-white shadow-sm inline-block w-full text-center">
+                                    <span style="font-size: 9px;" class="inline-block w-full whitespace-nowrap rounded-full border-2 border-white px-4 py-1.5 text-center font-black uppercase tracking-widest shadow-sm {{ $st[0] }} {{ $st[1] }}">
                                         {{ $st[2] }}
                                     </span>
                                 @endif
@@ -353,7 +586,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="px-5 py-16 sm:py-20 text-center">
+                            <td colspan="8" class="px-5 py-16 sm:py-20 text-center">
                                 <div class="mb-4 sm:mb-5 inline-flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-[#f0f5ff] text-4xl sm:text-5xl shadow-inner animate-float">🧾</div>
                                 <p class="text-lg sm:text-xl font-black text-[#5a76c8]">Tidak ada transaksi ditemukan.</p>
                             </td>
@@ -383,13 +616,128 @@
                     $trx->product?->category?->parent?->name,
                     $trx->product?->category?->name,
                 ])->filter()->implode(' / ');
+                $detailLoginProofUrl = $trx->login_proof_path
+                    ? url(\Illuminate\Support\Facades\Storage::url($trx->login_proof_path))
+                    : null;
                 $detailCanManualUpdate = $trx->payment_status === 'paid'
                     && ($trx->product?->process_type === 'account')
                     && (bool) ($trx->product?->requires_buyer_email);
+                $detailOrderData = \App\Support\WiboostOrderDetailData::forTransaction($trx);
+                $detailCredentials = is_array($trx->credential_data)
+                    ? $trx->credential_data
+                    : (json_decode((string) $trx->credential_data, true) ?: []);
+                $detailIsFilledValue = function ($value): bool {
+                    if ($value === null || is_array($value)) {
+                        return false;
+                    }
+
+                    $value = trim((string) $value);
+
+                    return ! in_array(strtolower($value), [
+                        '',
+                        '-',
+                        "\xE2\x80\x94",
+                        'n/a',
+                        'na',
+                        'null',
+                        'undefined',
+                        '[]',
+                        '{}',
+                        'tidak ada',
+                        'belum ada',
+                        'belum tersedia',
+                    ], true);
+                };
+                $detailAppendLine = function (array &$lines, string $label, $value) use ($detailIsFilledValue): void {
+                    if (! $detailIsFilledValue($value)) {
+                        return;
+                    }
+
+                    $lines[] = [
+                        'label' => $label,
+                        'value' => trim((string) $value),
+                    ];
+                };
+                $detailParseTextLines = function ($text) use ($detailAppendLine): array {
+                    $lines = [];
+
+                    foreach (preg_split('/\R/', trim((string) $text)) ?: [] as $line) {
+                        $line = trim((string) $line);
+
+                        if ($line === '') {
+                            continue;
+                        }
+
+                        if (str_contains($line, ':')) {
+                            [$label, $value] = array_map('trim', explode(':', $line, 2));
+                            $detailAppendLine($lines, $label !== '' ? $label : 'Data', $value);
+                        } else {
+                            $detailAppendLine($lines, 'Data', $line);
+                        }
+                    }
+
+                    return $lines;
+                };
+                $detailRelatedSections = [];
+
+                $detailUserLines = [];
+                $detailAppendLine($detailUserLines, 'Nama', $trx->user?->name);
+                $detailAppendLine($detailUserLines, 'Email', $trx->user?->email);
+                $detailAppendLine($detailUserLines, 'WhatsApp', $trx->user?->whatsapp);
+
+                if ($detailUserLines !== []) {
+                    $detailRelatedSections[] = ['title' => 'Data Pengguna', 'lines' => $detailUserLines];
+                }
+
+                if ($detailIsFilledValue($detailLoginProofUrl)) {
+                    $detailRelatedSections[] = [
+                        'title' => 'Bukti Login',
+                        'lines' => [[
+                            'label' => 'Link Bukti Login',
+                            'value' => trim((string) $detailLoginProofUrl),
+                        ]],
+                    ];
+                }
+
+                $detailOrderLines = [];
+                $detailAppendLine($detailOrderLines, 'Invoice', $detailOrderData['invoice'] ?? $trx->invoice_number);
+                $detailAppendLine($detailOrderLines, 'Kategori', $detailOrderData['category'] ?? $detailCategory);
+                $detailAppendLine($detailOrderLines, 'Produk', $detailOrderData['product'] ?? $trx->product?->name);
+                $detailAppendLine($detailOrderLines, 'Total Bayar', $detailOrderData['total'] ?? null);
+                $detailAppendLine($detailOrderLines, 'Metode', $detailOrderData['payment'] ?? $trx->display_payment_method);
+                $detailAppendLine($detailOrderLines, 'Status Pesanan', $detailOrderData['status'] ?? $trx->display_status);
+                $detailAppendLine($detailOrderLines, 'ID Provider', $detailOrderData['provider_id'] ?? $trx->provider_order_id);
+                $detailAppendLine($detailOrderLines, 'Waktu', $detailOrderData['time'] ?? optional($trx->created_at)->format('d M Y, H:i'));
+
+                if ($detailOrderLines !== []) {
+                    $detailRelatedSections[] = ['title' => 'Data Pesanan', 'lines' => $detailOrderLines];
+                }
+
+                $detailAccountLines = [];
+                foreach ([
+                    'email' => 'Email',
+                    'password' => 'Password',
+                    'profile' => 'Profil',
+                    'pin' => 'PIN',
+                    'link' => 'Link Akses',
+                    'tutorial_link' => 'Link Tutorial',
+                ] as $credentialKey => $credentialLabel) {
+                    $detailAppendLine($detailAccountLines, $credentialLabel, $detailCredentials[$credentialKey] ?? null);
+                }
+
+                if ($detailAccountLines !== []) {
+                    $detailRelatedSections[] = ['title' => 'Detail Akun', 'lines' => $detailAccountLines];
+                }
+
+                $detailInputBuyerLines = $detailParseTextLines($detailOrderData['input_text'] ?? $detailInputText);
+
+                if ($detailInputBuyerLines !== []) {
+                    $detailRelatedSections[] = ['title' => 'Input Pembeli', 'lines' => $detailInputBuyerLines];
+                }
             @endphp
             <div id="admin-trx-detail-{{ $trx->id }}" class="admin-detail-modal fixed inset-0 z-[9999] flex items-center justify-center opacity-0 pointer-events-none transition-all duration-200">
                 <div class="absolute inset-0" onclick="closeAdminDetailModal('admin-trx-detail-{{ $trx->id }}')"></div>
-                <div class="admin-detail-card relative flex w-full max-w-2xl max-h-[calc(100dvh-8.25rem)] flex-col rounded-[1.75rem] border-4 border-white bg-white p-4 shadow-2xl shadow-[#2b3a67]/20 transform scale-95 transition-transform duration-200 sm:p-5">
+                <div class="admin-detail-card relative flex w-full max-w-3xl max-h-[calc(100dvh-8.25rem)] flex-col rounded-[1.75rem] border-4 border-white bg-white p-4 shadow-2xl shadow-[#2b3a67]/20 transform scale-95 transition-transform duration-200 sm:p-5">
                     <div class="admin-detail-header mb-3.5 flex items-start justify-between gap-3 p-3.5">
                         <div>
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Detail Transaksi</p>
@@ -438,25 +786,80 @@
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">ID Provider</p>
                             <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $trx->provider_order_id ?? '-' }}</p>
                         </div>
+                        <div class="admin-detail-panel md:col-span-2">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Bukti Login</p>
+                            @if($detailLoginProofUrl)
+                                <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                    <a href="{{ $detailLoginProofUrl }}" target="_blank" rel="noopener" class="w-fit rounded-full border-2 border-white bg-[#5a76c8] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-sm">
+                                        Buka Gambar
+                                    </a>
+                                </div>
+                                <div class="mt-3 overflow-hidden rounded-[1.2rem] border-4 border-white bg-white shadow-inner">
+                                    <img src="{{ $detailLoginProofUrl }}" alt="Bukti login {{ $trx->invoice_number }}" class="max-h-72 w-full object-contain">
+                                </div>
+                                <p class="mt-2 break-all text-xs font-bold text-[#8faaf3]">{{ $detailLoginProofUrl }}</p>
+                            @else
+                                <p class="mt-2 text-sm font-bold text-[#8faaf3]">Tidak ada bukti.</p>
+                            @endif
+                        </div>
                         @if($trx->target_notes)
                             <div class="admin-detail-panel admin-detail-panel-soft md:col-span-2">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-amber-500">Catatan</p>
                                 <p class="mt-1 text-sm font-bold text-[#2b3a67]">{{ $trx->target_notes }}</p>
                             </div>
                         @endif
+                        <div class="admin-detail-panel admin-detail-panel-soft md:col-span-2">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Data Terkait</p>
+                            @if($detailRelatedSections !== [])
+                                <div class="mt-3 space-y-3">
+                                    @foreach($detailRelatedSections as $section)
+                                        <div class="rounded-[1rem] border-2 border-white bg-white/70 p-3 shadow-sm">
+                                            <p class="text-[10px] font-black uppercase tracking-widest text-[#5a76c8]">{{ $section['title'] }}</p>
+                                            <div class="mt-3 grid gap-3 md:grid-cols-2">
+                                                @foreach($section['lines'] as $line)
+                                                    @php
+                                                        $lineValue = (string) ($line['value'] ?? '');
+                                                        $lineIsUrl = preg_match('/^https?:\/\//i', $lineValue);
+                                                    @endphp
+                                                    <div>
+                                                        <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">{{ $line['label'] }}</p>
+                                                        @if($lineIsUrl)
+                                                            <a href="{{ $lineValue }}" target="_blank" rel="noopener" class="mt-1 block break-all text-sm font-bold text-[#5a76c8] underline decoration-[#bde0fe] underline-offset-4">
+                                                                {{ $lineValue }}
+                                                            </a>
+                                                        @else
+                                                            <p class="mt-1 break-words text-sm font-bold text-[#2b3a67]">{{ $lineValue }}</p>
+                                                        @endif
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="mt-2 text-sm font-bold text-[#8faaf3]">Tidak ada data terkait.</p>
+                            @endif
+                        </div>
                     </div>
 
                     @if($detailCanManualUpdate)
-                        <form action="{{ route('admin.transactions.update', $trx->id) }}" method="POST" class="admin-detail-panel mt-3.5 flex flex-col gap-2.5 sm:flex-row">
+                        <form action="{{ route('admin.transactions.update', $trx->id) }}" method="POST" class="admin-detail-panel admin-detail-panel-dropdown admin-detail-status-form mt-3.5">
                             @csrf
                             @method('PATCH')
-                            <select name="order_status" class="flex-1 rounded-full border-4 border-white bg-white px-4 py-2.5 text-xs font-black uppercase text-[#2b3a67] outline-none">
-                                <option value="pending" {{ ($trx->order_status ?? '') == 'pending' ? 'selected' : '' }}>Menunggu</option>
-                                <option value="processing" {{ ($trx->order_status ?? '') == 'processing' ? 'selected' : '' }}>Proses</option>
-                                <option value="success" {{ ($trx->order_status ?? '') == 'success' ? 'selected' : '' }}>Sukses</option>
-                                <option value="failed" {{ ($trx->order_status ?? '') == 'failed' ? 'selected' : '' }}>Gagal</option>
-                            </select>
-                            <button type="submit" class="rounded-full border-4 border-white bg-[#5a76c8] px-5 py-2.5 text-xs font-black text-white shadow-md">Simpan Status Manual</button>
+                            <input type="hidden" name="order_status" value="{{ $trx->order_status ?? 'pending' }}">
+                            <div class="admin-theme-select admin-theme-select-status" data-admin-theme-select data-input-name="order_status">
+                                <button type="button" class="admin-theme-select-button rounded-full px-4 py-2.5 text-xs font-black uppercase">
+                                    <span data-admin-theme-select-label>{{ match($trx->order_status ?? 'pending') { 'processing' => 'Proses', 'success' => 'Sukses', 'failed' => 'Gagal', default => 'Menunggu' } }}</span>
+                                    <span class="admin-theme-select-arrow">⌄</span>
+                                </button>
+                                <div class="admin-theme-select-menu">
+                                    <button type="button" class="admin-theme-select-option {{ ($trx->order_status ?? '') == 'pending' ? 'is-selected' : '' }}" data-value="pending" data-label="Menunggu">Menunggu</button>
+                                    <button type="button" class="admin-theme-select-option {{ ($trx->order_status ?? '') == 'processing' ? 'is-selected' : '' }}" data-value="processing" data-label="Proses">Proses</button>
+                                    <button type="button" class="admin-theme-select-option {{ ($trx->order_status ?? '') == 'success' ? 'is-selected' : '' }}" data-value="success" data-label="Sukses">Sukses</button>
+                                    <button type="button" class="admin-theme-select-option {{ ($trx->order_status ?? '') == 'failed' ? 'is-selected' : '' }}" data-value="failed" data-label="Gagal">Gagal</button>
+                                </div>
+                            </div>
+                            <button type="submit" class="admin-status-save-button min-h-[2.75rem] rounded-full border-4 border-white bg-[#5a76c8] px-3 py-2.5 text-[10px] font-black text-white shadow-md sm:px-5 sm:text-xs">Simpan Status Manual</button>
                         </form>
                     @endif
                     </div>
@@ -492,8 +895,62 @@
         document.querySelectorAll('.admin-detail-modal.modal-active').forEach((modal) => {
             modal.classList.remove('modal-active');
         });
+        document.querySelectorAll('[data-admin-theme-select].is-open').forEach((dropdown) => {
+            dropdown.classList.remove('is-open');
+        });
         document.body.classList.remove('overflow-hidden', 'admin-detail-open');
     });
+
+    (() => {
+        const closeAllDropdowns = (except = null) => {
+            document.querySelectorAll('[data-admin-theme-select].is-open').forEach((dropdown) => {
+                if (dropdown !== except) {
+                    dropdown.classList.remove('is-open');
+                }
+            });
+        };
+
+        document.querySelectorAll('[data-admin-theme-select]').forEach((dropdown) => {
+            const button = dropdown.querySelector('.admin-theme-select-button');
+            const label = dropdown.querySelector('[data-admin-theme-select-label]');
+            const inputName = dropdown.dataset.inputName;
+            const form = dropdown.closest('form');
+            const input = form?.querySelector(`input[type="hidden"][name="${inputName}"]`);
+
+            button?.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const willOpen = ! dropdown.classList.contains('is-open');
+                closeAllDropdowns(dropdown);
+                dropdown.classList.toggle('is-open', willOpen);
+            });
+
+            dropdown.querySelectorAll('[data-value]').forEach((option) => {
+                option.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    if (input) {
+                        input.value = option.dataset.value ?? '';
+                    }
+
+                    if (label) {
+                        label.textContent = option.dataset.label || option.textContent.trim();
+                    }
+
+                    dropdown.querySelectorAll('[data-value]').forEach((item) => item.classList.remove('is-selected'));
+                    option.classList.add('is-selected');
+                    dropdown.classList.remove('is-open');
+
+                    if (dropdown.dataset.submitOnChange === 'true' && form) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+
+        document.addEventListener('click', () => closeAllDropdowns());
+    })();
 
     (() => {
         const refreshUrl = @json(route('admin.transactions.refresh-provider-statuses'));
@@ -504,6 +961,7 @@
 
             return document.hidden
                 || document.body.classList.contains('admin-detail-open')
+                || !!document.querySelector('[data-admin-theme-select].is-open')
                 || (active && ['INPUT', 'SELECT', 'TEXTAREA'].includes(active.tagName));
         };
 

@@ -159,7 +159,7 @@
     <div class="relative z-10 w-full min-w-0 overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:rounded-[2.5rem]">
         <div class="table-scroll w-full overflow-x-auto pb-2">
             <div class="inline-block min-w-full p-4 align-middle sm:p-6">
-                <table class="w-full min-w-[950px] whitespace-nowrap text-left">
+                <table class="w-full min-w-[1080px] whitespace-nowrap text-left">
                     <thead>
                         <tr>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Waktu & Invoice</th>
@@ -180,15 +180,15 @@
                                 $statusText = $isHandled ? 'Sudah Ditangani' : 'Belum Ditangani';
                             @endphp
                             <tr onclick="openAdminReportDetail('admin-report-detail-{{ $report->id }}')" class="group cursor-pointer transition-colors hover:bg-[#f8faff]">
-                                <td class="min-w-[170px] px-5 py-5 align-middle">
-                                    <p class="mb-1 inline-block max-w-full truncate rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8]">
+                                <td class="min-w-[220px] px-5 py-5 align-middle">
+                                    <p class="mb-1 inline-flex whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8]">
                                         {{ $report->related_invoice ?: 'LAP-' . str_pad((string) $report->id, 5, '0', STR_PAD_LEFT) }}
                                     </p>
                                     <p class="ml-1 text-[10px] font-bold text-[#8faaf3]">{{ $report->created_at?->format('d M Y, H:i') }}</p>
                                 </td>
-                                <td class="min-w-[170px] max-w-[220px] px-5 py-5 align-middle">
-                                    <p class="truncate text-sm font-black text-[#2b3a67]">{{ $report->user?->name ?: '-' }}</p>
-                                    <p class="mt-1 truncate text-[10px] font-bold text-[#8faaf3]">{{ $report->user?->email ?: '-' }}</p>
+                                <td class="min-w-[280px] whitespace-nowrap px-5 py-5 align-middle">
+                                    <p class="whitespace-nowrap text-sm font-black leading-snug text-[#2b3a67]">{{ $report->user?->name ?: '-' }}</p>
+                                    <p class="mt-1 whitespace-nowrap text-[10px] font-bold text-[#8faaf3]">{{ $report->user?->email ?: '-' }}</p>
                                 </td>
                                 <td class="px-5 py-5 align-middle">
                                     <span class="inline-flex rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
@@ -201,12 +201,10 @@
                                 <td class="px-5 py-5 text-center align-middle">
                                     @if($proofUrl)
                                         <a href="{{ $proofUrl }}" target="_blank" onclick="event.stopPropagation()" class="inline-flex rounded-full border-2 border-white bg-[#fff7e0] px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#d38b00] shadow-sm">
-                                            Ada
+                                            Lihat
                                         </a>
                                     @else
-                                        <span class="inline-flex rounded-full border-2 border-white bg-[#ffe5e5] px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#ff6b6b] shadow-sm">
-                                            -
-                                        </span>
+                                        <span class="text-sm font-black text-[#a3bbfb]">-</span>
                                     @endif
                                 </td>
                                 <td class="min-w-[150px] px-5 py-5 text-center align-middle">
@@ -247,6 +245,114 @@
                 $isHandled = $report->status === 'closed';
                 $statusText = $isHandled ? 'Sudah Ditangani' : 'Belum Ditangani';
                 $statusClass = $isHandled ? 'bg-[#e6fff7] text-emerald-500' : 'bg-[#fff5eb] text-amber-500';
+                $isFilledReportValue = function ($value): bool {
+                    if ($value === null || is_array($value)) {
+                        return false;
+                    }
+
+                    $value = trim((string) $value);
+
+                    return ! in_array(strtolower($value), [
+                        '',
+                        '-',
+                        "\xE2\x80\x94",
+                        'n/a',
+                        'na',
+                        'null',
+                        'undefined',
+                        '[]',
+                        '{}',
+                        'tidak ada',
+                        'belum ada',
+                        'belum tersedia',
+                    ], true);
+                };
+                $appendReportDetailLine = function (array &$lines, string $label, $value) use ($isFilledReportValue): void {
+                    if (! $isFilledReportValue($value)) {
+                        return;
+                    }
+
+                    $lines[] = [
+                        'label' => $label,
+                        'value' => trim((string) $value),
+                    ];
+                };
+                $parseReportTextLines = function ($text) use ($appendReportDetailLine): array {
+                    $lines = [];
+
+                    foreach (preg_split('/\R/', trim((string) $text)) ?: [] as $line) {
+                        $line = trim((string) $line);
+
+                        if ($line === '') {
+                            continue;
+                        }
+
+                        if (str_contains($line, ':')) {
+                            [$label, $value] = array_map('trim', explode(':', $line, 2));
+                            $appendReportDetailLine($lines, $label !== '' ? $label : 'Data', $value);
+                        } else {
+                            $appendReportDetailLine($lines, 'Data', $line);
+                        }
+                    }
+
+                    return $lines;
+                };
+                $relatedSections = [];
+
+                if (($report->category_key ?? null) === 'deposit') {
+                    $depositLines = [];
+                    $appendReportDetailLine($depositLines, 'Invoice', $snapshot['invoice'] ?? $report->related_invoice);
+                    $appendReportDetailLine($depositLines, 'Nominal Masuk Saldo', $snapshot['amount'] ?? null);
+                    $appendReportDetailLine($depositLines, 'Jumlah Dibayar', $snapshot['paidAmount'] ?? null);
+                    $appendReportDetailLine($depositLines, 'Metode', $snapshot['method'] ?? null);
+                    $appendReportDetailLine($depositLines, 'Referensi QRIS', $snapshot['reference'] ?? null);
+                    $appendReportDetailLine($depositLines, 'Waktu', $snapshot['created'] ?? null);
+
+                    if ($depositLines !== []) {
+                        $relatedSections[] = ['title' => 'Data Deposit', 'lines' => $depositLines];
+                    }
+                } elseif ($snapshot !== []) {
+                    if ($isFilledReportValue($snapshot['loginProofUrl'] ?? null)) {
+                        $relatedSections[] = [
+                            'title' => 'Bukti Login',
+                            'lines' => [[
+                                'label' => 'Link Bukti Login',
+                                'value' => trim((string) $snapshot['loginProofUrl']),
+                            ]],
+                        ];
+                    }
+
+                    $orderLines = [];
+                    $appendReportDetailLine($orderLines, 'Invoice', $snapshot['invoice'] ?? $report->related_invoice);
+                    $appendReportDetailLine($orderLines, 'Kategori', $snapshot['category'] ?? $report->category_label);
+                    $appendReportDetailLine($orderLines, 'Produk', $snapshot['product'] ?? $report->related_title);
+                    $appendReportDetailLine($orderLines, 'Total Bayar', $snapshot['amount'] ?? null);
+                    $appendReportDetailLine($orderLines, 'Metode', $snapshot['payment'] ?? null);
+                    $appendReportDetailLine($orderLines, 'Status Pesanan', $snapshot['status'] ?? null);
+                    $appendReportDetailLine($orderLines, 'ID Provider', $snapshot['providerId'] ?? null);
+                    $appendReportDetailLine($orderLines, 'Waktu', $snapshot['created'] ?? null);
+
+                    if ($orderLines !== []) {
+                        $relatedSections[] = ['title' => 'Data Pesanan', 'lines' => $orderLines];
+                    }
+
+                    $accountLines = [];
+                    foreach (($snapshot['accountLines'] ?? []) as $accountLine) {
+                        foreach ($parseReportTextLines($accountLine) as $parsedLine) {
+                            $accountLines[] = $parsedLine;
+                        }
+                    }
+
+                    if ($accountLines !== []) {
+                        $relatedSections[] = ['title' => 'Detail Akun', 'lines' => $accountLines];
+                    }
+
+                    $inputBuyerLines = $parseReportTextLines($snapshot['target'] ?? '');
+
+                    if ($inputBuyerLines !== []) {
+                        $relatedSections[] = ['title' => 'Input Pembeli', 'lines' => $inputBuyerLines];
+                    }
+                }
             @endphp
             <div id="admin-report-detail-{{ $report->id }}" class="admin-detail-modal fixed inset-0 z-[9999] items-center justify-center opacity-0 pointer-events-none transition-all duration-200">
                 <div class="absolute inset-0" onclick="closeAdminReportDetail('admin-report-detail-{{ $report->id }}')"></div>
@@ -268,6 +374,9 @@
                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Pelanggan</p>
                                 <p class="mt-1 font-black text-[#2b3a67]">{{ $report->user?->name ?: '-' }}</p>
                                 <p class="mt-1 break-all text-xs font-bold text-[#8faaf3]">{{ $report->user?->email ?: '-' }}</p>
+                                @if($report->user?->whatsapp)
+                                    <p class="mt-1 break-all text-xs font-bold text-[#8faaf3]">WhatsApp: {{ $report->user->whatsapp }}</p>
+                                @endif
                             </div>
                             <div class="admin-detail-panel">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Status</p>
@@ -303,19 +412,35 @@
                             </div>
                             <div class="admin-detail-panel admin-detail-panel-soft md:col-span-2">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Data Terkait</p>
-                                <div class="mt-3 grid gap-3 md:grid-cols-2">
-                                    <div>
-                                        <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Invoice</p>
-                                        <p class="mt-1 break-words text-sm font-black text-[#2b3a67]">{{ $report->related_invoice ?: '-' }}</p>
+                                @if($relatedSections !== [])
+                                    <div class="mt-3 space-y-3">
+                                        @foreach($relatedSections as $section)
+                                            <div class="rounded-[1rem] border-2 border-white bg-white/70 p-3 shadow-sm">
+                                                <p class="text-[10px] font-black uppercase tracking-widest text-[#5a76c8]">{{ $section['title'] }}</p>
+                                                <div class="mt-3 grid gap-3 md:grid-cols-2">
+                                                    @foreach($section['lines'] as $line)
+                                                        @php
+                                                            $lineValue = (string) ($line['value'] ?? '');
+                                                            $lineIsUrl = preg_match('/^https?:\/\//i', $lineValue);
+                                                        @endphp
+                                                        <div>
+                                                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">{{ $line['label'] }}</p>
+                                                            @if($lineIsUrl)
+                                                                <a href="{{ $lineValue }}" target="_blank" rel="noopener" class="mt-1 block break-all text-sm font-bold text-[#5a76c8] underline decoration-[#bde0fe] underline-offset-4">
+                                                                    {{ $lineValue }}
+                                                                </a>
+                                                            @else
+                                                                <p class="mt-1 break-words text-sm font-bold text-[#2b3a67]">{{ $lineValue }}</p>
+                                                            @endif
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
-                                    @foreach($snapshot as $key => $value)
-                                        @continue(is_array($value))
-                                        <div>
-                                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">{{ str_replace('_', ' ', $key) }}</p>
-                                            <p class="mt-1 break-words text-sm font-bold text-[#2b3a67]">{{ $value ?: '-' }}</p>
-                                        </div>
-                                    @endforeach
-                                </div>
+                                @else
+                                    <p class="mt-2 text-sm font-bold text-[#8faaf3]">Tidak ada data terkait.</p>
+                                @endif
                             </div>
                         </div>
                     </div>

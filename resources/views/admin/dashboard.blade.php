@@ -131,14 +131,14 @@
                             <a href="{{ route('admin.products.index', ['search' => $summary['product']->name]) }}" class="mt-3 block line-clamp-3 text-lg font-black leading-tight text-[#2b3a67] transition-colors hover:text-[#5a76c8]">
                                 {{ $summary['product']->name }}
                             </a>
-                            <div class="mt-auto grid grid-cols-2 gap-3 pt-5">
-                                <div class="rounded-2xl border-2 border-white bg-white px-3 py-2 shadow-sm">
+                            <div class="mt-auto grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-2 pt-5">
+                                <div class="min-w-0 rounded-2xl border-2 border-white bg-white px-3 py-2 shadow-sm">
                                     <p class="text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">Dibeli</p>
                                     <p class="text-xl font-black text-[#5a76c8]">{{ number_format($summary['orders'], 0, ',', '.') }}</p>
                                 </div>
-                                <div class="rounded-2xl border-2 border-white bg-white px-3 py-2 shadow-sm">
+                                <div class="min-w-0 overflow-hidden rounded-2xl border-2 border-white bg-white px-3 py-2 shadow-sm">
                                     <p class="text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">Omzet</p>
-                                    <p class="truncate text-sm font-black text-[#4bc6b9]">Rp {{ number_format($summary['revenue'], 0, ',', '.') }}</p>
+                                    <p class="whitespace-nowrap text-xs font-black text-[#4bc6b9] xl:text-[13px]">Rp {{ number_format($summary['revenue'], 0, ',', '.') }}</p>
                                 </div>
                             </div>
                         @else
@@ -364,8 +364,8 @@
                         @endforelse
                     </div>
 
-                    <div class="hidden w-full overflow-hidden pb-2 md:block">
-                        <table class="w-full table-fixed text-left">
+                    <div class="hidden w-full overflow-x-auto pb-2 md:block">
+                        <table class="min-w-[620px] w-full table-auto text-left">
                             <thead>
                                 <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">
                                     <th class="w-[30%] px-3 py-3">Invoice</th>
@@ -379,12 +379,12 @@
                                     @php($reportInvoice = $report->related_invoice ?: 'LAP-' . str_pad((string) $report->id, 5, '0', STR_PAD_LEFT))
                                     <tr class="transition hover:bg-[#f8faff]">
                                         <td class="min-w-0 px-3 py-3">
-                                            <a href="{{ route('admin.reports.index', ['search' => $reportInvoice]) }}" class="block truncate text-xs font-black text-[#2b3a67] xl:text-sm">{{ $reportInvoice }}</a>
+                                            <a href="{{ route('admin.reports.index', ['search' => $reportInvoice]) }}" class="block whitespace-nowrap text-xs font-black text-[#2b3a67] xl:text-sm">{{ $reportInvoice }}</a>
                                         </td>
-                                        <td class="truncate px-3 py-3 text-xs font-black text-[#2b3a67] xl:text-sm">{{ $report->user?->name ?: '-' }}</td>
-                                        <td class="truncate px-3 py-3 text-xs font-black text-[#8faaf3] xl:text-sm">{{ $report->category_label ?: '-' }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67] xl:text-sm">{{ $report->user?->name ?: '-' }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#8faaf3] xl:text-sm">{{ $report->category_label ?: '-' }}</td>
                                         <td class="px-3 py-3 text-center">
-                                            <span class="{{ $report->status === 'closed' ? 'bg-[#e6fff7] text-emerald-500' : 'bg-[#fff5eb] text-amber-500' }} inline-flex max-w-full truncate rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm xl:text-[9px]">
+                                            <span class="{{ $report->status === 'closed' ? 'bg-[#e6fff7] text-emerald-500' : 'bg-[#fff5eb] text-amber-500' }} inline-flex whitespace-nowrap rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm xl:text-[9px]">
                                                 {{ $report->status === 'closed' ? 'Selesai' : 'Baru' }}
                                             </span>
                                         </td>
@@ -517,8 +517,8 @@
                     </div>
 
                     <!-- Desktop Table View -->
-                    <div class="hidden w-full overflow-hidden md:block pb-2">
-                        <table class="w-full table-fixed text-left">
+                    <div class="hidden w-full overflow-x-auto md:block pb-2">
+                        <table class="min-w-[720px] w-full table-auto text-left">
                             <thead>
                                 <tr class="text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">
                                     <th class="w-[28%] px-3 py-3">Invoice</th>
@@ -534,16 +534,16 @@
                                     @php($status = $transactionStatusMeta($trx))
                                     <tr class="transition hover:bg-[#f8faff] group">
                                         <td class="px-3 py-3 min-w-0">
-                                            <p class="truncate text-xs font-black text-[#2b3a67] xl:text-sm">{{ $trx->invoice_number }}</p>
-                                            <p class="mt-0.5 text-[9px] font-bold text-[#8faaf3] uppercase tracking-wider">{{ optional($trx->created_at)->diffForHumans() ?? '-' }}</p>
+                                            <p class="whitespace-nowrap text-xs font-black text-[#2b3a67] xl:text-sm">{{ $trx->invoice_number }}</p>
+                                            <p class="mt-0.5 whitespace-nowrap text-[9px] font-bold text-[#8faaf3] uppercase tracking-wider">{{ optional($trx->created_at)->diffForHumans() ?? '-' }}</p>
                                         </td>
-                                        <td class="truncate px-3 py-3 text-xs font-black text-[#2b3a67] xl:text-sm">{{ $trx->user->name ?? 'Guest' }}</td>
-                                        <td class="truncate px-3 py-3 text-xs font-black text-emerald-500 xl:text-sm">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67] xl:text-sm">{{ $trx->user->name ?? 'Guest' }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-emerald-500 xl:text-sm">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</td>
                                         <td class="px-3 py-3 text-center">
-                                            <span class="inline-flex max-w-full truncate rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm xl:text-[9px] {{ $status['class'] }}">{{ $status['label'] }}</span>
+                                            <span class="inline-flex whitespace-nowrap rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm xl:text-[9px] {{ $status['class'] }}">{{ $status['label'] }}</span>
                                         </td>
                                         <td class="px-3 py-3 text-center">
-                                            <span class="inline-flex max-w-full truncate rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm xl:text-[9px] {{ $method['class'] }}">{{ $method['label'] }}</span>
+                                            <span class="inline-flex whitespace-nowrap rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm xl:text-[9px] {{ $method['class'] }}">{{ $method['label'] }}</span>
                                         </td>
                                     </tr>
                                 @empty
@@ -609,8 +609,8 @@
                     </div>
 
                     <!-- Desktop Table View -->
-                    <div class="hidden w-full overflow-hidden md:block pb-2">
-                        <table class="w-full table-fixed text-left">
+                    <div class="hidden w-full overflow-x-auto md:block pb-2">
+                        <table class="min-w-[660px] w-full table-auto text-left">
                             <thead>
                                 <tr class="text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">
                                     <th class="w-[34%] px-3 py-3">Invoice</th>
@@ -624,15 +624,15 @@
                                     @php($logMeta = $walletLogMeta($log))
                                     <tr class="transition hover:bg-[#fffdf7] group">
                                         <td class="px-3 py-3 min-w-0">
-                                            <p class="truncate text-xs font-black text-[#2b3a67] xl:text-sm">{{ $log->invoice_number ?? '-' }}</p>
-                                            <p class="mt-0.5 text-[9px] font-bold text-[#8faaf3] uppercase tracking-wider">{{ optional($log->created_at)->diffForHumans() ?? '-' }}</p>
+                                            <p class="whitespace-nowrap text-xs font-black text-[#2b3a67] xl:text-sm">{{ $log->invoice_number ?? '-' }}</p>
+                                            <p class="mt-0.5 whitespace-nowrap text-[9px] font-bold text-[#8faaf3] uppercase tracking-wider">{{ optional($log->created_at)->diffForHumans() ?? '-' }}</p>
                                         </td>
-                                        <td class="truncate px-3 py-3 text-xs font-black text-[#2b3a67] xl:text-sm">{{ $log->user->name ?? 'Deleted' }}</td>
-                                        <td class="truncate px-3 py-3 text-xs font-black xl:text-sm {{ $log->type === 'purchase' ? 'text-[#ff6b6b]' : 'text-emerald-500' }}">
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67] xl:text-sm">{{ $log->user->name ?? 'Deleted' }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black xl:text-sm {{ $log->type === 'purchase' ? 'text-[#ff6b6b]' : 'text-emerald-500' }}">
                                             {{ $log->type === 'purchase' ? '-' : '+' }} Rp {{ number_format($log->amount, 0, ',', '.') }}
                                         </td>
                                         <td class="px-3 py-3 text-center">
-                                            <span class="inline-flex max-w-full truncate rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm xl:text-[9px] {{ $logMeta['class'] }}" title="{{ $log->description }}">
+                                            <span class="inline-flex whitespace-nowrap rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm xl:text-[9px] {{ $logMeta['class'] }}" title="{{ $log->description }}">
                                                 {{ $logMeta['label'] }}
                                             </span>
                                         </td>

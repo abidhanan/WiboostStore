@@ -193,7 +193,6 @@
                 </a>
             </div>
             <nav x-ref="adminSidebarNav" @scroll.debounce.150ms="saveSidebarScroll()" class="flex-1 space-y-2 overflow-y-auto overscroll-contain px-5 py-6 hide-scroll">
-                <p class="px-3 mb-2 text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">Menu Utama</p>
                 @foreach($adminNav as $item)
                     <a href="{{ route($item['route']) }}" @click="saveSidebarScroll()" class="flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-black transition-all duration-300 {{ request()->routeIs($item['pattern']) ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 scale-[1.02]' : 'border-2 border-transparent text-[#5a76c8] hover:border-white hover:bg-[#f4f9ff] hover:scale-[1.02]' }}">
                         <span class="text-lg">{{ $item['icon'] }}</span>

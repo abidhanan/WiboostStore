@@ -48,7 +48,7 @@ class OrderController extends Controller
         $rootCategoryName = $this->resolveRootCategoryName($category);
         $isSuntikSosmedOrder = $this->isSuntikSosmedCatalogCategory($category, $rootCategorySlug);
 
-        if (! Auth::check() && $this->guestSuntikSosmedCategoryRequiresLogin($category, $rootCategorySlug)) {
+        if (! Auth::check() && $this->guestFinalOrderCategoryRequiresLogin($category, $rootCategorySlug)) {
             return redirect()->guest(route('login'));
         }
 
@@ -361,6 +361,17 @@ class OrderController extends Controller
         }
 
         return $category->name;
+    }
+
+    protected function guestFinalOrderCategoryRequiresLogin(Category $category, ?string $rootCategorySlug = null): bool
+    {
+        $category->loadMissing('parent.parent.parent.parent.parent');
+
+        if ($category->children->isNotEmpty()) {
+            return false;
+        }
+
+        return true;
     }
 
     protected function guestSuntikSosmedCategoryRequiresLogin(Category $category, ?string $rootCategorySlug = null): bool

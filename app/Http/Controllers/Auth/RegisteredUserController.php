@@ -60,8 +60,10 @@ class RegisteredUserController extends Controller
 
         // 4. Langsung login otomatis setelah berhasil mendaftar
         Auth::login($user);
+        $request->session()->regenerate();
+        $request->session()->forget('url.intended');
 
-        // 5. Arahkan ke Dasbor user yang sudah dinormalisasi
-        return redirect()->intended(route('dashboard', absolute: false));
+        // 5. Arahkan ke dashboard user, bukan kembali ke halaman order/checkout guest.
+        return redirect()->route('user.dashboard');
     }
 }

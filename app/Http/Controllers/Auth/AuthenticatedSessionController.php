@@ -41,13 +41,13 @@ class AuthenticatedSessionController extends Controller
         // 2. Buat sesi baru untuk keamanan
         $request->session()->regenerate();
 
-        $this->forgetGuestCatalogIntendedUrl($request);
+        $this->forgetOrderCheckoutIntendedUrl($request);
 
         // 3. Arahkan user biasa langsung ke dashboard user.
         return redirect()->intended(route('user.dashboard', absolute: false));
     }
 
-    protected function forgetGuestCatalogIntendedUrl(Request $request): void
+    protected function forgetOrderCheckoutIntendedUrl(Request $request): void
     {
         $intendedUrl = $request->session()->get('url.intended');
 
@@ -61,7 +61,10 @@ class AuthenticatedSessionController extends Controller
             return;
         }
 
-        if (preg_match('#^/order/[^/]+/?$#', '/' . ltrim($path, '/')) === 1) {
+        $normalizedPath = '/' . ltrim($path, '/');
+
+        if (preg_match('#^/(order|checkout)(/|$)#', $normalizedPath) === 1
+            || preg_match('#^/user/(order|checkout)(/|$)#', $normalizedPath) === 1) {
             $request->session()->forget('url.intended');
         }
     }

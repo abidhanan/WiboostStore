@@ -92,22 +92,22 @@
 
                     <div class="w-full overflow-x-auto table-scroll pb-2">
                         <div class="inline-block min-w-full align-middle p-4 sm:p-6">
-                            <table class="w-full min-w-[800px] text-left whitespace-nowrap">
+                            <table class="w-full text-left" style="min-width: 1170px; table-layout: fixed;">
                                 <thead>
                                     <tr>
-                                        <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Produk</th>
-                                        <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Tipe Proses</th>
-                                        <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga Jual</th>
-                                        <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Provider</th>
-                                        <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Stok</th>
-                                        <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Aksi</th>
+                                        <th style="font-size: 10px; width: 360px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Produk</th>
+                                        <th style="font-size: 10px; width: 170px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Tipe Proses</th>
+                                        <th style="font-size: 10px; width: 170px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga Jual</th>
+                                        <th style="font-size: 10px; width: 210px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Provider</th>
+                                        <th style="font-size: 10px; width: 115px;" class="whitespace-nowrap px-5 py-4 pr-8 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Stok</th>
+                                        <th style="font-size: 10px; width: 145px;" class="whitespace-nowrap px-5 py-4 pl-8 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
                                     @foreach($categorySections as $categorySection)
                                         <tr class="bg-[#f8faff]">
                                             <td colspan="6" class="px-5 py-3">
-                                                <div class="flex flex-wrap items-center justify-between gap-3">
+                                                <div class="flex flex-wrap items-center justify-start gap-4 sm:gap-5">
                                                     <span class="inline-flex rounded-full border-2 border-white bg-white px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-[#5a76c8] shadow-sm">
                                                         {{ $categorySection['name'] }}
                                                     </span>
@@ -120,7 +120,7 @@
 
                                         @foreach($categorySection['products'] as $product)
                                             <tr class="transition-colors hover:bg-[#f8faff] group">
-                                                <td class="min-w-[200px] max-w-[280px] whitespace-normal px-5 py-4 sm:py-5 align-middle">
+                                                <td class="px-5 py-4 align-middle sm:py-5" style="width: 360px; max-width: 360px;">
                                                     <div class="flex items-center gap-3 sm:gap-4">
                                                         @if(!empty($product->display_logo_image))
                                                             <div class="h-10 w-10 shrink-0 overflow-hidden rounded-[1rem] border-2 border-white bg-[#f4f9ff] shadow-sm">
@@ -132,13 +132,15 @@
                                                             </div>
                                                         @endif
 
-                                                        <div class="min-w-0 flex-1">
-                                                            <p class="admin-clamp-2 text-xs sm:text-sm font-black leading-snug text-[#2b3a67]">{{ $product->name ?? '-' }}</p>
+                                                        <div class="flex-1" style="min-width: 0;">
+                                                            <p class="text-[11px] font-black leading-tight text-[#2b3a67] sm:text-sm sm:leading-snug" title="{{ $product->name ?? '-' }}" style="display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; text-overflow: clip; white-space: normal; word-break: normal; overflow-wrap: anywhere;">
+                                                                {{ $product->name ?? '-' }}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </td>
 
-                                                <td class="px-5 py-4 sm:py-5 align-middle text-center">
+                                                <td class="px-5 py-4 pr-8 sm:py-5 align-middle text-center">
                                                     @php $pType = $product->process_type ?? 'api'; @endphp
                                                     @if($pType === 'api')
                                                         <span style="font-size: 10px;" class="inline-block rounded-lg border-2 border-white bg-[#f4f9ff] shadow-sm px-3 py-1.5 font-black uppercase tracking-widest text-[#8faaf3]">API</span>
@@ -154,18 +156,18 @@
                                                 <td class="px-5 py-4 sm:py-5 align-middle">
                                                     <p class="text-xs sm:text-sm font-black text-[#4bc6b9] drop-shadow-sm">Rp {{ number_format($product->selling_price ?? 0, 0, ',', '.') }}</p>
                                                     @if($product->uses_api_selling_markup)
-                                                        <p style="font-size: 9px;" class="mt-1 font-black uppercase tracking-widest text-[#8faaf3]">
+                                                        <p style="font-size: 9px;" class="mt-1 whitespace-nowrap font-black uppercase tracking-widest text-[#8faaf3]">
                                                             Modal: Rp {{ number_format($product->price ?? 0, 0, ',', '.') }}
                                                         </p>
                                                     @endif
                                                 </td>
 
-                                                <td class="px-5 py-4 sm:py-5 align-middle text-center">
+                                                <td class="px-5 py-4 pl-8 sm:py-5 align-middle text-center">
                                                     <div class="space-y-1">
                                                         <span style="font-size: 10px;" class="inline-block rounded-lg border-2 border-white bg-[#f0f5ff] px-2 py-1 font-mono font-black text-[#8faaf3] shadow-inner max-w-[120px] truncate">
                                                             {{ $product->provider_product_id ?? '-' }}
                                                         </span>
-                                                        <div style="font-size: 9px;" class="font-black uppercase tracking-widest text-[#5a76c8]">
+                                                        <div style="font-size: 9px;" class="whitespace-nowrap font-black uppercase tracking-widest text-[#5a76c8]">
                                                             {{ $product->provider_source ?? '-' }}
                                                             @if(($product->provider_source ?? '') === 'ordersosmed')
                                                                 <span class="ml-1 text-[#8faaf3]">x{{ $product->provider_quantity ?? 1 }}</span>
