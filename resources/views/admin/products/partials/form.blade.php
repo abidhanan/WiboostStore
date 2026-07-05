@@ -4,6 +4,26 @@
     $currentType = in_array($currentType, ['api', 'account'], true) ? $currentType : 'api';
     $currentProvider = old('provider_source', $currentProduct->provider_source ?? $currentProduct->provider_id ?? '');
     $requiresBuyerEmail = old('requires_buyer_email', $currentProduct->requires_buyer_email ?? false);
+    $currentCategoryId = (string) old('category_id', $currentProduct->category_id ?? '');
+    $categoryOptions = collect($categories)->map(function ($category) {
+        return [
+            'value' => (string) $category->id,
+            'label' => collect([$category->parent?->parent?->name, $category->parent?->name, $category->name])->filter()->implode(' / '),
+        ];
+    })->prepend([
+        'value' => '',
+        'label' => '-- Pilih Kategori --',
+        'disabled' => true,
+    ])->values()->all();
+    $processTypeOptions = [
+        ['value' => 'api', 'label' => 'API Otomatis'],
+        ['value' => 'account', 'label' => 'Akun Premium'],
+    ];
+    $providerOptions = [
+        ['value' => '', 'label' => '-- Pilih Provider --'],
+        ['value' => 'ordersosmed', 'label' => 'OrderSosmed'],
+        ['value' => 'digiflazz', 'label' => 'Digiflazz'],
+    ];
 @endphp
 
 @if ($errors->any())
@@ -39,34 +59,37 @@
                     <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Nama Produk / Layanan</label>
                     <input type="text" name="name" required value="{{ old('name', $currentProduct->name ?? '') }}"
                         class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] placeholder-[#a3bbfb]"
-                        placeholder="Contoh: 1000 Followers Instagram HQ / Netflix Premium">
+                        placeholder="Cth: Followers IG / Netflix">
                 </div>
 
                 <div class="md:col-span-2">
                     <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Deskripsi Layanan</label>
                     <textarea name="description" rows="5"
                         class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] placeholder-[#a3bbfb]"
-                        placeholder="Jelaskan detail layanan, ketentuan, manfaat, atau instruksi penting yang perlu dibaca pembeli.">{{ old('description', $currentProduct->description ?? '') }}</textarea>
+                        placeholder="Detail layanan singkat...">{{ old('description', $currentProduct->description ?? '') }}</textarea>
                 </div>
 
                 <div>
                     <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Kategori</label>
-                    <select name="category_id" required class="w-full appearance-none rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] cursor-pointer">
-                        <option value="" disabled {{ old('category_id', $currentProduct->category_id ?? '') === '' ? 'selected' : '' }}>-- Pilih Kategori --</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ (string) old('category_id', $currentProduct->category_id ?? '') === (string) $category->id ? 'selected' : '' }}>
-                                {{ collect([$category->parent?->parent?->name, $category->parent?->name, $category->name])->filter()->implode(' / ') }}
-                            </option>
-                        @endforeach
-                    </select>
+                    @include('admin.products.partials.theme-select', [
+                        'name' => 'category_id',
+                        'id' => 'category_id',
+                        'selectedValue' => $currentCategoryId,
+                        'options' => $categoryOptions,
+                        'placeholder' => '-- Pilih Kategori --',
+                        'required' => true,
+                    ])
                 </div>
 
                 <div>
                     <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Tipe Proses Order</label>
-                    <select name="process_type" id="process_type" required class="w-full appearance-none rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] cursor-pointer">
-                        <option value="api" {{ $currentType === 'api' ? 'selected' : '' }}>API Otomatis</option>
-                        <option value="account" {{ $currentType === 'account' ? 'selected' : '' }}>Akun Premium</option>
-                    </select>
+                    @include('admin.products.partials.theme-select', [
+                        'name' => 'process_type',
+                        'id' => 'process_type',
+                        'selectedValue' => $currentType,
+                        'options' => $processTypeOptions,
+                        'required' => true,
+                    ])
                 </div>
 
                 <div>
@@ -88,25 +111,27 @@
                 <div>
                     <p class="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Integrasi API</p>
                     <h4 class="text-2xl font-black text-[#2b3a67]">Provider Otomatis</h4>
-                    <p class="mt-2 max-w-2xl text-sm font-bold text-[#6b84bf] bg-white/50 px-4 py-2 rounded-xl border border-white">Gunakan bagian ini hanya untuk produk yang diproses otomatis ke provider seperti Digiflazz atau OrderSosmed.</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
                     <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Sumber Provider</label>
-                    <select name="provider_source" id="provider_source" class="w-full appearance-none rounded-[1.5rem] border-4 border-white bg-white px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] cursor-pointer">
-                        <option value="">-- Pilih Provider --</option>
-                        <option value="ordersosmed" {{ $currentProvider === 'ordersosmed' ? 'selected' : '' }}>OrderSosmed</option>
-                        <option value="digiflazz" {{ $currentProvider === 'digiflazz' ? 'selected' : '' }}>Digiflazz</option>
-                    </select>
+                    @include('admin.products.partials.theme-select', [
+                        'name' => 'provider_source',
+                        'id' => 'provider_source',
+                        'selectedValue' => (string) $currentProvider,
+                        'options' => $providerOptions,
+                        'placeholder' => '-- Pilih Provider --',
+                        'background' => '#ffffff',
+                    ])
                 </div>
 
                 <div>
                     <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Kode Layanan Provider</label>
                     <input type="text" name="provider_product_id" value="{{ old('provider_product_id', $currentProduct->provider_product_id ?? '') }}"
                         class="w-full rounded-[1.5rem] border-4 border-white bg-white px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] placeholder-[#a3bbfb]"
-                        placeholder="SKU Digiflazz / service ID OrderSosmed">
+                        placeholder="SKU / ID layanan">
                 </div>
 
                 <div id="provider_quantity_group" class="md:col-span-2">
@@ -114,7 +139,6 @@
                     <input type="number" name="provider_quantity" min="1" value="{{ old('provider_quantity', $currentProduct->provider_quantity ?? 1) }}"
                         class="w-full rounded-[1.5rem] border-4 border-white bg-white px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] placeholder-[#a3bbfb]"
                         placeholder="1000">
-                    <p class="mt-3 ml-2 text-[10px] font-black uppercase tracking-widest text-[#8faaf3] bg-white inline-block px-3 py-1 rounded-md border border-[#f0f5ff] shadow-sm">Isi jumlah order yang dikirim ke provider (cth: 1000 untuk Followers).</p>
                 </div>
             </div>
         </section>
@@ -125,7 +149,6 @@
                 <div>
                     <p class="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-amber-500">Checkout User</p>
                     <h4 class="text-2xl font-black text-[#2b3a67]">Instruksi Input Target</h4>
-                    <p class="mt-2 max-w-2xl text-sm font-bold text-amber-700 bg-amber-50 px-4 py-2 rounded-xl border border-amber-100">Bagian ini mengatur label, placeholder, dan petunjuk yang dilihat pelanggan saat mengisi ID pesanan.</p>
                 </div>
             </div>
 
@@ -134,21 +157,21 @@
                     <label class="mb-3 ml-2 block text-sm font-black text-amber-600">Label Field</label>
                     <input type="text" name="target_label" value="{{ old('target_label', $currentProduct->target_label ?? '') }}"
                         class="w-full rounded-[1.5rem] border-4 border-white bg-white px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-amber-200 placeholder-[#d1d5db]"
-                        placeholder="Contoh: User ID & Zone ID">
+                        placeholder="Cth: User ID">
                 </div>
 
                 <div>
                     <label class="mb-3 ml-2 block text-sm font-black text-amber-600">Placeholder Field</label>
                     <input type="text" name="target_placeholder" value="{{ old('target_placeholder', $currentProduct->target_placeholder ?? '') }}"
                         class="w-full rounded-[1.5rem] border-4 border-white bg-white px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-amber-200 placeholder-[#d1d5db]"
-                        placeholder="Contoh: 12345678 (1234)">
+                        placeholder="Cth: 12345678">
                 </div>
 
                 <div class="md:col-span-2">
                     <label class="mb-3 ml-2 block text-sm font-black text-amber-600">Petunjuk Tambahan</label>
                     <textarea name="target_hint" rows="3"
                         class="w-full rounded-[1.5rem] border-4 border-white bg-white px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-amber-200 placeholder-[#d1d5db]"
-                        placeholder="Contoh: Pastikan ID dan zone sudah benar agar pesanan tidak gagal.">{{ old('target_hint', $currentProduct->target_hint ?? '') }}</textarea>
+                        placeholder="Cth: Pastikan ID benar.">{{ old('target_hint', $currentProduct->target_hint ?? '') }}</textarea>
                 </div>
             </div>
         </section>
@@ -159,7 +182,6 @@
                 <div>
                     <p class="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500">Stok</p>
                     <h4 class="text-2xl font-black text-[#2b3a67]">Pengingat Inventory</h4>
-                    <p class="mt-2 max-w-2xl text-sm font-bold text-emerald-700 bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100">Peringatan khusus untuk produk akun premium yang stoknya terbatas di gudang kredensial.</p>
                 </div>
             </div>
 
@@ -177,7 +199,6 @@
                 <div>
                     <p class="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-pink-500">Aplikasi Premium</p>
                     <h4 class="text-2xl font-black text-[#2b3a67]">Kebutuhan Input Buyer</h4>
-                    <p class="mt-2 max-w-2xl text-sm font-bold text-pink-700 bg-pink-50 px-4 py-2 rounded-xl border border-pink-100">Aktifkan jika produk ini perlu buyer memasukkan email pribadinya saat checkout.</p>
                 </div>
             </div>
 
@@ -187,7 +208,6 @@
                     class="h-6 w-6 rounded border-2 border-pink-200 text-pink-500 shadow-inner focus:ring-pink-400">
                 <div>
                     <p class="font-black text-[#2b3a67] text-lg">Buyer wajib mengisi email</p>
-                    <p class="mt-1 text-sm font-bold text-pink-400">Kalau dimatikan, checkout langsung lanjut tanpa field tambahan.</p>
                 </div>
             </label>
         </section>
@@ -242,7 +262,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const processTypeSelect = document.getElementById('process_type');
-        const categorySelect = document.querySelector('select[name="category_id"]');
+        const categorySelect = document.querySelector('[name="category_id"]');
         const providerSourceSelect = document.getElementById('provider_source');
         
         const providerSection = document.getElementById('provider_section');

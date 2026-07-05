@@ -15,36 +15,29 @@
 </style>
 
 <div class="wiboost-font pb-12 max-w-6xl mx-auto relative z-10">
-    
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-10 pl-2 relative z-10">
-        <div class="flex items-center gap-5">
-            <a href="{{ route('admin.products.index') }}" class="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-[1.2rem] flex items-center justify-center text-[#5a76c8] hover:bg-[#e0fbfc] transition-transform active:scale-95 border-4 border-white shadow-lg shadow-[#bde0fe]/30 shrink-0">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
-            </a>
-            <div>
-                <h3 class="text-3xl md:text-4xl font-black text-[#2b3a67] tracking-tight drop-shadow-sm">Gudang Stok 📦</h3>
-                <p class="text-sm font-bold text-[#8faaf3] mt-2 bg-white/50 px-4 py-2 rounded-xl border border-white shadow-sm inline-block">{{ $product->name }}</p>
-            </div>
+    @include('admin.partials.form-header', [
+        'backUrl' => route('admin.products.index'),
+        'badge' => 'Gudang Akun',
+        'title' => 'Gudang Stok',
+        'description' => $product->name,
+    ])
+
+    <div class="mb-10 grid grid-cols-2 gap-3 sm:gap-4">
+        <div class="min-w-0 rounded-[1.5rem] border-4 border-white bg-white/90 px-4 py-4 text-center shadow-lg shadow-[#bde0fe]/20 backdrop-blur-sm sm:px-6">
+            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Tipe Produk</p>
+            <p class="mt-1 truncate text-base font-black uppercase text-[#5a76c8] sm:text-lg">{{ $product->process_type }}</p>
         </div>
 
-        <div class="flex gap-4">
-            <div class="bg-white/90 backdrop-blur-sm px-6 py-3 rounded-[1.5rem] border-4 border-white shadow-lg shadow-[#bde0fe]/20 text-center flex flex-col justify-center transform hover:scale-105 transition-transform">
-                <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Sisa Stok Total</p>
-                <div class="flex items-center justify-center gap-3 mt-1">
-                    <p class="font-black text-3xl leading-none text-[#5a76c8]">{{ $product->available_stock }}</p>
-                    @if($product->available_stock <= $product->stock_reminder)
-                        <span class="bg-[#ffe5e5] text-[#ff6b6b] text-[10px] px-3 py-1 rounded-md border border-white font-black animate-pulse shadow-sm">RE-STOK!</span>
-                    @endif
-                </div>
-            </div>
-
-            <div class="bg-[#f0f5ff]/90 backdrop-blur-sm px-6 py-3 rounded-[1.5rem] border-4 border-white shadow-lg shadow-[#bde0fe]/20 text-center flex flex-col justify-center transform hover:scale-105 transition-transform">
-                <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Tipe Produk</p>
-                <p class="font-black text-[#5a76c8] text-lg uppercase mt-1">{{ $product->process_type }}</p>
+        <div class="min-w-0 rounded-[1.5rem] border-4 border-white bg-white/90 px-4 py-4 text-center shadow-lg shadow-[#bde0fe]/20 backdrop-blur-sm sm:px-6">
+            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Sisa Stok Total</p>
+            <div class="mt-1 flex min-w-0 items-center justify-center gap-2">
+                <p class="text-2xl font-black leading-none text-[#5a76c8] sm:text-3xl">{{ $product->available_stock }}</p>
+                @if($product->available_stock <= $product->stock_reminder)
+                    <span class="shrink-0 rounded-md border border-white bg-[#ffe5e5] px-2.5 py-1 text-[9px] font-black text-[#ff6b6b] shadow-sm animate-pulse sm:px-3 sm:text-[10px]">RE-STOK!</span>
+                @endif
             </div>
         </div>
     </div>
-
     @if (session('success'))
         <div class="bg-[#e6fff7] border-4 border-white text-emerald-500 px-6 py-4 rounded-[2.5rem] mb-8 font-black shadow-lg shadow-emerald-100/50 flex items-center gap-4 relative z-10">
             <span class="text-3xl drop-shadow-sm">✅</span><p>{{ session('success') }}</p>
@@ -62,7 +55,6 @@
             <form action="{{ route('admin.credentials.store', $product->id) }}" method="POST" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-8 sticky top-6">
                 @csrf
                 <div class="flex items-center gap-3 mb-6 border-b-4 border-dashed border-[#f4f9ff] pb-4">
-                    <span class="text-3xl drop-shadow-sm">➕</span>
                     <h4 class="font-black text-[#2b3a67] text-2xl">Tambah Stok</h4>
                 </div>
                 
@@ -133,7 +125,7 @@
                 </div>
 
                 <button type="submit" class="w-full bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black text-lg py-4 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white mt-8 flex justify-center items-center gap-2">
-                    Simpan Data 💾
+                    Simpan Data
                 </button>
             </form>
         </div>

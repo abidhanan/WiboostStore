@@ -19,8 +19,8 @@
         <div class="min-w-0 flex-1">
             <form action="{{ route('admin.tutorials.index') }}" method="GET" class="flex w-full items-center gap-2 sm:gap-3">
                 <input type="text" name="search" value="{{ request('search') }}"
-                    class="min-w-0 flex-1 truncate rounded-[1.2rem] border-4 border-white bg-[#f4f9ff] px-4 py-3 text-xs font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe] sm:rounded-[1.5rem] sm:px-5 sm:text-sm"
-                    placeholder="Cari judul, kategori utama, kategori kedua, atau isi tutorial...">
+                    class="h-12 min-w-0 flex-1 rounded-[1.2rem] border-4 border-white bg-[#f4f9ff] px-4 text-xs font-black leading-normal text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe] sm:h-14 sm:rounded-[1.5rem] sm:px-5 sm:text-sm"
+                    placeholder="Cari tutorial...">
 
                 <button type="submit" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#5a76c8] text-base text-white shadow-md shadow-[#5a76c8]/25 transition-transform hover:bg-[#4760a9] active:scale-95 sm:rounded-[1.2rem]" title="Cari Tutorial">
                     <span>&#x1F50D;</span>

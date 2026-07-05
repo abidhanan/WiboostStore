@@ -15,25 +15,18 @@
 </style>
 
 <div class="wiboost-font pb-12 max-w-4xl mx-auto relative z-10">
-
-    <div class="flex flex-col md:flex-row items-start md:items-center gap-5 mb-10 pl-2 relative z-10">
-        <a href="{{ route('admin.categories.index') }}" class="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-[1.2rem] flex items-center justify-center text-[#5a76c8] hover:bg-[#e0fbfc] transition-transform active:scale-95 border-4 border-white shadow-lg shadow-[#bde0fe]/30 shrink-0">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
-        </a>
-        <div>
-            <div class="inline-block px-4 py-1 bg-[#fff5eb] text-amber-500 font-black rounded-full mb-2 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">
-                Mode Edit
-            </div>
-            <h3 class="text-3xl md:text-4xl font-black text-[#2b3a67] tracking-tight drop-shadow-sm">Edit Kategori ✍️</h3>
-            <p class="text-[#8faaf3] font-bold text-sm mt-2 bg-white/50 px-4 py-2 rounded-xl border border-white shadow-sm inline-block">Mengubah data: <span class="font-black text-[#5a76c8]">{{ $category->name }}</span></p>
-        </div>
-    </div>
+    @include('admin.partials.form-header', [
+        'backUrl' => route('admin.categories.index'),
+        'badge' => 'Mode Edit',
+        'title' => 'Edit Kategori',
+        'description' => 'Atur data kategori.',
+    ])
 
     @if ($errors->any())
         <div class="bg-[#ffe5e5] border-4 border-white text-[#ff6b6b] px-6 py-5 rounded-[2.5rem] mb-8 font-black shadow-lg shadow-[#ff6b6b]/20 flex items-start gap-4 relative z-10">
             <span class="text-3xl mt-1 drop-shadow-sm">⚠️</span>
             <div>
-                <p class="mb-3 text-lg">Aduh, gagal memperbarui! Cek dulu bagian ini:</p>
+                <p class="mb-3 text-lg">Periksa data berikut:</p>
                 <ul class="list-disc list-inside text-sm font-bold bg-white/50 p-4 rounded-2xl border border-white">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -43,7 +36,22 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.categories.update', $category->id) }}" method="POST" enctype="multipart/form-data" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-10 relative z-10">
+    @php
+        $selectedParentId = (string) old('parent_id', $category->parent_id ?? '');
+        $parentSelectOptions = collect([['value' => '', 'label' => 'Jadikan Kategori Utama']])
+            ->merge(collect($parentOptions)->map(fn ($option) => [
+                'value' => (string) $option['id'],
+                'label' => $option['label'],
+            ]))
+            ->values()
+            ->all();
+
+        $fulfillmentSelectOptions = [
+            ['value' => 'auto_api', 'label' => 'API Otomatis'],
+            ['value' => 'stock_based', 'label' => 'Stok / Gudang Kredensial'],
+        ];
+    @endphp
+    <form action="{{ route('admin.categories.update', $category->id) }}" method="POST" enctype="multipart/form-data" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-10 relative z-10 overflow-visible">
         @csrf
         @method('PUT')
         
@@ -54,12 +62,13 @@
             </div>
             <div>
                 <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Kategori Induk</label>
-                <select name="parent_id" id="parent_id_select" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition cursor-pointer appearance-none">
-                    <option value="">⭐ Jadikan Kategori Utama</option>
-                    @foreach($parentOptions as $option)
-                        <option value="{{ $option['id'] }}" {{ (string) old('parent_id', $category->parent_id) === (string) $option['id'] ? 'selected' : '' }}>{{ $option['label'] }}</option>
-                    @endforeach
-                </select>
+                @include('admin.categories.partials.theme-select', [
+                    'name' => 'parent_id',
+                    'id' => 'parent_id_select',
+                    'options' => $parentSelectOptions,
+                    'selectedValue' => $selectedParentId,
+                    'placeholder' => 'Jadikan Kategori Utama',
+                ])
             </div>
         </div>
 
@@ -70,11 +79,13 @@
 
         <div class="mb-6" id="fulfillment_container">
             <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Tipe Fulfillment <span class="text-amber-500 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100 text-[10px] uppercase">(Kategori Utama)</span></label>
-            <select name="fulfillment_type" id="fulfillment_type_select" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition cursor-pointer appearance-none">
-                <option value="auto_api" {{ old('fulfillment_type', $category->fulfillment_type) === 'auto_api' ? 'selected' : '' }}>API Otomatis</option>
-                <option value="stock_based" {{ old('fulfillment_type', $category->fulfillment_type) === 'stock_based' ? 'selected' : '' }}>Stok / Gudang Kredensial</option>
-            </select>
-            <p class="text-[10px] font-black text-[#8faaf3] mt-3 ml-2 uppercase tracking-widest bg-[#f4f9ff] inline-block px-3 py-1 rounded-md border border-white shadow-sm">Jika kategori ini menjadi sub-kategori, tipe fulfillment akan mengikuti parent.</p>
+            @include('admin.categories.partials.theme-select', [
+                'name' => 'fulfillment_type',
+                'id' => 'fulfillment_type_select',
+                'options' => $fulfillmentSelectOptions,
+                'selectedValue' => (string) old('fulfillment_type', $category->fulfillment_type ?: 'auto_api'),
+                'placeholder' => 'API Otomatis',
+            ])
         </div>
 
         <div class="mb-6" id="emote_container">
@@ -111,7 +122,7 @@
         </div>
 
         <button type="submit" class="w-full bg-[#4bc6b9] hover:bg-[#3ba398] text-white font-black text-xl py-5 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#4bc6b9]/40 border-4 border-white flex justify-center items-center gap-2">
-            Simpan Perubahan ✨
+            Simpan Perubahan
         </button>
     </form>
 </div>

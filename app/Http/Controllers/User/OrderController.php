@@ -48,17 +48,15 @@ class OrderController extends Controller
         $rootCategoryName = $this->resolveRootCategoryName($category);
         $isSuntikSosmedOrder = $this->isSuntikSosmedCatalogCategory($category, $rootCategorySlug);
 
-        if (! Auth::check() && $this->guestFinalOrderCategoryRequiresLogin($category, $rootCategorySlug)) {
-            return redirect()->guest(route('login'));
-        }
-
         if ($category->children->count() > 0) {
             return view('user.order_sub', compact('category', 'isGuestCatalog'));
         }
 
-        $products = $isSuntikSosmedOrder && ! app()->environment('testing')
-            ? collect()
-            : $this->loadCategoryProducts($category, $rootCategorySlug);
+        if (! Auth::check() && $this->guestSuntikSosmedCategoryRequiresLogin($category, $rootCategorySlug)) {
+            return redirect()->route('login');
+        }
+
+        $products = $this->loadCategoryProducts($category, $rootCategorySlug);
         $this->cacheRootCategoryForProducts($products, $rootCategorySlug, $rootCategoryName);
         $isTopUpGameOrder = $rootCategorySlug === 'top-up-game';
         $isCompactServiceCardOrder = in_array($rootCategorySlug, ['suntik-sosmed', 'top-up-game', 'kuota-murah', 'paket-data', 'aplikasi-premium'], true);

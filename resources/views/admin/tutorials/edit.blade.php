@@ -3,24 +3,18 @@
 
 @section('content')
 <div class="wiboost-font pb-12 max-w-4xl mx-auto relative z-10">
-    <div class="flex flex-col md:flex-row items-start md:items-center gap-5 mb-10 pl-2 relative z-10">
-        <a href="{{ route('admin.tutorials.index') }}" class="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-[1.2rem] flex items-center justify-center text-[#5a76c8] hover:bg-[#e0fbfc] transition-transform active:scale-95 border-4 border-white shadow-lg shadow-[#bde0fe]/30 shrink-0">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
-        </a>
-        <div>
-            <div class="inline-block px-4 py-1 bg-[#fff5eb] text-amber-500 font-black rounded-full mb-2 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">
-                Mode Edit
-            </div>
-            <h3 class="text-3xl md:text-4xl font-black text-[#2b3a67] tracking-tight drop-shadow-sm">Edit Tutorial</h3>
-            <p class="text-[#8faaf3] font-bold text-sm mt-2 bg-white/50 px-4 py-2 rounded-xl border border-white shadow-sm inline-block">Mengubah tutorial: <span class="font-black text-[#5a76c8]">{{ $tutorial->title }}</span></p>
-        </div>
-    </div>
+    @include('admin.partials.form-header', [
+        'backUrl' => route('admin.tutorials.index'),
+        'badge' => 'Mode Edit',
+        'title' => 'Edit Tutorial',
+        'description' => 'Atur data tutorial.',
+    ])
 
     @if ($errors->any())
         <div class="bg-[#ffe5e5] border-4 border-white text-[#ff6b6b] px-6 py-5 rounded-[2.5rem] mb-8 font-black shadow-lg shadow-[#ff6b6b]/20 flex items-start gap-4 relative z-10">
             <span class="text-2xl mt-1 drop-shadow-sm">!</span>
             <div>
-                <p class="mb-3 text-lg">Gagal memperbarui. Periksa bagian ini:</p>
+                <p class="mb-3 text-lg">Periksa data berikut:</p>
                 <ul class="list-disc list-inside text-sm font-bold bg-white/50 p-4 rounded-2xl border border-white">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -30,14 +24,14 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.tutorials.update', $tutorial->id) }}" method="POST" enctype="multipart/form-data" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-10 relative z-10">
+    <form action="{{ route('admin.tutorials.update', $tutorial->id) }}" method="POST" enctype="multipart/form-data" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-10 relative z-10 overflow-visible">
         @csrf
         @method('PUT')
 
         <div class="mb-8 rounded-[2rem] border-4 border-[#f0f5ff] bg-[#f8faff] p-6 shadow-sm">
             <div class="mb-5">
                 <span class="inline-flex rounded-full border-2 border-white bg-white px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-[#5a76c8] shadow-sm">
-                    Struktur Kategori Tutorial
+                    Kategori Tutorial
                 </span>
             </div>
 
@@ -62,7 +56,6 @@
                     </div>
                 @endif
                 <input type="file" name="sub_category_image" accept="image/*" class="w-full text-sm font-bold text-[#8faaf3] file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:bg-[#e0fbfc] file:text-[#4bc6b9] file:shadow-sm cursor-pointer bg-white rounded-[1.5rem] p-2 border-4 border-white shadow-inner">
-                <p class="text-[10px] font-black text-amber-500 mt-2 ml-2 uppercase tracking-widest">Boleh kosong. Upload baru hanya kalau ingin mengganti logo kategori kedua.</p>
             </div>
         </div>
 
@@ -74,7 +67,6 @@
         <div class="mb-8">
             <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Deskripsi Singkat</label>
             <input type="text" name="description" value="{{ old('description', $tutorial->description) }}" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]">
-            <p class="text-[10px] font-black text-[#8faaf3] mt-2 ml-2 uppercase tracking-widest">Tampil di bagian ringkas akordion tutorial.</p>
         </div>
 
         <div class="p-6 bg-[#fffcf0] rounded-[2rem] border-4 border-white mb-8 shadow-md">
@@ -93,10 +85,16 @@
 
         <div class="mb-8">
             <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Status Tutorial</label>
-            <select name="is_active" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition cursor-pointer appearance-none">
-                <option value="1" {{ old('is_active', (string) (int) $tutorial->is_active) === '1' ? 'selected' : '' }}>Aktif, tampilkan ke pelanggan</option>
-                <option value="0" {{ old('is_active', (string) (int) $tutorial->is_active) === '0' ? 'selected' : '' }}>Sembunyikan</option>
-            </select>
+            @include('admin.partials.theme-select', [
+                'name' => 'is_active',
+                'id' => 'tutorial_edit_is_active',
+                'selectedValue' => old('is_active', (string) (int) $tutorial->is_active),
+                'placeholder' => 'Pilih status tutorial',
+                'options' => [
+                    ['value' => '1', 'label' => 'Aktif, tampilkan ke pelanggan'],
+                    ['value' => '0', 'label' => 'Sembunyikan'],
+                ],
+            ])
         </div>
 
         <button type="submit" class="w-full bg-[#4bc6b9] hover:bg-[#3ba398] text-white font-black text-xl py-5 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#4bc6b9]/40 border-4 border-white flex justify-center items-center gap-2">

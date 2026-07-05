@@ -162,23 +162,35 @@
 >
     @php
         $adminNav = [
-            ['route' => 'admin.dashboard', 'pattern' => 'admin.dashboard', 'label' => 'Dashboard', 'icon' => '📊'],
-            ['route' => 'admin.users.index', 'pattern' => 'admin.users.*', 'label' => 'Pengguna', 'icon' => '👥'],
-            ['route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'label' => 'Kategori', 'icon' => '📂'],
-            ['route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Produk', 'icon' => '📦'],
-            ['route' => 'admin.promos.index', 'pattern' => 'admin.promos.*', 'label' => 'Banner', 'icon' => '📢'],
-            ['route' => 'admin.tutorials.index', 'pattern' => 'admin.tutorials.*', 'label' => 'Tutorial', 'icon' => '📖'],
-            ['route' => 'admin.transactions.index', 'pattern' => 'admin.transactions.*', 'label' => 'Transaksi', 'icon' => '💳'],
-            ['route' => 'admin.manual-orders.index', 'pattern' => 'admin.manual-orders.*', 'label' => 'Manual Order', 'icon' => '✍️'],
-            ['route' => 'admin.deposits.index', 'pattern' => 'admin.deposits.*', 'label' => 'Deposit', 'icon' => '💰'],
-            ['route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Laporan', 'icon' => '📩'],
-            ['route' => 'profile.edit', 'pattern' => 'profile.edit', 'label' => 'Profil', 'icon' => '👤'],
+            ['route' => 'admin.dashboard', 'pattern' => 'admin.dashboard', 'label' => 'Dashboard', 'description' => 'Pantau ringkasan transaksi, saldo, stok, dan aktivitas terbaru.', 'icon' => '📊'],
+            ['route' => 'admin.users.index', 'pattern' => 'admin.users.*', 'label' => 'Pengguna', 'title' => 'Manajemen Pengguna', 'description' => 'Atur data admin dan pelanggan Wiboost Store.', 'icon' => '👥'],
+            ['route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'label' => 'Kategori', 'title' => 'Manajemen Kategori', 'description' => 'Kelola pengelompokan layanan dan produk Wiboost Store.', 'icon' => '📂'],
+            ['route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Produk', 'title' => 'Manajemen Produk', 'description' => 'Kelola harga, stok, dan sinkronisasi layanan provider.', 'icon' => '📦'],
+            ['route' => 'admin.promos.index', 'pattern' => 'admin.promos.*', 'label' => 'Banner', 'title' => 'Manajemen Banner', 'description' => 'Kelola slider pengumuman yang muncul di Dashboard User.', 'icon' => '📢'],
+            ['route' => 'admin.tutorials.index', 'pattern' => 'admin.tutorials.*', 'label' => 'Tutorial', 'title' => 'Manajemen Tutorial', 'description' => 'Kelola kategori utama, kategori kedua, dan isi tutorial pelanggan.', 'icon' => '📖'],
+            ['route' => 'admin.transactions.index', 'pattern' => 'admin.transactions.*', 'label' => 'Transaksi', 'title' => 'Manajemen Transaksi', 'description' => 'Pantau pesanan pelanggan dan filter berdasarkan bulan.', 'icon' => '💳'],
+            ['route' => 'admin.manual-orders.index', 'pattern' => 'admin.manual-orders.*', 'label' => 'Manual Order', 'description' => 'Kelola pesanan manual pelanggan.', 'icon' => '✍️'],
+            ['route' => 'admin.deposits.index', 'pattern' => 'admin.deposits.*', 'label' => 'Deposit', 'title' => 'Manajemen Deposit', 'description' => 'Pantau riwayat top-up atau pengisian saldo pengguna.', 'icon' => '💰'],
+            ['route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Laporan', 'title' => 'Manajemen Laporan', 'description' => 'Pantau kendala yang dikirim pelanggan dari halaman bantuan.', 'icon' => '📩'],
+            ['route' => 'profile.edit', 'pattern' => 'profile.edit', 'label' => 'Profil', 'description' => 'Kelola informasi profil dan keamanan akun.', 'icon' => '👤'],
         ];
 
         $adminNav = array_values(array_filter(
             $adminNav,
             fn (array $item) => $item['route'] !== 'admin.manual-orders.index'
         ));
+
+        $adminNavMatches = function (array $item): bool {
+            if ($item['route'] === 'admin.products.index' && request()->routeIs('admin.credentials.*')) {
+                return true;
+            }
+
+            return request()->routeIs(...(array) $item['pattern']);
+        };
+
+        $activeAdminNav = collect($adminNav)->first($adminNavMatches);
+        $adminNavbarTitle = $activeAdminNav['title'] ?? $activeAdminNav['label'] ?? trim($__env->yieldContent('title'));
+        $adminNavbarSubtitle = $activeAdminNav['description'] ?? trim($__env->yieldContent('admin_header_subtitle'));
     @endphp
 
     <!-- Sidebar Desktop -->
@@ -194,7 +206,8 @@
             </div>
             <nav x-ref="adminSidebarNav" @scroll.debounce.150ms="saveSidebarScroll()" class="flex-1 space-y-2 overflow-y-auto overscroll-contain px-5 py-6 hide-scroll">
                 @foreach($adminNav as $item)
-                    <a href="{{ route($item['route']) }}" @click="saveSidebarScroll()" class="flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-black transition-all duration-300 {{ request()->routeIs($item['pattern']) ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 scale-[1.02]' : 'border-2 border-transparent text-[#5a76c8] hover:border-white hover:bg-[#f4f9ff] hover:scale-[1.02]' }}">
+                    @php($isActiveAdminNav = $adminNavMatches($item))
+                    <a href="{{ route($item['route']) }}" @click="saveSidebarScroll()" class="flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-black transition-all duration-300 {{ $isActiveAdminNav ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 scale-[1.02]' : 'border-2 border-transparent text-[#5a76c8] hover:border-white hover:bg-[#f4f9ff] hover:scale-[1.02]' }}">
                         <span class="text-lg">{{ $item['icon'] }}</span>
                         <span>{{ $item['label'] }}</span>
                     </a>
@@ -222,10 +235,12 @@
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
                 
-                <div class="min-w-0 flex-1">
-                    <h1 class="text-xl sm:text-2xl md:text-3xl font-black leading-tight text-[#2b3a67] drop-shadow-sm truncate">@yield('title')</h1>
-                    @hasSection('admin_header_subtitle')
-                        <p class="mt-1 text-[10px] sm:text-xs font-bold text-[#8faaf3] truncate">@yield('admin_header_subtitle')</p>
+                <div class="min-w-0 flex-1 overflow-visible">
+                    <h1 class="text-xl sm:text-2xl md:text-3xl font-black leading-tight text-[#2b3a67] drop-shadow-sm whitespace-normal break-words">{{ $adminNavbarTitle }}</h1>
+                    @if($adminNavbarSubtitle)
+                        <p class="mt-1 block w-full max-w-full overflow-visible text-[10px] sm:text-xs font-bold leading-snug text-[#8faaf3] whitespace-normal break-words" style="-webkit-line-clamp: unset; text-overflow: clip;">
+                            {{ $adminNavbarSubtitle }}
+                        </p>
                     @endif
                 </div>
             </div>
@@ -269,7 +284,8 @@
             <!-- Nav Menu Mobile Sidebar (Scrollable & Hide Scrollbar) -->
             <nav class="flex-1 space-y-2 overflow-y-auto overscroll-contain hide-scroll pr-1">
                 @foreach($adminNav as $item)
-                    <a href="{{ route($item['route']) }}" class="flex items-center gap-3 rounded-full px-5 py-3 text-sm font-black transition-all {{ request()->routeIs($item['pattern']) ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white' : 'bg-[#f4f9ff] text-[#2b3a67] border-2 border-transparent hover:border-white' }}">
+                    @php($isActiveAdminNav = $adminNavMatches($item))
+                    <a href="{{ route($item['route']) }}" class="flex items-center gap-3 rounded-full px-5 py-3 text-sm font-black transition-all {{ $isActiveAdminNav ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white' : 'bg-[#f4f9ff] text-[#2b3a67] border-2 border-transparent hover:border-white' }}">
                         <span class="text-lg">{{ $item['icon'] }}</span>
                         <span>{{ $item['label'] }}</span>
                     </a>
