@@ -186,7 +186,7 @@
             </div>
             <h1 class="wiboost-dashboard-greeting font-black text-[#2b3a67] mb-2 drop-shadow-sm" data-fit-single-line>
                 Halo, {{ $dashboardUserName }}!
-                <span class="inline-flex align-[-0.18em] text-[#5a76c8]">
+                <span class="inline-flex align-[-0.18em] text-[#f5b84b]">
                     @include('partials.wiboost-icon', ['name' => 'sparkles', 'class' => 'h-8 w-8'])
                 </span>
             </h1>

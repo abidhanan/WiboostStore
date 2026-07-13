@@ -13,23 +13,26 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-6" x-data="{ photoPreview: @js($profilePhotoUrl), removeProfilePhoto: false }">
+    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-6" x-data="{ photoPreview: @js($profilePhotoUrl), photoError: '' }">
         @csrf
         @method('patch')
 
         <div class="flex flex-col items-start gap-4 text-left">
             <label class="block text-sm font-black text-[#5a76c8]">Foto Profil</label>
 
-            <div class="relative shrink-0">
-                <img :src="photoPreview"
-                     src="{{ $profilePhotoUrl }}"
-                     onerror="this.onerror=null;this.src='{{ $defaultProfilePhoto }}';"
-                     alt="Foto profil {{ $user->name }}"
-                     class="h-28 w-28 rounded-full border-2 border-[#5a76c8] bg-white object-cover shadow-xl shadow-[#bde0fe]/40 ring-4 ring-white sm:h-32 sm:w-32">
+            <div class="profile-photo-shell">
+                <span class="profile-photo-frame">
+                    <img :src="photoPreview"
+                         src="{{ $profilePhotoUrl }}"
+                         onerror="this.onerror=null;this.src='{{ $defaultProfilePhoto }}';"
+                         alt="Foto profil {{ $user->name }}"
+                         width="128"
+                         height="128">
+                </span>
                 <button type="button"
                         @click="$refs.profilePhotoInput.click(); editingProfile = true"
                         aria-label="Edit foto profil"
-                        class="absolute bottom-0 right-0 flex h-11 w-11 items-center justify-center rounded-full border-4 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/25 transition-transform hover:bg-[#4760a9] active:scale-95">
+                        class="profile-photo-edit-button">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m16.5 4.5 3 3M4 20h4l10.5-10.5a2.12 2.12 0 0 0-3-3L5 17v3Z" />
                     </svg>
@@ -44,26 +47,22 @@
                 accept="image/jpeg,image/png,image/webp"
                 class="hidden"
                 @change="
-                    const file = $event.target.files[0];
+                    const input = $event.target;
+                    const file = input.files[0];
                     if (!file) return;
-                    removeProfilePhoto = false;
-                    editingProfile = true;
-                    const reader = new FileReader();
-                    reader.onload = (event) => photoPreview = event.target.result;
-                    reader.readAsDataURL(file);
+                    photoError = '';
+                    window.wiboostPrepareProfilePhoto(file, input)
+                        .then((preview) => {
+                            photoPreview = preview;
+                            editingProfile = true;
+                        })
+                        .catch((message) => {
+                            photoError = message;
+                            input.value = '';
+                        });
                 ">
-            <input type="hidden" name="remove_profile_photo" :value="removeProfilePhoto ? 1 : 0">
 
-            <div class="flex flex-col items-start justify-start gap-3 sm:flex-row">
-                <button type="button"
-                        x-show="photoPreview !== @js($defaultProfilePhoto) && !removeProfilePhoto"
-                        x-cloak
-                        @click="$refs.profilePhotoInput.value = ''; photoPreview = @js($defaultProfilePhoto); removeProfilePhoto = true; editingProfile = true"
-                        class="rounded-full border-4 border-white bg-[#ffe5e5] px-6 py-3 text-sm font-black text-[#ff6b6b] shadow-sm transition-transform hover:bg-[#ffcccc] active:scale-95">
-                    Hapus Foto
-                </button>
-            </div>
-
+            <p x-show="photoError" x-cloak x-text="photoError" class="mt-1 text-xs font-bold text-[#ff6b6b]"></p>
             <x-input-error class="mt-1 text-xs font-bold text-[#ff6b6b]" :messages="$errors->get('profile_photo')" />
         </div>
 
@@ -114,11 +113,11 @@
             <x-input-error class="mt-2 pl-2 text-xs font-bold text-[#ff6b6b]" :messages="$errors->get('whatsapp')" />
         </div>
 
-        <div class="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row">
-            <button x-show="editingProfile" x-cloak type="submit" class="rounded-full border-4 border-white bg-[#5a76c8] px-8 py-4 font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9]">
+        <div class="grid grid-cols-2 items-center gap-3 pt-2 sm:flex sm:justify-center">
+            <button x-show="editingProfile" x-cloak type="submit" class="min-w-0 rounded-full border-4 border-white bg-[#5a76c8] px-4 py-4 font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9] sm:px-8">
                 Simpan Profil
             </button>
-            <button x-show="editingProfile" x-cloak type="button" @click="editingProfile = false; $el.closest('form').reset(); photoPreview = @js($profilePhotoUrl); removeProfilePhoto = false; $refs.profilePhotoInput.value = ''" class="rounded-full border-4 border-white bg-[#f4f9ff] px-8 py-4 font-black text-[#5a76c8] shadow-sm transition-transform active:scale-95">
+            <button x-show="editingProfile" x-cloak type="button" @click="editingProfile = false; $el.closest('form').reset(); photoPreview = @js($profilePhotoUrl); $refs.profilePhotoInput.value = ''" class="min-w-0 rounded-full border-4 border-white bg-[#f4f9ff] px-4 py-4 font-black text-[#5a76c8] shadow-sm transition-transform active:scale-95 sm:px-8">
                 Batal
             </button>
         </div>
@@ -130,3 +129,75 @@
         @endif
     </form>
 </section>
+
+@once
+    <script>
+        window.wiboostPrepareProfilePhoto = window.wiboostPrepareProfilePhoto || function (file, input) {
+            const maxBytes = 5 * 1024 * 1024;
+
+            return new Promise((resolve, reject) => {
+                if (!file || !file.type || !file.type.startsWith('image/')) {
+                    reject('Foto profil harus berupa gambar.');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onerror = () => reject('Foto profil gagal dibaca. Coba pilih gambar lain.');
+                reader.onload = () => {
+                    const image = new Image();
+                    image.onerror = () => reject('Foto profil gagal diproses. Coba pilih gambar lain.');
+                    image.onload = () => {
+                        const sourceSize = Math.min(image.naturalWidth || image.width, image.naturalHeight || image.height);
+
+                        if (!sourceSize) {
+                            reject('Foto profil gagal diproses. Coba pilih gambar lain.');
+                            return;
+                        }
+
+                        const canvasSize = Math.min(720, sourceSize);
+                        const canvas = document.createElement('canvas');
+                        canvas.width = canvasSize;
+                        canvas.height = canvasSize;
+
+                        const context = canvas.getContext('2d');
+                        const sx = ((image.naturalWidth || image.width) - sourceSize) / 2;
+                        const sy = ((image.naturalHeight || image.height) - sourceSize) / 2;
+
+                        context.fillStyle = '#ffffff';
+                        context.fillRect(0, 0, canvasSize, canvasSize);
+                        context.drawImage(image, sx, sy, sourceSize, sourceSize, 0, 0, canvasSize, canvasSize);
+
+                        canvas.toBlob((blob) => {
+                            if (!blob) {
+                                reject('Foto profil gagal diproses. Coba pilih gambar lain.');
+                                return;
+                            }
+
+                            if (blob.size > maxBytes) {
+                                reject('Ukuran foto profil terlalu besar. Pilih gambar maksimal 5 MB.');
+                                return;
+                            }
+
+                            const croppedFile = new File([blob], 'foto-profil.jpg', {
+                                type: 'image/jpeg',
+                                lastModified: Date.now(),
+                            });
+
+                            if (typeof DataTransfer !== 'undefined') {
+                                const transfer = new DataTransfer();
+                                transfer.items.add(croppedFile);
+                                input.files = transfer.files;
+                            }
+
+                            resolve(URL.createObjectURL(blob));
+                        }, 'image/jpeg', 0.86);
+                    };
+
+                    image.src = reader.result;
+                };
+
+                reader.readAsDataURL(file);
+            });
+        };
+    </script>
+@endonce

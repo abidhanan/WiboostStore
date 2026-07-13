@@ -608,7 +608,7 @@
                             <div class="h-6 w-6 shrink-0 rounded-full border-2 border-[#8faaf3] bg-white transition-all peer-checked:border-[7px] peer-checked:border-[#5a76c8]"></div>
                             <div class="flex-1">
                                 <p class="text-base font-black text-[#2b3a67]">Saldo</p>
-                                <p class="mt-1 text-sm font-bold text-[#5a76c8]">Sisa: Rp {{ number_format(Auth::user()->balance ?? 0, 0, ',', '.') }}</p>
+                                <p class="mt-1 text-sm font-bold text-[#5a76c8]">Rp {{ number_format(Auth::user()->balance ?? 0, 0, ',', '.') }}</p>
                             </div>
                             <div class="text-[#5a76c8] drop-shadow-sm opacity-70 transition-transform group-hover:scale-110">@include('partials.wiboost-icon', ['name' => 'wallet', 'class' => 'h-8 w-8'])</div>
                             <div class="pointer-events-none absolute inset-0 rounded-[1.5rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
@@ -818,7 +818,7 @@
                         <div class="h-7 w-7 shrink-0 rounded-full border-2 border-[#8faaf3] bg-white transition-all peer-checked:border-[8px] peer-checked:border-[#5a76c8]"></div>
                         <div class="flex-1">
                             <p class="text-xl font-black text-[#2b3a67]">Saldo</p>
-                            <p class="mt-1 text-sm font-bold text-[#5a76c8]">Sisa: Rp {{ number_format(Auth::user()->balance ?? 0, 0, ',', '.') }}</p>
+                            <p class="mt-1 text-sm font-bold text-[#5a76c8]">Rp {{ number_format(Auth::user()->balance ?? 0, 0, ',', '.') }}</p>
                         </div>
                         <div class="text-[#5a76c8] drop-shadow-sm opacity-70 transition-transform group-hover:scale-110">@include('partials.wiboost-icon', ['name' => 'wallet', 'class' => 'h-10 w-10'])</div>
                         <div class="pointer-events-none absolute inset-0 rounded-[2rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>

@@ -7,6 +7,60 @@
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
     .wiboost-font { font-family: 'Nunito', sans-serif; }
     [x-cloak] { display: none !important; }
+    .profile-photo-shell {
+        position: relative;
+        display: inline-flex;
+        width: 8rem;
+        height: 8rem;
+        aspect-ratio: 1 / 1;
+        flex: 0 0 8rem;
+    }
+    .profile-photo-frame {
+        display: block;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 9999px;
+        border: 2px solid #5a76c8;
+        background: #ffffff;
+        box-shadow: 0 16px 35px rgba(189, 224, 254, 0.4);
+        outline: 4px solid #ffffff;
+    }
+    .profile-photo-frame img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        aspect-ratio: 1 / 1;
+        border-radius: 9999px;
+        object-fit: cover;
+        object-position: center;
+    }
+    .profile-photo-edit-button {
+        position: absolute;
+        right: -0.25rem;
+        bottom: -0.25rem;
+        z-index: 2;
+        display: inline-flex;
+        width: 2.75rem;
+        height: 2.75rem;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        border: 4px solid #ffffff;
+        background: #5a76c8;
+        color: #ffffff;
+        box-shadow: 0 12px 22px rgba(90, 118, 200, 0.25);
+    }
+    .profile-photo-edit-button:hover { background: #4760a9; }
+    .profile-photo-edit-button:active { transform: scale(0.95); }
+    @media (max-width: 640px) {
+        .profile-photo-shell {
+            width: 7rem;
+            height: 7rem;
+            flex-basis: 7rem;
+        }
+    }
 </style>
 
 @php
