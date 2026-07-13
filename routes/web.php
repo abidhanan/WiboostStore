@@ -113,6 +113,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:buyer'])->prefix('user')->name('user.')->group(function () {
     // Dashboard & History
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/tutorial', [UserDashboardController::class, 'tutorials'])->name('tutorials.index');
     Route::get('/tutorials', [UserDashboardController::class, 'tutorialCategory'])->name('tutorials.category');
     Route::get('/history', [TransactionHistoryController::class, 'index'])->name('history');
     Route::post('/history/{transaction}/login-proof', [TransactionHistoryController::class, 'storeLoginProof'])->name('history.login-proof');
@@ -131,6 +132,7 @@ Route::middleware(['auth', 'role:buyer'])->prefix('user')->name('user.')->group(
 
     // Wallet, Deposit & Loyalty Points
     Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
+    Route::get('/points', [WalletController::class, 'points'])->name('points.index');
     Route::post('/wallet/topup', [WalletController::class, 'store'])->name('wallet.topup');
     Route::get('/wallet/pay/{invoice_number}', [WalletController::class, 'pay'])->name('wallet.pay');
     Route::delete('/wallet/deposits/{deposit}/cancel', [WalletController::class, 'cancelTripayDeposit'])->name('wallet.deposits.cancel');

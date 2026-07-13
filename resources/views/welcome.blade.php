@@ -357,8 +357,15 @@
          .faq-icon {
              transition: transform 0.3s ease-in-out;
          }
+         body.wiboost-welcome-page > nav,
+         body.wiboost-welcome-page > nav > div {
+             width: 100% !important;
+             max-width: none !important;
+         }
+         body.wiboost-welcome-page > nav > div > div {
+             border-radius: 0 !important;
+         }
          @media (min-width: 1024px) {
-             nav > div,
              .welcome-section-inner,
              footer > div {
                  max-width: min(1600px, calc(100vw - 8rem)) !important;
@@ -376,9 +383,9 @@
     $categoryDiscountLabel = \App\Models\Product::currentDiscountLabel();
 @endphp
 <body class="wiboost-compact-ui wiboost-welcome-page bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white flex flex-col min-h-screen">
-    <nav class="fixed w-full z-50 top-4 px-4 sm:px-6 lg:px-8 pointer-events-none">
-        <div class="max-w-7xl mx-auto pointer-events-auto">
-            <div class="flex items-center justify-between rounded-[2rem] border-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-6">
+    <nav class="fixed inset-x-0 top-0 z-50 px-0 pointer-events-none">
+        <div class="w-full max-w-none pointer-events-auto">
+            <div class="flex items-center justify-between rounded-none border-0 border-b-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-6 lg:px-8">
                 <a href="{{ Auth::check() ? (Auth::user()->isAdmin() ? route('admin.dashboard') : route('user.dashboard')) : route('home') }}" class="flex items-center gap-3 group">
                     <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" onerror="this.onerror=null;this.src='{{ asset('images/wiboost-logo.png') }}?v=20260426-full';" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 rounded-full object-contain drop-shadow-sm transition-transform group-hover:scale-105 sm:h-14 sm:w-14">
                     <p class="text-lg font-black leading-none text-[#2b3a67] drop-shadow-sm sm:text-2xl">Wiboost <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Store</span></p>
@@ -464,11 +471,7 @@
                                 @if($cat->image)
                                     <img src="{{ Storage::url($cat->image) }}" alt="{{ $cat->name }}" class="drop-shadow-sm">
                                 @else
-                                @if($cat->emote)
-                                    <span class="text-3xl drop-shadow-sm">{{ $cat->emote }}</span>
-                                @else
-                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                @endif
+                                <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['label' => $cat->name, 'class' => 'h-9 w-9'])</span>
                                 @endif
                             </div>
                             <h3 class="welcome-category-title max-w-full break-words px-1 font-black text-[#2b3a67]">{{ $cat->name }}</h3>

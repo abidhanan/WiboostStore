@@ -29,8 +29,20 @@
         </div>
     @endif
 
+    @php
+        $defaultAdminProfilePhotoUrl = \App\Models\User::defaultProfilePhotoUrl();
+        $adminUserPhotoUrl = $user->profile_photo_url ?: $defaultAdminProfilePhotoUrl;
+    @endphp
+
     <form action="{{ route('admin.users.update', $user->id) }}" method="POST" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-10 relative z-10 overflow-visible">
         @csrf @method('PUT')
+
+        <div class="mb-8 flex flex-col items-center text-center">
+            <label class="mb-4 block text-sm font-black text-[#5a76c8]">Foto Profil</label>
+            <div class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-4 ring-white shadow-lg shadow-[#bde0fe]/40">
+                <img src="{{ $adminUserPhotoUrl }}" onerror="this.onerror=null;this.src='{{ $defaultAdminProfilePhotoUrl }}';" alt="Foto profil {{ $user->name }}" class="h-full w-full object-cover">
+            </div>
+        </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>

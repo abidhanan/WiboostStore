@@ -47,52 +47,20 @@ class DashboardController extends Controller
                             ->whereYear('created_at', $currentYear)
                             ->sum('amount');
 
-        $tutorials = Tutorial::where('is_active', true)->latest()->get();
-        $tutorialMainOrder = [
-            'suntik sosmed' => 0,
-            'top up game' => 1,
-            'paket data' => 2,
-            'kuota murah' => 2,
-            'aplikasi premium' => 3,
-        ];
-
-        $tutorialGroups = $tutorials
-            ->groupBy(fn (Tutorial $tutorial) => $tutorial->main_category ?: ($tutorial->category ?: 'Umum'))
-            ->map(function ($mainTutorials, $mainCategory) {
-                $directTutorials = $mainTutorials
-                    ->filter(fn (Tutorial $tutorial) => blank($tutorial->sub_category))
-                    ->values();
-                $subcategoryTutorials = $mainTutorials
-                    ->filter(fn (Tutorial $tutorial) => filled($tutorial->sub_category));
-
-                return [
-                    'name' => $mainCategory,
-                    'tutorials' => $directTutorials,
-                    'subcategories' => $subcategoryTutorials
-                        ->groupBy(fn (Tutorial $tutorial) => $tutorial->sub_category)
-                        ->map(function ($subTutorials, $subCategory) {
-                            $firstTutorial = $subTutorials->first();
-
-                            return [
-                                'name' => $subCategory,
-                                'image' => $firstTutorial?->sub_category_image ?: $firstTutorial?->image,
-                                'tutorials' => $subTutorials->values(),
-                            ];
-                        })
-                        ->values(),
-                ];
-            })
-            ->sortBy(fn (array $group) => $tutorialMainOrder[strtolower((string) $group['name'])] ?? 99)
-            ->values();
-
         return view('user.dashboard', compact(
             'categories', 
             'promos', 
             'totalThisMonth', 
-            'totalSpent', 
-            'tutorials',
-            'tutorialGroups'
+            'totalSpent'
         ));
+    }
+
+    public function tutorials()
+    {
+        $tutorials = Tutorial::where('is_active', true)->latest()->get();
+        $tutorialGroups = $this->buildTutorialGroups($tutorials);
+
+        return view('user.tutorials', compact('tutorials', 'tutorialGroups'));
     }
 
     public function tutorialCategory(Request $request)
@@ -132,5 +100,45 @@ class DashboardController extends Controller
             'subCategoryImage',
             'tutorials'
         ));
+    }
+
+    protected function buildTutorialGroups($tutorials)
+    {
+        $tutorialMainOrder = [
+            'suntik sosmed' => 0,
+            'top up game' => 1,
+            'paket data' => 2,
+            'kuota murah' => 2,
+            'aplikasi premium' => 3,
+        ];
+
+        return $tutorials
+            ->groupBy(fn (Tutorial $tutorial) => $tutorial->main_category ?: ($tutorial->category ?: 'Umum'))
+            ->map(function ($mainTutorials, $mainCategory) {
+                $directTutorials = $mainTutorials
+                    ->filter(fn (Tutorial $tutorial) => blank($tutorial->sub_category))
+                    ->values();
+                $subcategoryTutorials = $mainTutorials
+                    ->filter(fn (Tutorial $tutorial) => filled($tutorial->sub_category));
+
+                return [
+                    'name' => $mainCategory,
+                    'tutorials' => $directTutorials,
+                    'subcategories' => $subcategoryTutorials
+                        ->groupBy(fn (Tutorial $tutorial) => $tutorial->sub_category)
+                        ->map(function ($subTutorials, $subCategory) {
+                            $firstTutorial = $subTutorials->first();
+
+                            return [
+                                'name' => $subCategory,
+                                'image' => $firstTutorial?->sub_category_image ?: $firstTutorial?->image,
+                                'tutorials' => $subTutorials->values(),
+                            ];
+                        })
+                        ->values(),
+                ];
+            })
+            ->sortBy(fn (array $group) => $tutorialMainOrder[strtolower((string) $group['name'])] ?? 99)
+            ->values();
     }
 }

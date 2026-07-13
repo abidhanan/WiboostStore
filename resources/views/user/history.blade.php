@@ -177,12 +177,15 @@
     
     <div class="mb-10 text-center md:text-left pl-2">
         <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">Catatan Transaksi</div>
-        <h2 class="text-3xl sm:text-4xl font-black text-[#2b3a67] tracking-tight drop-shadow-sm">Riwayat Pesanan 🧾</h2>
+        <h2 class="flex items-center justify-center gap-2 text-3xl sm:text-4xl font-black text-[#2b3a67] tracking-tight drop-shadow-sm md:justify-start">
+            <span class="text-[#5a76c8]">@include('partials.wiboost-icon', ['name' => 'history', 'class' => 'h-8 w-8'])</span>
+            <span>Riwayat Pesanan</span>
+        </h2>
     </div>
 
     @if(session('success'))
         <div class="bg-[#e6fff7] border-4 border-white text-emerald-500 px-6 py-5 rounded-[2.5rem] mb-8 font-black flex items-center gap-4 shadow-lg shadow-emerald-100/50">
-            <span class="text-3xl drop-shadow-sm">✅</span> {{ session('success') }}
+            <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['name' => 'success', 'class' => 'h-8 w-8'])</span> {{ session('success') }}
         </div>
     @endif
 
@@ -270,8 +273,11 @@
 
                 <div class="history-modal-card relative bg-white w-full max-w-lg md:max-w-xl rounded-[2rem] p-4 md:p-5 shadow-xl flex flex-col overflow-hidden border-4 border-white">
                     <div class="flex justify-between items-center mb-4 pb-3 border-b-4 border-dashed border-[#f4f9ff]">
-                        <h3 class="text-xl font-black text-[#2b3a67] drop-shadow-sm">Detail Pesanan 🧾</h3>
-                        <button onclick="closeModal('modal-{{ $trx->id }}')" class="w-12 h-12 bg-[#ffe5e5] text-[#ff6b6b] hover:bg-[#ff6b6b] hover:text-white rounded-[1.2rem] flex items-center justify-center transition-colors font-black border-4 border-white shadow-sm text-xl shrink-0 active:scale-95">✕</button>
+                        <h3 class="flex items-center gap-2 text-xl font-black text-[#2b3a67] drop-shadow-sm">
+                            <span>Detail Pesanan</span>
+                            <span class="text-[#5a76c8]">@include('partials.wiboost-icon', ['name' => 'receipt', 'class' => 'h-5 w-5'])</span>
+                        </h3>
+                        <button onclick="closeModal('modal-{{ $trx->id }}')" class="w-12 h-12 bg-[#ffe5e5] text-[#ff6b6b] hover:bg-[#ff6b6b] hover:text-white rounded-[1.2rem] flex items-center justify-center transition-colors font-black border-4 border-white shadow-sm text-xl shrink-0 active:scale-95">@include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])</button>
                     </div>
 
                     <div data-history-detail-scroll class="history-modal-body flex-1 overflow-y-auto hide-scroll space-y-3 pb-3">
@@ -289,7 +295,7 @@
                                 <div class="relative z-10">
                                     @if($hasCredentialAccess)
                                     <div class="flex items-center gap-3 mb-5">
-                                        <span class="text-2xl drop-shadow-sm">🔑</span>
+                                        <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['name' => 'key', 'class' => 'h-6 w-6'])</span>
                                         <p class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Akses Kredensial Kamu</p>
                                     </div>
 
@@ -365,7 +371,9 @@
                                         <div class="mt-6 space-y-3">
                                             @if(!empty($credentials['tutorial_link']))
                                                 <a href="{{ $credentials['tutorial_link'] }}" target="_blank" class="w-full bg-[#f4f9ff] border-4 border-white hover:border-[#bde0fe] hover:bg-[#e0fbfc] text-[#5a76c8] font-black text-xs py-4 rounded-[1.5rem] flex items-center justify-center gap-2 transition-colors shadow-sm active:scale-95">
-                                                    <span>Panduan</span> Cara Pakai 📖
+                                                    <span>Panduan</span>
+                                                    <span>Cara Pakai</span>
+                                                    @include('partials.wiboost-icon', ['name' => 'book', 'class' => 'h-4 w-4'])
                                                 </a>
                                             @endif
 
@@ -505,7 +513,7 @@
                             <div class="bg-[#fffcf0] p-6 rounded-[2rem] border-4 border-white shadow-md shadow-amber-100/50 relative overflow-hidden">
                                 <div class="relative z-10">
                                 <div class="mb-5 flex items-center gap-3">
-                                    <span class="text-2xl drop-shadow-sm">📝</span>
+                                    <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['name' => 'note', 'class' => 'h-6 w-6'])</span>
                                     <p class="text-[10px] font-black uppercase tracking-widest text-amber-500">Informasi Login</p>
                                 </div>
 
@@ -632,11 +640,11 @@
             </div>
         @empty
             <div class="text-center py-20 bg-white/90 backdrop-blur-sm rounded-[2.5rem] border-4 border-dashed border-[#bde0fe] shadow-lg shadow-[#bde0fe]/20 relative z-10">
-                <div class="text-6xl mb-5 opacity-50 animate-float block">📦</div>
+                <div class="mb-5 flex justify-center text-[#8faaf3] opacity-70 animate-float">@include('partials.wiboost-icon', ['name' => 'receipt', 'class' => 'h-16 w-16'])</div>
                 <h3 class="text-2xl font-black text-[#5a76c8] mb-2 drop-shadow-sm">Belum Ada Pesanan</h3>
                 <p class="text-[#8faaf3] font-bold max-w-sm mx-auto px-4 mb-8">Yuk, mulai buat pesanan pertamamu dan nikmati layanan kami!</p>
                 <a href="{{ route('user.dashboard') }}" class="inline-flex items-center justify-center gap-2 bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black px-8 py-4 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white">
-                    Lihat Katalog Layanan 🚀
+                    <span>Lihat Katalog Layanan</span>
                 </a>
             </div>
         @endforelse

@@ -35,8 +35,8 @@
     <div class="relative overflow-hidden bg-wiboost-sky px-4 sm:px-6 lg:px-8 {{ $isCompactAuth ? 'min-h-screen py-4 flex flex-col' : 'min-h-screen py-5' }}">
         
         @unless($isCompactAuth)
-            <nav class="relative z-20 mx-auto mt-2 w-full max-w-7xl">
-                <div class="flex items-center rounded-[2rem] border-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-6">
+            <nav class="relative z-20 -mx-4 mt-0 w-auto sm:-mx-6 lg:-mx-8">
+                <div class="flex items-center rounded-none border-0 border-b-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-6 lg:px-8">
                     <a href="{{ Auth::check() ? (Auth::user()->isAdmin() ? route('admin.dashboard') : route('user.dashboard')) : route('home') }}" class="flex items-center gap-3 group">
                         <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" onerror="this.onerror=null;this.src='{{ asset('images/wiboost-logo.png') }}?v=20260426-full';" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 rounded-full object-contain drop-shadow-sm transition-transform group-hover:scale-105 sm:h-14 sm:w-14">
                         <p class="text-lg font-black leading-none text-[#2b3a67] drop-shadow-sm sm:text-2xl">Wiboost <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Store</span></p>

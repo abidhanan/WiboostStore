@@ -14,9 +14,16 @@
     <style>
         body { font-family: 'Nunito', sans-serif; }
         .bg-wiboost-sky { background: linear-gradient(180deg, #bde0fe 0%, #e0fbfc 100%); }
+        body.wiboost-welcome-page > nav,
+        body.wiboost-welcome-page > nav > div {
+            width: 100% !important;
+            max-width: none !important;
+        }
+        body.wiboost-welcome-page > nav > div > div {
+            border-radius: 0 !important;
+        }
 
         @media (min-width: 1024px) {
-            nav > div,
             main,
             footer > div {
                 max-width: min(1600px, calc(100vw - 8rem)) !important;
@@ -31,9 +38,9 @@
     @include('partials.ios-layout-fixes')
 </head>
 <body class="wiboost-compact-ui wiboost-welcome-page min-h-screen bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white flex flex-col">
-    <nav class="fixed w-full z-50 top-4 px-4 sm:px-6 lg:px-8 pointer-events-none">
-        <div class="max-w-7xl mx-auto pointer-events-auto">
-            <div class="flex items-center justify-between rounded-[2rem] border-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-6">
+    <nav class="fixed inset-x-0 top-0 z-50 px-0 pointer-events-none">
+        <div class="w-full max-w-none pointer-events-auto">
+            <div class="flex items-center justify-between rounded-none border-0 border-b-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-6 lg:px-8">
                 <a href="{{ route('home') }}" class="flex items-center gap-3 group">
                     <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" onerror="this.onerror=null;this.src='{{ asset('images/wiboost-logo.png') }}?v=20260426-full';" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 rounded-full object-contain drop-shadow-sm transition-transform group-hover:scale-105 sm:h-14 sm:w-14">
                     <p class="text-lg font-black leading-none text-[#2b3a67] drop-shadow-sm sm:text-2xl">Wiboost <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Store</span></p>
@@ -46,7 +53,7 @@
         </div>
     </nav>
 
-    <div class="h-32 sm:h-36"></div>
+    <div class="h-24 sm:h-28"></div>
 
     <main class="relative z-10 mx-auto w-full max-w-7xl flex-1 px-4 pb-20 sm:px-6 lg:px-8">
         @yield('content')

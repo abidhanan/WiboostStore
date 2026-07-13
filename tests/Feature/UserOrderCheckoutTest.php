@@ -820,7 +820,7 @@ class UserOrderCheckoutTest extends TestCase
         $this->assertSame(1, \App\Models\WalletHistory::where('invoice_number', $transaction->invoice_number)->where('type', 'refund')->count());
     }
 
-    public function test_fifth_successful_order_automatically_adds_bonus_balance(): void
+    public function test_successful_orders_collect_points_and_manual_exchange_resets_stage(): void
     {
         Mail::fake();
 
@@ -867,13 +867,30 @@ class UserOrderCheckoutTest extends TestCase
 
         $user->refresh();
 
-        $this->assertSame(1000.0, (float) $user->balance);
-        $this->assertSame(0, (int) $user->points);
-        $this->assertDatabaseHas('wallet_histories', [
+        $this->assertSame(0.0, (float) $user->balance);
+        $this->assertSame(5, (int) $user->points);
+        $this->assertDatabaseMissing('wallet_histories', [
             'user_id' => $user->id,
             'type' => 'topup',
             'amount' => 1000,
             'description' => 'Bonus otomatis 5 order sukses',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('user.wallet.exchange'), ['reward_index' => 0])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $user->refresh();
+
+        $this->assertSame(1000.0, (float) $user->balance);
+        $this->assertSame(0, (int) $user->points);
+        $this->assertSame(1, (int) $user->point_reward_stage);
+        $this->assertDatabaseHas('wallet_histories', [
+            'user_id' => $user->id,
+            'type' => 'topup',
+            'amount' => 1000,
+            'description' => 'Klaim penukaran 3 poin Wiboost',
         ]);
     }
 

@@ -451,7 +451,7 @@
     
     @if(session('error'))
         <div class="mb-8 flex items-center gap-3 rounded-[2rem] border-4 border-white bg-[#ffe5e5] px-6 py-4 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 relative z-10">
-            <span class="text-3xl drop-shadow-sm">⚠️</span>
+            <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'h-8 w-8'])</span>
             <span>{{ session('error') }}</span>
         </div>
     @endif
@@ -459,7 +459,7 @@
     @if($errors->any())
         <div class="mb-8 rounded-[2rem] border-4 border-white bg-[#ffe5e5] px-6 py-4 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 relative z-10">
             <div class="flex items-center gap-2 mb-3">
-                <span class="text-2xl drop-shadow-sm">🛑</span>
+                <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['name' => 'stop', 'class' => 'h-7 w-7'])</span>
                 <p>Periksa lagi data pesananmu:</p>
             </div>
             <ul class="list-disc pl-8 text-sm font-bold">
@@ -506,7 +506,7 @@
                 @if($category->image)
                     <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="wiboost-header-logo-img drop-shadow-sm">
                 @else
-                    <span class="text-4xl font-black drop-shadow-sm">{{ $category->emote ?? '📦' }}</span>
+                    <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['label' => $category->name, 'class' => 'h-10 w-10'])</span>
                 @endif
             </div>
 
@@ -610,7 +610,7 @@
                                 <p class="text-base font-black text-[#2b3a67]">Saldo</p>
                                 <p class="mt-1 text-sm font-bold text-[#5a76c8]">Sisa: Rp {{ number_format(Auth::user()->balance ?? 0, 0, ',', '.') }}</p>
                             </div>
-                            <div class="text-3xl drop-shadow-sm opacity-70 transition-transform group-hover:scale-110">&#128176;</div>
+                            <div class="text-[#5a76c8] drop-shadow-sm opacity-70 transition-transform group-hover:scale-110">@include('partials.wiboost-icon', ['name' => 'wallet', 'class' => 'h-8 w-8'])</div>
                             <div class="pointer-events-none absolute inset-0 rounded-[1.5rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
                         </label>
 
@@ -621,7 +621,7 @@
                                 <p class="text-base font-black text-[#2b3a67]">QRIS</p>
                                 <p class="mt-1 text-xs font-bold text-[#8faaf3]">Otomatis via QRIS</p>
                             </div>
-                            <div class="text-3xl drop-shadow-sm opacity-70 transition-transform group-hover:scale-110">&#128241;</div>
+                            <div class="text-[#5a76c8] drop-shadow-sm opacity-70 transition-transform group-hover:scale-110">@include('partials.wiboost-icon', ['name' => 'qris', 'class' => 'h-8 w-8'])</div>
                             <div class="pointer-events-none absolute inset-0 rounded-[1.5rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
                         </label>
                     </div>
@@ -670,7 +670,7 @@
                     data-discount-label="{{ $product->active_discount_label ?? '' }}"
                     data-description="{{ $checkoutDescription }}"
                     data-logo-image="{{ (! $forceEmoteLogoOnly && $product->display_logo_image) ? Storage::url($product->display_logo_image) : '' }}"
-                    data-logo-emote="{{ $product->display_logo_emote ?? '' }}"
+                    data-logo-emote="{{ Str::upper(Str::substr($product->name, 0, 1)) }}"
                     data-logo-mode="{{ $forceEmoteLogoOnly ? 'emote' : 'auto' }}"
                     data-checkout-fields='{{ json_encode($product->checkout_fields, JSON_UNESCAPED_UNICODE) }}'
                     @if(!$isOutOfStock && ! $isGuestCatalog)
@@ -701,12 +701,12 @@
                     <div class="flex w-full flex-col items-center {{ $showCompactServiceCards ? 'wiboost-compact-card-main justify-center py-1' : 'mb-4' }}">
                         @if(! $forceEmoteLogoOnly && $product->display_logo_image)
                             <div class="{{ $logoBoxClass }}">
-                                <span class="hidden text-4xl font-black text-[#5a76c8] drop-shadow-sm">{{ $product->display_logo_emote ?: Str::upper(Str::substr($product->name, 0, 1)) }}</span>
+                                <span class="hidden text-[#5a76c8] drop-shadow-sm">@include('partials.wiboost-icon', ['label' => $product->name, 'class' => 'h-10 w-10'])</span>
                                 <img src="{{ Storage::url($product->display_logo_image) }}" alt="" class="wiboost-square-logo-img drop-shadow-sm" onerror="this.classList.add('hidden'); this.previousElementSibling.classList.remove('hidden');">
                             </div>
                         @elseif($product->display_logo_emote)
                             <div class="{{ $logoBoxClass }} text-[#5a76c8] drop-shadow-sm">
-                                {{ $product->display_logo_emote }}
+                                @include('partials.wiboost-icon', ['label' => $product->name, 'class' => $showCompactServiceCards ? 'h-10 w-10' : 'h-12 w-12'])
                             </div>
                         @else
                             <div class="{{ $logoBoxClass }} text-[9px] font-black text-[#8faaf3] uppercase">
@@ -820,7 +820,7 @@
                             <p class="text-xl font-black text-[#2b3a67]">Saldo</p>
                             <p class="mt-1 text-sm font-bold text-[#5a76c8]">Sisa: Rp {{ number_format(Auth::user()->balance ?? 0, 0, ',', '.') }}</p>
                         </div>
-                        <div class="text-4xl drop-shadow-sm opacity-70 transition-transform group-hover:scale-110">&#128176;</div>
+                        <div class="text-[#5a76c8] drop-shadow-sm opacity-70 transition-transform group-hover:scale-110">@include('partials.wiboost-icon', ['name' => 'wallet', 'class' => 'h-10 w-10'])</div>
                         <div class="pointer-events-none absolute inset-0 rounded-[2rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
                     </label>
 
@@ -831,7 +831,7 @@
                             <p class="text-xl font-black text-[#2b3a67]">QRIS</p>
                             <p class="mt-1 text-xs font-bold text-[#8faaf3]">Otomatis via QRIS</p>
                         </div>
-                        <div class="text-4xl drop-shadow-sm opacity-70 transition-transform group-hover:scale-110">&#128241;</div>
+                        <div class="text-[#5a76c8] drop-shadow-sm opacity-70 transition-transform group-hover:scale-110">@include('partials.wiboost-icon', ['name' => 'qris', 'class' => 'h-10 w-10'])</div>
                         <div class="pointer-events-none absolute inset-0 rounded-[2rem] border-4 border-transparent transition-colors peer-checked:border-[#5a76c8]"></div>
                     </label>
                 </div>
@@ -1302,7 +1302,6 @@
 
         btn.disabled = true;
         const selectedPayment = form?.querySelector('input[name="payment_method"]:checked')?.value;
-        btn.innerHTML = selectedPayment === 'tripay' ? 'Menyiapkan QRIS...' : 'Memproses pesanan...';
         btn.classList.add('cursor-not-allowed', 'opacity-70');
 
         return true;
@@ -1510,7 +1509,6 @@
 
         btn.disabled = true;
         const selectedPayment = form?.querySelector('input[name="payment_method"]:checked')?.value;
-        btn.innerHTML = selectedPayment === 'tripay' ? 'Menyiapkan QRIS...' : 'Memproses pesanan...';
         btn.classList.add('cursor-not-allowed', 'opacity-70');
 
         return true;

@@ -24,17 +24,20 @@
         <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">
             Keuangan
         </div>
-        <h2 class="text-3xl sm:text-4xl font-black text-[#2b3a67] tracking-tight drop-shadow-sm">Dompet Anda 💳</h2>
+        <h2 class="flex items-center justify-center gap-2 text-3xl sm:text-4xl font-black text-[#2b3a67] tracking-tight drop-shadow-sm md:justify-start">
+            <span class="text-[#5a76c8]">@include('partials.wiboost-icon', ['name' => 'wallet', 'class' => 'h-8 w-8'])</span>
+            <span>Dompet Anda</span>
+        </h2>
     </div>
 
     @if(session('success'))
         <div class="bg-[#e6fff7] border-4 border-white text-emerald-500 px-6 py-4 rounded-[2rem] mb-8 font-black flex items-center gap-3 shadow-lg shadow-emerald-100/50">
-            <span class="text-2xl drop-shadow-sm">🎉</span> {{ session('success') }}
+            <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['name' => 'success', 'class' => 'h-7 w-7'])</span> {{ session('success') }}
         </div>
     @endif
     @if(session('error'))
         <div class="bg-[#ffe5e5] border-4 border-white text-[#ff6b6b] px-6 py-4 rounded-[2rem] mb-8 font-black flex items-center gap-3 shadow-lg shadow-[#ff6b6b]/20">
-            <span class="text-2xl drop-shadow-sm">⚠️</span> {{ session('error') }}
+            <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'h-7 w-7'])</span> {{ session('error') }}
         </div>
     @endif
 
@@ -52,48 +55,10 @@
                 </div>
             </div>
 
-            <div class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] p-8 shadow-xl shadow-[#bde0fe]/30 border-4 border-white">
-                @php
-                    $currentPoints = (int) (Auth::user()->points ?? 0);
-                    $targetPoints = 5;
-                    $pointProgress = min(100, (int) round(($currentPoints / $targetPoints) * 100));
-                    $remainingPoints = max(0, $targetPoints - $currentPoints);
-                @endphp
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <p class="text-[#8faaf3] text-[10px] font-black uppercase tracking-widest mb-1">POIN Wiboost ⭐</p>
-                        <h3 class="text-3xl font-black text-[#2b3a67] tracking-tight">{{ $currentPoints }} <span class="text-sm font-bold text-[#8faaf3]">POIN</span></h3>
-                    </div>
-                    <div class="text-4xl animate-bounce drop-shadow-sm">🎁</div>
-                </div>
-
-                <div class="w-full bg-[#f8faff] border-4 border-dashed border-[#bde0fe] text-[#8faaf3] p-4 rounded-[1.5rem] font-black text-center text-sm shadow-inner">
-                    <div class="mb-3 text-center text-[10px] uppercase tracking-widest">
-                        @if($currentPoints >= $targetPoints)
-                            <span>POIN Siap Ditukar!</span>
-                        @else
-                            <span>Kumpulkan {{ $remainingPoints }} POIN Lagi!</span>
-                        @endif
-                    </div>
-                    <div class="h-5 overflow-hidden rounded-full p-0.5 shadow-inner" style="background-color: #ffffff; border: 3px solid #facc15;">
-                        <div class="h-full rounded-full transition-all duration-500" style="width: {{ $pointProgress }}%; min-width: {{ $currentPoints > 0 ? '1.25rem' : '0' }}; background: linear-gradient(90deg, #fef08a 0%, #facc15 52%, #f59e0b 100%); box-shadow: 0 0 18px rgba(250, 204, 21, 0.55);"></div>
-                    </div>
-                </div>
-
-                @if($currentPoints >= $targetPoints)
-                    <form action="{{ route('user.wallet.exchange') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="mt-4 w-full bg-[#4bc6b9] hover:bg-[#3ba398] text-white py-4 rounded-full font-black transition-transform active:scale-95 shadow-lg shadow-[#4bc6b9]/30 border-4 border-white flex items-center justify-center gap-2">
-                            Tukar 5 POIN &rarr; Saldo 1K
-                        </button>
-                    </form>
-                @endif
-                <p class="text-[9px] font-bold text-[#8faaf3] mt-4 text-center uppercase tracking-widest">Kumpulkan POIN dan dapatkan bonus saldo.</p>
-            </div>
 
             <div class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/30">
                 <div class="flex items-center gap-2 mb-6 ml-2">
-                    <span class="text-2xl">⚡</span>
+                    <span class="text-[#5a76c8]">@include('partials.wiboost-icon', ['name' => 'zap', 'class' => 'h-7 w-7'])</span>
                     <h4 class="font-black text-[#2b3a67] text-xl">Isi Saldo Cepat</h4>
                 </div>
                 <form action="{{ route('user.wallet.topup') }}" method="POST" data-single-submit>
@@ -125,7 +90,10 @@
             <div class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white h-full flex flex-col overflow-hidden relative">
                 
                 <div class="px-8 py-6 border-b-4 border-dashed border-[#f4f9ff] flex flex-col md:flex-row md:justify-between items-start md:items-center bg-[#ffffff] gap-3 relative z-10">
-                    <h4 class="font-black text-xl text-[#2b3a67]">Mutasi Saldo 💸</h4>
+                    <h4 class="flex items-center gap-2 font-black text-xl text-[#2b3a67]">
+                        Mutasi Saldo
+                        <span class="text-[#4bc6b9]">@include('partials.wiboost-icon', ['name' => 'cash', 'class' => 'h-6 w-6'])</span>
+                    </h4>
                     <span class="text-[10px] font-black bg-[#f4f9ff] px-4 py-1.5 rounded-full text-[#8faaf3] border-2 border-white shadow-sm uppercase tracking-widest">Semua Transaksi</span>
                 </div>
                 
@@ -201,7 +169,9 @@
                         </div>
                     @empty
                         <div class="text-center py-24 bg-white/50 rounded-[2rem] border-4 border-dashed border-[#bde0fe]">
-                            <div class="text-6xl mb-4 opacity-50 animate-float">🪫</div>
+                            <div class="mb-4 flex justify-center text-[#5a76c8] animate-float">
+                                @include('partials.wiboost-icon', ['name' => 'wallet', 'class' => 'h-16 w-16'])
+                            </div>
                             <h3 class="text-xl font-black text-[#5a76c8] mb-1">Dompet Masih Kosong</h3>
                             <p class="text-[#8faaf3] font-bold text-sm">Belum ada mutasi saldo masuk ataupun keluar.</p>
                         </div>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
+use App\Models\User;
 use App\Models\WalletHistory;
 use App\Services\TripayDepositSyncService;
 use App\Services\XoftwarePaymentService;
@@ -11,6 +12,8 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class WalletController extends Controller
@@ -28,6 +31,21 @@ class WalletController extends Controller
             ->get();
 
         return view('user.wallet.index', compact('deposits'));
+    }
+
+    public function points()
+    {
+        $user = $this->supportsPointRewardTracking()
+            ? $this->syncPointRewardPeriod(Auth::user())
+            : Auth::user();
+        $rewards = $this->pointRewards();
+        $currentRewardIndex = $this->currentRewardIndex(
+            $this->supportsPointRewardTracking() ? (int) ($user->point_reward_stage ?? 0) : 0,
+            $rewards
+        );
+        $currentPoints = (int) ($user->points ?? 0);
+
+        return view('user.points.index', compact('rewards', 'currentRewardIndex', 'currentPoints'));
     }
 
     public function store(Request $request, XoftwarePaymentService $paymentService)
@@ -106,26 +124,112 @@ class WalletController extends Controller
         return redirect()->route('user.wallet.index');
     }
 
-    public function exchangePoints()
+    public function exchangePoints(Request $request)
     {
-        $user = Auth::user();
-
-        if ($user->points < 5) {
-            return back()->with('error', 'Poin kamu belum cukup. Kumpulkan minimal 5 poin.');
-        }
-
-        $user->decrement('points', 5);
-        $user->increment('balance', 1000);
-
-        WalletHistory::create([
-            'user_id' => $user->id,
-            'type' => 'topup',
-            'amount' => 1000,
-            'description' => 'Bonus penukaran 5 poin loyalty',
-            'invoice_number' => 'POIN-' . strtoupper(Str::random(8)),
+        $validated = $request->validate([
+            'reward_index' => ['required', 'integer', 'min:0'],
         ]);
 
-        return back()->with('success', 'Selamat, 5 poin berhasil ditukar menjadi saldo Rp 1.000.');
+        $rewards = $this->pointRewards();
+        $requestedIndex = (int) $validated['reward_index'];
+
+        if (! isset($rewards[$requestedIndex])) {
+            return back()->with('error', 'Pilihan penukaran poin tidak tersedia.');
+        }
+
+        $message = DB::transaction(function () use ($requestedIndex, $rewards) {
+            $user = User::query()
+                ->lockForUpdate()
+                ->findOrFail(Auth::id());
+
+            $supportsPointRewardTracking = $this->supportsPointRewardTracking();
+            $user = $supportsPointRewardTracking ? $this->syncPointRewardPeriod($user) : $user;
+            $currentRewardIndex = $this->currentRewardIndex(
+                $supportsPointRewardTracking ? (int) ($user->point_reward_stage ?? 0) : 0,
+                $rewards
+            );
+
+            if ($requestedIndex !== $currentRewardIndex) {
+                return 'Tahap penukaran ini belum terbuka.';
+            }
+
+            $reward = $rewards[$currentRewardIndex];
+
+            if ((int) $user->points < (int) $reward['points']) {
+                return 'Poin kamu belum cukup untuk klaim reward ini.';
+            }
+
+            $nextStage = min($currentRewardIndex + 1, count($rewards) - 1);
+
+            $updates = [
+                'points' => 0,
+                'balance' => (float) $user->balance + (float) $reward['amount'],
+            ];
+
+            if ($supportsPointRewardTracking) {
+                $updates['point_reward_stage'] = $nextStage;
+            }
+
+            $user->forceFill($updates)->save();
+
+            WalletHistory::create([
+                'user_id' => $user->id,
+                'type' => 'topup',
+                'amount' => $reward['amount'],
+                'description' => 'Klaim penukaran ' . $reward['points'] . ' poin Wiboost',
+                'invoice_number' => 'POIN-' . strtoupper(Str::random(8)),
+            ]);
+
+            return 'Selamat, ' . $reward['points'] . ' poin berhasil ditukar menjadi saldo Rp ' . number_format($reward['amount'], 0, ',', '.') . '.';
+        });
+
+        $isSuccess = str_starts_with($message, 'Selamat');
+
+        return back()->with($isSuccess ? 'success' : 'error', $message);
+    }
+
+    protected function pointRewards(): array
+    {
+        return [
+            ['points' => 3, 'amount' => 1000, 'label' => 'Saldo Rp 1.000'],
+            ['points' => 5, 'amount' => 3000, 'label' => 'Saldo Rp 3.000'],
+            ['points' => 8, 'amount' => 6000, 'label' => 'Saldo Rp 6.000'],
+        ];
+    }
+
+    protected function currentRewardIndex(int $stage, array $rewards): int
+    {
+        return max(0, min($stage, max(0, count($rewards) - 1)));
+    }
+
+    protected function syncPointRewardPeriod(User $user): User
+    {
+        if (! $this->supportsPointRewardTracking()) {
+            return $user;
+        }
+
+        $currentPeriod = now()->format('Y-m');
+
+        if ((string) ($user->point_reward_period ?? '') !== $currentPeriod) {
+            $user->forceFill([
+                'point_reward_stage' => 0,
+                'point_reward_period' => $currentPeriod,
+            ])->save();
+        }
+
+        return $user;
+    }
+
+    protected function supportsPointRewardTracking(): bool
+    {
+        static $supports = null;
+
+        if ($supports !== null) {
+            return $supports;
+        }
+
+        return $supports = Schema::hasColumn('users', 'point_reward_stage')
+            && Schema::hasColumn('users', 'point_reward_period');
     }
 
     protected function findReusableDeposit(float $amount): ?Deposit

@@ -242,9 +242,19 @@
         <div class="inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1 text-[10px] font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
             Bantuan
         </div>
-        <h1 class="mt-3 flex items-center justify-center gap-2 text-3xl font-black tracking-tight text-[#2b3a67] md:justify-start md:text-4xl">
+        <h1 class="mt-3 flex items-center justify-start gap-3 text-3xl font-black tracking-tight text-[#2b3a67] md:text-4xl">
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center text-[#5a76c8]">
+                <svg class="h-9 w-9 drop-shadow-sm" fill="none" stroke="currentColor" stroke-width="2.25" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 11.85a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Zm-6.35 8.05a6.35 6.35 0 0 1 12.7 0"/>
+                    <g transform="translate(0 -4.4)">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.9 12.05v-.55a6.1 6.1 0 0 1 12.2 0v.55"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 12.1h1.45v3.05H5.25a1 1 0 0 1-1-1V13.1a1 1 0 0 1 1-1Zm12.05 0h1.45a1 1 0 0 1 1 1v1.05a1 1 0 0 1-1 1H17.3V12.1Z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.05 15.05c-.45 1.55-1.7 2.35-3.65 2.35h-1.05"/>
+                        <path stroke-linecap="round" d="M12.55 17.4h1.2"/>
+                    </g>
+                </svg>
+            </span>
             <span>Lapor Admin</span>
-            <span class="text-2xl leading-none">&#128172;</span>
         </h1>
     </div>
 

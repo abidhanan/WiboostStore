@@ -1,3 +1,8 @@
+@php
+    $defaultProfilePhoto = \App\Models\User::defaultProfilePhotoUrl();
+    $profilePhotoUrl = $user->profile_photo_url ?: $defaultProfilePhoto;
+@endphp
+
 <section>
     <header class="mb-6 text-left">
         <h3 class="text-xl font-black text-[#2b3a67] md:text-2xl">Informasi Profil</h3>
@@ -8,9 +13,59 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" class="space-y-6">
+    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-6" x-data="{ photoPreview: @js($profilePhotoUrl), removeProfilePhoto: false }">
         @csrf
         @method('patch')
+
+        <div class="flex flex-col items-start gap-4 text-left">
+            <label class="block text-sm font-black text-[#5a76c8]">Foto Profil</label>
+
+            <div class="relative shrink-0">
+                <img :src="photoPreview"
+                     src="{{ $profilePhotoUrl }}"
+                     onerror="this.onerror=null;this.src='{{ $defaultProfilePhoto }}';"
+                     alt="Foto profil {{ $user->name }}"
+                     class="h-28 w-28 rounded-full border-2 border-[#5a76c8] bg-white object-cover shadow-xl shadow-[#bde0fe]/40 ring-4 ring-white sm:h-32 sm:w-32">
+                <button type="button"
+                        @click="$refs.profilePhotoInput.click(); editingProfile = true"
+                        aria-label="Edit foto profil"
+                        class="absolute bottom-0 right-0 flex h-11 w-11 items-center justify-center rounded-full border-4 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/25 transition-transform hover:bg-[#4760a9] active:scale-95">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.5 4.5 3 3M4 20h4l10.5-10.5a2.12 2.12 0 0 0-3-3L5 17v3Z" />
+                    </svg>
+                </button>
+            </div>
+
+            <input
+                x-ref="profilePhotoInput"
+                id="profile_photo"
+                name="profile_photo"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                class="hidden"
+                @change="
+                    const file = $event.target.files[0];
+                    if (!file) return;
+                    removeProfilePhoto = false;
+                    editingProfile = true;
+                    const reader = new FileReader();
+                    reader.onload = (event) => photoPreview = event.target.result;
+                    reader.readAsDataURL(file);
+                ">
+            <input type="hidden" name="remove_profile_photo" :value="removeProfilePhoto ? 1 : 0">
+
+            <div class="flex flex-col items-start justify-start gap-3 sm:flex-row">
+                <button type="button"
+                        x-show="photoPreview !== @js($defaultProfilePhoto) && !removeProfilePhoto"
+                        x-cloak
+                        @click="$refs.profilePhotoInput.value = ''; photoPreview = @js($defaultProfilePhoto); removeProfilePhoto = true; editingProfile = true"
+                        class="rounded-full border-4 border-white bg-[#ffe5e5] px-6 py-3 text-sm font-black text-[#ff6b6b] shadow-sm transition-transform hover:bg-[#ffcccc] active:scale-95">
+                    Hapus Foto
+                </button>
+            </div>
+
+            <x-input-error class="mt-1 text-xs font-bold text-[#ff6b6b]" :messages="$errors->get('profile_photo')" />
+        </div>
 
         <div>
             <label for="name" class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Nama Lengkap</label>
@@ -63,7 +118,7 @@
             <button x-show="editingProfile" x-cloak type="submit" class="rounded-full border-4 border-white bg-[#5a76c8] px-8 py-4 font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9]">
                 Simpan Profil
             </button>
-            <button x-show="editingProfile" x-cloak type="button" @click="editingProfile = false; $el.closest('form').reset()" class="rounded-full border-4 border-white bg-[#f4f9ff] px-8 py-4 font-black text-[#5a76c8] shadow-sm transition-transform active:scale-95">
+            <button x-show="editingProfile" x-cloak type="button" @click="editingProfile = false; $el.closest('form').reset(); photoPreview = @js($profilePhotoUrl); removeProfilePhoto = false; $refs.profilePhotoInput.value = ''" class="rounded-full border-4 border-white bg-[#f4f9ff] px-8 py-4 font-black text-[#5a76c8] shadow-sm transition-transform active:scale-95">
                 Batal
             </button>
         </div>

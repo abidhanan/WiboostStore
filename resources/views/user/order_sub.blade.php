@@ -172,7 +172,7 @@
                 @if($category->image)
                     <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="wiboost-header-logo-img drop-shadow-sm">
                 @else
-                    <span class="wiboost-suborder-emote text-4xl font-black drop-shadow-sm">{{ $category->emote ?? '📦' }}</span>
+                    <span class="wiboost-suborder-emote drop-shadow-sm">@include('partials.wiboost-icon', ['label' => $category->name, 'class' => 'h-10 w-10'])</span>
                 @endif
             </div>
         </div>
@@ -220,7 +220,7 @@
                     @if($child->image)
                         <img src="{{ Storage::url($child->image) }}" alt="{{ $child->name }}" class="wiboost-square-logo-img wiboost-suborder-logo-content drop-shadow-sm">
                     @else
-                        <span class="wiboost-suborder-emote-large text-5xl drop-shadow-md">{{ $child->emote ?? '📦' }}</span>
+                        <span class="wiboost-suborder-emote-large drop-shadow-md">@include('partials.wiboost-icon', ['label' => $child->name, 'class' => 'h-12 w-12'])</span>
                     @endif
                 </div>
 

@@ -26,6 +26,8 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
             'whatsapp' => ['required', 'string', 'max:20'],
+            'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'remove_profile_photo' => ['nullable', 'boolean'],
         ];
     }
 
@@ -35,6 +37,7 @@ class ProfileUpdateRequest extends FormRequest
             'name' => 'nama panggilan',
             'email' => 'alamat email',
             'whatsapp' => 'nomor kontak',
+            'profile_photo' => 'foto profil',
         ];
     }
 }

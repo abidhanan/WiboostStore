@@ -1225,25 +1225,9 @@ class OrderFulfillmentService
                 return;
             }
 
-            $newPoints = (int) $user->points + 1;
-            $bonusCount = intdiv($newPoints, 5);
-            $remainingPoints = $newPoints % 5;
-            $bonusAmount = $bonusCount * 1000;
-
             $user->forceFill([
-                'points' => $remainingPoints,
-                'balance' => (float) $user->balance + $bonusAmount,
+                'points' => (int) $user->points + 1,
             ])->save();
-
-            for ($i = 0; $i < $bonusCount; $i++) {
-                WalletHistory::create([
-                    'user_id' => $user->id,
-                    'type' => 'topup',
-                    'amount' => 1000,
-                    'description' => 'Bonus otomatis 5 order sukses',
-                    'invoice_number' => 'BONUS-' . strtoupper(Str::random(10)),
-                ]);
-            }
 
             $lockedTransaction->forceFill(['points_awarded_at' => now()])->save();
         });

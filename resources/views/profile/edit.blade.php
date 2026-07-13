@@ -23,8 +23,8 @@
             Area Privasi
         </div>
         <h2 class="flex items-center justify-center gap-2 text-3xl font-black text-[#2b3a67] tracking-tight md:justify-start">
+            <span class="text-[#5a76c8]">@include('partials.wiboost-icon', ['name' => 'profile', 'class' => 'h-8 w-8'])</span>
             <span>Pengaturan Akun</span>
-            <span class="text-2xl leading-none">&#128736;&#65039;</span>
         </h2>
     </div>
 

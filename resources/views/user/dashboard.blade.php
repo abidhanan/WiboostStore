@@ -6,6 +6,7 @@
 @section('content')
 @php
     $categoryDiscountLabel = \App\Models\Product::currentDiscountLabel();
+    $dashboardUserName = Auth::user()->short_name ?? Auth::user()->name;
 @endphp
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
@@ -13,22 +14,6 @@
     .bg-wiboost-sky { background: linear-gradient(180deg, #bde0fe 0%, #e0fbfc 100%); }
     .hide-scroll::-webkit-scrollbar { display: none; }
     .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-    .tutorial-accordion > summary { list-style: none; }
-    .tutorial-accordion > summary::-webkit-details-marker { display: none; }
-    .tutorial-accordion[open] summary .faq-icon { transform: rotate(180deg); }
-    .faq-icon { transition: transform 0.25s ease-in-out; }
-    .tut-filter-btn.is-active {
-        background: #5a76c8 !important;
-        color: #ffffff !important;
-        border-color: #ffffff !important;
-        box-shadow: 0 8px 18px rgba(90, 118, 200, 0.18) !important;
-    }
-    .tutorial-sub-filter.is-active {
-        border-color: #bde0fe !important;
-        background: #f8fbff !important;
-        box-shadow: 0 12px 24px rgba(189, 224, 254, 0.32) !important;
-        transform: translateY(-2px);
-    }
     .discount-corner-ribbon {
         pointer-events: none;
         position: absolute;
@@ -199,7 +184,12 @@
             <div class="inline-block px-4 py-1 bg-white/80 backdrop-blur-sm text-[#5a76c8] font-black rounded-full mb-3 text-xs border-2 border-white shadow-sm">
                 Dashboard
             </div>
-            <h1 class="wiboost-dashboard-greeting font-black text-[#2b3a67] mb-2 drop-shadow-sm" data-fit-single-line>Halo, {{ Auth::user()->name }}! 👋</h1>
+            <h1 class="wiboost-dashboard-greeting font-black text-[#2b3a67] mb-2 drop-shadow-sm" data-fit-single-line>
+                Halo, {{ $dashboardUserName }}!
+                <span class="inline-flex align-[-0.18em] text-[#5a76c8]">
+                    @include('partials.wiboost-icon', ['name' => 'sparkles', 'class' => 'h-8 w-8'])
+                </span>
+            </h1>
             <p class="wiboost-dashboard-subtitle font-extrabold text-[#5a76c8]" data-fit-single-line>Mau beli apa hari ini?</p>
         </div>
 
@@ -215,8 +205,8 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">
         <div class="bg-white p-6 rounded-[2rem] border-4 border-white shadow-xl shadow-[#bde0fe]/40 flex items-center gap-5 hover:-translate-y-1 transition duration-300">
-            <div class="w-14 h-14 bg-[#f4f9ff] rounded-2xl flex items-center justify-center text-[#5a76c8] border-2 border-white shadow-inner shrink-0 text-2xl">
-                🛒
+            <div class="w-14 h-14 bg-[#f4f9ff] rounded-2xl flex items-center justify-center text-[#5a76c8] border-2 border-white shadow-inner shrink-0">
+                @include('partials.wiboost-icon', ['name' => 'cart', 'class' => 'h-7 w-7'])
             </div>
             <div>
                 <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest">Pesanan Bulan Ini</p>
@@ -225,8 +215,8 @@
         </div>
 
         <div class="bg-white p-6 rounded-[2rem] border-4 border-white shadow-xl shadow-[#bde0fe]/40 flex items-center gap-5 hover:-translate-y-1 transition duration-300">
-            <div class="w-14 h-14 bg-[#e6fff7] rounded-2xl flex items-center justify-center text-emerald-500 border-2 border-white shadow-inner shrink-0 text-2xl">
-                💸
+            <div class="w-14 h-14 bg-[#e6fff7] rounded-2xl flex items-center justify-center text-emerald-500 border-2 border-white shadow-inner shrink-0">
+                @include('partials.wiboost-icon', ['name' => 'cash', 'class' => 'h-7 w-7'])
             </div>
             <div class="truncate">
                 <p class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Pengeluaran Bulan Ini</p>
@@ -283,14 +273,16 @@
 
                     @if(!$promo->image && filled($promo->emoji))
                         <div class="text-7xl md:text-8xl opacity-50 absolute right-10 transform {{ $loop->iteration % 2 == 0 ? '-rotate-12' : 'rotate-12' }} pointer-events-none group-hover/slide:scale-110 transition-transform duration-500 drop-shadow-xl">
-                            {{ $promo->emoji }}
+                            @include('partials.wiboost-icon', ['name' => 'gift', 'class' => 'h-20 w-20 md:h-24 md:w-24'])
                         </div>
                     @endif
                 </div>
             @empty
                 <div class="promo-slide snap-center shrink-0 w-full bg-gradient-to-r from-[#8faaf3] to-[#5a76c8] p-8 md:p-12 text-white relative overflow-hidden flex items-center justify-center">
                     <div class="text-center relative z-20">
-                        <span class="text-6xl mb-4 block animate-float">🎁</span>
+                        <span class="mb-4 flex justify-center text-white/80 animate-float">
+                            @include('partials.wiboost-icon', ['name' => 'gift', 'class' => 'h-16 w-16'])
+                        </span>
                         <h2 class="text-3xl md:text-5xl font-black mb-3 drop-shadow-md">Belum Ada Promo</h2>
                         <p class="font-bold text-white/90 text-sm md:text-xl drop-shadow-md">Nantikan penawaran menarik dari Wiboost.</p>
                     </div>
@@ -331,7 +323,9 @@
                     @if($category->image)
                         <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="wiboost-square-logo-img drop-shadow-sm">
                     @else
-                    <span class="text-4xl drop-shadow-sm">{{ $category->emote ?? '🛒' }}</span>
+                    <span class="text-[#5a76c8] drop-shadow-sm">
+                        @include('partials.wiboost-icon', ['label' => $category->name, 'class' => 'h-10 w-10'])
+                    </span>
                     @endif
                 </div>
                 <span class="wiboost-main-category-title max-w-full break-words px-1 font-black text-[#2b3a67]">{{ $category->name }}</span>
@@ -343,6 +337,7 @@
         @endforelse
     </div>
 
+    @if(false)
     <div class="text-center md:text-left mb-6 pl-2">
         <div class="inline-block px-4 py-1 bg-[#fff0f0] text-[#ff6b6b] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">Tutorial</div>
         <h3 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pusat Tutorial</h3>
@@ -422,6 +417,8 @@
         </div>
     @endif
 
+    @endif
+
     @if(false)
     <div class="hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mb-12" id="tutorial-grid">
         @forelse($tutorials ?? [] as $tutorial)
@@ -431,7 +428,7 @@
                         @if($tutorial->image)
                             <img src="{{ Storage::url($tutorial->image) }}" class="w-full h-full object-cover">
                         @else
-                            {{ $tutorial->icon ?? '📖' }}
+                            @include('partials.wiboost-icon', ['name' => 'book', 'class' => 'h-8 w-8'])
                         @endif
                     </div>
                     <span class="bg-[#f0f5ff] text-[#5a76c8] text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest text-right border border-white shadow-sm">{{ $tutorial->category }}</span>
@@ -446,7 +443,9 @@
             </div>
         @empty
             <div class="col-span-full text-center py-16 bg-white rounded-[2rem] border-4 border-dashed border-[#bde0fe]">
-                <div class="text-6xl mb-3 opacity-50 animate-float">📖</div>
+                <div class="mb-3 flex justify-center text-[#5a76c8]/50 animate-float">
+                    @include('partials.wiboost-icon', ['name' => 'book', 'class' => 'h-16 w-16'])
+                </div>
                 <p class="text-[#8faaf3] font-black text-lg">Belum ada tutorial tersedia.</p>
             </div>
         @endforelse
@@ -465,11 +464,13 @@
                     @if($tutorial->image)
                         <img src="{{ Storage::url($tutorial->image) }}" class="w-10 h-10 object-cover rounded-xl border-2 border-[#f0f5ff] shadow-sm">
                     @else
-                        <span class="text-3xl">{{ $tutorial->icon ?? '📖' }}</span>
+                        <span class="text-[#5a76c8]">@include('partials.wiboost-icon', ['name' => 'book', 'class' => 'h-8 w-8'])</span>
                     @endif
                     {{ $tutorial->title }}
                 </h3>
-                <button onclick="closeTutorialModal('tut-{{ $tutorial->id }}')" class="w-12 h-12 bg-[#ffe5e5] text-[#ff6b6b] hover:bg-[#ff6b6b] hover:text-white rounded-[1.2rem] flex items-center justify-center transition-colors font-black border-2 border-white shadow-sm shrink-0 text-xl">✕</button>
+                <button onclick="closeTutorialModal('tut-{{ $tutorial->id }}')" class="w-12 h-12 bg-[#ffe5e5] text-[#ff6b6b] hover:bg-[#ff6b6b] hover:text-white rounded-[1.2rem] flex items-center justify-center transition-colors font-black border-2 border-white shadow-sm shrink-0 text-xl">
+                    @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])
+                </button>
             </div>
 
             <div class="flex-1 overflow-y-auto hide-scroll pr-2 text-left">
@@ -617,15 +618,5 @@
         }
     });
 
-    function filterTutorialMain(mainCategory) {
-        document.querySelectorAll('[data-main-filter]').forEach(btn => {
-            btn.classList.toggle('is-active', btn.dataset.mainFilter === mainCategory);
-        });
-
-        document.querySelectorAll('[data-main-panel]').forEach(panel => {
-            const isActive = panel.dataset.mainPanel === mainCategory;
-            panel.classList.toggle('hidden', !isActive);
-        });
-    }
 </script>
 @endsection
