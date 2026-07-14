@@ -586,7 +586,7 @@
                             <svg class="faq-icon w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
                         </span>
                     </summary>
-                    <div class="px-6 pb-6 text-sm text-[#4a5f96] font-bold leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white text-left">
+                    <div class="px-6 pb-6 text-sm text-[#5a76c8] font-bold leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white text-left">
                         Sebagian besar layanan kami diproses secara otomatis dan instan dalam hitungan detik setelah pembayaran berhasil dikonfirmasi. Untuk layanan tertentu (seperti SMM dengan target tinggi), proses mungkin membutuhkan waktu yang sedikit lebih lama sesuai deskripsi produk.
                     </div>
                 </details>
@@ -598,7 +598,7 @@
                             <svg class="faq-icon w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
                         </span>
                     </summary>
-                    <div class="px-6 pb-6 text-sm text-[#4a5f96] font-bold leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white text-left">
+                    <div class="px-6 pb-6 text-sm text-[#5a76c8] font-bold leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white text-left">
                         Tidak! Layanan SMM (Social Media Marketing) kami 100% aman karena hanya membutuhkan <strong>Username</strong> atau <strong>Link/Tautan</strong> postingan Anda. Kami tidak akan pernah meminta password akun Anda.
                     </div>
                 </details>
@@ -610,7 +610,7 @@
                             <svg class="faq-icon w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
                         </span>
                     </summary>
-                    <div class="px-6 pb-6 text-sm text-[#4a5f96] font-bold leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white text-left">
+                    <div class="px-6 pb-6 text-sm text-[#5a76c8] font-bold leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white text-left">
                         Kami mendukung pembayaran via <strong>QRIS</strong> yang dapat di-scan menggunakan seluruh aplikasi E-Wallet (Dana, Ovo, Gopay, LinkAja, ShopeePay) maupun Mobile Banking (BCA, Mandiri, BRI, BNI, dll). Pembayaran diproses otomatis tanpa perlu mengirim bukti transfer.
                     </div>
                 </details>
@@ -622,7 +622,7 @@
                             <svg class="faq-icon w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
                         </span>
                     </summary>
-                    <div class="px-6 pb-6 text-sm text-[#4a5f96] font-bold leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white text-left">
+                    <div class="px-6 pb-6 text-sm text-[#5a76c8] font-bold leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white text-left">
                         Jika terjadi gangguan teknis dari pusat yang menyebabkan pesanan Anda berstatus gagal (Error/Canceled), sistem kami akan secara otomatis mengembalikan dana Anda dalam bentuk saldo akun yang bisa Anda gunakan kembali untuk transaksi lainnya.
                     </div>
                 </details>

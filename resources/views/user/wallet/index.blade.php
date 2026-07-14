@@ -64,7 +64,6 @@
                 <form action="{{ route('user.wallet.topup') }}" method="POST" data-single-submit>
                     @csrf
                     <div class="mb-6">
-                        <label class="block text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mb-3 ml-2">Pilih Nominal Instan</label>
                         <div class="grid grid-cols-2 gap-3 mb-5">
                             <button type="button" onclick="setNominal(10000)" class="py-3 bg-[#f4f9ff] border-2 border-white hover:border-[#bde0fe] shadow-sm hover:bg-[#e0fbfc] rounded-[1.2rem] text-sm font-black text-[#5a76c8] transition-all active:scale-95">10K</button>
                             <button type="button" onclick="setNominal(20000)" class="py-3 bg-[#f4f9ff] border-2 border-white hover:border-[#bde0fe] shadow-sm hover:bg-[#e0fbfc] rounded-[1.2rem] text-sm font-black text-[#5a76c8] transition-all active:scale-95">20K</button>
@@ -77,10 +76,10 @@
                                    class="w-full pl-12 pr-5 py-4 bg-[#f4f9ff] rounded-[1.5rem] border-4 border-white shadow-inner focus:border-[#bde0fe] outline-none font-black text-lg text-[#2b3a67] transition placeholder-[#a3bbfb]" 
                                    placeholder="ketik nominal tanpa titik">
                         </div>
-                        <p class="text-[10px] font-black text-amber-500 mt-3 ml-3 uppercase tracking-widest">*Min. isi Rp 10.000</p>
+                        <p class="text-[10px] font-black text-amber-500 mt-3 ml-3">*Min. isi Rp 10.000</p>
                     </div>
                     <button type="submit" data-submit-label="Menyiapkan QRIS..." class="w-full bg-[#5a76c8] text-white py-4 rounded-full font-black hover:bg-[#4760a9] transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex justify-center items-center gap-2">
-                        Lanjut Bayar
+                        Bayar
                     </button>
                 </form>
             </div>
@@ -94,7 +93,6 @@
                         Mutasi Saldo
                         <span class="text-[#4bc6b9]">@include('partials.wiboost-icon', ['name' => 'cash', 'class' => 'h-6 w-6'])</span>
                     </h4>
-                    <span class="text-[10px] font-black bg-[#f4f9ff] px-4 py-1.5 rounded-full text-[#8faaf3] border-2 border-white shadow-sm uppercase tracking-widest">Semua Transaksi</span>
                 </div>
                 
                 <div class="flex-1 p-6 space-y-4 overflow-y-auto max-h-[700px] hide-scroll bg-[#f8faff]/50 relative z-10">

@@ -1,7 +1,7 @@
 <section class="space-y-6">
     <header class="mb-6 text-left">
-        <h3 class="text-xl md:text-2xl font-black text-[#ff6b6b]">Zona Berbahaya: Hapus Akun</h3>
-        <p class="text-sm font-bold text-[#ff9999] mt-2">Sekali akun dihapus, semua data riwayat pesanan dan sisa saldo <span class="font-black underline">tidak dapat dikembalikan</span>.</p>
+        <h3 class="text-xl md:text-2xl font-black text-[#ff6b6b]">Hapus Akun</h3>
+        <p class="text-sm font-bold text-[#ff9999] mt-2">Semua data riwayat pesanan dan sisa saldo <span class="font-black underline">tidak dapat dikembalikan</span>.</p>
     </header>
 
     <div class="flex justify-start">
@@ -10,7 +10,7 @@
             x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
             class="bg-[#ff6b6b] hover:bg-[#e55050] text-white font-black px-8 py-4 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#ff6b6b]/30 border-4 border-white"
         >
-            Hapus Akun Permanen
+            Hapus
         </button>
     </div>
 

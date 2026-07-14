@@ -177,6 +177,7 @@
 @php
     $roleOptions = [
         '2' => 'Buyer (Pelanggan)',
+        '3' => 'Reseller',
         '1' => 'Admin',
     ];
     $selectedRole = (string) ($selectedRole ?? '2');

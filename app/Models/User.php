@@ -23,6 +23,10 @@ class User extends Authenticatable
         'point_reward_stage',
         'point_reward_period',
         'profile_photo_path',
+        'reseller_payout_method',
+        'reseller_payout_account',
+        'reseller_payout_name',
+        'reseller_joined_at',
     ];
 
     protected $hidden = [
@@ -34,6 +38,7 @@ class User extends Authenticatable
         'balance' => 'decimal:2',
         'points' => 'integer',
         'point_reward_stage' => 'integer',
+        'reseller_joined_at' => 'datetime',
     ];
 
     public function isAdmin()
@@ -46,6 +51,11 @@ class User extends Authenticatable
         return (int) $this->role_id === 2; 
     }
 
+    public function isReseller(): bool
+    {
+        return (int) $this->role_id === 3;
+    }
+
     public function role()
     {
         return $this->belongsTo(Role::class);
@@ -54,6 +64,16 @@ class User extends Authenticatable
     public function transactions()
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function resellerCommissions()
+    {
+        return $this->hasMany(ResellerCommission::class);
+    }
+
+    public function resellerWithdrawals()
+    {
+        return $this->hasMany(ResellerCommission::class)->where('type', 'withdrawal');
     }
 
     public function getProfilePhotoUrlAttribute(): string
@@ -70,8 +90,8 @@ class User extends Authenticatable
         $svg = <<<'SVG'
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="Foto profil default">
   <rect width="192" height="192" rx="96" fill="#ffffff"/>
-  <circle cx="96" cy="76" r="28" fill="none" stroke="#5a76c8" stroke-width="12"/>
-  <path d="M49 153c5.7-29 24.5-45 47-45s41.3 16 47 45" fill="none" stroke="#5a76c8" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="96" cy="76" r="28" fill="none" stroke="#94a3b8" stroke-width="12"/>
+  <path d="M49 153c5.7-29 24.5-45 47-45s41.3 16 47 45" fill="none" stroke="#94a3b8" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
 SVG;
 

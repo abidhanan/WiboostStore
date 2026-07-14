@@ -40,7 +40,7 @@ class DashboardController extends Controller
             ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
             ->sum('amount');
 
-        $totalUsers = User::where('role_id', 2)->count();
+        $totalUsers = User::whereIn('role_id', [2, 3])->count();
 
         $recentTransactions = Transaction::with(['user', 'product'])
             ->where(function ($query) {
@@ -74,7 +74,7 @@ class DashboardController extends Controller
             ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
             ->get(['created_at', 'amount']);
 
-        $newUsersForChart = User::where('role_id', 2)
+        $newUsersForChart = User::whereIn('role_id', [2, 3])
             ->where('created_at', '>=', $chartStart)
             ->get(['created_at']);
 

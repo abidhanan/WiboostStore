@@ -4,13 +4,14 @@
         <p class="mt-1 text-sm font-bold text-[#8faaf3]">Pastikan akun menggunakan kata sandi yang panjang dan acak agar tetap aman.</p>
     </header>
 
-    <form method="post" action="{{ route('password.update') }}" class="space-y-6">
+    <form method="post" action="{{ route('password.update') }}" class="space-y-6"
+          x-data="{ currentPassword: '', newPassword: '', confirmPassword: '', passwordChanged() { return this.currentPassword || this.newPassword || this.confirmPassword; } }">
         @csrf
         @method('put')
 
         <div>
             <label for="update_password_current_password" class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Sandi Saat Ini</label>
-            <input id="update_password_current_password" name="current_password" type="password" autocomplete="current-password"
+            <input x-model="currentPassword" id="update_password_current_password" name="current_password" type="password" autocomplete="current-password"
                    :readonly="! editingPassword"
                    @click="editingPassword = true"
                    @focus="editingPassword = true"
@@ -20,7 +21,7 @@
 
         <div>
             <label for="update_password_password" class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Sandi Baru</label>
-            <input id="update_password_password" name="password" type="password" autocomplete="new-password"
+            <input x-model="newPassword" id="update_password_password" name="password" type="password" autocomplete="new-password"
                    :readonly="! editingPassword"
                    @click="editingPassword = true"
                    @focus="editingPassword = true"
@@ -30,7 +31,7 @@
 
         <div>
             <label for="update_password_password_confirmation" class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Konfirmasi Sandi Baru</label>
-            <input id="update_password_password_confirmation" name="password_confirmation" type="password" autocomplete="new-password"
+            <input x-model="confirmPassword" id="update_password_password_confirmation" name="password_confirmation" type="password" autocomplete="new-password"
                    :readonly="! editingPassword"
                    @click="editingPassword = true"
                    @focus="editingPassword = true"
@@ -38,11 +39,11 @@
             <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-2 pl-2 text-xs font-bold text-[#ff6b6b]" />
         </div>
 
-        <div class="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row">
-            <button x-show="editingPassword" x-cloak type="submit" class="rounded-full border-4 border-white bg-[#4bc6b9] px-8 py-4 font-black text-white shadow-xl shadow-[#4bc6b9]/30 transition-transform active:scale-95 hover:bg-[#3ba398]">
-                Perbarui Sandi
+        <div class="grid grid-cols-2 items-center gap-3 pt-2 sm:flex sm:justify-start">
+            <button x-show="passwordChanged()" x-cloak type="submit" class="min-w-0 rounded-full border-4 border-white bg-[#4bc6b9] px-4 py-4 font-black text-white shadow-xl shadow-[#4bc6b9]/30 transition-transform active:scale-95 hover:bg-[#3ba398] sm:px-8">
+                Perbarui
             </button>
-            <button x-show="editingPassword" x-cloak type="button" @click="editingPassword = false; $el.closest('form').reset()" class="rounded-full border-4 border-white bg-[#f4f9ff] px-8 py-4 font-black text-[#5a76c8] shadow-sm transition-transform active:scale-95">
+            <button x-show="passwordChanged()" x-cloak type="button" @click="editingPassword = false; currentPassword = ''; newPassword = ''; confirmPassword = ''; $el.closest('form').reset()" class="min-w-0 rounded-full border-4 border-white bg-[#f4f9ff] px-4 py-4 font-black text-[#5a76c8] shadow-sm transition-transform active:scale-95 sm:px-8">
                 Batal
             </button>
         </div>

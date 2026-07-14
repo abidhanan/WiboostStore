@@ -178,28 +178,19 @@
 </style>
 
 <div class="wiboost-font relative">
-    <div class="relative overflow-hidden bg-wiboost-sky rounded-[2.5rem] p-8 md:p-10 mb-8 shadow-xl shadow-[#bde0fe]/50 border-4 border-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+    <div class="relative overflow-hidden bg-wiboost-sky rounded-[2.5rem] p-8 md:p-10 mb-8 shadow-xl shadow-[#bde0fe]/50 border-4 border-white flex flex-col items-start gap-6">
         
         <div class="relative z-10">
             <div class="inline-block px-4 py-1 bg-white/80 backdrop-blur-sm text-[#5a76c8] font-black rounded-full mb-3 text-xs border-2 border-white shadow-sm">
-                Dashboard
+                Dashboard User
             </div>
             <h1 class="wiboost-dashboard-greeting font-black text-[#2b3a67] mb-2 drop-shadow-sm" data-fit-single-line>
                 Halo, {{ $dashboardUserName }}!
-                <span class="inline-flex align-[-0.18em] text-[#f5b84b]">
+                <span class="inline-flex align-[-0.18em] text-[#5a76c8]" style="color: #5a76c8;">
                     @include('partials.wiboost-icon', ['name' => 'sparkles', 'class' => 'h-8 w-8'])
                 </span>
             </h1>
             <p class="wiboost-dashboard-subtitle font-extrabold text-[#5a76c8]" data-fit-single-line>Mau beli apa hari ini?</p>
-        </div>
-
-        <div class="relative z-10 bg-white/90 backdrop-blur-md px-8 py-6 rounded-[2rem] border-4 border-white w-full md:w-auto text-center shadow-lg shadow-[#bde0fe]/30 hover:scale-105 transition-transform duration-300">
-            <p class="text-[#8faaf3] text-xs font-black uppercase tracking-widest mb-1">Saldo Anda</p>
-            <p class="text-3xl md:text-4xl font-black text-[#5a76c8] tracking-tight mb-4">Rp {{ number_format(Auth::user()->balance, 0, ',', '.') }}</p>
-            <a href="{{ route('user.wallet.index') }}" class="inline-flex items-center justify-center gap-2 bg-[#5a76c8] text-white px-6 py-2.5 rounded-full text-sm font-extrabold hover:bg-[#4760a9] hover:-translate-y-1 active:scale-95 transition-all shadow-lg shadow-[#5a76c8]/30 border-2 border-white w-full md:w-auto">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                Top Up Saldo
-            </a>
         </div>
     </div>
 

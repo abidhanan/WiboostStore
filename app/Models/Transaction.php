@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ResellerCommissionService;
 use App\Support\TripayPaymentAmounts;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -48,6 +49,20 @@ class Transaction extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function resellerCommissions()
+    {
+        return $this->hasMany(ResellerCommission::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(function (Transaction $transaction): void {
+            if ($transaction->payment_status === 'paid' && $transaction->order_status === 'success') {
+                app(ResellerCommissionService::class)->awardForTransaction($transaction);
+            }
+        });
     }
 
     public function getOrderInputFieldsAttribute(): array

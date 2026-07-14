@@ -39,6 +39,8 @@ class CheckRole
                 $allowedRoles[] = 1; // Admin = 1
             } elseif ($roleLower === 'buyer' || $roleLower === 'user' || $role == 2) {
                 $allowedRoles[] = 2; // Buyer = 2
+            } elseif ($roleLower === 'reseller' || $role == 3) {
+                $allowedRoles[] = 3; // Reseller = 3
             } elseif ($role == 5) {
                 // Sisaan sistem lama: Jika route masih minta role 5, kita arahkan ke 2 (Buyer)
                 $allowedRoles[] = 2; 

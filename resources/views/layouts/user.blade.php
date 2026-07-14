@@ -268,6 +268,7 @@
             body.wiboost-user-shell.wiboost-user-sidebar-collapsed .wiboost-user-sidebar > div > div:last-child {
                 padding-left: 0.75rem !important;
                 padding-right: 0.75rem !important;
+                padding-bottom: 0 !important;
             }
 
             body.wiboost-user-shell.wiboost-user-sidebar-collapsed .wiboost-user-sidebar nav a {
@@ -341,6 +342,13 @@
             display: flex;
         }
 
+        .wiboost-user-navbar-metric-value {
+            max-width: none;
+            overflow: visible;
+            text-overflow: clip;
+            white-space: nowrap;
+        }
+
         .wiboost-navbar-icon-metric {
             display: inline-flex;
             height: 1.35rem;
@@ -397,9 +405,17 @@
 
             .wiboost-user-navbar-metric {
                 gap: 0.25rem !important;
-                padding: 0.48rem 0.52rem !important;
+                padding: 0.48rem 0.6rem !important;
                 font-size: 0.68rem !important;
                 line-height: 1 !important;
+            }
+
+            .wiboost-user-navbar-actions a[aria-label="Saldo"] {
+                min-width: 6.6rem;
+            }
+
+            .wiboost-user-navbar-actions a[aria-label="Poin"] {
+                min-width: 3.75rem;
             }
 
             .wiboost-navbar-icon-metric {
@@ -414,9 +430,9 @@
             }
 
             .wiboost-user-navbar-metric-value {
-                max-width: 3rem;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                max-width: none !important;
+                overflow: visible !important;
+                text-overflow: clip !important;
                 white-space: nowrap;
             }
         }
@@ -451,14 +467,51 @@
 
             .wiboost-user-mobile-menu-panel {
                 border-radius: 0 !important;
+                height: 100dvh !important;
+                max-height: 100dvh !important;
+                overflow: hidden !important;
+                padding-bottom: max(0.75rem, env(safe-area-inset-bottom)) !important;
+                padding-top: 1.25rem !important;
+            }
+
+            @supports not (height: 100dvh) {
+                .wiboost-user-mobile-menu-panel {
+                    height: 100vh !important;
+                    max-height: 100vh !important;
+                }
+            }
+
+            .wiboost-mobile-sidebar-stack {
+                display: grid !important;
+                grid-template-rows: auto minmax(0, 1fr) clamp(5.75rem, 12svh, 6.75rem) !important;
+                height: 100% !important;
+                min-height: 0 !important;
+                row-gap: 0.65rem !important;
             }
 
             .wiboost-mobile-sidebar-header {
                 border-bottom: 4px dashed #d7ecff !important;
+                padding-bottom: 1rem !important;
+            }
+
+            .wiboost-mobile-sidebar-nav {
+                min-height: 0 !important;
+                overflow: hidden !important;
+                padding-bottom: 0.15rem !important;
             }
 
             .wiboost-mobile-sidebar-footer {
+                align-items: center !important;
                 border-top: 4px dashed #d7ecff !important;
+                display: flex !important;
+                margin-bottom: 0 !important;
+                min-height: clamp(5.75rem, 12svh, 6.75rem) !important;
+                padding: 0.75rem 0 0 !important;
+            }
+
+            .wiboost-mobile-sidebar-footer > a {
+                margin: 0 !important;
+                width: 100% !important;
             }
 
             body.wiboost-user-shell main {
@@ -478,6 +531,72 @@
         }
     </style>
     @include('partials.ios-layout-fixes')
+    <style>
+        body.wiboost-user-shell .wiboost-user-navbar-card,
+        body.wiboost-user-shell .wiboost-user-navbar > div > div {
+            overflow: visible !important;
+        }
+
+        body.wiboost-user-shell .wiboost-user-navbar-actions {
+            flex-wrap: nowrap !important;
+        }
+
+        body.wiboost-user-shell .wiboost-user-navbar-actions a[aria-label="Saldo"],
+        body.wiboost-user-shell .wiboost-user-navbar-actions a[aria-label="Poin"] {
+            width: auto !important;
+            min-width: max-content !important;
+            max-width: none !important;
+            overflow: visible !important;
+            white-space: nowrap !important;
+        }
+
+        body.wiboost-user-shell .wiboost-user-navbar-actions a[aria-label="Saldo"] .wiboost-user-navbar-metric-value,
+        body.wiboost-user-shell .wiboost-user-navbar-actions a[aria-label="Poin"] .wiboost-user-navbar-metric-value {
+            display: inline-block !important;
+            width: auto !important;
+            min-width: max-content !important;
+            max-width: none !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            white-space: nowrap !important;
+        }
+
+        body.wiboost-user-shell .wiboost-user-sidebar > div > div:last-child {
+            display: flex !important;
+            align-items: center !important;
+            height: var(--wiboost-user-topbar-height) !important;
+            min-height: var(--wiboost-user-topbar-height) !important;
+            padding: 0 1rem !important;
+        }
+
+        body.wiboost-user-shell .wiboost-user-sidebar > div > div:last-child > a {
+            width: 100%;
+        }
+
+        @media (min-width: 1024px) {
+            body.wiboost-user-shell.wiboost-user-sidebar-collapsed .wiboost-user-sidebar > div > div:last-child {
+                justify-content: center !important;
+                height: var(--wiboost-user-topbar-height) !important;
+                min-height: var(--wiboost-user-topbar-height) !important;
+                padding: 0 0.75rem !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body.wiboost-user-shell .wiboost-user-navbar-actions {
+                gap: 0.28rem !important;
+            }
+
+            body.wiboost-user-shell .wiboost-user-navbar-actions a[aria-label="Saldo"] {
+                padding-inline: 0.62rem !important;
+                font-size: clamp(0.62rem, 2.35vw, 0.68rem) !important;
+            }
+
+            body.wiboost-user-shell .wiboost-user-navbar-actions a[aria-label="Poin"] {
+                padding-inline: 0.55rem !important;
+            }
+        }
+    </style>
 </head>
 <body
     x-data="{
@@ -515,11 +634,16 @@
         $currentUserDisplayName = trim((string) ($currentUser?->name ?? 'User'));
         $currentUserNameParts = preg_split('/\s+/', $currentUserDisplayName, -1, PREG_SPLIT_NO_EMPTY);
         $currentUserShortName = trim(implode(' ', array_slice($currentUserNameParts ?: ['User'], 0, 2))) ?: 'User';
+        $currentUserIsReseller = $currentUser?->isReseller() ?? false;
+        $currentUserRoleLabel = $currentUserIsReseller ? 'Reseller' : 'Buyer';
+        $currentUserProfileBorder = $currentUserIsReseller ? '#f4b740' : '#5a76c8';
+        $currentUserRoleText = $currentUserIsReseller ? '#d99b16' : '#8faaf3';
 
         $mobileUserNav = [
             ['route' => 'user.dashboard', 'pattern' => 'user.dashboard', 'label' => 'Home', 'icon' => 'home'],
             ['route' => 'user.wallet.index', 'pattern' => 'user.wallet.*', 'label' => 'Saldo', 'icon' => 'wallet'],
             ['route' => 'user.points.index', 'pattern' => 'user.points.*', 'label' => 'Poin', 'icon' => 'points'],
+            ['route' => 'user.reseller.index', 'pattern' => 'user.reseller.*', 'label' => 'Reseller', 'icon' => 'reseller'],
             ['route' => 'user.tutorials.index', 'pattern' => 'user.tutorials.*', 'label' => 'Tutorial', 'icon' => 'tutorial'],
             ['route' => 'user.history', 'pattern' => 'user.history', 'label' => 'Riwayat', 'icon' => 'history'],
         ];
@@ -528,6 +652,7 @@
             'home' => '<path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5M9 21v-6h6v6" />',
             'wallet' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-10a2 2 0 0 1 2-2Zm0 0 12-3v3M17 13.5h.01" />',
             'points' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3.5 14.6 9l6 .8-4.35 4.15 1.05 5.85L12 17l-5.3 2.8 1.05-5.85L3.4 9.8l6-.8L12 3.5Z" />',
+            'reseller' => '<path stroke-linecap="round" stroke-linejoin="round" d="M8.5 10.5V8A3.5 3.5 0 0 1 12 4.5 3.5 3.5 0 0 1 15.5 8v2.5M5.5 10.5h13l-1 9h-11l-1-9ZM9 14h6" />',
             'tutorial' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 5.5A2.5 2.5 0 0 1 7 3h11.5v16H7a2.5 2.5 0 0 0-2.5 2.5v-16Zm0 0v16M8.25 7.25h6.5M8.25 10.75h5M8.25 14.25h4" />',
             'history' => '<path stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 1 0 3-6.7M3 4.5v5h5M12 7.5V12l3 2" />',
             'profile' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0" />',
@@ -564,12 +689,12 @@
 
             <div class="shrink-0 border-t-4 border-dashed border-[#f4f9ff] p-4">
                 <a href="{{ route('profile.edit') }}" class="flex w-full items-center gap-3 rounded-[1.5rem] border-2 border-white bg-[#f4f9ff] px-4 py-3 text-[#2b3a67] shadow-sm transition hover:bg-[#e0fbfc]">
-                    <span class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#5a76c8] bg-white ring-2 ring-white">
+                    <span class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white ring-2 ring-white" style="border-color: {{ $currentUserProfileBorder }};">
                         <img src="{{ $currentUserPhotoUrl }}" onerror="this.onerror=null;this.src='{{ $defaultProfilePhotoUrl }}';" alt="Foto profil {{ $currentUserShortName }}" class="h-full w-full object-cover">
                     </span>
                     <span class="wiboost-sidebar-profile-text min-w-0">
                         <span class="block truncate text-sm font-black">{{ $currentUserShortName }}</span>
-                        <span class="block text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Buyer</span>
+                        <span class="block text-[10px] font-black uppercase tracking-widest" style="color: {{ $currentUserRoleText }};">{{ $currentUserRoleLabel }}</span>
                     </span>
                 </a>
             </div>
@@ -617,7 +742,7 @@
                     </a>
 
                     <div class="relative" @click.outside="profileMenuOpen = false">
-                        <button type="button" @click="profileMenuOpen = !profileMenuOpen; mobileNavOpen = false" :aria-expanded="profileMenuOpen.toString()" aria-label="Menu profil" class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#5a76c8] bg-white shadow-sm ring-2 ring-white transition active:scale-95 sm:h-12 sm:w-12">
+                        <button type="button" @click="profileMenuOpen = !profileMenuOpen; mobileNavOpen = false" :aria-expanded="profileMenuOpen.toString()" aria-label="Menu profil" class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white shadow-sm ring-2 ring-white transition active:scale-95 sm:h-12 sm:w-12" style="border-color: {{ $currentUserProfileBorder }};">
                             <img src="{{ $currentUserPhotoUrl }}" onerror="this.onerror=null;this.src='{{ $defaultProfilePhotoUrl }}';" alt="Foto profil {{ $currentUserShortName }}" class="h-full w-full object-cover">
                         </button>
 
@@ -664,18 +789,18 @@
              x-transition:leave-end="-translate-x-full opacity-0"
              class="wiboost-user-mobile-menu-panel absolute inset-y-0 left-0 flex w-[min(82vw,20rem)] flex-col border-r-4 border-white bg-white/95 px-5 py-5 shadow-2xl shadow-[#2b3a67]/30 backdrop-blur-xl">
             
-            <div class="flex min-h-0 flex-1 flex-col space-y-3">
+            <div class="wiboost-mobile-sidebar-stack flex min-h-0 flex-1 flex-col">
                 <div class="wiboost-mobile-sidebar-header flex shrink-0 items-center gap-3 border-b-4 border-dashed border-[#f4f9ff] pb-4">
                     <img src="{{ $brandLogoUrl }}" onerror="this.onerror=null;this.src='{{ asset('images/wiboost-logo.png') }}?v=20260426-full';" alt="Logo Wiboost Store" width="192" height="192" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm">
                     <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></p>
                 </div>
                 
                 {{-- List Vertical Minimalis --}}
-                <div class="hide-scroll flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto py-1">
+                <div class="wiboost-mobile-sidebar-nav hide-scroll flex min-h-0 flex-1 flex-col gap-2 py-1">
                     @foreach($mobileUserNav as $item)
-                        <a href="{{ route($item['route']) }}" class="flex items-center rounded-[1.5rem] border-2 {{ request()->routeIs($item['pattern']) ? 'border-white bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/30' : 'border-transparent bg-[#f8fbff] text-[#5a76c8] hover:border-white hover:bg-[#e0fbfc]' }} px-5 py-3.5 font-black transition-all">
+                        <a href="{{ route($item['route']) }}" class="flex items-center rounded-[1.5rem] border-2 {{ request()->routeIs($item['pattern']) ? 'border-white bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/30' : 'border-transparent bg-[#f8fbff] text-[#5a76c8] hover:border-white hover:bg-[#e0fbfc]' }} px-5 py-3 font-black transition-all">
                             <div class="flex items-center gap-4">
-                                <div class="flex items-center justify-center w-10 h-10 rounded-xl {{ request()->routeIs($item['pattern']) ? 'bg-white/20 shadow-inner' : 'bg-white shadow-sm border border-[#f0f5ff]' }}">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-2xl {{ request()->routeIs($item['pattern']) ? 'bg-white/20 shadow-inner' : 'bg-white shadow-sm border border-[#f0f5ff]' }}">
                                     <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
                                         {!! $userNavIconPaths[$item['icon']] ?? $userNavIconPaths['home'] !!}
                                     </svg>
@@ -686,15 +811,17 @@
                     @endforeach
                 </div>
 
-                <a href="{{ route('profile.edit') }}" class="wiboost-mobile-sidebar-footer flex shrink-0 items-center gap-3 border-t-4 border-dashed border-[#f4f9ff] pt-4">
-                    <span class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#5a76c8] bg-white ring-2 ring-white">
-                        <img src="{{ $currentUserPhotoUrl }}" onerror="this.onerror=null;this.src='{{ $defaultProfilePhotoUrl }}';" alt="Foto profil {{ $currentUserShortName }}" class="h-full w-full object-cover">
-                    </span>
-                    <span class="min-w-0">
-                        <span class="block truncate text-sm font-black text-[#2b3a67]">{{ $currentUserShortName }}</span>
-                        <span class="block text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Buyer</span>
-                    </span>
-                </a>
+                <div class="wiboost-mobile-sidebar-footer shrink-0 border-t-4 border-dashed border-[#f4f9ff] p-4">
+                    <a href="{{ route('profile.edit') }}" class="flex w-full items-center gap-3 rounded-[1.5rem] border-2 border-white bg-[#f4f9ff] px-4 py-3 text-[#2b3a67] shadow-sm transition hover:bg-[#e0fbfc]">
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white ring-2 ring-white" style="border-color: {{ $currentUserProfileBorder }};">
+                            <img src="{{ $currentUserPhotoUrl }}" onerror="this.onerror=null;this.src='{{ $defaultProfilePhotoUrl }}';" alt="Foto profil {{ $currentUserShortName }}" class="h-full w-full object-cover">
+                        </span>
+                        <span class="wiboost-sidebar-profile-text min-w-0">
+                            <span class="block truncate text-sm font-black text-[#2b3a67]">{{ $currentUserShortName }}</span>
+                            <span class="block text-[10px] font-black uppercase tracking-widest" style="color: {{ $currentUserRoleText }};">{{ $currentUserRoleLabel }}</span>
+                        </span>
+                    </a>
+                </div>
             </div>
         </div>
     </div>

@@ -13,7 +13,24 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-6" x-data="{ photoPreview: @js($profilePhotoUrl), photoError: '' }">
+    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-6"
+          x-data="{
+              photoPreview: @js($profilePhotoUrl),
+              photoError: '',
+              profilePhotoChanged: false,
+              originalName: @js(old('name', $user->name)),
+              originalEmail: @js(old('email', $user->email)),
+              originalWhatsapp: @js(old('whatsapp', $user->whatsapp)),
+              profileName: @js(old('name', $user->name)),
+              profileEmail: @js(old('email', $user->email)),
+              profileWhatsapp: @js(old('whatsapp', $user->whatsapp)),
+              profileChanged() {
+                  return this.profilePhotoChanged
+                      || this.profileName !== this.originalName
+                      || this.profileEmail !== this.originalEmail
+                      || this.profileWhatsapp !== this.originalWhatsapp;
+              }
+          }">
         @csrf
         @method('patch')
 
@@ -54,6 +71,7 @@
                     window.wiboostPrepareProfilePhoto(file, input)
                         .then((preview) => {
                             photoPreview = preview;
+                            profilePhotoChanged = true;
                             editingProfile = true;
                         })
                         .catch((message) => {
@@ -68,7 +86,7 @@
 
         <div>
             <label for="name" class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Nama Lengkap</label>
-            <input id="name" name="name" type="text" value="{{ old('name', $user->name) }}" required autocomplete="name"
+            <input x-model="profileName" x-ref="profileName" id="name" name="name" type="text" value="{{ old('name', $user->name) }}" required autocomplete="name"
                    :readonly="! editingProfile"
                    @click="editingProfile = true"
                    @focus="editingProfile = true"
@@ -78,7 +96,7 @@
 
         <div>
             <label for="email" class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Alamat Email</label>
-            <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" required autocomplete="username"
+            <input x-model="profileEmail" x-ref="profileEmail" id="email" name="email" type="email" value="{{ old('email', $user->email) }}" required autocomplete="username"
                    :readonly="! editingProfile"
                    @click="editingProfile = true"
                    @focus="editingProfile = true"
@@ -104,7 +122,7 @@
 
         <div>
             <label for="whatsapp" class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Nomor WhatsApp</label>
-            <input id="whatsapp" name="whatsapp" type="text" value="{{ old('whatsapp', $user->whatsapp) }}" required
+            <input x-model="profileWhatsapp" x-ref="profileWhatsapp" id="whatsapp" name="whatsapp" type="text" value="{{ old('whatsapp', $user->whatsapp) }}" required
                    :readonly="! editingProfile"
                    @click="editingProfile = true"
                    @focus="editingProfile = true"
@@ -114,10 +132,10 @@
         </div>
 
         <div class="grid grid-cols-2 items-center gap-3 pt-2 sm:flex sm:justify-center">
-            <button x-show="editingProfile" x-cloak type="submit" class="min-w-0 rounded-full border-4 border-white bg-[#5a76c8] px-4 py-4 font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9] sm:px-8">
-                Simpan Profil
+            <button x-show="profileChanged()" x-cloak type="submit" class="min-w-0 rounded-full border-4 border-white bg-[#5a76c8] px-4 py-4 font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95 hover:bg-[#4760a9] sm:px-8">
+                Simpan
             </button>
-            <button x-show="editingProfile" x-cloak type="button" @click="editingProfile = false; $el.closest('form').reset(); photoPreview = @js($profilePhotoUrl); $refs.profilePhotoInput.value = ''" class="min-w-0 rounded-full border-4 border-white bg-[#f4f9ff] px-4 py-4 font-black text-[#5a76c8] shadow-sm transition-transform active:scale-95 sm:px-8">
+            <button x-show="profileChanged()" x-cloak type="button" @click="editingProfile = false; profileName = originalName; profileEmail = originalEmail; profileWhatsapp = originalWhatsapp; $el.closest('form').reset(); photoPreview = @js($profilePhotoUrl); profilePhotoChanged = false; $refs.profilePhotoInput.value = ''" class="min-w-0 rounded-full border-4 border-white bg-[#f4f9ff] px-4 py-4 font-black text-[#5a76c8] shadow-sm transition-transform active:scale-95 sm:px-8">
                 Batal
             </button>
         </div>

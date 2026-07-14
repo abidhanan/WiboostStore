@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\DepositController as AdminDepositController;
 use App\Http\Controllers\Admin\AdminReportController as AdminAdminReportController;
 use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Admin\TutorialController; // <-- IMPORT BARU UNTUK TUTORIAL
+use App\Http\Controllers\Admin\ResellerController as AdminResellerController;
 
 // User / Customer Controllers
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\User\OrderController;
 use App\Http\Controllers\User\QrisPaymentController;
 use App\Http\Controllers\User\WalletController; 
 use App\Http\Controllers\User\AdminReportController;
+use App\Http\Controllers\User\ResellerController;
 
 // Webhook Controller
 use App\Http\Controllers\PaymentCallbackController;
@@ -107,10 +109,10 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| 4. USER PANEL ROUTES (Role: Buyer / 2)
+| 4. USER PANEL ROUTES (Role: Buyer / 2, Reseller / 3)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:buyer'])->prefix('user')->name('user.')->group(function () {
+Route::middleware(['auth', 'role:buyer,reseller'])->prefix('user')->name('user.')->group(function () {
     // Dashboard & History
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
     Route::get('/tutorial', [UserDashboardController::class, 'tutorials'])->name('tutorials.index');
@@ -137,6 +139,13 @@ Route::middleware(['auth', 'role:buyer'])->prefix('user')->name('user.')->group(
     Route::get('/wallet/pay/{invoice_number}', [WalletController::class, 'pay'])->name('wallet.pay');
     Route::delete('/wallet/deposits/{deposit}/cancel', [WalletController::class, 'cancelTripayDeposit'])->name('wallet.deposits.cancel');
     Route::post('/wallet/exchange-points', [WalletController::class, 'exchangePoints'])->name('wallet.exchange');
+
+    // Reseller
+    Route::get('/reseller', [ResellerController::class, 'index'])->name('reseller.index');
+    Route::post('/reseller/join', [ResellerController::class, 'join'])->name('reseller.join');
+    Route::patch('/reseller/payout', [ResellerController::class, 'updatePayout'])->name('reseller.payout.update');
+    Route::post('/reseller/withdraw', [ResellerController::class, 'withdraw'])->name('reseller.withdraw');
+    Route::delete('/reseller/leave', [ResellerController::class, 'leave'])->name('reseller.leave');
 });
 
 /*
@@ -153,6 +162,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Master Data (CRUD)
     Route::resource('users', AdminUserController::class);
     Route::resource('categories', CategoryController::class);
+
+    // Reseller
+    Route::get('/resellers', [AdminResellerController::class, 'index'])->name('resellers.index');
+    Route::patch('/resellers/withdrawals/{commission}', [AdminResellerController::class, 'updateWithdrawal'])->name('resellers.withdrawals.update');
     
     // Produk & Manajemen Stok Kredensial (Akun Premium)
     Route::post('/products/sync/digiflazz', [ProductController::class, 'syncDigiflazz'])->name('products.sync.digiflazz');

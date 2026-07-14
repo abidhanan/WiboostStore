@@ -91,6 +91,8 @@
                                 <td class="px-5 py-4 sm:py-5 align-middle text-center">
                                     @if($user->role_id == 1)
                                         <span class="bg-[#ffe5e5] text-[#ff6b6b] px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border-2 border-white shadow-sm inline-block w-24">Admin</span>
+                                    @elseif($user->role_id == 3)
+                                        <span class="bg-[#fff7d6] text-[#d99b16] px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border-2 border-white shadow-sm inline-block w-24">Reseller</span>
                                     @else
                                         <span class="bg-[#e0fbfc] text-[#5a76c8] px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border-2 border-white shadow-sm inline-block w-24">Buyer</span>
                                     @endif

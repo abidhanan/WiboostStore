@@ -27,6 +27,10 @@ class UserController extends Controller
                     if (str_contains(strtolower($search), 'buyer') || str_contains(strtolower($search), 'pelanggan')) {
                         $innerQuery->orWhere('role_id', 2);
                     }
+
+                    if (str_contains(strtolower($search), 'reseller')) {
+                        $innerQuery->orWhere('role_id', 3);
+                    }
                 });
             })
             ->latest()
@@ -47,7 +51,7 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'whatsapp' => 'required|string|max:20',
             'password' => 'required|string|min:8',
-            'role_id' => 'required|in:1,2',
+            'role_id' => 'required|in:1,2,3',
         ], [], [
             'name' => 'nama lengkap',
             'email' => 'email',
@@ -77,7 +81,7 @@ class UserController extends Controller
     {
         // Admin SEKARANG HANYA BISA MENGUBAH ROLE
         $request->validate([
-            'role_id' => 'required|in:1,2',
+            'role_id' => 'required|in:1,2,3',
         ]);
 
         $user->role_id = $request->role_id;
