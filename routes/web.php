@@ -135,6 +135,7 @@ Route::middleware(['auth', 'role:buyer,reseller'])->prefix('user')->name('user.'
     // Wallet, Deposit & Loyalty Points
     Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
     Route::get('/points', [WalletController::class, 'points'])->name('points.index');
+    Route::get('/membership', [UserDashboardController::class, 'membership'])->name('membership.index');
     Route::post('/wallet/topup', [WalletController::class, 'store'])->name('wallet.topup');
     Route::get('/wallet/pay/{invoice_number}', [WalletController::class, 'pay'])->name('wallet.pay');
     Route::delete('/wallet/deposits/{deposit}/cancel', [WalletController::class, 'cancelTripayDeposit'])->name('wallet.deposits.cancel');

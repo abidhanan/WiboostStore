@@ -46,12 +46,19 @@
             </div>
         </header>
     @else
-        <header class="rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/25 sm:p-8">
-            <span class="mb-4 inline-flex rounded-full border-2 border-white bg-[#e0fbfc] px-6 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#4bc6b9] shadow-sm">Reseller</span>
+        <header class="relative mb-8 flex flex-col items-start gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white p-8 shadow-xl shadow-[#f5d36b]/35 md:p-10" style="background: linear-gradient(135deg, #ffe082 0%, #fff0b3 48%, #fffdf2 100%);">
+            <span class="mb-3 inline-block rounded-full border-2 border-white bg-white px-4 py-1 text-xs font-black text-[#5a76c8] shadow-sm">Reseller</span>
             <div class="min-w-0">
-                <h1 class="text-3xl font-black leading-tight text-[#2b3a67] sm:text-4xl">Yuk Gabung Jadi Reseller Wiboost Store!</h1>
-                <p class="mt-3 max-w-3xl text-sm font-bold leading-relaxed text-[#8faaf3] sm:text-base">
-                    Promosikan produk dan layanan lalu lakukan transaksi seperti biasa dan dapatkan komisi setiap transaksi sukses.
+                <h1 class="wiboost-dashboard-greeting mb-2 font-black leading-tight text-[#2b3a67] drop-shadow-sm" style="font-size: clamp(1.45rem, 7vw, 3rem); line-height: 1.08;">
+                    Yuk Jadi Reseller!
+                    <span class="inline-flex align-middle text-[#f5b84b]" style="color:#f5b84b; transform: translateY(-0.06em);">
+                        <svg class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.5 10.5V8A3.5 3.5 0 0 1 12 4.5 3.5 3.5 0 0 1 15.5 8v2.5M5.5 10.5h13l-1 9h-11l-1-9ZM9 14h6" />
+                        </svg>
+                    </span>
+                </h1>
+                <p class="wiboost-dashboard-subtitle max-w-3xl text-sm font-extrabold leading-relaxed text-[#5a76c8] sm:text-base">
+                    Promosikan produk dan layanan lalu dapatkan komisi setiap transaksi sukses.
                 </p>
             </div>
         </header>
@@ -91,7 +98,7 @@
                 </div>
             </div>
 
-            <form method="POST" action="{{ route('user.reseller.join') }}" x-data="{ payoutOpen: false, payoutMethod: @js(old('reseller_payout_method', 'DANA')), methods: @js($eWalletMethods) }" class="overflow-visible rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/25 sm:p-8">
+            <form id="reseller-join-form" method="POST" action="{{ route('user.reseller.join') }}" x-data="{ payoutOpen: false, payoutMethod: @js(old('reseller_payout_method', 'DANA')), methods: @js($eWalletMethods) }" class="overflow-visible rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/25 sm:p-8">
                 @csrf
                 <h2 class="text-2xl font-black text-[#2b3a67]">Data Penarikan</h2>
                 <p class="mt-2 text-sm font-bold text-[#8faaf3]">Isi nomor e-wallet untuk penarikan komisi.</p>
@@ -123,10 +130,10 @@
                 <input name="reseller_payout_name" value="{{ old('reseller_payout_name') }}" placeholder="Masukkan nama pemilik e-wallet" class="mt-3 w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none ring-2 ring-transparent focus:ring-[#bde0fe]" required>
                 @error('reseller_payout_name')<p class="mt-2 text-xs font-bold text-[#ff6b6b]">{{ $message }}</p>@enderror
 
-                <button type="submit" class="mt-6 w-full rounded-full border-4 border-white bg-[#5a76c8] px-6 py-4 text-sm font-black text-white shadow-xl shadow-[#5a76c8]/25 transition active:scale-[0.98]">
-                    Gabung
-                </button>
             </form>
+            <button type="submit" form="reseller-join-form" class="w-full rounded-full border-4 border-white bg-[#5a76c8] px-6 py-4 text-sm font-black text-white shadow-xl shadow-[#5a76c8]/25 transition active:scale-[0.98]">
+                Gabung Reseller
+            </button>
         </div>
     @else
         <div class="grid gap-4 sm:grid-cols-2">

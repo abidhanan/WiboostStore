@@ -63,6 +63,11 @@ class DashboardController extends Controller
         return view('user.tutorials', compact('tutorials', 'tutorialGroups'));
     }
 
+    public function membership()
+    {
+        return view('user.membership');
+    }
+
     public function tutorialCategory(Request $request)
     {
         $mainCategory = trim((string) $request->query('main', ''));

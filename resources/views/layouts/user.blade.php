@@ -509,9 +509,11 @@
                 padding: 0.75rem 0 0 !important;
             }
 
-            .wiboost-mobile-sidebar-footer > a {
+            .wiboost-mobile-sidebar-footer > .wiboost-sidebar-profile-link {
+                flex: 1 1 auto !important;
+                min-width: 0 !important;
                 margin: 0 !important;
-                width: 100% !important;
+                width: auto !important;
             }
 
             body.wiboost-user-shell main {
@@ -569,8 +571,13 @@
             padding: 0 1rem !important;
         }
 
-        body.wiboost-user-shell .wiboost-user-sidebar > div > div:last-child > a {
-            width: 100%;
+        body.wiboost-user-shell .wiboost-sidebar-profile-link {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        body.wiboost-user-shell .wiboost-sidebar-membership-link {
+            flex: 0 0 3.5rem;
         }
 
         @media (min-width: 1024px) {
@@ -579,6 +586,10 @@
                 height: var(--wiboost-user-topbar-height) !important;
                 min-height: var(--wiboost-user-topbar-height) !important;
                 padding: 0 0.75rem !important;
+            }
+
+            body.wiboost-user-shell.wiboost-user-sidebar-collapsed .wiboost-sidebar-membership-link {
+                display: none !important;
             }
         }
 
@@ -652,6 +663,7 @@
             'home' => '<path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5M9 21v-6h6v6" />',
             'wallet' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-10a2 2 0 0 1 2-2Zm0 0 12-3v3M17 13.5h.01" />',
             'points' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3.5 14.6 9l6 .8-4.35 4.15 1.05 5.85L12 17l-5.3 2.8 1.05-5.85L3.4 9.8l6-.8L12 3.5Z" />',
+            'diamond' => '<path stroke-linecap="round" stroke-linejoin="round" d="M6.5 4.5h11L21 9l-9 11L3 9l3.5-4.5Z M3 9h18" />',
             'reseller' => '<path stroke-linecap="round" stroke-linejoin="round" d="M8.5 10.5V8A3.5 3.5 0 0 1 12 4.5 3.5 3.5 0 0 1 15.5 8v2.5M5.5 10.5h13l-1 9h-11l-1-9ZM9 14h6" />',
             'tutorial' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 5.5A2.5 2.5 0 0 1 7 3h11.5v16H7a2.5 2.5 0 0 0-2.5 2.5v-16Zm0 0v16M8.25 7.25h6.5M8.25 10.75h5M8.25 14.25h4" />',
             'history' => '<path stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 1 0 3-6.7M3 4.5v5h5M12 7.5V12l3 2" />',
@@ -687,8 +699,8 @@
                 @endforeach
             </nav>
 
-            <div class="shrink-0 border-t-4 border-dashed border-[#f4f9ff] p-4">
-                <a href="{{ route('profile.edit') }}" class="flex w-full items-center gap-3 rounded-[1.5rem] border-2 border-white bg-[#f4f9ff] px-4 py-3 text-[#2b3a67] shadow-sm transition hover:bg-[#e0fbfc]">
+            <div class="shrink-0 gap-3 border-t-4 border-dashed border-[#f4f9ff] p-4">
+                <a href="{{ route('profile.edit') }}" class="wiboost-sidebar-profile-link flex items-center gap-3 rounded-[1.5rem] border-2 border-white bg-[#f4f9ff] px-4 py-3 text-[#2b3a67] shadow-sm transition hover:bg-[#e0fbfc]">
                     <span class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white ring-2 ring-white" style="border-color: {{ $currentUserProfileBorder }};">
                         <img src="{{ $currentUserPhotoUrl }}" onerror="this.onerror=null;this.src='{{ $defaultProfilePhotoUrl }}';" alt="Foto profil {{ $currentUserShortName }}" class="h-full w-full object-cover">
                     </span>
@@ -696,6 +708,11 @@
                         <span class="block truncate text-sm font-black">{{ $currentUserShortName }}</span>
                         <span class="block text-[10px] font-black uppercase tracking-widest" style="color: {{ $currentUserRoleText }};">{{ $currentUserRoleLabel }}</span>
                     </span>
+                </a>
+                <a href="{{ route('user.membership.index') }}" aria-label="Membership" title="Membership" class="wiboost-sidebar-membership-link flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.35rem] border-2 border-white transition active:scale-95" style="background-color: #8b5cf6; color: #ffffff; box-shadow: 0 18px 30px rgba(139, 92, 246, 0.32); {{ request()->routeIs('user.membership.*') ? 'outline: 4px solid #ddd6fe;' : '' }}">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24" aria-hidden="true">
+                        {!! $userNavIconPaths['diamond'] !!}
+                    </svg>
                 </a>
             </div>
         </div>
@@ -811,8 +828,8 @@
                     @endforeach
                 </div>
 
-                <div class="wiboost-mobile-sidebar-footer shrink-0 border-t-4 border-dashed border-[#f4f9ff] p-4">
-                    <a href="{{ route('profile.edit') }}" class="flex w-full items-center gap-3 rounded-[1.5rem] border-2 border-white bg-[#f4f9ff] px-4 py-3 text-[#2b3a67] shadow-sm transition hover:bg-[#e0fbfc]">
+                <div class="wiboost-mobile-sidebar-footer shrink-0 gap-3 border-t-4 border-dashed border-[#f4f9ff] p-4">
+                    <a href="{{ route('profile.edit') }}" class="wiboost-sidebar-profile-link flex items-center gap-3 rounded-[1.5rem] border-2 border-white bg-[#f4f9ff] px-4 py-3 text-[#2b3a67] shadow-sm transition hover:bg-[#e0fbfc]">
                         <span class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white ring-2 ring-white" style="border-color: {{ $currentUserProfileBorder }};">
                             <img src="{{ $currentUserPhotoUrl }}" onerror="this.onerror=null;this.src='{{ $defaultProfilePhotoUrl }}';" alt="Foto profil {{ $currentUserShortName }}" class="h-full w-full object-cover">
                         </span>
@@ -820,6 +837,11 @@
                             <span class="block truncate text-sm font-black text-[#2b3a67]">{{ $currentUserShortName }}</span>
                             <span class="block text-[10px] font-black uppercase tracking-widest" style="color: {{ $currentUserRoleText }};">{{ $currentUserRoleLabel }}</span>
                         </span>
+                    </a>
+                    <a href="{{ route('user.membership.index') }}" aria-label="Membership" title="Membership" class="wiboost-sidebar-membership-link flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.35rem] border-2 border-white transition active:scale-95" style="background-color: #8b5cf6; color: #ffffff; box-shadow: 0 18px 30px rgba(139, 92, 246, 0.32); {{ request()->routeIs('user.membership.*') ? 'outline: 4px solid #ddd6fe;' : '' }}">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24" aria-hidden="true">
+                            {!! $userNavIconPaths['diamond'] !!}
+                        </svg>
                     </a>
                 </div>
             </div>
