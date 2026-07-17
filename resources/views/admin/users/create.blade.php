@@ -50,7 +50,7 @@
             </div>
             <div class="md:col-span-2 relative z-30">
                 <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Role Akses</label>
-                @include('admin.users.partials.role-select', ['selectedRole' => old('role_id', '2')])
+                @include('admin.users.partials.role-select', ['selectedRole' => old('role_id', request('role', '2'))])
             </div>
         </div>
         

@@ -43,6 +43,44 @@ class UserController extends Controller
         return view('admin.users.index', compact('users'));
     }
 
+    public function members(Request $request)
+    {
+        $search = trim((string) $request->query('search', ''));
+
+        $members = User::query()
+            ->where('membership_expires_at', '>', now())
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($innerQuery) use ($search) {
+                    $innerQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('whatsapp', 'like', "%{$search}%");
+                });
+            })
+            ->latest('membership_expires_at')
+            ->get();
+
+        return view('admin.members.index', compact('members', 'search'));
+    }
+
+    public function admins(Request $request)
+    {
+        $search = trim((string) $request->query('search', ''));
+
+        $admins = User::query()
+            ->where('role_id', 1)
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($innerQuery) use ($search) {
+                    $innerQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('whatsapp', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->get();
+
+        return view('admin.admins.index', compact('admins', 'search'));
+    }
+
     public function create()
     {
         return view('admin.users.create');

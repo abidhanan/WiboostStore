@@ -163,6 +163,9 @@
     @php
         $adminNav = [
             ['route' => 'admin.resellers.index', 'pattern' => 'admin.resellers.*', 'label' => 'Reseller', 'title' => 'Manajemen Reseller', 'description' => 'Pantau komisi reseller dan konfirmasi penarikan.', 'icon' => 'R'],
+            ['route' => 'admin.commissions.index', 'pattern' => 'admin.commissions.*', 'label' => 'Komisi', 'title' => 'Halaman Komisi', 'description' => 'Pantau komisi masuk dan konfirmasi penarikan reseller.', 'icon' => 'K'],
+            ['route' => 'admin.members.index', 'pattern' => 'admin.members.*', 'label' => 'Member', 'title' => 'Halaman Member', 'description' => 'Pantau user dengan membership aktif.', 'icon' => 'M'],
+            ['route' => 'admin.admins.index', 'pattern' => 'admin.admins.*', 'label' => 'Admin', 'title' => 'Halaman Admin', 'description' => 'Pantau akun admin Wiboost Store.', 'icon' => 'A'],
             ['route' => 'admin.dashboard', 'pattern' => 'admin.dashboard', 'label' => 'Dashboard', 'description' => 'Pantau ringkasan transaksi, saldo, stok, dan aktivitas terbaru.', 'icon' => '📊'],
             ['route' => 'admin.users.index', 'pattern' => 'admin.users.*', 'label' => 'Pengguna', 'title' => 'Manajemen Pengguna', 'description' => 'Atur data admin dan pelanggan Wiboost Store.', 'icon' => '👥'],
             ['route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'label' => 'Kategori', 'title' => 'Manajemen Kategori', 'description' => 'Kelola pengelompokan layanan dan produk Wiboost Store.', 'icon' => '📂'],

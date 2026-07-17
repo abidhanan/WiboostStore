@@ -62,7 +62,7 @@
                 <p class="inline-flex rounded-full border-2 border-white bg-[#e0fbfc] px-5 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-[#4bc6b9] shadow-sm">Konfirmasi</p>
                 <h2 class="mt-3 text-2xl font-black text-[#2b3a67]">Penarikan Komisi</h2>
             </div>
-            <p class="text-sm font-bold text-[#8faaf3]">Admin konfirmasi maksimal 24 jam.</p>
+            <a href="{{ route('admin.commissions.index') }}" class="rounded-full border-4 border-white bg-[#5a76c8] px-5 py-3 text-sm font-black text-white shadow-lg shadow-[#5a76c8]/25 transition active:scale-95">Halaman Komisi</a>
         </div>
 
         <div class="mt-6 space-y-4">
@@ -92,30 +92,20 @@
                             @csrf
                             @method('PATCH')
                             <input type="hidden" name="notes" value="">
-                            <button type="submit" name="status" value="approved" class="rounded-full border-4 border-white bg-[#4bc6b9] px-5 py-3 text-sm font-black text-white shadow-lg shadow-[#4bc6b9]/25 transition active:scale-95">
-                                Setujui
-                            </button>
-                            <button type="submit" name="status" value="rejected" class="rounded-full border-4 border-white bg-[#ffe5e5] px-5 py-3 text-sm font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/15 transition active:scale-95">
-                                Tolak
-                            </button>
+                            <button type="submit" name="status" value="approved" class="rounded-full border-4 border-white bg-[#4bc6b9] px-5 py-3 text-sm font-black text-white shadow-lg shadow-[#4bc6b9]/25 transition active:scale-95">Setujui</button>
+                            <button type="submit" name="status" value="rejected" class="rounded-full border-4 border-white bg-[#ffe5e5] px-5 py-3 text-sm font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/15 transition active:scale-95">Tolak</button>
                         </form>
                     </div>
                 </div>
             @empty
-                <p class="rounded-[1.75rem] border-4 border-dashed border-[#d7ecff] bg-[#f8fbff] p-10 text-center text-sm font-black text-[#5a76c8]">
-                    Belum ada penarikan komisi yang menunggu konfirmasi.
-                </p>
+                <p class="rounded-[1.75rem] border-4 border-dashed border-[#d7ecff] bg-[#f8fbff] p-10 text-center text-sm font-black text-[#5a76c8]">Belum ada penarikan komisi yang menunggu konfirmasi.</p>
             @endforelse
         </div>
     </section>
 
     <section class="mt-8 rounded-[2rem] border-4 border-white bg-white p-5 shadow-xl shadow-[#bde0fe]/25 sm:p-7">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-                <h2 class="text-2xl font-black text-[#2b3a67]">Daftar Reseller Aktif</h2>
-                <p class="mt-1 text-xs font-bold text-[#8faaf3]">User yang sudah aktif member tidak dihitung sebagai reseller aktif.</p>
-            </div>
-        </div>
+        <h2 class="text-2xl font-black text-[#2b3a67]">Daftar Reseller Aktif</h2>
+        <p class="mt-1 text-xs font-bold text-[#8faaf3]">User yang sudah aktif member tidak dihitung sebagai reseller aktif.</p>
         <div class="table-scroll mt-5 overflow-x-auto pb-2">
             <table class="w-full min-w-[820px] text-left">
                 <thead>
@@ -143,9 +133,7 @@
                             <td class="px-4 py-4 align-top text-sm font-black text-[#d99b16]">{{ $formatRupiah($reseller->available_commission) }}</td>
                         </tr>
                     @empty
-                        <tr>
-                            <td colspan="5" class="px-4 py-12 text-center text-sm font-black text-[#5a76c8]">Belum ada reseller aktif.</td>
-                        </tr>
+                        <tr><td colspan="5" class="px-4 py-12 text-center text-sm font-black text-[#5a76c8]">Belum ada reseller aktif.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -165,16 +153,12 @@
                         @endif
                     </div>
                     <div class="flex shrink-0 items-center gap-3">
-                        <span class="rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest {{ $statusClass[$history->status] ?? 'bg-[#f4f9ff] text-[#5a76c8]' }}">
-                            {{ $history->display_status }}
-                        </span>
+                        <span class="rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest {{ $statusClass[$history->status] ?? 'bg-[#f4f9ff] text-[#5a76c8]' }}">{{ $history->display_status }}</span>
                         <p class="text-sm font-black text-[#ff6b6b]">- {{ $formatRupiah($history->amount) }}</p>
                     </div>
                 </div>
             @empty
-                <p class="rounded-[1.75rem] border-4 border-dashed border-[#d7ecff] bg-[#f8fbff] p-10 text-center text-sm font-black text-[#5a76c8]">
-                    Riwayat penarikan reseller masih kosong.
-                </p>
+                <p class="rounded-[1.75rem] border-4 border-dashed border-[#d7ecff] bg-[#f8fbff] p-10 text-center text-sm font-black text-[#5a76c8]">Riwayat penarikan reseller masih kosong.</p>
             @endforelse
         </div>
     </section>

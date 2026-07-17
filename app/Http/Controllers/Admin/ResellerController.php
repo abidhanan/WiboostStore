@@ -57,6 +57,49 @@ class ResellerController extends Controller
         return view('admin.resellers.index', compact('resellers', 'memberUpgrades', 'pendingWithdrawals', 'withdrawalHistories'));
     }
 
+    public function commissions()
+    {
+        $incomeCommissions = ResellerCommission::query()
+            ->with(['user', 'transaction'])
+            ->where('type', 'income')
+            ->latest()
+            ->limit(80)
+            ->get();
+
+        $pendingWithdrawals = ResellerCommission::query()
+            ->with('user')
+            ->where('type', 'withdrawal')
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+
+        $withdrawalHistories = ResellerCommission::query()
+            ->with(['user', 'approver'])
+            ->where('type', 'withdrawal')
+            ->latest()
+            ->limit(60)
+            ->get();
+
+        $totalIncome = (int) ResellerCommission::query()
+            ->where('type', 'income')
+            ->where('status', 'success')
+            ->sum('amount');
+        $totalApprovedWithdrawal = (int) ResellerCommission::query()
+            ->where('type', 'withdrawal')
+            ->where('status', 'approved')
+            ->sum('amount');
+        $pendingWithdrawalTotal = (int) $pendingWithdrawals->sum('amount');
+
+        return view('admin.commissions.index', compact(
+            'incomeCommissions',
+            'pendingWithdrawals',
+            'withdrawalHistories',
+            'totalIncome',
+            'totalApprovedWithdrawal',
+            'pendingWithdrawalTotal'
+        ));
+    }
+
     public function updateWithdrawal(Request $request, ResellerCommission $commission)
     {
         abort_unless($commission->type === 'withdrawal', 404);

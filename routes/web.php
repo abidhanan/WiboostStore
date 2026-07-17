@@ -167,6 +167,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Reseller
     Route::get('/resellers', [AdminResellerController::class, 'index'])->name('resellers.index');
+    Route::get('/commissions', [AdminResellerController::class, 'commissions'])->name('commissions.index');
+    Route::get('/members', [AdminUserController::class, 'members'])->name('members.index');
+    Route::get('/admins', [AdminUserController::class, 'admins'])->name('admins.index');
     Route::patch('/resellers/withdrawals/{commission}', [AdminResellerController::class, 'updateWithdrawal'])->name('resellers.withdrawals.update');
     
     // Produk & Manajemen Stok Kredensial (Akun Premium)
