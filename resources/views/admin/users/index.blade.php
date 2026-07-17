@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 @section('title', 'Manajemen Pengguna')
-@section('admin_header_subtitle', 'Atur data admin dan pelanggan Wiboost Store.')
+@section('admin_header_subtitle', 'Kelola data pengguna dan role akun.')
 
 @section('content')
 <style>

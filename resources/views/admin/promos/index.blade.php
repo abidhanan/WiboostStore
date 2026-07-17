@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 @section('title', 'Manajemen Banner')
-@section('admin_header_subtitle', 'Kelola slider pengumuman yang muncul di Dashboard User.')
+@section('admin_header_subtitle', 'Kelola banner dan pengumuman user.')
 
 {{-- Section admin_header_actions dihapus karena tombol Tambah dipindah ke area toolbar --}}
 

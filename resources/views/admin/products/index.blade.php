@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 @section('title', 'Manajemen Produk')
-@section('admin_header_subtitle', 'Kelola harga, stok otomatis, dan sinkronisasi layanan provider ke website.')
+@section('admin_header_subtitle', 'Kelola harga, stok, dan provider.')
 
 @section('content')
 <style>

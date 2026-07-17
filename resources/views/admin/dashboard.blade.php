@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 @section('title', 'Dashboard Admin')
-@section('admin_header_subtitle', 'Pantau ringkasan transaksi, saldo, stok, dan aktivitas terbaru Wiboost Store.')
+@section('admin_header_subtitle', 'Ringkasan transaksi dan aktivitas toko.')
 @section('content')
     @php
         $paymentMethodMeta = static function ($trx): array {

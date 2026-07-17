@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Manajemen Reseller')
-@section('admin_header_subtitle', 'Pantau komisi reseller dan konfirmasi penarikan.')
+@section('admin_header_subtitle', 'Kelola reseller dan penarikan komisi.')
 
 @section('content')
 @php

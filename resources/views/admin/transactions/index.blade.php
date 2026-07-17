@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 @section('title', 'Riwayat Transaksi')
-@section('admin_header_subtitle', 'Pantau pesanan pelanggan dan filter berdasarkan bulan.')
+@section('admin_header_subtitle', 'Pantau transaksi dan pesanan pelanggan.')
 
 @section('content')
 <style>

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 @section('title', 'Manajemen Tutorial')
-@section('admin_header_subtitle', 'Kelola kategori utama, kategori kedua, dan isi tutorial pelanggan.')
+@section('admin_header_subtitle', 'Kelola panduan dan tutorial pelanggan.')
 
 @section('content')
 <style>

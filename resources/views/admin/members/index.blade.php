@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Halaman Member')
-@section('admin_header_subtitle', 'Pantau user dengan membership aktif.')
+@section('admin_header_subtitle', 'Pantau member aktif dan masa berlaku.')
 
 @section('content')
 <div class="wiboost-font pb-12">

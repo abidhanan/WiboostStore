@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 @section('title', 'Manajemen Kategori')
-@section('admin_header_subtitle', 'Kelola pengelompokan layanan dan produk Wiboost Store.')
+@section('admin_header_subtitle', 'Atur kategori layanan dan produk.')
 
 @section('content')
 <style>

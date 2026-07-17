@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 @section('title', 'Riwayat Deposit')
-@section('admin_header_subtitle', 'Pantau riwayat top-up atau pengisian saldo pengguna.')
+@section('admin_header_subtitle', 'Pantau top-up saldo pengguna.')
 
 {{-- Section admin_header_actions dihapus, dipindah ke toolbar agar responsif --}}
 

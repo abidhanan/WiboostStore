@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Laporan Kendala')
-@section('admin_header_subtitle', 'Pantau kendala yang dikirim pelanggan dari halaman bantuan.')
+@section('admin_header_subtitle', 'Pantau laporan kendala pelanggan.')
 
 @section('content')
 <style>

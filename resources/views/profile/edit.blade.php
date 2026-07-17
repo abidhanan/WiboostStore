@@ -72,11 +72,11 @@
     class="wiboost-font pb-12 max-w-6xl mx-auto mt-4 relative z-10"
     x-data="{ editingProfile: {{ $profileHasErrors ? 'true' : 'false' }}, editingPassword: {{ $passwordHasErrors ? 'true' : 'false' }} }"
 >
-    <div class="mb-10 text-center md:text-left pl-2">
+    <div class="mb-10 text-left pl-2">
         <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">
             Area Privasi
         </div>
-        <h2 class="flex items-center justify-center gap-2 text-3xl font-black text-[#2b3a67] tracking-tight md:justify-start">
+        <h2 class="flex items-center justify-start gap-2 text-3xl font-black text-[#2b3a67] tracking-tight">
             <span class="text-[#5a76c8]">@include('partials.wiboost-icon', ['name' => 'profile', 'class' => 'h-8 w-8'])</span>
             <span>Pengaturan Akun</span>
         </h2>

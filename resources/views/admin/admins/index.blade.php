@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Halaman Admin')
-@section('admin_header_subtitle', 'Pantau akun admin Wiboost Store.')
+@section('admin_header_subtitle', 'Kelola akun admin Wiboost Store.')
 
 @section('admin_header_actions')
     <a href="{{ route('admin.users.create', ['role' => 1]) }}" class="inline-flex items-center justify-center rounded-full border-4 border-white bg-[#5a76c8] px-6 py-3 text-sm font-black text-white shadow-lg shadow-[#5a76c8]/25 transition active:scale-95">
