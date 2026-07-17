@@ -15,6 +15,10 @@ class ResellerController extends Controller
     {
         $resellers = User::query()
             ->where('role_id', 3)
+            ->where(function ($query) {
+                $query->whereNull('membership_expires_at')
+                    ->orWhere('membership_expires_at', '<=', now());
+            })
             ->withCount([
                 'resellerCommissions as total_sales' => fn ($query) => $query->where('type', 'income')->where('status', 'success'),
             ])
@@ -31,6 +35,11 @@ class ResellerController extends Controller
                 return $user;
             });
 
+        $memberUpgrades = User::query()
+            ->whereNotNull('reseller_joined_at')
+            ->where('membership_expires_at', '>', now())
+            ->count();
+
         $pendingWithdrawals = ResellerCommission::query()
             ->with('user')
             ->where('type', 'withdrawal')
@@ -45,7 +54,7 @@ class ResellerController extends Controller
             ->limit(40)
             ->get();
 
-        return view('admin.resellers.index', compact('resellers', 'pendingWithdrawals', 'withdrawalHistories'));
+        return view('admin.resellers.index', compact('resellers', 'memberUpgrades', 'pendingWithdrawals', 'withdrawalHistories'));
     }
 
     public function updateWithdrawal(Request $request, ResellerCommission $commission)

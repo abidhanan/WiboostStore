@@ -8,6 +8,10 @@
     $categoryRouteName = $isGuestCatalog ? 'guest.order.category' : 'user.order.category';
     $categoryHomeUrl = $isGuestCatalog ? route('home') . '#kategori' : route('user.dashboard');
     $categoryDiscountLabel = \App\Models\Product::currentDiscountLabel();
+    $currentUserIsMemberForSubcategory = (! $isGuestCatalog) && (auth()->user()?->isMember() ?? false);
+    $memberSubcategoryHoverClass = $currentUserIsMemberForSubcategory ? ' wiboost-member-subcategory-card' : '';
+    $memberSubcategoryFridayRibbonClass = $currentUserIsMemberForSubcategory && now()->isFriday() ? ' discount-corner-ribbon--member' : '';
+    $categoryUsesTargetEmoji = \App\Support\WiboostEmoji::shouldUseForSubcategory($category);
 @endphp
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
@@ -50,6 +54,10 @@
         color: white;
         text-transform: uppercase;
         box-shadow: 0 12px 26px rgba(90, 118, 200, 0.28);
+    }
+    .discount-corner-ribbon--member .discount-corner-ribbon__text {
+        background: #8b5cf6 !important;
+        box-shadow: 0 12px 26px rgba(139, 92, 246, 0.30) !important;
     }
     .wiboost-square-logo-img {
         display: block;
@@ -105,10 +113,35 @@
         min-height: auto;
     }
 
+    .wiboost-member-subcategory-card:hover {
+        border-color: #c4b5fd !important;
+        box-shadow: 0 22px 48px rgba(139, 92, 246, 0.30) !important;
+    }
+
+    .wiboost-member-subcategory-card:hover .wiboost-category-logo {
+        background: #f5f3ff !important;
+        color: #8b5cf6 !important;
+        box-shadow: inset 0 2px 8px rgba(139, 92, 246, 0.10) !important;
+    }
+
+    .wiboost-member-subcategory-card:hover .wiboost-subcategory-title {
+        color: #8b5cf6 !important;
+    }
+
     .wiboost-category-logo {
         height: 4.75rem !important;
         margin-bottom: 0.75rem;
         width: 4.75rem !important;
+    }
+
+    .wiboost-suborder-emote {
+        font-size: 2.65rem;
+        line-height: 1;
+    }
+
+    .wiboost-suborder-emote-large {
+        font-size: 3.05rem;
+        line-height: 1;
     }
 
     @media (min-width: 640px) {
@@ -150,12 +183,12 @@
         }
 
         .wiboost-suborder-emote {
-            font-size: 2.35rem;
+            font-size: 2.25rem;
             line-height: 1;
         }
 
         .wiboost-suborder-emote-large {
-            font-size: 2.75rem;
+            font-size: 2.55rem;
             line-height: 1;
         }
     }
@@ -169,10 +202,12 @@
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
             </a>
             <div class="wiboost-header-logo-frame col-start-1 row-start-2 flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] bg-[#f4f9ff] text-[#5a76c8] shadow-inner sm:h-24 sm:w-24">
-                @if($category->image)
+                @if($categoryUsesTargetEmoji)
+                    <span class="wiboost-suborder-emote drop-shadow-sm">{{ \App\Support\WiboostEmoji::forCategory($category) }}</span>
+                @elseif($category->image)
                     <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="wiboost-header-logo-img drop-shadow-sm">
                 @else
-                    <span class="wiboost-suborder-emote drop-shadow-sm">@include('partials.wiboost-icon', ['label' => $category->name, 'class' => 'h-10 w-10'])</span>
+                    <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['label' => $category->name, 'class' => 'h-10 w-10'])</span>
                 @endif
             </div>
         </div>
@@ -200,16 +235,18 @@
                 $hasActiveProducts = (int) ($child->active_products_count ?? 0) > 0;
                 $hasNestedChildren = (int) ($child->children_count ?? 0) > 0;
                 $isBrowsable = $hasActiveProducts || $hasNestedChildren;
+                $childUsesTargetEmoji = \App\Support\WiboostEmoji::shouldUseForSubcategory($child);
+                $childEmote = $childUsesTargetEmoji ? \App\Support\WiboostEmoji::forCategory($child) : null;
             @endphp
 
             @if($isBrowsable)
-                <a href="{{ route($categoryRouteName, $child->slug) }}" class="wiboost-category-card group relative overflow-hidden bg-white/95 backdrop-blur-sm p-2 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 text-center flex flex-col items-center justify-center">
+                <a href="{{ route($categoryRouteName, $child->slug) }}" class="wiboost-category-card{{ $memberSubcategoryHoverClass }} group relative overflow-hidden bg-white/95 backdrop-blur-sm p-2 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 text-center flex flex-col items-center justify-center">
             @else
                 <div class="wiboost-category-card group relative overflow-hidden bg-white/60 backdrop-blur-sm p-2 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border-4 border-white shadow-md shadow-[#bde0fe]/10 text-center flex flex-col items-center justify-center opacity-80 grayscale-[20%]">
             @endif
 
                 @if($categoryDiscountLabel)
-                    <span class="discount-corner-ribbon">
+                    <span class="discount-corner-ribbon{{ $memberSubcategoryFridayRibbonClass }}">
                         <span class="discount-corner-ribbon__text">
                             {{ $categoryDiscountLabel }}
                         </span>
@@ -217,14 +254,16 @@
                 @endif
 
                 <div class="wiboost-category-logo bg-[#f4f9ff] rounded-[1.25rem] sm:rounded-[1.5rem] flex items-center justify-center {{ $hasActiveProducts ? 'group-hover:scale-110 group-hover:-rotate-3' : '' }} transition-transform duration-300 shadow-inner shrink-0 overflow-hidden">
-                    @if($child->image)
+                    @if($childUsesTargetEmoji)
+                        <span class="wiboost-suborder-emote-large drop-shadow-md">{{ $childEmote }}</span>
+                    @elseif($child->image)
                         <img src="{{ Storage::url($child->image) }}" alt="{{ $child->name }}" class="wiboost-square-logo-img wiboost-suborder-logo-content drop-shadow-sm">
                     @else
-                        <span class="wiboost-suborder-emote-large drop-shadow-md">@include('partials.wiboost-icon', ['label' => $child->name, 'class' => 'h-12 w-12'])</span>
+                        <span class="drop-shadow-md">@include('partials.wiboost-icon', ['label' => $child->name, 'class' => 'h-12 w-12'])</span>
                     @endif
                 </div>
 
-                <span class="max-w-full break-words px-1 text-xs font-black leading-tight text-[#2b3a67] sm:text-lg md:text-xl">{{ $child->name }}</span>
+                <span class="wiboost-subcategory-title max-w-full break-words px-1 text-xs font-black leading-tight text-[#2b3a67] sm:text-lg md:text-xl">{{ $child->name }}</span>
 
             @if($isBrowsable)
                 </a>

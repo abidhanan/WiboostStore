@@ -73,8 +73,8 @@
                         <tr>
                             <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Nama & Email</th>
                             <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Nomor Kontak</th>
-                            <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff] text-center">Role</th>
-                            <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff] text-center">Membership</th>
+                            <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff] text-center">Role Efektif</th>
+                            <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff] text-center">Masa Member</th>
                             <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Saldo</th>
                             <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff] text-center">Aksi</th>
                         </tr>
@@ -90,7 +90,9 @@
                                     <p class="font-black text-[#5a76c8] text-sm">{{ $user->whatsapp ?? '-' }}</p>
                                 </td>
                                 <td class="px-5 py-4 sm:py-5 align-middle text-center">
-                                    @if($user->role_id == 1)
+                                    @if($user->isMember())
+                                        <span class="bg-[#ede9fe] text-[#8b5cf6] px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border-2 border-white shadow-sm inline-block w-24">Member</span>
+                                    @elseif($user->role_id == 1)
                                         <span class="bg-[#ffe5e5] text-[#ff6b6b] px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border-2 border-white shadow-sm inline-block w-24">Admin</span>
                                     @elseif($user->role_id == 3)
                                         <span class="bg-[#fff7d6] text-[#d99b16] px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border-2 border-white shadow-sm inline-block w-24">Reseller</span>

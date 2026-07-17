@@ -5,8 +5,12 @@
 
 @section('content')
 @php
+    $dashboardUser = Auth::user();
     $categoryDiscountLabel = \App\Models\Product::currentDiscountLabel();
-    $dashboardUserName = Auth::user()->short_name ?? Auth::user()->name;
+    $dashboardUserIsMember = $dashboardUser?->isMember() ?? false;
+    $dashboardMemberHoverClass = $dashboardUserIsMember ? ' wiboost-member-category-card' : '';
+    $dashboardMemberFridayRibbonClass = $dashboardUserIsMember && now()->isFriday() ? ' discount-corner-ribbon--member' : '';
+    $dashboardUserName = $dashboardUser->short_name ?? $dashboardUser->name;
 @endphp
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
@@ -42,6 +46,10 @@
         color: white;
         text-transform: uppercase;
         box-shadow: 0 12px 26px rgba(90, 118, 200, 0.28);
+    }
+    .discount-corner-ribbon--member .discount-corner-ribbon__text {
+        background: #8b5cf6 !important;
+        box-shadow: 0 12px 26px rgba(139, 92, 246, 0.30) !important;
     }
     .promo-banner-shell {
         width: 100%;
@@ -116,6 +124,18 @@
     }
     .wiboost-main-category-card {
         aspect-ratio: 1 / 1;
+    }
+    .wiboost-member-category-card:hover {
+        border-color: #c4b5fd !important;
+        box-shadow: 0 22px 48px rgba(139, 92, 246, 0.30) !important;
+    }
+    .wiboost-member-category-card:hover .wiboost-main-category-logo {
+        background: #f5f3ff !important;
+        color: #8b5cf6 !important;
+        box-shadow: inset 0 2px 8px rgba(139, 92, 246, 0.10) !important;
+    }
+    .wiboost-member-category-card:hover .wiboost-main-category-title {
+        color: #8b5cf6 !important;
     }
     .wiboost-main-category-logo {
         height: 4.75rem !important;
@@ -302,9 +322,9 @@
 
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 md:gap-6 mb-14">
         @forelse($categories as $category)
-            <a href="{{ route('user.order.category', $category->slug) }}" class="wiboost-main-category-card group relative overflow-hidden bg-white p-2 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 transition-all text-center flex flex-col items-center justify-center">
+            <a href="{{ route('user.order.category', $category->slug) }}" class="wiboost-main-category-card{{ $dashboardMemberHoverClass }} group relative overflow-hidden bg-white p-2 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 transition-all text-center flex flex-col items-center justify-center">
                 @if($categoryDiscountLabel)
-                    <span class="discount-corner-ribbon">
+                    <span class="discount-corner-ribbon{{ $dashboardMemberFridayRibbonClass }}">
                         <span class="discount-corner-ribbon__text">
                             {{ $categoryDiscountLabel }}
                         </span>
@@ -314,9 +334,9 @@
                     @if($category->image)
                         <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="wiboost-square-logo-img drop-shadow-sm">
                     @else
-                    <span class="text-[#5a76c8] drop-shadow-sm">
-                        @include('partials.wiboost-icon', ['label' => $category->name, 'class' => 'h-10 w-10'])
-                    </span>
+                        <span class="text-[#5a76c8] drop-shadow-sm">
+                            @include('partials.wiboost-icon', ['label' => $category->name, 'class' => 'h-10 w-10'])
+                        </span>
                     @endif
                 </div>
                 <span class="wiboost-main-category-title max-w-full break-words px-1 font-black text-[#2b3a67]">{{ $category->name }}</span>

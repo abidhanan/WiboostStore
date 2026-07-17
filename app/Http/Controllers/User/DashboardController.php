@@ -71,7 +71,9 @@ class DashboardController extends Controller
     {
         $depositSyncService->syncForUser((int) Auth::id());
 
-        $user = Auth::user()->fresh();
+        $user = Auth::user();
+        $user?->syncExpiredMembershipRole();
+        $user = $user?->fresh();
         $isMember = $user?->isMember() ?? false;
         $membershipExpiresAt = $user?->membership_expires_at;
         $remainingTotalSeconds = $isMember && $membershipExpiresAt
@@ -97,6 +99,8 @@ class DashboardController extends Controller
     public function joinMembership(Request $request, XoftwarePaymentService $paymentService)
     {
         $user = $request->user();
+        $user?->syncExpiredMembershipRole();
+        $user = $user?->fresh();
         $amount = 30000;
         $lockKey = 'membership-payment:' . $user->id;
 

@@ -37,10 +37,14 @@
         </div>
     @endif
 
-    <div class="grid gap-4 sm:grid-cols-3">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div class="rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/25">
-            <p class="text-xs font-black uppercase tracking-[0.22em] text-[#8faaf3]">Total Reseller</p>
+            <p class="text-xs font-black uppercase tracking-[0.22em] text-[#8faaf3]">Reseller Aktif</p>
             <p class="mt-3 text-4xl font-black text-[#2b3a67]">{{ $resellers->count() }}</p>
+        </div>
+        <div class="rounded-[2rem] border-4 border-white bg-[#ede9fe] p-6 shadow-xl shadow-[#8b5cf6]/15">
+            <p class="text-xs font-black uppercase tracking-[0.22em] text-[#8b5cf6]">Reseller Jadi Member</p>
+            <p class="mt-3 text-4xl font-black text-[#8b5cf6]">{{ $memberUpgrades ?? 0 }}</p>
         </div>
         <div class="rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/25">
             <p class="text-xs font-black uppercase tracking-[0.22em] text-[#8faaf3]">Penarikan Pending</p>
@@ -106,7 +110,12 @@
     </section>
 
     <section class="mt-8 rounded-[2rem] border-4 border-white bg-white p-5 shadow-xl shadow-[#bde0fe]/25 sm:p-7">
-        <h2 class="text-2xl font-black text-[#2b3a67]">Daftar Reseller</h2>
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <h2 class="text-2xl font-black text-[#2b3a67]">Daftar Reseller Aktif</h2>
+                <p class="mt-1 text-xs font-bold text-[#8faaf3]">User yang sudah aktif member tidak dihitung sebagai reseller aktif.</p>
+            </div>
+        </div>
         <div class="table-scroll mt-5 overflow-x-auto pb-2">
             <table class="w-full min-w-[820px] text-left">
                 <thead>
@@ -135,7 +144,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-12 text-center text-sm font-black text-[#5a76c8]">Belum ada user yang bergabung menjadi reseller.</td>
+                            <td colspan="5" class="px-4 py-12 text-center text-sm font-black text-[#5a76c8]">Belum ada reseller aktif.</td>
                         </tr>
                     @endforelse
                 </tbody>

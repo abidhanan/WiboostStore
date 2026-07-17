@@ -41,6 +41,19 @@ class DashboardController extends Controller
             ->sum('amount');
 
         $totalUsers = User::whereIn('role_id', [2, 3])->count();
+        $totalMembers = User::where('membership_expires_at', '>', now())->count();
+        $totalResellers = User::where('role_id', 3)
+            ->where(function ($query) {
+                $query->whereNull('membership_expires_at')
+                    ->orWhere('membership_expires_at', '<=', now());
+            })
+            ->count();
+        $totalBuyers = User::where('role_id', 2)
+            ->where(function ($query) {
+                $query->whereNull('membership_expires_at')
+                    ->orWhere('membership_expires_at', '<=', now());
+            })
+            ->count();
 
         $recentTransactions = Transaction::with(['user', 'product'])
             ->where(function ($query) {
@@ -151,6 +164,9 @@ class DashboardController extends Controller
             'totalTransactionsMonth',
             'revenueMonth',
             'totalUsers',
+            'totalBuyers',
+            'totalResellers',
+            'totalMembers',
             'recentTransactions',
             'globalWalletLogs',
             'lowStockProducts',

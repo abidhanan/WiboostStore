@@ -31,6 +31,10 @@ class UserController extends Controller
                     if (str_contains(strtolower($search), 'reseller')) {
                         $innerQuery->orWhere('role_id', 3);
                     }
+
+                    if (str_contains(strtolower($search), 'member') || str_contains(strtolower($search), 'membership')) {
+                        $innerQuery->orWhere('membership_expires_at', '>', now());
+                    }
                 });
             })
             ->latest()

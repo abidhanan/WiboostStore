@@ -639,6 +639,10 @@
 
     @php
         $currentUser = Auth::user();
+        if ($currentUser && method_exists($currentUser, 'syncExpiredMembershipRole') && $currentUser->syncExpiredMembershipRole()) {
+            $currentUser = $currentUser->fresh();
+            Auth::setUser($currentUser);
+        }
         $brandLogoUrl = asset('images/wiboost-logo-nav.png') . '?v=20260613-nav2';
         $defaultProfilePhotoUrl = \App\Models\User::defaultProfilePhotoUrl();
         $currentUserPhotoUrl = $currentUser?->profile_photo_url ?? $defaultProfilePhotoUrl;
@@ -653,11 +657,11 @@
 
         $mobileUserNav = [
             ['route' => 'user.dashboard', 'pattern' => 'user.dashboard', 'label' => 'Home', 'icon' => 'home'],
+            ['route' => 'user.history', 'pattern' => 'user.history', 'label' => 'Riwayat', 'icon' => 'history'],
             ['route' => 'user.wallet.index', 'pattern' => 'user.wallet.*', 'label' => 'Saldo', 'icon' => 'wallet'],
             ['route' => 'user.points.index', 'pattern' => 'user.points.*', 'label' => 'Poin', 'icon' => 'points'],
             ['route' => 'user.reseller.index', 'pattern' => 'user.reseller.*', 'label' => 'Reseller', 'icon' => 'reseller'],
             ['route' => 'user.tutorials.index', 'pattern' => 'user.tutorials.*', 'label' => 'Tutorial', 'icon' => 'tutorial'],
-            ['route' => 'user.history', 'pattern' => 'user.history', 'label' => 'Riwayat', 'icon' => 'history'],
         ];
 
         $userNavIconPaths = [

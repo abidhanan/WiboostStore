@@ -57,7 +57,7 @@ class User extends Authenticatable
 
     public function isReseller(): bool
     {
-        return (int) $this->role_id === 3;
+        return (int) $this->role_id === 3 && ! $this->isMember();
     }
 
     public function isMember(): bool
@@ -65,11 +65,38 @@ class User extends Authenticatable
         return $this->membership_expires_at !== null && $this->membership_expires_at->isFuture();
     }
 
+    public function syncExpiredMembershipRole(): bool
+    {
+        if ($this->membership_expires_at === null || $this->membership_expires_at->isFuture()) {
+            return false;
+        }
+
+        $targetRoleId = (int) $this->role_id;
+
+        if (! $this->isAdmin()) {
+            $targetRoleId = $this->reseller_joined_at ? 3 : 2;
+        }
+
+        if ((int) $this->role_id === $targetRoleId) {
+            return false;
+        }
+
+        $this->forceFill([
+            'role_id' => $targetRoleId,
+        ])->saveQuietly();
+
+        $this->refresh();
+
+        return true;
+    }
+
     public function activateMembership(int $days = 30): void
     {
         $base = $this->isMember() ? $this->membership_expires_at->copy() : now();
+        $roleId = in_array((int) $this->role_id, [2, 3], true) ? (int) $this->role_id : 2;
 
         $this->forceFill([
+            'role_id' => $roleId,
             'membership_started_at' => $this->membership_started_at ?: now(),
             'membership_expires_at' => $base->addDays($days),
         ])->save();

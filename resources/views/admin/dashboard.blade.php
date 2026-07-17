@@ -78,6 +78,20 @@
             <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
                 <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Total Pelanggan</p>
                 <p class="mt-3 text-4xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalUsers ?? 0, 0, ',', '.') }}</p>
+                <div class="mt-5 grid grid-cols-3 gap-2 text-center">
+                    <div class="rounded-2xl border-2 border-white bg-[#f4f9ff] px-2 py-2 shadow-sm">
+                        <p class="text-[8px] font-black uppercase tracking-widest text-[#8faaf3]">Buyer</p>
+                        <p class="text-sm font-black text-[#5a76c8]">{{ number_format($totalBuyers ?? 0, 0, ',', '.') }}</p>
+                    </div>
+                    <div class="rounded-2xl border-2 border-white bg-[#fff7d6] px-2 py-2 shadow-sm">
+                        <p class="text-[8px] font-black uppercase tracking-widest text-[#d99b16]">Reseller</p>
+                        <p class="text-sm font-black text-[#d99b16]">{{ number_format($totalResellers ?? 0, 0, ',', '.') }}</p>
+                    </div>
+                    <div class="rounded-2xl border-2 border-white bg-[#ede9fe] px-2 py-2 shadow-sm">
+                        <p class="text-[8px] font-black uppercase tracking-widest text-[#8b5cf6]">Member</p>
+                        <p class="text-sm font-black text-[#8b5cf6]">{{ number_format($totalMembers ?? 0, 0, ',', '.') }}</p>
+                    </div>
+                </div>
             </article>
         </section>
 

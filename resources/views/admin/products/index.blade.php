@@ -97,7 +97,7 @@
                                     <tr>
                                         <th style="font-size: 10px; width: 360px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Produk</th>
                                         <th style="font-size: 10px; width: 170px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Tipe Proses</th>
-                                        <th style="font-size: 10px; width: 170px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga Jual</th>
+                                        <th style="font-size: 10px; width: 190px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga Buyer / Member</th>
                                         <th style="font-size: 10px; width: 210px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Provider</th>
                                         <th style="font-size: 10px; width: 115px;" class="whitespace-nowrap px-5 py-4 pr-8 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Stok</th>
                                         <th style="font-size: 10px; width: 145px;" class="whitespace-nowrap px-5 py-4 pl-8 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Aksi</th>
@@ -119,6 +119,31 @@
                                         </tr>
 
                                         @foreach($categorySection['products'] as $product)
+                                            @php
+                                                $productRootCategory = $product->category;
+                                                while($productRootCategory?->parent) {
+                                                    $productRootCategory = $productRootCategory->parent;
+                                                }
+
+                                                $productRootSlug = $productRootCategory?->slug;
+                                                $memberMarkupRate = \App\Models\Product::memberMarkupRateFor($productRootSlug, collect([
+                                                    $productRootCategory?->name,
+                                                    $product->category?->name,
+                                                    $product->name,
+                                                    $product->slug,
+                                                ])->filter()->implode(' '));
+                                                $memberOriginalPrice = null;
+
+                                                if ($productRootSlug === 'aplikasi-premium' && filled($product->membership_price)) {
+                                                    $memberOriginalPrice = (float) $product->membership_price;
+                                                } elseif (($product->uses_api_selling_markup ?? false) && $memberMarkupRate > 0) {
+                                                    $memberOriginalPrice = (float) ceil(round(((float) $product->price) * (1 + $memberMarkupRate), 6));
+                                                }
+
+                                                $memberDisplayPrice = $memberOriginalPrice !== null
+                                                    ? (float) max(0, ceil(round($memberOriginalPrice * (1 - \App\Models\Product::currentDiscountRate()), 6)))
+                                                    : null;
+                                            @endphp
                                             <tr class="transition-colors hover:bg-[#f8faff] group">
                                                 <td class="px-5 py-4 align-middle sm:py-5" style="width: 360px; max-width: 360px;">
                                                     <div class="flex items-center gap-3 sm:gap-4">
@@ -154,15 +179,15 @@
                                                 </td>
 
                                                 <td class="px-5 py-4 sm:py-5 align-middle">
-                                                    <p class="text-xs sm:text-sm font-black text-[#4bc6b9] drop-shadow-sm">Rp {{ number_format($product->selling_price ?? 0, 0, ',', '.') }}</p>
+                                                    <p class="text-xs sm:text-sm font-black text-[#5a76c8] drop-shadow-sm">Buyer: Rp {{ number_format($product->selling_price ?? 0, 0, ',', '.') }}</p>
+                                                    @if($memberDisplayPrice !== null)
+                                                        <p style="font-size: 10px; color:#8b5cf6;" class="mt-1 whitespace-nowrap font-black uppercase tracking-widest">
+                                                            Member: Rp {{ number_format($memberDisplayPrice, 0, ',', '.') }}
+                                                        </p>
+                                                    @endif
                                                     @if($product->uses_api_selling_markup)
                                                         <p style="font-size: 9px;" class="mt-1 whitespace-nowrap font-black uppercase tracking-widest text-[#8faaf3]">
                                                             Modal: Rp {{ number_format($product->price ?? 0, 0, ',', '.') }}
-                                                        </p>
-                                                    @endif
-                                                    @if(filled($product->membership_price))
-                                                        <p style="font-size: 9px; color:#8b5cf6;" class="mt-1 whitespace-nowrap font-black uppercase tracking-widest">
-                                                            Member: Rp {{ number_format($product->membership_price ?? 0, 0, ',', '.') }}
                                                         </p>
                                                     @endif
                                                 </td>

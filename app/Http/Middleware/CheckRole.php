@@ -24,6 +24,12 @@ class CheckRole
 
         $user = Auth::user();
 
+        if (method_exists($user, 'syncExpiredMembershipRole') && $user->syncExpiredMembershipRole()) {
+            $user = $user->fresh();
+            Auth::setUser($user);
+            $request->setUserResolver(fn () => $user);
+        }
+
         // 2. Jika tidak ada role spesifik yang didefinisikan di route, biarkan masuk
         if (empty($roles)) {
             return $next($request);

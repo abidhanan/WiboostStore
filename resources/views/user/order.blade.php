@@ -90,6 +90,11 @@
         box-shadow: 0 12px 26px rgba(255, 107, 107, 0.28);
     }
 
+    .discount-corner-ribbon--member .discount-corner-ribbon__text {
+        background: #8b5cf6 !important;
+        box-shadow: 0 12px 26px rgba(139, 92, 246, 0.30) !important;
+    }
+
     .discount-old-price {
         color: #111827 !important;
         text-decoration-line: line-through !important;
@@ -522,7 +527,9 @@
             ? '#8b5cf6'
             : '#5a76c8';
         $memberProductHoverClass = $currentUserIsMemberForPrice ? ' wiboost-member-product-card' : '';
+        $memberFridayDiscountRibbonClass = $currentUserIsMemberForPrice && now()->isFriday() ? ' discount-corner-ribbon--member' : '';
         $forceEmoteLogoOnly = false;
+        $forceTopUpGameProductEmoji = $rootCategorySlugForCards === 'top-up-game';
         $shouldShowCompactServiceDescription = false;
         $compactProductGridClass = 'grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-4';
         $checkoutNonce = (string) \Illuminate\Support\Str::uuid();
@@ -533,6 +540,7 @@
         $socialServiceListUrl = $showSuntikSosmedForm
             ? route('user.order.ordersosmed-services', ['category' => $category->id])
             : null;
+        $categoryUsesTargetEmoji = \App\Support\WiboostEmoji::shouldUseForSubcategory($category);
     @endphp
 
     <div id="page-product-list" class="transition-all duration-300 relative z-10">
@@ -545,7 +553,9 @@
             </div>
 
             <div class="wiboost-header-logo-frame col-start-1 row-start-2 flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] bg-[#f4f9ff] text-[#5a76c8] shadow-inner sm:h-24 sm:w-24">
-                @if($category->image)
+                @if($categoryUsesTargetEmoji)
+                    <span class="text-2xl leading-none drop-shadow-sm sm:text-3xl">{{ \App\Support\WiboostEmoji::forCategory($category) }}</span>
+                @elseif($category->image)
                     <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="wiboost-header-logo-img drop-shadow-sm">
                 @else
                     <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['label' => $category->name, 'class' => 'h-10 w-10'])</span>
@@ -701,6 +711,10 @@
                     $logoBoxClass = $showCompactServiceCards
                         ? 'wiboost-compact-logo flex shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] bg-[#f4f9ff] text-4xl shadow-inner transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3'
                         : 'mb-5 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] bg-[#f4f9ff] text-5xl shadow-inner transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3';
+                    $productLogoEmote = $forceTopUpGameProductEmoji
+                        ? \App\Support\DigiflazzProductLogo::emoteForProduct($product)
+                        : $product->display_logo_emote;
+                    $productLogoMode = ($forceEmoteLogoOnly || ($forceTopUpGameProductEmoji && $productLogoEmote)) ? 'emote' : 'auto';
                 @endphp
 
                 <button
@@ -711,9 +725,9 @@
                     data-original-price="{{ $product->original_selling_price }}"
                     data-discount-label="{{ $product->active_discount_label ?? '' }}"
                     data-description="{{ $checkoutDescription }}"
-                    data-logo-image="{{ (! $forceEmoteLogoOnly && $product->display_logo_image) ? Storage::url($product->display_logo_image) : '' }}"
-                    data-logo-emote="{{ Str::upper(Str::substr($product->name, 0, 1)) }}"
-                    data-logo-mode="{{ $forceEmoteLogoOnly ? 'emote' : 'auto' }}"
+                    data-logo-image="{{ ($productLogoMode !== 'emote' && $product->display_logo_image) ? Storage::url($product->display_logo_image) : '' }}"
+                    data-logo-emote="{{ $productLogoEmote ?: Str::upper(Str::substr($product->name, 0, 1)) }}"
+                    data-logo-mode="{{ $productLogoMode }}"
                     data-checkout-fields='{{ json_encode($product->checkout_fields, JSON_UNESCAPED_UNICODE) }}'
                     @if(!$isOutOfStock && ! $isGuestCatalog)
                         onclick="goToCheckout(this)"
@@ -733,7 +747,7 @@
                             </span>
                         </span>
                     @elseif($product->has_active_discount)
-                        <span class="discount-corner-ribbon">
+                        <span class="discount-corner-ribbon{{ $memberFridayDiscountRibbonClass }}">
                             <span class="discount-corner-ribbon__text">
                                 {{ $product->active_discount_label }}
                             </span>
@@ -741,7 +755,11 @@
                     @endif
 
                     <div class="flex w-full flex-col items-center {{ $showCompactServiceCards ? 'wiboost-compact-card-main justify-center py-1' : 'mb-4' }}">
-                        @if(! $forceEmoteLogoOnly && $product->display_logo_image)
+                        @if($forceTopUpGameProductEmoji && $productLogoEmote)
+                            <div class="{{ $logoBoxClass }} leading-none drop-shadow-sm" style="font-size: {{ $showCompactServiceCards ? '1.85rem' : '2.2rem' }} !important;">
+                                {{ $productLogoEmote }}
+                            </div>
+                        @elseif(! $forceEmoteLogoOnly && $product->display_logo_image)
                             <div class="{{ $logoBoxClass }}">
                                 <span class="hidden text-[#5a76c8] drop-shadow-sm">@include('partials.wiboost-icon', ['label' => $product->name, 'class' => 'h-10 w-10'])</span>
                                 <img src="{{ Storage::url($product->display_logo_image) }}" alt="" class="wiboost-square-logo-img drop-shadow-sm" onerror="this.classList.add('hidden'); this.previousElementSibling.classList.remove('hidden');">
@@ -818,7 +836,7 @@
                 </div>
 
                 <div class="relative z-10 shrink-0 overflow-hidden rounded-[2rem] border-4 border-white/50 bg-white/20 px-6 py-5 text-left backdrop-blur-md shadow-lg">
-                    <span id="checkout_discount_badge" class="discount-corner-ribbon discount-corner-ribbon--checkout hidden">
+                    <span id="checkout_discount_badge" class="discount-corner-ribbon discount-corner-ribbon--checkout{{ $memberFridayDiscountRibbonClass }} hidden">
                         <span
                             id="checkout_discount_badge_text"
                             class="discount-corner-ribbon__text"

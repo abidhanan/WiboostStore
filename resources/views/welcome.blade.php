@@ -471,7 +471,7 @@
                                 @if($cat->image)
                                     <img src="{{ Storage::url($cat->image) }}" alt="{{ $cat->name }}" class="drop-shadow-sm">
                                 @else
-                                <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['label' => $cat->name, 'class' => 'h-9 w-9'])</span>
+                                    <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['label' => $cat->name, 'class' => 'h-9 w-9'])</span>
                                 @endif
                             </div>
                             <h3 class="welcome-category-title max-w-full break-words px-1 font-black text-[#2b3a67]">{{ $cat->name }}</h3>

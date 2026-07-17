@@ -32,6 +32,14 @@
     @php
         $defaultAdminProfilePhotoUrl = \App\Models\User::defaultProfilePhotoUrl();
         $adminUserPhotoUrl = $user->profile_photo_url ?: $defaultAdminProfilePhotoUrl;
+        $effectiveRoleLabel = $user->isMember()
+            ? 'Member'
+            : ($user->isAdmin() ? 'Admin' : ($user->role_id == 3 ? 'Reseller' : 'Buyer'));
+        $effectiveRoleStyle = $user->isMember()
+            ? 'background:#ede9fe; color:#8b5cf6;'
+            : ($user->role_id == 3
+                ? 'background:#fff7d6; color:#d99b16;'
+                : ($user->isAdmin() ? 'background:#ffe5e5; color:#ff6b6b;' : 'background:#e0fbfc; color:#5a76c8;'));
     @endphp
 
     <form action="{{ route('admin.users.update', $user->id) }}" method="POST" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-10 relative z-10 overflow-visible">
@@ -62,6 +70,12 @@
                 <input type="text" value="Rp {{ number_format($user->balance, 0, ',', '.') }}" disabled class="w-full bg-[#f0f5ff] border-4 border-white rounded-[1.5rem] px-6 py-4 text-[#4bc6b9] font-black outline-none cursor-not-allowed shadow-inner opacity-80">
             </div>
             <div class="md:col-span-2">
+                <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2 flex items-center gap-2">Role Efektif</label>
+                <div class="rounded-[1.5rem] border-4 border-white px-6 py-4 font-black shadow-inner" style="{{ $effectiveRoleStyle }}">
+                    {{ $effectiveRoleLabel }}
+                </div>
+            </div>
+            <div class="md:col-span-2">
                 <label class="block text-sm font-black text-[#8b5cf6] mb-3 ml-2 flex items-center gap-2">Status Membership</label>
                 <div class="rounded-[1.5rem] border-4 border-white bg-[#f5f3ff] px-6 py-4 font-black text-[#8b5cf6] shadow-inner">
                     @if($user->isMember())
@@ -78,6 +92,9 @@
                     @include('admin.users.partials.role-select', ['selectedRole' => old('role_id', (string) $user->role_id)])
                     <p class="text-xs font-bold text-amber-600 mt-4 ml-2 bg-amber-100/50 inline-block px-3 py-1.5 rounded-lg border border-amber-200">
                         ⚠️ <b>Peringatan:</b> Mengubah menjadi Admin akan memberikan akses penuh ke dashboard pengelolaan.
+                    </p>
+                    <p class="text-xs font-bold text-[#8b5cf6] mt-3 ml-2 bg-[#f5f3ff] inline-block px-3 py-1.5 rounded-lg border border-[#ddd6fe]">
+                        Membership aktif tetap tampil sebagai Member sampai masa aktif habis.
                     </p>
                 </div>
             </div>

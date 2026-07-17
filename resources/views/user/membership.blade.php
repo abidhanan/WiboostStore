@@ -111,6 +111,8 @@
             }
 
             const expiresAt = Number(countdown.dataset.expiresAt || 0) * 1000;
+            const membershipUrl = @json(route('user.membership.index'));
+            let redirectScheduled = false;
             const formatCountdown = (totalSeconds) => {
                 const days = Math.floor(totalSeconds / 86400);
                 const hours = Math.floor((totalSeconds % 86400) / 3600);
@@ -122,6 +124,13 @@
             const tick = () => {
                 const totalSeconds = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
                 countdown.textContent = formatCountdown(totalSeconds);
+
+                if (totalSeconds <= 0 && ! redirectScheduled) {
+                    redirectScheduled = true;
+                    window.setTimeout(() => {
+                        window.location.href = membershipUrl;
+                    }, 400);
+                }
             };
 
             tick();

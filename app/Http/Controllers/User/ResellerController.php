@@ -109,6 +109,10 @@ class ResellerController extends Controller
 
         $request->user()->forceFill([
             'role_id' => 2,
+            'reseller_joined_at' => null,
+            'reseller_payout_method' => null,
+            'reseller_payout_account' => null,
+            'reseller_payout_name' => null,
         ])->save();
 
         return redirect()->route('user.dashboard')->with('success', 'Kamu sudah berhenti menjadi reseller.');
