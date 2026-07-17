@@ -16,14 +16,16 @@ class XoftwarePaymentService
         $transaction->loadMissing('product', 'user');
 
         $productName = $transaction->product?->name ?: 'Pesanan Wiboost';
+        $paymentUser = $user ?: $transaction->user;
 
         return $this->createPayment(
             merchantRef: $transaction->invoice_number,
             amount: (int) round((float) $transaction->amount),
             note: 'Pembayaran pesanan ' . $productName,
             returnUrl: $this->publicUrl('user/history'),
+            buyerFeeShareOverride: $paymentUser?->isMember() ? 0.0 : null,
             metadata: $this->paymentMetadata(
-                user: $user ?: $transaction->user,
+                user: $paymentUser,
                 productCode: (string) ($transaction->product?->provider_product_id ?: $transaction->product_id ?: $transaction->invoice_number),
                 productName: $productName,
                 productUrl: $this->publicUrl('user/history'),
@@ -34,17 +36,20 @@ class XoftwarePaymentService
     public function createDepositPayment(Deposit $deposit, ?User $user = null): array
     {
         $deposit->loadMissing('user');
+        $isMembershipPayment = $deposit->isMembershipPayment();
 
         return $this->createPayment(
             merchantRef: $deposit->invoice_number,
             amount: (int) round((float) $deposit->amount),
-            note: 'Top Up Saldo Wiboost',
-            returnUrl: $this->publicUrl('user/dashboard'),
+            note: $isMembershipPayment ? 'Pembayaran Membership Wiboost' : 'Top Up Saldo Wiboost',
+            returnUrl: $this->publicUrl($isMembershipPayment ? 'user/membership' : 'user/dashboard'),
+            buyerFeeShareOverride: $isMembershipPayment ? $this->membershipBuyerFeeShare() : null,
+            feeDirectionOverride: $isMembershipPayment ? 'merchant' : null,
             metadata: $this->paymentMetadata(
                 user: $user ?: $deposit->user,
-                productCode: 'TOPUP-SALDO',
-                productName: 'Top Up Saldo Wiboost',
-                productUrl: $this->publicUrl('user/wallet'),
+                productCode: $isMembershipPayment ? 'MEMBERSHIP-WIBOOST' : 'TOPUP-SALDO',
+                productName: $isMembershipPayment ? 'Membership Wiboost 30 Hari' : 'Top Up Saldo Wiboost',
+                productUrl: $this->publicUrl($isMembershipPayment ? 'user/membership' : 'user/wallet'),
             ),
         );
     }
@@ -66,11 +71,20 @@ class XoftwarePaymentService
         return $this->request('POST', '/v1/api/balance', null);
     }
 
+    protected function membershipBuyerFeeShare(): float
+    {
+        $share = (float) config('xoftware.buyer_fee_share', 0.5);
+
+        return $share > 0 ? min(1.0, $share) : 0.5;
+    }
+
     protected function createPayment(
         string $merchantRef,
         int $amount,
         string $note,
         ?string $returnUrl = null,
+        ?float $buyerFeeShareOverride = null,
+        ?string $feeDirectionOverride = null,
         array $metadata = []
     ): array {
         $this->ensureConfigured();
@@ -80,7 +94,7 @@ class XoftwarePaymentService
         }
 
         $channelCode = $this->normalizeChannelCode((string) config('xoftware.default_channel', 'QRISREALTIME'));
-        $paymentAmounts = $this->resolveProviderPaymentAmounts($amount, $channelCode);
+        $paymentAmounts = $this->resolveProviderPaymentAmounts($amount, $channelCode, $buyerFeeShareOverride, $feeDirectionOverride);
 
         $payload = [
             'merchant_id' => (int) config('xoftware.merchant_id'),
@@ -127,6 +141,7 @@ class XoftwarePaymentService
 
         $raw = $this->normalizeRawResponse($body, $merchantRef, $amount, $paymentAmounts);
         $checkoutUrl = $this->resolveLocalQrisUrl($raw, $merchantRef)
+            ?: (str_starts_with($merchantRef, 'MEM-') ? $this->publicUrl('user/qris/' . rawurlencode($merchantRef)) : null)
             ?: $this->resolveCheckoutUrl($raw);
 
         if (! $checkoutUrl) {
@@ -324,6 +339,11 @@ class XoftwarePaymentService
         return [
             'data.qris_text',
             'data.qris_string',
+            'data.raw_qris',
+            'data.emv',
+            'data.qr',
+            'data.qrcode',
+            'data.qrCode',
             'data.qr_string',
             'data.qr_content',
             'data.qr_code',
@@ -331,12 +351,24 @@ class XoftwarePaymentService
             'data.qris_data',
             'data.qris_payload',
             'data.qris_url',
+            'data.qris_image',
+            'data.qris_image_url',
+            'data.qris_base64',
             'data.qr_url',
             'data.qr_image',
             'data.qr_image_url',
+            'data.qr_image_base64',
+            'data.qr_base64',
+            'data.image',
             'data.image_url',
             'data.qris.image_url',
             'data.qris.url',
+            'data.qris.image',
+            'raw_qris',
+            'emv',
+            'qr',
+            'qrcode',
+            'qrCode',
             'qris_text',
             'qris_string',
             'qr_string',
@@ -346,10 +378,19 @@ class XoftwarePaymentService
             'qris_data',
             'qris_payload',
             'qris_url',
+            'qris_image',
+            'qris_image_url',
+            'qris_base64',
             'qr_url',
             'qr_image',
             'qr_image_url',
+            'qr_image_base64',
+            'qr_base64',
+            'image',
             'image_url',
+            'qris.image_url',
+            'qris.url',
+            'qris.image',
         ];
     }
 
@@ -383,11 +424,20 @@ class XoftwarePaymentService
         return $this->normalizeChannelCode($channelCode) === 'QRISREALTIME' ? 'QRIS Real Time' : 'QRIS';
     }
 
-    protected function resolveProviderPaymentAmounts(int $baseAmount, string $channelCode): array
+    protected function resolveProviderPaymentAmounts(
+        int $baseAmount,
+        string $channelCode,
+        ?float $buyerFeeShareOverride = null,
+        ?string $feeDirectionOverride = null
+    ): array
     {
-        $feeDirection = $this->resolveFeeDirection($channelCode);
+        $feeDirection = $feeDirectionOverride && in_array($feeDirectionOverride, ['merchant', 'user'], true)
+            ? $feeDirectionOverride
+            : $this->resolveFeeDirection($channelCode);
         $feeConfig = $this->feeConfigForChannel($channelCode);
-        $buyerFeeShare = max(0.0, min(1.0, (float) config('xoftware.buyer_fee_share', 0.5)));
+        $buyerFeeShare = $buyerFeeShareOverride !== null
+            ? max(0.0, min(1.0, $buyerFeeShareOverride))
+            : max(0.0, min(1.0, (float) config('xoftware.buyer_fee_share', 0.5)));
         $buyerAdminFee = 0;
 
         if ($feeDirection === 'merchant' && $buyerFeeShare > 0) {

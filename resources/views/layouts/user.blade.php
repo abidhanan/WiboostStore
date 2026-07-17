@@ -646,9 +646,10 @@
         $currentUserNameParts = preg_split('/\s+/', $currentUserDisplayName, -1, PREG_SPLIT_NO_EMPTY);
         $currentUserShortName = trim(implode(' ', array_slice($currentUserNameParts ?: ['User'], 0, 2))) ?: 'User';
         $currentUserIsReseller = $currentUser?->isReseller() ?? false;
-        $currentUserRoleLabel = $currentUserIsReseller ? 'Reseller' : 'Buyer';
-        $currentUserProfileBorder = $currentUserIsReseller ? '#f4b740' : '#5a76c8';
-        $currentUserRoleText = $currentUserIsReseller ? '#d99b16' : '#8faaf3';
+        $currentUserIsMember = $currentUser?->isMember() ?? false;
+        $currentUserRoleLabel = $currentUserIsMember ? 'Member' : ($currentUserIsReseller ? 'Reseller' : 'Buyer');
+        $currentUserProfileBorder = $currentUserIsMember ? '#8b5cf6' : ($currentUserIsReseller ? '#f4b740' : '#5a76c8');
+        $currentUserRoleText = $currentUserIsMember ? '#8b5cf6' : ($currentUserIsReseller ? '#d99b16' : '#8faaf3');
 
         $mobileUserNav = [
             ['route' => 'user.dashboard', 'pattern' => 'user.dashboard', 'label' => 'Home', 'icon' => 'home'],

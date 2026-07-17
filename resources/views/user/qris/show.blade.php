@@ -3,6 +3,7 @@
 @section('title', 'Pembayaran QRIS')
 
 @section('content')
+<!-- qris-membership-force-fix-20260717 -->
 @php
     $baseAmount = (int) ($baseAmount ?? 0);
     $adminFee = (int) ($adminFee ?? 0);
@@ -192,12 +193,11 @@
             </div>
         </div>
 
-        <div class="mt-5 rounded-[1.8rem] bg-[#f8fbff] p-3 shadow-inner sm:p-4">
-            <button type="button" data-qris-refresh class="inline-flex w-full items-center justify-center rounded-full border-4 border-white bg-[#5a76c8] px-6 py-4 text-sm font-black text-white shadow-lg shadow-[#5a76c8]/25 transition active:scale-95">
-                Segarkan
-            </button>
-        </div>
     </section>
+
+    <button type="button" data-qris-refresh class="inline-flex w-full items-center justify-center rounded-full border-4 border-white bg-[#5a76c8] px-6 py-4 text-sm font-black text-white shadow-lg shadow-[#5a76c8]/25 transition active:scale-95">
+        Segarkan
+    </button>
 </div>
 
 <script>

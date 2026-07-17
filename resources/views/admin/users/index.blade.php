@@ -68,12 +68,13 @@
     <div class="bg-white/95 backdrop-blur-sm rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl shadow-[#bde0fe]/30 border-4 border-white flex flex-col overflow-hidden relative z-10 min-w-0 w-full">
         <div class="w-full overflow-x-auto table-scroll pb-2">
             <div class="inline-block min-w-full align-middle p-4 sm:p-6">
-                <table class="w-full min-w-[920px] text-left whitespace-nowrap">
+                <table class="w-full min-w-[1080px] text-left whitespace-nowrap">
                     <thead>
                         <tr>
                             <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Nama & Email</th>
                             <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Nomor Kontak</th>
                             <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff] text-center">Role</th>
+                            <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff] text-center">Membership</th>
                             <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Saldo</th>
                             <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff] text-center">Aksi</th>
                         </tr>
@@ -95,6 +96,14 @@
                                         <span class="bg-[#fff7d6] text-[#d99b16] px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border-2 border-white shadow-sm inline-block w-24">Reseller</span>
                                     @else
                                         <span class="bg-[#e0fbfc] text-[#5a76c8] px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border-2 border-white shadow-sm inline-block w-24">Buyer</span>
+                                    @endif
+                                </td>
+                                <td class="px-5 py-4 sm:py-5 align-middle text-center">
+                                    @if($user->isMember())
+                                        <span class="inline-block rounded-full border-2 border-white bg-[#ede9fe] px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#8b5cf6] shadow-sm">Member</span>
+                                        <p class="mt-2 text-[10px] font-bold text-[#8faaf3]">{{ $user->membership_expires_at?->timezone(config('app.timezone'))->format('d/m/Y H:i') }}</p>
+                                    @else
+                                        <span class="inline-block rounded-full border-2 border-white bg-[#f4f9ff] px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#8faaf3] shadow-sm">Tidak Aktif</span>
                                     @endif
                                 </td>
                                 <td class="px-5 py-4 sm:py-5 align-middle">
@@ -119,7 +128,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-5 py-16 text-center">
+                                <td colspan="6" class="px-5 py-16 text-center">
                                     <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-[2rem] sm:rounded-[2.5rem] bg-[#f0f5ff] border-4 border-white mb-4 sm:mb-5 shadow-inner">
                                         <span class="text-4xl sm:text-5xl animate-float">📭</span>
                                     </div>

@@ -33,7 +33,7 @@
     @if($isReseller)
         <header class="relative mb-8 flex flex-col items-start gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white p-8 shadow-xl shadow-[#f5d36b]/35 md:p-10" style="background: linear-gradient(135deg, #ffe082 0%, #fff0b3 48%, #fffdf2 100%);">
             <div class="relative z-10 min-w-0">
-                <div class="mb-3 inline-block rounded-full border-2 border-white bg-white px-4 py-1 text-xs font-black text-[#5a76c8] shadow-sm">
+                <div class="mb-3 inline-block rounded-full border-2 border-white bg-white px-4 py-1 text-xs font-black shadow-sm" style="color:#f5b84b !important;">
                     Dashboard Reseller
                 </div>
                 <h1 class="wiboost-dashboard-greeting mb-2 whitespace-nowrap font-black text-[#2b3a67] drop-shadow-sm" style="font-size: clamp(1.45rem, 7vw, 3rem); line-height: 1.08;" data-fit-single-line>
@@ -42,12 +42,12 @@
                         @include('partials.wiboost-icon', ['name' => 'sparkles', 'class' => 'h-8 w-8'])
                     </span>
                 </h1>
-                <p class="wiboost-dashboard-subtitle whitespace-nowrap font-extrabold text-[#5a76c8]" style="font-size: clamp(0.82rem, 3.8vw, 1rem); line-height: 1.25;" data-fit-single-line>Lakukan transaksi dan dapatkan komisi!</p>
+                <p class="wiboost-dashboard-subtitle whitespace-nowrap font-extrabold" style="color:#f5b84b !important; font-size: clamp(0.82rem, 3.8vw, 1rem); line-height: 1.25;" data-fit-single-line>Lakukan transaksi dan dapatkan komisi!</p>
             </div>
         </header>
     @else
         <header class="relative mb-8 flex flex-col items-start gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white p-8 shadow-xl shadow-[#f5d36b]/35 md:p-10" style="background: linear-gradient(135deg, #ffe082 0%, #fff0b3 48%, #fffdf2 100%);">
-            <span class="mb-3 inline-block rounded-full border-2 border-white bg-white px-4 py-1 text-xs font-black text-[#5a76c8] shadow-sm">Reseller</span>
+            <span class="mb-3 inline-block rounded-full border-2 border-white bg-white px-4 py-1 text-xs font-black shadow-sm" style="color:#f5b84b !important;">Reseller</span>
             <div class="min-w-0">
                 <h1 class="wiboost-dashboard-greeting mb-2 font-black leading-tight text-[#2b3a67] drop-shadow-sm" style="font-size: clamp(1.45rem, 7vw, 3rem); line-height: 1.08;">
                     Yuk Jadi Reseller!
@@ -57,7 +57,7 @@
                         </svg>
                     </span>
                 </h1>
-                <p class="wiboost-dashboard-subtitle max-w-3xl text-sm font-extrabold leading-relaxed text-[#5a76c8] sm:text-base">
+                <p class="wiboost-dashboard-subtitle max-w-3xl text-sm font-extrabold leading-relaxed sm:text-base" style="color:#f5b84b !important;">
                     Promosikan produk dan layanan lalu dapatkan komisi setiap transaksi sukses.
                 </p>
             </div>

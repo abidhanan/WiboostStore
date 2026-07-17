@@ -160,6 +160,11 @@
                                                             Modal: Rp {{ number_format($product->price ?? 0, 0, ',', '.') }}
                                                         </p>
                                                     @endif
+                                                    @if(filled($product->membership_price))
+                                                        <p style="font-size: 9px; color:#8b5cf6;" class="mt-1 whitespace-nowrap font-black uppercase tracking-widest">
+                                                            Member: Rp {{ number_format($product->membership_price ?? 0, 0, ',', '.') }}
+                                                        </p>
+                                                    @endif
                                                 </td>
 
                                                 <td class="px-5 py-4 pl-8 sm:py-5 align-middle text-center">

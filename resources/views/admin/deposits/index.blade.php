@@ -201,11 +201,12 @@
     <div class="overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm shadow-2xl shadow-[#bde0fe]/30 relative z-10 min-w-0 w-full">
         <div class="w-full overflow-x-auto table-scroll pb-2">
             <div class="inline-block min-w-full align-middle p-4 sm:p-6">
-                <table class="w-full min-w-[800px] text-left whitespace-nowrap">
+                <table class="w-full min-w-[920px] text-left whitespace-nowrap">
                     <thead>
                         <tr>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Waktu & Invoice</th>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Pelanggan</th>
+                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Jenis</th>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Nominal</th>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Metode</th>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Status</th>
@@ -225,6 +226,14 @@
                             <td class="px-5 py-4 sm:py-5 align-middle min-w-[150px] max-w-[200px]">
                                 <p class="font-black text-[#2b3a67] text-xs sm:text-sm truncate">{{ $deposit->user->name ?? 'Guest' }}</p>
                                 <p class="text-[9px] sm:text-[10px] font-bold text-[#8faaf3] truncate mt-1">{{ $deposit->user->email ?? '-' }}</p>
+                            </td>
+
+                            <td class="px-5 py-4 sm:py-5 align-middle text-center">
+                                @if($deposit->isMembershipPayment())
+                                    <span style="font-size: 9px;" class="inline-block rounded-full border-2 border-white bg-[#ede9fe] px-3 py-1.5 font-black uppercase tracking-widest text-[#8b5cf6] shadow-sm">Membership</span>
+                                @else
+                                    <span style="font-size: 9px;" class="inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-3 py-1.5 font-black uppercase tracking-widest text-[#5a76c8] shadow-sm">Top Up</span>
+                                @endif
                             </td>
                             
                             <!-- Nominal -->
@@ -274,7 +283,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="px-5 py-16 sm:py-20 text-center">
+                            <td colspan="6" class="px-5 py-16 sm:py-20 text-center">
                                 <div class="mb-4 sm:mb-5 inline-flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-[#f0f5ff] text-4xl sm:text-5xl shadow-inner animate-float">💰</div>
                                 <p class="text-lg sm:text-xl font-black text-[#5a76c8]">Belum ada riwayat deposit.</p>
                             </td>
@@ -322,7 +331,11 @@
                             <span class="{{ $depositStatus[0] }} {{ $depositStatus[1] }} mt-2 inline-flex rounded-full border-2 border-white px-4 py-1.5 text-[10px] font-black uppercase tracking-widest shadow-sm">{{ $depositStatus[2] }}</span>
                         </div>
                         <div class="admin-detail-panel">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nominal Masuk Saldo</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Jenis Pembayaran</p>
+                            <p class="mt-1 text-lg font-black {{ $deposit->isMembershipPayment() ? 'text-[#8b5cf6]' : 'text-[#5a76c8]' }}">{{ $deposit->isMembershipPayment() ? 'Membership' : 'Top Up Saldo' }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">{{ $deposit->isMembershipPayment() ? 'Biaya Membership' : 'Nominal Masuk Saldo' }}</p>
                             <p class="mt-1 text-lg font-black text-[#4bc6b9]">Rp {{ number_format($deposit->amount ?? 0, 0, ',', '.') }}</p>
                         </div>
                         <div class="admin-detail-panel">

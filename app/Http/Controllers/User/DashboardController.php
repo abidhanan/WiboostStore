@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\Deposit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Category;
@@ -10,8 +11,11 @@ use App\Models\Transaction;
 use App\Models\Promo;
 use App\Models\Tutorial;
 use App\Services\TripayDepositSyncService;
+use App\Services\XoftwarePaymentService;
 use App\Support\WiboostCatalog;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
@@ -63,9 +67,127 @@ class DashboardController extends Controller
         return view('user.tutorials', compact('tutorials', 'tutorialGroups'));
     }
 
-    public function membership()
+    public function membership(TripayDepositSyncService $depositSyncService)
     {
-        return view('user.membership');
+        $depositSyncService->syncForUser((int) Auth::id());
+
+        $user = Auth::user()->fresh();
+        $isMember = $user?->isMember() ?? false;
+        $membershipExpiresAt = $user?->membership_expires_at;
+        $remainingTotalSeconds = $isMember && $membershipExpiresAt
+            ? (int) floor(max(0, now()->diffInSeconds($membershipExpiresAt, false)))
+            : 0;
+        $remainingDays = intdiv($remainingTotalSeconds, 86400);
+        $remainingHours = intdiv($remainingTotalSeconds % 86400, 3600);
+        $remainingMinutes = intdiv($remainingTotalSeconds % 3600, 60);
+        $remainingSeconds = $remainingTotalSeconds % 60;
+
+        return view('user.membership', compact(
+            'user',
+            'isMember',
+            'membershipExpiresAt',
+            'remainingTotalSeconds',
+            'remainingDays',
+            'remainingHours',
+            'remainingMinutes',
+            'remainingSeconds'
+        ));
+    }
+
+    public function joinMembership(Request $request, XoftwarePaymentService $paymentService)
+    {
+        $user = $request->user();
+        $amount = 30000;
+        $lockKey = 'membership-payment:' . $user->id;
+
+        try {
+            app(TripayDepositSyncService::class)->syncForUser((int) $user->id);
+
+            if (! Cache::add($lockKey, true, now()->addSeconds(20))) {
+                usleep(500000);
+                $deposit = $this->findReusableMembershipDeposit((int) $user->id);
+
+                if ($deposit) {
+                    $this->restoreReusableMembershipDeposit($deposit);
+                    return redirect()->route('user.qris.show', $deposit->invoice_number);
+                }
+
+                return back()->with('error', 'Tagihan QRIS membership sedang disiapkan. Tunggu sebentar lalu coba lagi.');
+            }
+
+            $deposit = $this->findReusableMembershipDeposit((int) $user->id) ?: Deposit::create([
+                'user_id' => $user->id,
+                'invoice_number' => 'MEM-' . strtoupper(Str::random(10)),
+                'amount' => $amount,
+                'payment_status' => 'unpaid',
+                'payment_method' => 'tripay',
+                'payment_response' => [
+                    'purpose' => 'membership',
+                    'membership_days' => 30,
+                ],
+            ]);
+
+            $this->restoreReusableMembershipDeposit($deposit);
+
+            if (blank($deposit->payment_url)) {
+                $payment = $paymentService->createDepositPayment($deposit->fresh('user'), $user);
+
+                $deposit->update([
+                    'payment_url' => route('user.qris.show', $deposit->invoice_number),
+                    'tripay_reference' => $payment['reference'] ?? null,
+                    'payment_response' => array_merge($deposit->payment_response ?? [], [
+                        'purpose' => 'membership',
+                        'membership_days' => 30,
+                        'payment_gateway' => 'xoftware',
+                        'xoftware_reference' => $payment['reference'] ?? null,
+                        'tripay_reference' => $payment['reference'] ?? null,
+                        'xoftware_create_response' => $payment['raw'] ?? null,
+                    ]),
+                ]);
+            }
+
+            return redirect()->route('user.qris.show', $deposit->invoice_number);
+        } catch (\Throwable $exception) {
+            return back()->with('error', 'Gagal menyiapkan pembayaran membership: ' . $exception->getMessage());
+        } finally {
+            Cache::forget($lockKey);
+        }
+    }
+
+    protected function findReusableMembershipDeposit(int $userId): ?Deposit
+    {
+        $expiresInMinutes = max(1, (int) config('xoftware.expired_minutes', 60));
+
+        return Deposit::query()
+            ->where('user_id', $userId)
+            ->whereIn('payment_status', ['unpaid', 'pending', 'failed'])
+            ->where('payment_method', 'tripay')
+            ->where('amount', 30000)
+            ->where('invoice_number', 'like', 'MEM-%')
+            ->where('created_at', '>=', now()->subMinutes($expiresInMinutes))
+            ->latest()
+            ->get()
+            ->first(function (Deposit $deposit) {
+                if ($deposit->payment_status === 'failed'
+                    && data_get($deposit->payment_response, 'membership_recreate_reason') !== 'admin_fee_missing') {
+                    return false;
+                }
+
+                return filled($deposit->payment_url);
+            });
+    }
+
+    protected function restoreReusableMembershipDeposit(Deposit $deposit): void
+    {
+        if ($deposit->payment_status === 'failed'
+            && data_get($deposit->payment_response, 'membership_recreate_reason') === 'admin_fee_missing') {
+            $deposit->update([
+                'payment_status' => 'unpaid',
+                'payment_response' => array_merge($deposit->payment_response ?? [], [
+                    'membership_recreate_restored_at' => now()->toDateTimeString(),
+                ]),
+            ]);
+        }
     }
 
     public function tutorialCategory(Request $request)

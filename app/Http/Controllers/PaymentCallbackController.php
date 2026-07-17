@@ -45,7 +45,7 @@ class PaymentCallbackController extends Controller
             ?: 'tripay'
         );
 
-        if (str_starts_with($merchantRef, 'DEP-')) {
+        if (str_starts_with($merchantRef, 'DEP-') || str_starts_with($merchantRef, 'MEM-')) {
             $result = DB::transaction(function () use ($merchantRef, $status, $paidAmount, $paymentMethod, $payload) {
                 $deposit = Deposit::where('invoice_number', $merchantRef)
                     ->lockForUpdate()
@@ -70,24 +70,33 @@ class PaymentCallbackController extends Controller
                         ]),
                     ]);
 
-                    $walletHistory = WalletHistory::firstOrCreate(
-                        [
-                            'invoice_number' => $deposit->invoice_number,
-                            'type' => 'topup',
-                        ],
-                        [
-                            'user_id' => $deposit->user_id,
-                            'amount' => $topupAmount,
-                            'description' => 'Top Up Saldo via ' . strtoupper($paymentMethod),
-                        ]
-                    );
-
                     $user = User::whereKey($deposit->user_id)
                         ->lockForUpdate()
                         ->first();
 
-                    if ($user && $walletHistory->wasRecentlyCreated) {
-                        $user->increment('balance', $topupAmount);
+                    if ($user) {
+                        if ($deposit->isMembershipPayment()) {
+                            if (! $deposit->membershipActivated()) {
+                                $user->activateMembership((int) data_get($deposit->payment_response, 'membership_days', 30));
+                                $deposit->markMembershipActivated();
+                            }
+                        } else {
+                            $walletHistory = WalletHistory::firstOrCreate(
+                                [
+                                    'invoice_number' => $deposit->invoice_number,
+                                    'type' => 'topup',
+                                ],
+                                [
+                                    'user_id' => $deposit->user_id,
+                                    'amount' => $topupAmount,
+                                    'description' => 'Top Up Saldo via ' . strtoupper($paymentMethod),
+                                ]
+                            );
+
+                            if ($walletHistory->wasRecentlyCreated) {
+                                $user->increment('balance', $topupAmount);
+                            }
+                        }
                     }
 
                     return ['found' => true, 'paid' => true, 'deposit_id' => $deposit->id];
@@ -113,8 +122,8 @@ class PaymentCallbackController extends Controller
             if ($result['paid'] ?? false) {
                 $discordWebhookService->sendDepositAlert(
                     Deposit::with('user')->find($result['deposit_id']),
-                    'Deposit berhasil dibayar',
-                    'Saldo user sudah otomatis ditambahkan.'
+                    Deposit::find($result['deposit_id'])?->isMembershipPayment() ? 'Membership berhasil dibayar' : 'Deposit berhasil dibayar',
+                    Deposit::find($result['deposit_id'])?->isMembershipPayment() ? 'Membership user sudah otomatis aktif.' : 'Saldo user sudah otomatis ditambahkan.'
                 );
             }
 
@@ -232,7 +241,7 @@ class PaymentCallbackController extends Controller
         $isFailed = in_array($status, ['FAILED', 'EXPIRED', 'REFUND', 'CANCELED', 'CANCELLED'], true)
             || in_array($paymentStatus, ['FAILED', 'EXPIRED', 'REFUND', 'CANCELED', 'CANCELLED'], true);
 
-        if (str_starts_with($merchantRef, 'DEP-')) {
+        if (str_starts_with($merchantRef, 'DEP-') || str_starts_with($merchantRef, 'MEM-')) {
             $result = DB::transaction(function () use ($merchantRef, $providerReference, $isPaid, $isFailed, $paidAmount, $paymentMethod, $payload, $status, $paymentStatus) {
                 $deposit = Deposit::where('invoice_number', $merchantRef)
                     ->lockForUpdate()
@@ -261,24 +270,33 @@ class PaymentCallbackController extends Controller
                         ]),
                     ]);
 
-                    $walletHistory = WalletHistory::firstOrCreate(
-                        [
-                            'invoice_number' => $deposit->invoice_number,
-                            'type' => 'topup',
-                        ],
-                        [
-                            'user_id' => $deposit->user_id,
-                            'amount' => $topupAmount,
-                            'description' => 'Top Up Saldo via ' . strtoupper($paymentMethod),
-                        ]
-                    );
-
                     $user = User::whereKey($deposit->user_id)
                         ->lockForUpdate()
                         ->first();
 
-                    if ($user && $walletHistory->wasRecentlyCreated) {
-                        $user->increment('balance', $topupAmount);
+                    if ($user) {
+                        if ($deposit->isMembershipPayment()) {
+                            if (! $deposit->membershipActivated()) {
+                                $user->activateMembership((int) data_get($deposit->payment_response, 'membership_days', 30));
+                                $deposit->markMembershipActivated();
+                            }
+                        } else {
+                            $walletHistory = WalletHistory::firstOrCreate(
+                                [
+                                    'invoice_number' => $deposit->invoice_number,
+                                    'type' => 'topup',
+                                ],
+                                [
+                                    'user_id' => $deposit->user_id,
+                                    'amount' => $topupAmount,
+                                    'description' => 'Top Up Saldo via ' . strtoupper($paymentMethod),
+                                ]
+                            );
+
+                            if ($walletHistory->wasRecentlyCreated) {
+                                $user->increment('balance', $topupAmount);
+                            }
+                        }
                     }
 
                     return ['found' => true, 'paid' => true, 'deposit_id' => $deposit->id];
@@ -305,8 +323,8 @@ class PaymentCallbackController extends Controller
             if ($result['paid'] ?? false) {
                 $discordWebhookService->sendDepositAlert(
                     Deposit::with('user')->find($result['deposit_id']),
-                    'Deposit berhasil dibayar',
-                    'Saldo user sudah otomatis ditambahkan.'
+                    Deposit::find($result['deposit_id'])?->isMembershipPayment() ? 'Membership berhasil dibayar' : 'Deposit berhasil dibayar',
+                    Deposit::find($result['deposit_id'])?->isMembershipPayment() ? 'Membership user sudah otomatis aktif.' : 'Saldo user sudah otomatis ditambahkan.'
                 );
             }
 
@@ -402,7 +420,7 @@ class PaymentCallbackController extends Controller
         $orderId = $notification->order_id;
         $paidAmount = (int) round((float) $notification->gross_amount);
 
-        if (str_starts_with($orderId, 'DEP-')) {
+        if (str_starts_with($orderId, 'DEP-') || str_starts_with($orderId, 'MEM-')) {
             $result = DB::transaction(function () use ($orderId, $transactionStatus, $paidAmount, $notification) {
                 $deposit = Deposit::where('invoice_number', $orderId)
                     ->lockForUpdate()
@@ -422,24 +440,33 @@ class PaymentCallbackController extends Controller
                         'paid_amount' => $actualPaidAmount,
                     ]);
 
-                    $walletHistory = WalletHistory::firstOrCreate(
-                        [
-                            'invoice_number' => $deposit->invoice_number,
-                            'type' => 'topup',
-                        ],
-                        [
-                            'user_id' => $deposit->user_id,
-                            'amount' => $topupAmount,
-                            'description' => 'Top Up Saldo via ' . strtoupper($notification->payment_type),
-                        ]
-                    );
-
                     $user = User::whereKey($deposit->user_id)
                         ->lockForUpdate()
                         ->first();
 
-                    if ($user && $walletHistory->wasRecentlyCreated) {
-                        $user->increment('balance', $topupAmount);
+                    if ($user) {
+                        if ($deposit->isMembershipPayment()) {
+                            if (! $deposit->membershipActivated()) {
+                                $user->activateMembership((int) data_get($deposit->payment_response, 'membership_days', 30));
+                                $deposit->markMembershipActivated();
+                            }
+                        } else {
+                            $walletHistory = WalletHistory::firstOrCreate(
+                                [
+                                    'invoice_number' => $deposit->invoice_number,
+                                    'type' => 'topup',
+                                ],
+                                [
+                                    'user_id' => $deposit->user_id,
+                                    'amount' => $topupAmount,
+                                    'description' => 'Top Up Saldo via ' . strtoupper($notification->payment_type),
+                                ]
+                            );
+
+                            if ($walletHistory->wasRecentlyCreated) {
+                                $user->increment('balance', $topupAmount);
+                            }
+                        }
                     }
 
                     return ['found' => true, 'paid' => true, 'deposit_id' => $deposit->id];
@@ -459,8 +486,8 @@ class PaymentCallbackController extends Controller
             if ($result['paid'] ?? false) {
                 $discordWebhookService->sendDepositAlert(
                     Deposit::with('user')->find($result['deposit_id']),
-                    'Deposit berhasil dibayar',
-                    'Saldo user sudah otomatis ditambahkan.'
+                    Deposit::find($result['deposit_id'])?->isMembershipPayment() ? 'Membership berhasil dibayar' : 'Deposit berhasil dibayar',
+                    Deposit::find($result['deposit_id'])?->isMembershipPayment() ? 'Membership user sudah otomatis aktif.' : 'Saldo user sudah otomatis ditambahkan.'
                 );
             }
 

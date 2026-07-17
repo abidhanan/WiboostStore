@@ -298,6 +298,7 @@ class OrderController extends Controller
             $product->id,
             optional($product->updated_at)->timestamp ?? '0',
             md5((string) Product::currentDiscountLabel()),
+            Auth::user()?->isMember() ? 'member' : 'regular',
         ]);
 
         $payload = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($product) {

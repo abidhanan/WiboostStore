@@ -22,6 +22,13 @@ class Product extends Model
         'paket-data' => 0.10,
     ];
 
+    protected const MEMBER_API_CATEGORY_MARKUP_RATES = [
+        'suntik-sosmed' => 0.35,
+        'top-up-game' => 0.04,
+        'kuota-murah' => 0.07,
+        'paket-data' => 0.07,
+    ];
+
     protected const API_PROVIDER_SOURCES = [
         'ordersosmed',
         'digiflazz',
@@ -57,6 +64,7 @@ class Product extends Model
         'slug',
         'description',
         'price',
+        'membership_price',
         'provider_product_id', // Penting untuk menyimpan SKU Digiflazz
         'provider_source',
         'provider_quantity',
@@ -76,6 +84,7 @@ class Product extends Model
         'requires_buyer_email' => 'boolean',
         'provider_quantity' => 'integer',
         'price' => 'decimal:2',
+        'membership_price' => 'decimal:2',
     ];
 
     // Relasi ke Kategori
@@ -594,6 +603,10 @@ class Product extends Model
 
     public function getOriginalSellingPriceAttribute(): float
     {
+        if ($this->shouldUseMembershipPrice()) {
+            return $this->calculateMembershipSellingPrice((float) $this->price);
+        }
+
         return $this->calculateSellingPrice((float) $this->price);
     }
 
@@ -738,6 +751,63 @@ class Product extends Model
         }
 
         return (float) ceil(round($basePrice * (1 + $this->api_selling_markup_rate), 6));
+    }
+
+    protected function shouldUseMembershipPrice(): bool
+    {
+        return auth()->check() && auth()->user()?->isMember();
+    }
+
+    protected function calculateMembershipSellingPrice(float $basePrice): float
+    {
+        if ($this->resolvePrimaryCategorySlug() === 'aplikasi-premium' && filled($this->membership_price)) {
+            return (float) $this->membership_price;
+        }
+
+        if (! $this->uses_api_selling_markup) {
+            return $this->calculateSellingPrice($basePrice);
+        }
+
+        $rate = static::memberMarkupRateFor(
+            $this->resolvePrimaryCategorySlug(),
+            $this->resolveApiMarkupCategoryText()
+        );
+
+        if ($rate <= 0) {
+            return $this->calculateSellingPrice($basePrice);
+        }
+
+        return (float) ceil(round($basePrice * (1 + $rate), 6));
+    }
+
+    public static function memberMarkupRateFor(?string $topCategorySlug, ?string $categoryText = null): float
+    {
+        $slug = Str::slug((string) $topCategorySlug);
+
+        if ($slug !== '' && isset(static::MEMBER_API_CATEGORY_MARKUP_RATES[$slug])) {
+            return static::MEMBER_API_CATEGORY_MARKUP_RATES[$slug];
+        }
+
+        $text = Str::lower(trim(str_replace(['-', '_'], ' ', implode(' ', array_filter([
+            $slug,
+            $categoryText,
+        ])))));
+
+        if ($text !== '') {
+            if (str_contains($text, 'suntik sosmed')) {
+                return 0.35;
+            }
+
+            if (str_contains($text, 'top up game')) {
+                return 0.04;
+            }
+
+            if (str_contains($text, 'paket data') || str_contains($text, 'kuota murah')) {
+                return 0.07;
+            }
+        }
+
+        return 0.0;
     }
 
     protected function applyActiveDiscount(float $price): float

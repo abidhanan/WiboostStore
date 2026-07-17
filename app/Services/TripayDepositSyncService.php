@@ -67,6 +67,18 @@ class TripayDepositSyncService
                 ]),
             ]);
         }
+
+        if (! in_array($status, ['SUCCESS', 'PAID', 'SUCCEEDED', 'SETTLEMENT', 'CAPTURE', 'FAILED', 'EXPIRED', 'REFUND', 'CANCELED', 'CANCELLED'], true)
+            && ! in_array($paymentStatus, ['SUCCESS', 'PAID', 'SUCCEEDED', 'SETTLEMENT', 'CAPTURE', 'FAILED', 'EXPIRED', 'REFUND', 'CANCELED', 'CANCELLED'], true)) {
+            $pendingDeposit->update([
+                'payment_response' => array_merge($pendingDeposit->payment_response ?? [], [
+                    'payment_gateway' => 'xoftware',
+                    'xoftware_detail_sync' => $detail,
+                    'tripay_detail_sync' => $detail,
+                    'synced_at' => now()->toDateTimeString(),
+                ]),
+            ]);
+        }
     }
 
     protected function markDepositAsPaid(Deposit $pendingDeposit, array $data, array $detail): void
@@ -110,24 +122,33 @@ class TripayDepositSyncService
                 ]),
             ]);
 
-            $walletHistory = WalletHistory::firstOrCreate(
-                [
-                    'invoice_number' => $deposit->invoice_number,
-                    'type' => 'topup',
-                ],
-                [
-                    'user_id' => $deposit->user_id,
-                    'amount' => $topupAmount,
-                    'description' => 'Top Up Saldo via ' . strtoupper($paymentMethod),
-                ]
-            );
-
             $user = User::whereKey($deposit->user_id)
                 ->lockForUpdate()
                 ->first();
 
-            if ($user && $walletHistory->wasRecentlyCreated) {
-                $user->increment('balance', $topupAmount);
+            if ($user) {
+                if ($deposit->isMembershipPayment()) {
+                    if (! $deposit->membershipActivated()) {
+                        $user->activateMembership((int) data_get($deposit->payment_response, 'membership_days', 30));
+                        $deposit->markMembershipActivated();
+                    }
+                } else {
+                    $walletHistory = WalletHistory::firstOrCreate(
+                        [
+                            'invoice_number' => $deposit->invoice_number,
+                            'type' => 'topup',
+                        ],
+                        [
+                            'user_id' => $deposit->user_id,
+                            'amount' => $topupAmount,
+                            'description' => 'Top Up Saldo via ' . strtoupper($paymentMethod),
+                        ]
+                    );
+
+                    if ($walletHistory->wasRecentlyCreated) {
+                        $user->increment('balance', $topupAmount);
+                    }
+                }
             }
         });
     }
@@ -184,24 +205,33 @@ class TripayDepositSyncService
                 $topupAmount = (float) $deposit->amount;
                 $paymentMethod = (string) ($deposit->payment_method ?: 'qris');
 
-                $walletHistory = WalletHistory::firstOrCreate(
-                    [
-                        'invoice_number' => $deposit->invoice_number,
-                        'type' => 'topup',
-                    ],
-                    [
-                        'user_id' => $deposit->user_id,
-                        'amount' => $topupAmount,
-                        'description' => 'Top Up Saldo via ' . strtoupper($paymentMethod),
-                    ]
-                );
-
                 $user = User::whereKey($deposit->user_id)
                     ->lockForUpdate()
                     ->first();
 
-                if ($user && $walletHistory->wasRecentlyCreated) {
-                    $user->increment('balance', $topupAmount);
+                if ($user) {
+                    if ($deposit->isMembershipPayment()) {
+                        if (! $deposit->membershipActivated()) {
+                            $user->activateMembership((int) data_get($deposit->payment_response, 'membership_days', 30));
+                            $deposit->markMembershipActivated();
+                        }
+                    } else {
+                        $walletHistory = WalletHistory::firstOrCreate(
+                            [
+                                'invoice_number' => $deposit->invoice_number,
+                                'type' => 'topup',
+                            ],
+                            [
+                                'user_id' => $deposit->user_id,
+                                'amount' => $topupAmount,
+                                'description' => 'Top Up Saldo via ' . strtoupper($paymentMethod),
+                            ]
+                        );
+
+                        if ($walletHistory->wasRecentlyCreated) {
+                            $user->increment('balance', $topupAmount);
+                        }
+                    }
                 }
             });
         }

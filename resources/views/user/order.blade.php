@@ -383,6 +383,20 @@
         word-break: normal;
     }
 
+    .wiboost-member-product-card:hover {
+        border-color: #c4b5fd !important;
+        box-shadow: 0 22px 48px rgba(139, 92, 246, 0.30) !important;
+    }
+
+    .wiboost-member-product-card:hover .wiboost-product-title {
+        color: #8b5cf6 !important;
+    }
+
+    .wiboost-member-product-card:hover .wiboost-compact-logo,
+    .wiboost-member-product-card:hover .wiboost-square-logo-img {
+        filter: drop-shadow(0 12px 18px rgba(139, 92, 246, 0.24));
+    }
+
     @media (max-width: 380px) {
         .wiboost-compact-logo {
             height: clamp(3.85rem, 17vw, 4.35rem) !important;
@@ -480,6 +494,34 @@
         $showTopUpGameCompactCards = ($isTopUpGameOrder ?? false) && ! $showSuntikSosmedForm;
         $showCompactServiceCards = ($isCompactServiceCardOrder ?? $showTopUpGameCompactCards) && ! $showSuntikSosmedForm;
         $rootCategorySlugForCards = $rootCategorySlug ?? null;
+        $categoryPricePaletteSegments = [$rootCategorySlugForCards, $category->slug ?? null, $category->name ?? null];
+        $categoryPricePaletteCursor = $category->parent ?? null;
+
+        while($categoryPricePaletteCursor) {
+            $categoryPricePaletteSegments[] = $categoryPricePaletteCursor->slug ?? null;
+            $categoryPricePaletteSegments[] = $categoryPricePaletteCursor->name ?? null;
+            $categoryPricePaletteCursor = $categoryPricePaletteCursor->parent ?? null;
+        }
+
+        $categoryPricePaletteText = \Illuminate\Support\Str::lower(trim(implode(' ', array_filter($categoryPricePaletteSegments))));
+        $usesRolePricePalette = \Illuminate\Support\Str::contains($categoryPricePaletteText, [
+            'top-up-game',
+            'top up game',
+            'paket-data',
+            'paket data',
+            'kuota-murah',
+            'kuota murah',
+            'aplikasi-premium',
+            'aplikasi premium',
+        ]);
+        $currentUserIsMemberForPrice = (! $isGuestCatalog) && (auth()->user()?->isMember() ?? false);
+        $regularPriceTextColor = $usesRolePricePalette
+            ? ($currentUserIsMemberForPrice ? '#8b5cf6' : '#5a76c8')
+            : '#4bc6b9';
+        $discountPriceTextColor = $usesRolePricePalette && $currentUserIsMemberForPrice
+            ? '#8b5cf6'
+            : '#5a76c8';
+        $memberProductHoverClass = $currentUserIsMemberForPrice ? ' wiboost-member-product-card' : '';
         $forceEmoteLogoOnly = false;
         $shouldShowCompactServiceDescription = false;
         $compactProductGridClass = 'grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-4';
@@ -651,8 +693,8 @@
                     $compactCardMinHeight = $compactCardHasDescription ? 'min-h-[185px]' : 'min-h-[150px]';
                     $compactCardShape = $showCompactServiceCards ? ' wiboost-product-square' . ($compactCardHasDescription ? ' wiboost-product-square--with-description' : '') : '';
                     $cardBaseClass = $showCompactServiceCards
-                        ? 'group relative flex h-full w-full flex-col items-stretch justify-stretch overflow-hidden rounded-[1.35rem] border-4 border-white bg-white/95 p-2 text-center shadow-lg shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 ' . $compactCardMinHeight . ' sm:p-4' . $compactCardShape
-                        : 'group relative flex flex-col items-center justify-between w-full overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 text-center shadow-xl shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 min-h-[230px]';
+                        ? 'group relative flex h-full w-full flex-col items-stretch justify-stretch overflow-hidden rounded-[1.35rem] border-4 border-white bg-white/95 p-2 text-center shadow-lg shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 ' . $compactCardMinHeight . ' sm:p-4' . $compactCardShape . $memberProductHoverClass
+                        : 'group relative flex flex-col items-center justify-between w-full overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 text-center shadow-xl shadow-[#bde0fe]/20 transition-all hover:scale-[1.02] hover:border-[#bde0fe] active:scale-95 min-h-[230px]' . $memberProductHoverClass;
                     $disabledCardClass = $showCompactServiceCards
                         ? 'relative flex h-full w-full cursor-not-allowed flex-col items-stretch justify-stretch overflow-hidden rounded-[1.35rem] border-4 border-white bg-gray-50 p-2 text-center opacity-60 grayscale shadow-sm ' . $compactCardMinHeight . ' sm:p-4' . $compactCardShape
                         : 'relative flex flex-col items-center justify-between w-full cursor-not-allowed overflow-hidden rounded-[2rem] border-4 border-white bg-gray-50 p-6 text-center opacity-60 grayscale shadow-sm min-h-[230px]';
@@ -713,7 +755,7 @@
                                 {{ $product->process_type }}
                             </div>
                         @endif
-                        <span class="block max-w-full break-words px-1 font-black text-[#2b3a67] transition-colors group-hover:text-[#5a76c8] {{ $showCompactServiceCards ? 'wiboost-compact-card-title' : 'text-lg leading-tight' }}">{{ $product->name }}</span>
+                        <span class="wiboost-product-title block max-w-full break-words px-1 font-black text-[#2b3a67] transition-colors group-hover:text-[#5a76c8] {{ $showCompactServiceCards ? 'wiboost-compact-card-title' : 'text-lg leading-tight' }}">{{ $product->name }}</span>
                         @if($cardDescription !== '')
                             <p class="{{ $showCompactServiceCards ? 'mt-1 max-w-full break-words px-1 text-center text-[10px] font-bold leading-snug text-[#8faaf3] sm:mt-2' : 'mt-2 text-center text-xs font-bold text-[#8faaf3]' }}">{{ $cardDescription }}</p>
                         @endif
@@ -723,10 +765,10 @@
                         @if($product->has_active_discount)
                             <div class="w-full text-center">
                                 <span class="discount-old-price block text-xs font-black text-[#111827] line-through decoration-[#111827] decoration-2 sm:text-base">Rp {{ number_format($product->original_selling_price, 0, ',', '.') }}</span>
-                                <span class="block shrink-0 font-black text-[#5a76c8] {{ $showCompactServiceCards ? 'text-sm sm:text-base' : 'text-lg' }}">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</span>
+                                <span class="block shrink-0 font-black {{ $showCompactServiceCards ? 'text-sm sm:text-base' : 'text-lg' }}" style="color: {{ $discountPriceTextColor }} !important;">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</span>
                             </div>
                         @else
-                            <span class="shrink-0 font-black text-[#4bc6b9] {{ $showCompactServiceCards ? 'text-sm sm:text-base' : 'text-lg' }}">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</span>
+                            <span class="shrink-0 font-black {{ $showCompactServiceCards ? 'text-sm sm:text-base' : 'text-lg' }}" style="color: {{ $regularPriceTextColor }} !important;">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</span>
                         @endif
                     </div>
                 </button>

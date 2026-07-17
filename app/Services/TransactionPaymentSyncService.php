@@ -120,6 +120,16 @@ class TransactionPaymentSyncService
                 ]);
             });
         }
+
+        if (! $isPaid && ! $isFailed) {
+            $pendingTransaction->update([
+                'response_data' => array_merge($pendingTransaction->response_data ?? [], [
+                    'payment_gateway' => 'xoftware',
+                    'xoftware_detail_sync' => $detail,
+                    'payment_synced_at' => now()->toDateTimeString(),
+                ]),
+            ]);
+        }
     }
 
     public function expireIfPastDue(Transaction $pendingTransaction): bool

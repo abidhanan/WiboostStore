@@ -167,6 +167,7 @@ class ProductController extends Controller
             'description' => 'nullable|string|max:10000',
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',
+            'membership_price' => 'nullable|numeric|min:0',
             'provider_product_id' => [
                 'nullable',
                 'string',
@@ -229,6 +230,7 @@ class ProductController extends Controller
             'category_id' => $validated['category_id'],
             'description' => $validated['description'] ?? null,
             'price' => $validated['price'],
+            'membership_price' => $validated['membership_price'] ?? null,
             'provider_product_id' => $providerProductId,
             'provider_source' => $providerSource,
             'provider_id' => $providerSource,

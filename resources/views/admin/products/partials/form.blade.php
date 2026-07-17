@@ -102,6 +102,17 @@
                     </div>
                 </div>
 
+                <div>
+                    <label class="mb-3 ml-2 block text-sm font-black text-[#8b5cf6]">Harga Jual Membership</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-6 font-black text-[#8b5cf6]">Rp</span>
+                        <input type="number" name="membership_price" min="0" value="{{ old('membership_price', $currentProduct->membership_price ?? '') }}"
+                            class="w-full rounded-[1.5rem] border-4 border-white bg-[#f7f2ff] py-4 pl-14 pr-6 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#ddd6fe] placeholder-[#a78bfa]"
+                            placeholder="Khusus aplikasi premium">
+                    </div>
+                    <p class="mt-2 ml-2 text-xs font-bold text-[#8b5cf6]">Opsional. Diutamakan untuk produk aplikasi premium; harga ini tampil untuk member aktif.</p>
+                </div>
+
             </div>
         </section>
 

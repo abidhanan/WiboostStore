@@ -61,7 +61,17 @@
                 <label class="block text-sm font-black text-[#a3bbfb] mb-3 ml-2 flex items-center gap-2">Saldo Saat Ini 🔒</label>
                 <input type="text" value="Rp {{ number_format($user->balance, 0, ',', '.') }}" disabled class="w-full bg-[#f0f5ff] border-4 border-white rounded-[1.5rem] px-6 py-4 text-[#4bc6b9] font-black outline-none cursor-not-allowed shadow-inner opacity-80">
             </div>
-            
+            <div class="md:col-span-2">
+                <label class="block text-sm font-black text-[#8b5cf6] mb-3 ml-2 flex items-center gap-2">Status Membership</label>
+                <div class="rounded-[1.5rem] border-4 border-white bg-[#f5f3ff] px-6 py-4 font-black text-[#8b5cf6] shadow-inner">
+                    @if($user->isMember())
+                        Member aktif sampai {{ $user->membership_expires_at?->timezone(config('app.timezone'))->format('d/m/Y H:i') }}
+                    @else
+                        Tidak aktif
+                    @endif
+                </div>
+            </div>
+
             <div class="md:col-span-2 mt-4 p-8 bg-[#fffcf0] rounded-[2rem] border-4 border-white shadow-md relative z-30 overflow-visible">
                 <div class="relative z-10">
                     <label class="block text-lg font-black text-amber-600 mb-4 ml-2">Ubah Role Akses</label>

@@ -13,7 +13,12 @@ use Illuminate\Support\Carbon;
 
 class QrisPaymentController extends Controller
 {
-    public function show(Request $request, string $invoice_number)
+    public function show(
+        Request $request,
+        string $invoice_number,
+        TransactionPaymentSyncService $transactionSyncService,
+        TripayDepositSyncService $depositSyncService
+    )
     {
         $transaction = Transaction::with('product')
             ->where('invoice_number', $invoice_number)
@@ -21,6 +26,14 @@ class QrisPaymentController extends Controller
             ->first();
 
         if ($transaction) {
+            if (in_array($transaction->payment_status, ['unpaid', 'pending'], true)) {
+                $this->syncOnce(
+                    'qris-transaction-show:' . $transaction->id,
+                    fn () => $transactionSyncService->sync($transaction)
+                );
+                $transaction->refresh();
+            }
+
             return $this->showTransaction($transaction);
         }
 
@@ -28,16 +41,20 @@ class QrisPaymentController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
+        if (in_array($deposit->payment_status, ['unpaid', 'pending'], true)) {
+            $this->syncOnce(
+                'qris-deposit-show:' . $deposit->id,
+                fn () => $depositSyncService->syncDepositFromProvider($deposit)
+            );
+            $deposit->refresh();
+        }
+
         return $this->showDeposit($deposit);
     }
 
     protected function showTransaction(Transaction $transaction)
     {
-        $raw = (array) (
-            data_get($transaction->response_data, 'xoftware_create_response')
-            ?: data_get($transaction->response_data, 'tripay_create_response')
-            ?: []
-        );
+        $raw = (array) ($transaction->response_data ?? []);
 
         return view('user.qris.show', [
             'kind' => 'transaction',
@@ -60,11 +77,12 @@ class QrisPaymentController extends Controller
     protected function showDeposit(Deposit $deposit)
     {
         $raw = (array) ($deposit->payment_response ?? []);
+        $isMembershipPayment = $deposit->isMembershipPayment();
 
         return view('user.qris.show', [
             'kind' => 'deposit',
             'invoice' => $deposit->invoice_number,
-            'title' => 'Top Up Saldo Wiboost',
+            'title' => $isMembershipPayment ? 'Membership Wiboost 30 Hari' : 'Top Up Saldo Wiboost',
             'baseAmount' => (int) round((float) $deposit->amount),
             'adminFee' => $deposit->tripay_admin_fee,
             'totalPayable' => $deposit->tripay_total_payable,
@@ -72,10 +90,10 @@ class QrisPaymentController extends Controller
             'qrisImageUrl' => $this->resolveQrisImageUrl($raw),
             'qrisText' => $this->resolveQrisText($raw),
             'expiresAt' => $this->resolveExpiresAt($raw, $deposit->created_at),
-            'backUrl' => route('user.wallet.index'),
-            'backLabel' => 'Kembali ke Dompet',
+            'backUrl' => $isMembershipPayment ? route('user.membership.index') : route('user.wallet.index'),
+            'backLabel' => $isMembershipPayment ? 'Kembali ke Membership' : 'Kembali ke Dompet',
             'statusUrl' => route('user.qris.status', $deposit->invoice_number),
-            'redirectUrl' => route('user.dashboard'),
+            'redirectUrl' => $isMembershipPayment ? route('user.membership.index') : route('user.dashboard'),
         ]);
     }
 
@@ -119,7 +137,7 @@ class QrisPaymentController extends Controller
 
         return response()->json($this->statusPayload(
             status: (string) $deposit->payment_status,
-            redirectUrl: route('user.dashboard')
+            redirectUrl: $deposit->isMembershipPayment() ? route('user.membership.index') : route('user.dashboard')
         ));
     }
 
@@ -153,24 +171,50 @@ class QrisPaymentController extends Controller
     protected function resolveQrisImageUrl(array $raw): ?string
     {
         $image = $this->firstPayloadValue($raw, [
+            'data.qris',
             'data.qris_url',
+            'data.qris_image',
+            'data.qris_image_url',
+            'data.qris_base64',
+            'data.qr',
+            'data.qrcode',
+            'data.qrCode',
             'data.qr_url',
             'data.qr_image',
             'data.qr_image_url',
+            'data.qr_image_base64',
+            'data.qr_base64',
+            'data.image',
             'data.image_url',
             'data.qris.image_url',
             'data.qris.url',
+            'data.qris.image',
+            'qris',
             'qris_url',
+            'qris_image',
+            'qris_image_url',
+            'qris_base64',
+            'qr',
+            'qrcode',
+            'qrCode',
             'qr_url',
             'qr_image',
             'qr_image_url',
+            'qr_image_base64',
+            'qr_base64',
+            'image',
             'image_url',
             'qris.image_url',
             'qris.url',
+            'qris.image',
         ]);
 
-        if ($image && preg_match('/^https?:\/\//i', $image)) {
-            return $image;
+        if ($image) {
+            $normalizedImage = $this->normalizeQrisImageSource($image);
+
+            if ($normalizedImage) {
+                return $normalizedImage;
+            }
         }
 
         $text = $this->resolveQrisText($raw);
@@ -180,6 +224,27 @@ class QrisPaymentController extends Controller
         }
 
         return 'https://api.qrserver.com/v1/create-qr-code/?size=420x420&margin=1&data=' . rawurlencode($text);
+    }
+
+    protected function normalizeQrisImageSource(string $value): ?string
+    {
+        $value = trim($value);
+
+        if (preg_match('/^https?:\/\//i', $value) || preg_match('/^data:image\//i', $value)) {
+            return $value;
+        }
+
+        if (str_starts_with($value, '//')) {
+            return 'https:' . $value;
+        }
+
+        $compact = preg_replace('/\s+/', '', $value);
+
+        if (preg_match('/^(iVBORw0KGgo|\/9j\/|R0lGOD|PHN2Z)/', $compact) === 1) {
+            return 'data:image/png;base64,' . $compact;
+        }
+
+        return null;
     }
 
     protected function resolveExpiresAt(array $raw, mixed $createdAt = null): ?Carbon
@@ -213,13 +278,24 @@ class QrisPaymentController extends Controller
     protected function resolveQrisText(array $raw): ?string
     {
         $text = $this->firstPayloadValue($raw, [
+            'data.qris',
             'data.qris_text',
             'data.qris_string',
+            'data.raw_qris',
+            'data.emv',
+            'data.qr',
+            'data.qrcode',
+            'data.qrCode',
             'data.qr_string',
             'data.qr_content',
             'data.qr_code',
             'data.qris_data',
             'data.qris_payload',
+            'raw_qris',
+            'emv',
+            'qr',
+            'qrcode',
+            'qrCode',
             'qris_text',
             'qris_string',
             'qr_string',
@@ -248,6 +324,39 @@ class QrisPaymentController extends Controller
             }
         }
 
+        $leafKeys = array_values(array_unique(array_map(function (string $key): string {
+            $position = strrpos($key, '.');
+
+            return $position === false ? $key : substr($key, $position + 1);
+        }, $keys)));
+
+        return $this->recursivePayloadValue($raw, $leafKeys);
+    }
+
+    protected function recursivePayloadValue(mixed $value, array $keys): ?string
+    {
+        if (! is_array($value)) {
+            return null;
+        }
+
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $value)) {
+                $normalized = $this->normalizePayloadValue($value[$key]);
+
+                if ($normalized !== null) {
+                    return $normalized;
+                }
+            }
+        }
+
+        foreach ($value as $item) {
+            $normalized = $this->recursivePayloadValue($item, $keys);
+
+            if ($normalized !== null) {
+                return $normalized;
+            }
+        }
+
         return null;
     }
 
@@ -261,7 +370,27 @@ class QrisPaymentController extends Controller
             return null;
         }
 
-        foreach (['text', 'string', 'payload', 'code', 'data', 'url', 'image_url'] as $key) {
+        foreach ([
+            'qris_text',
+            'qris_string',
+            'qr_string',
+            'qr_content',
+            'qr_code',
+            'raw_qris',
+            'emv',
+            'text',
+            'string',
+            'payload',
+            'content',
+            'code',
+            'data',
+            'url',
+            'image_url',
+            'image',
+            'base64',
+            'qr_image',
+            'qris_image',
+        ] as $key) {
             if (array_key_exists($key, $value)) {
                 $normalized = $this->normalizePayloadValue($value[$key]);
 

@@ -7,6 +7,7 @@ use App\Models\Deposit;
 use App\Models\User;
 use App\Models\WalletHistory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DepositController extends Controller
 {
@@ -51,25 +52,44 @@ class DepositController extends Controller
 
         // Jika admin mengubah status menjadi LUNAS, dan sebelumnya belum lunas
         if ($request->payment_status == 'paid' && $deposit->payment_status != 'paid') {
-            $deposit->update(['payment_status' => 'paid', 'payment_method' => 'manual_admin']);
-            
-            // Tambahkan saldo ke user
-            $user = User::find($deposit->user_id);
-            $user->increment('balance', $deposit->amount);
+            $message = DB::transaction(function () use ($deposit) {
+                $lockedDeposit = Deposit::query()
+                    ->lockForUpdate()
+                    ->findOrFail($deposit->id);
 
-            WalletHistory::firstOrCreate(
-                [
-                    'invoice_number' => $deposit->invoice_number,
-                    'type' => 'topup',
-                ],
-                [
-                    'user_id' => $deposit->user_id,
-                    'amount' => $deposit->amount,
-                    'description' => 'Top Up Saldo via MANUAL ADMIN',
-                ]
-            );
+                $lockedDeposit->update(['payment_status' => 'paid', 'payment_method' => 'manual_admin']);
 
-            return back()->with('success', 'Deposit disetujui! Saldo Rp ' . number_format($deposit->amount, 0, ',', '.') . ' telah ditambahkan ke akun ' . $user->name);
+                $user = User::query()
+                    ->lockForUpdate()
+                    ->findOrFail($lockedDeposit->user_id);
+
+                if ($lockedDeposit->isMembershipPayment()) {
+                    if (! $lockedDeposit->membershipActivated()) {
+                        $user->activateMembership((int) data_get($lockedDeposit->payment_response, 'membership_days', 30));
+                        $lockedDeposit->markMembershipActivated();
+                    }
+
+                    return 'Membership ' . $user->name . ' berhasil diaktifkan 30 hari.';
+                }
+
+                $user->increment('balance', $lockedDeposit->amount);
+
+                WalletHistory::firstOrCreate(
+                    [
+                        'invoice_number' => $lockedDeposit->invoice_number,
+                        'type' => 'topup',
+                    ],
+                    [
+                        'user_id' => $lockedDeposit->user_id,
+                        'amount' => $lockedDeposit->amount,
+                        'description' => 'Top Up Saldo via MANUAL ADMIN',
+                    ]
+                );
+
+                return 'Deposit disetujui! Saldo Rp ' . number_format($lockedDeposit->amount, 0, ',', '.') . ' telah ditambahkan ke akun ' . $user->name;
+            });
+
+            return back()->with('success', $message);
         }
 
         // Jika admin membatalkan (mengubah jadi failed)

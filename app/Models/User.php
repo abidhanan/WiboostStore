@@ -27,6 +27,8 @@ class User extends Authenticatable
         'reseller_payout_account',
         'reseller_payout_name',
         'reseller_joined_at',
+        'membership_started_at',
+        'membership_expires_at',
     ];
 
     protected $hidden = [
@@ -39,6 +41,8 @@ class User extends Authenticatable
         'points' => 'integer',
         'point_reward_stage' => 'integer',
         'reseller_joined_at' => 'datetime',
+        'membership_started_at' => 'datetime',
+        'membership_expires_at' => 'datetime',
     ];
 
     public function isAdmin()
@@ -54,6 +58,21 @@ class User extends Authenticatable
     public function isReseller(): bool
     {
         return (int) $this->role_id === 3;
+    }
+
+    public function isMember(): bool
+    {
+        return $this->membership_expires_at !== null && $this->membership_expires_at->isFuture();
+    }
+
+    public function activateMembership(int $days = 30): void
+    {
+        $base = $this->isMember() ? $this->membership_expires_at->copy() : now();
+
+        $this->forceFill([
+            'membership_started_at' => $this->membership_started_at ?: now(),
+            'membership_expires_at' => $base->addDays($days),
+        ])->save();
     }
 
     public function role()
