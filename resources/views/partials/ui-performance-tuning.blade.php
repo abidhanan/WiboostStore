@@ -1,4 +1,36 @@
 <style data-wiboost-ui-performance>
+    a[data-wiboost-back],
+    a[aria-label="Kembali"],
+    button[aria-label="Kembali"],
+    .wiboost-back-link {
+        transition:
+            transform 360ms cubic-bezier(.22, 1, .36, 1),
+            background-color 220ms ease,
+            border-color 220ms ease,
+            box-shadow 320ms ease,
+            opacity 220ms ease !important;
+        will-change: transform;
+    }
+
+    a[data-wiboost-back]:hover,
+    a[aria-label="Kembali"]:hover,
+    button[aria-label="Kembali"]:hover,
+    .wiboost-back-link:hover {
+        transform: translateX(-2px) scale(1.04) !important;
+    }
+
+    a[data-wiboost-back]:active,
+    a[aria-label="Kembali"]:active,
+    button[aria-label="Kembali"]:active,
+    .wiboost-back-link:active,
+    .wiboost-back-link.is-backing,
+    a[data-wiboost-back].is-backing,
+    a[aria-label="Kembali"].is-backing {
+        transform: translateX(-8px) scale(.94) !important;
+        opacity: .76 !important;
+        box-shadow: 0 8px 18px rgba(90, 118, 200, .24) !important;
+    }
+
     body.wiboost-compact-ui {
         font-size: 15px;
     }

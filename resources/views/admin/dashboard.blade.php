@@ -3,6 +3,8 @@
 @section('admin_header_subtitle', 'Ringkasan transaksi dan aktivitas toko.')
 @section('content')
     @php
+        \Carbon\Carbon::setLocale('id');
+
         $paymentMethodMeta = static function ($trx): array {
             $label = $trx->display_payment_method;
             if ($label === 'SALDO') { return ['label' => 'Saldo', 'class' => 'bg-[#e0fbfc] text-[#5a76c8] border-white']; }
@@ -59,42 +61,98 @@
                 })
                 ->all();
         };
+        $formatDashboardTime = static fn ($value) => $value ? $value->diffForHumans() : '-';
+        $currentAdminRoleId = (int) (auth()->user()?->role_id ?? 0);
+        $dashboardCanAccess = static function (string $area) use ($currentAdminRoleId): bool {
+            if ($currentAdminRoleId === 1) {
+                return true;
+            }
+
+            $accessMap = [
+                4 => ['dashboard', 'commissions', 'users', 'transactions', 'deposits', 'withdrawals'],
+                6 => ['dashboard', 'users', 'categories', 'products', 'tutorials', 'transactions'],
+                7 => ['dashboard', 'users', 'transactions', 'promos', 'displays'],
+                8 => ['dashboard', 'commissions', 'users', 'transactions', 'deposits', 'reports'],
+            ];
+
+            return in_array($area, $accessMap[$currentAdminRoleId] ?? [], true);
+        };
+        $showDashboardTransactions = $dashboardCanAccess('transactions');
+        $showDashboardRevenue = $dashboardCanAccess('transactions') || $dashboardCanAccess('deposits') || $dashboardCanAccess('commissions');
+        $showDashboardUsers = $dashboardCanAccess('users');
+        $showDashboardResellers = $dashboardCanAccess('commissions') || $dashboardCanAccess('withdrawals');
+        $showDashboardProducts = $dashboardCanAccess('products');
+        $showDashboardReports = $dashboardCanAccess('reports');
+        $showDashboardDeposits = $dashboardCanAccess('deposits');
+        $showDashboardCommissions = $dashboardCanAccess('commissions');
+        $showDashboardWithdrawals = $dashboardCanAccess('withdrawals');
+        $dashboardChartCards = collect([
+            ['enabled' => $showDashboardTransactions, 'key' => 'transactions', 'title' => 'Transaksi', 'max' => $transactionMax, 'stroke' => '#5a76c8', 'bg' => 'bg-[#f8fbff]', 'text' => 'text-[#8faaf3]', 'suffix' => ' transaksi'],
+            ['enabled' => $showDashboardRevenue, 'key' => 'revenue', 'title' => 'Pendapatan', 'max' => $revenueMax, 'stroke' => '#4bc6b9', 'bg' => 'bg-[#f6fffb]', 'text' => 'text-emerald-500', 'suffix' => ''],
+            ['enabled' => $showDashboardUsers, 'key' => 'users', 'title' => 'Pengguna Baru', 'max' => $userMax, 'stroke' => '#f59e0b', 'bg' => 'bg-[#fffdf7]', 'text' => 'text-amber-500', 'suffix' => ' user'],
+        ])->filter(fn ($chart) => $chart['enabled'])->values();
     @endphp
 
-    <div class="space-y-6 sm:space-y-8 pb-12 relative z-10 w-full min-w-0">
+    <style>
+        .wiboost-admin-dashboard span.text-3xl.opacity-50 {
+            display: inline-flex;
+            height: 3rem;
+            width: 3rem;
+            align-items: center;
+            justify-content: center;
+            border-radius: 1rem;
+            border: 2px solid #fff;
+            background: #f0f5ff;
+            color: #5a76c8;
+            font-size: 0 !important;
+            box-shadow: inset 0 2px 8px rgba(143, 170, 243, .16);
+        }
+        .wiboost-admin-dashboard span.text-3xl.opacity-50::before {
+            content: "";
+            width: 1.2rem;
+            height: 1.2rem;
+            border: 3px solid currentColor;
+            border-radius: .3rem;
+            box-shadow: inset 0 0 0 3px #f0f5ff;
+        }
+    </style>
+
+    <div class="wiboost-admin-dashboard space-y-6 sm:space-y-8 pb-12 relative z-10 w-full min-w-0">
         
         <!-- Monthly Summary -->
-        <section class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
+        @if($showDashboardTransactions || $showDashboardRevenue || $showDashboardUsers || $showDashboardResellers)
+        <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+            @if($showDashboardTransactions)
             <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
                 <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Transaksi Bulan Ini</p>
                 <p class="mt-3 text-4xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalTransactionsMonth ?? 0, 0, ',', '.') }}</p>
             </article>
+            @endif
 
-            <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-gradient-to-br from-[#8faaf3] to-[#5a76c8] p-6 text-white shadow-xl shadow-[#5a76c8]/35 sm:rounded-[2.5rem] sm:p-8">
-                <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#e0fbfc]">Pendapatan Bulan Ini</p>
-                <p class="mt-3 truncate text-4xl font-black tracking-tight">Rp {{ number_format($revenueMonth ?? 0, 0, ',', '.') }}</p>
-            </article>
-
+            @if($showDashboardRevenue)
             <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
-                <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Total Pelanggan</p>
-                <p class="mt-3 text-4xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalUsers ?? 0, 0, ',', '.') }}</p>
-                <div class="mt-5 grid grid-cols-3 gap-2 text-center">
-                    <div class="rounded-2xl border-2 border-white bg-[#f4f9ff] px-2 py-2 shadow-sm">
-                        <p class="text-[8px] font-black uppercase tracking-widest text-[#8faaf3]">Buyer</p>
-                        <p class="text-sm font-black text-[#5a76c8]">{{ number_format($totalBuyers ?? 0, 0, ',', '.') }}</p>
-                    </div>
-                    <div class="rounded-2xl border-2 border-white bg-[#fff7d6] px-2 py-2 shadow-sm">
-                        <p class="text-[8px] font-black uppercase tracking-widest text-[#d99b16]">Reseller</p>
-                        <p class="text-sm font-black text-[#d99b16]">{{ number_format($totalResellers ?? 0, 0, ',', '.') }}</p>
-                    </div>
-                    <div class="rounded-2xl border-2 border-white bg-[#ede9fe] px-2 py-2 shadow-sm">
-                        <p class="text-[8px] font-black uppercase tracking-widest text-[#8b5cf6]">Member</p>
-                        <p class="text-sm font-black text-[#8b5cf6]">{{ number_format($totalMembers ?? 0, 0, ',', '.') }}</p>
-                    </div>
-                </div>
+                <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Pendapatan Bulan Ini</p>
+                <p class="mt-3 truncate text-4xl font-black tracking-tight text-[#2b3a67]">Rp {{ number_format($revenueMonth ?? 0, 0, ',', '.') }}</p>
             </article>
-        </section>
+            @endif
 
+            @if($showDashboardUsers)
+            <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
+                <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Total Pengguna</p>
+                <p class="mt-3 text-4xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalUsers ?? 0, 0, ',', '.') }}</p>
+            </article>
+            @endif
+
+            @if($showDashboardResellers)
+            <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
+                <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Total Reseller</p>
+                <p class="mt-3 text-4xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalResellers ?? 0, 0, ',', '.') }}</p>
+            </article>
+            @endif
+        </section>
+        @endif
+
+        @if($dashboardChartCards->isNotEmpty())
         <section class="overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:rounded-[2.5rem]">
             <div class="flex flex-col gap-2 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-7 sm:py-6 sm:flex-row sm:items-center sm:justify-between">
                 <div class="min-w-0">
@@ -104,12 +162,8 @@
             </div>
 
             <div class="grid grid-cols-1 gap-5 p-5 sm:p-7 lg:grid-cols-3">
-                @foreach([
-                    ['key' => 'transactions', 'title' => 'Transaksi', 'max' => $transactionMax, 'stroke' => '#5a76c8', 'bg' => 'bg-[#f8fbff]', 'text' => 'text-[#8faaf3]', 'suffix' => ' transaksi'],
-                    ['key' => 'revenue', 'title' => 'Pendapatan', 'max' => $revenueMax, 'stroke' => '#4bc6b9', 'bg' => 'bg-[#f6fffb]', 'text' => 'text-emerald-500', 'suffix' => ''],
-                    ['key' => 'users', 'title' => 'Pelanggan Baru', 'max' => $userMax, 'stroke' => '#f59e0b', 'bg' => 'bg-[#fffdf7]', 'text' => 'text-amber-500', 'suffix' => ' user'],
-                ] as $chart)
-                    @php($dots = $chartDots($chart['key'], $chart['max']))
+                @foreach($dashboardChartCards as $chart)
+                    <?php $dots = $chartDots($chart['key'], $chart['max']); ?>
                     <article class="{{ $chart['bg'] }} rounded-[1.75rem] border-2 border-white p-4 shadow-inner">
                         <p class="mb-3 text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">{{ $chart['title'] }}</p>
                         <svg viewBox="0 0 240 88" class="h-32 w-full overflow-visible" role="img" aria-label="{{ $chart['title'] }} 7 hari terakhir">
@@ -130,11 +184,13 @@
                 @endforeach
             </div>
         </section>
+        @endif
 
+        @if($showDashboardProducts)
         <section class="overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:rounded-[2.5rem]">
             <div class="border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-7 sm:py-6">
                 <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Produk Terlaris</p>
-                <h3 class="mt-1 text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Paling Sering Dibeli per Kategori</h3>
+                <h3 class="mt-1 text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Paling Sering Dibeli</h3>
             </div>
 
             <div class="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 sm:p-7 xl:grid-cols-4">
@@ -152,7 +208,7 @@
                                 </div>
                                 <div class="min-w-0 overflow-hidden rounded-2xl border-2 border-white bg-white px-3 py-2 shadow-sm">
                                     <p class="text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">Omzet</p>
-                                    <p class="whitespace-nowrap text-xs font-black text-[#4bc6b9] xl:text-[13px]">Rp {{ number_format($summary['revenue'], 0, ',', '.') }}</p>
+                                    <p class="break-words text-lg font-black leading-tight text-[#4bc6b9] sm:text-xl">Rp {{ number_format($summary['revenue'], 0, ',', '.') }}</p>
                                 </div>
                             </div>
                         @else
@@ -168,6 +224,7 @@
                 @endforelse
             </div>
         </section>
+        @endif
 
         @if(false)
         <section class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
@@ -282,7 +339,9 @@
 
         @endif
 
-        <section class="grid grid-cols-1 gap-6 sm:gap-8 xl:grid-cols-2 w-full min-w-0">
+        @if($showDashboardProducts || $showDashboardReports)
+        <section class="grid grid-cols-1 gap-6 sm:gap-8 {{ ($showDashboardProducts && $showDashboardReports) ? 'xl:grid-cols-2' : 'xl:grid-cols-1' }} w-full min-w-0">
+            @if($showDashboardProducts)
             <article class="flex flex-col overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
                 <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#fffdf7] px-5 py-5 sm:px-6 sm:py-6 md:flex-row md:items-center md:justify-between">
                     <div class="min-w-0">
@@ -346,7 +405,9 @@
                     </div>
                 </div>
             </article>
+            @endif
 
+            @if($showDashboardReports)
             <article class="flex flex-col overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
                 <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-6 sm:py-6 md:flex-row md:items-center md:justify-between">
                     <div class="min-w-0">
@@ -358,43 +419,63 @@
                     </a>
                 </div>
                 <div class="w-full min-w-0 p-4 sm:p-6 md:p-8">
-                    <div class="space-y-4 md:hidden">
-                        @forelse(collect($latestReports ?? [])->take(5) as $report)
-                            @php($reportInvoice = $report->related_invoice ?: 'LAP-' . str_pad((string) $report->id, 5, '0', STR_PAD_LEFT))
-                            <a href="{{ route('admin.reports.index', ['search' => $reportInvoice]) }}" class="block w-full min-w-0 rounded-2xl border-4 border-white bg-[#f8fbff] p-4 shadow-sm transition hover:border-[#bde0fe]">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div class="min-w-0">
-                                        <p class="truncate text-sm font-black text-[#2b3a67]">{{ $reportInvoice }}</p>
-                                        <p class="mt-0.5 truncate text-[10px] font-bold uppercase tracking-wider text-[#8faaf3]">{{ $report->category_label ?: '-' }}</p>
-                                    </div>
-                                    <span class="{{ $report->status === 'closed' ? 'bg-[#e6fff7] text-emerald-500' : 'bg-[#fff5eb] text-amber-500' }} shrink-0 rounded-full border border-white px-3 py-1 text-[9px] font-black uppercase tracking-widest shadow-sm">{{ $report->status === 'closed' ? 'Selesai' : 'Baru' }}</span>
-                                </div>
-                                <p class="mt-3 truncate text-xs font-black text-[#2b3a67]">{{ $report->user?->name ?: '-' }}</p>
-                            </a>
-                        @empty
-                            <div class="rounded-[2rem] border-4 border-dashed border-[#d6e5ff] bg-[#f8fbff] px-5 py-8 text-center">
-                                <p class="text-sm font-black text-[#2b3a67]">Belum ada laporan.</p>
-                            </div>
-                        @endforelse
-                    </div>
-
-                    <div class="hidden w-full overflow-x-auto pb-2 md:block">
-                        <table class="min-w-[620px] w-full table-auto text-left">
+                    <div class="table-scroll w-full overflow-x-auto pb-2 md:hidden">
+                        <table class="w-full min-w-[620px] text-left">
                             <thead>
-                                <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">
-                                    <th class="w-[30%] px-3 py-3">Invoice</th>
-                                    <th class="w-[25%] px-3 py-3">User</th>
-                                    <th class="w-[25%] px-3 py-3">Jenis</th>
-                                    <th class="w-[20%] px-3 py-3 text-center">Status</th>
+                                <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">
+                                    <th class="px-3 py-3">Invoice</th>
+                                    <th class="px-3 py-3">Waktu</th>
+                                    <th class="px-3 py-3">User</th>
+                                    <th class="px-3 py-3">Jenis</th>
+                                    <th class="px-3 py-3 text-center">Status</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
                                 @forelse(collect($latestReports ?? [])->take(5) as $report)
-                                    @php($reportInvoice = $report->related_invoice ?: 'LAP-' . str_pad((string) $report->id, 5, '0', STR_PAD_LEFT))
+                            <?php $reportInvoice = $report->related_invoice ?: 'LAP-' . str_pad((string) $report->id, 5, '0', STR_PAD_LEFT); ?>
+                                    <tr class="transition hover:bg-[#f8faff]">
+                                        <td class="px-3 py-3">
+                                            <a href="{{ route('admin.reports.index', ['search' => $reportInvoice]) }}" class="whitespace-nowrap text-xs font-black text-[#2b3a67]">{{ $reportInvoice }}</a>
+                                        </td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-[10px] font-bold text-[#8faaf3]">{{ $formatDashboardTime($report->created_at) }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67]">{{ $report->user?->name ?: '-' }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#8faaf3]">{{ $report->category_label ?: '-' }}</td>
+                                        <td class="px-3 py-3 text-center">
+                                            <span class="{{ $report->status === 'closed' ? 'bg-[#e6fff7] text-emerald-500' : 'bg-[#fff5eb] text-amber-500' }} inline-flex whitespace-nowrap rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm">
+                                                {{ $report->status === 'closed' ? 'Selesai' : 'Baru' }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-4 py-10 text-center">
+                                            <p class="text-sm font-black text-[#2b3a67]">Belum ada laporan.</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="hidden w-full overflow-x-auto pb-2 md:block">
+                        <table class="min-w-[720px] w-full table-auto text-left">
+                            <thead>
+                                <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">
+                                    <th class="w-[24%] px-3 py-3">Invoice</th>
+                                    <th class="w-[18%] px-3 py-3">Waktu</th>
+                                    <th class="w-[22%] px-3 py-3">User</th>
+                                    <th class="w-[20%] px-3 py-3">Jenis</th>
+                                    <th class="w-[16%] px-3 py-3 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
+                                @forelse(collect($latestReports ?? [])->take(5) as $report)
+                                    <?php $reportInvoice = $report->related_invoice ?: 'LAP-' . str_pad((string) $report->id, 5, '0', STR_PAD_LEFT); ?>
                                     <tr class="transition hover:bg-[#f8faff]">
                                         <td class="min-w-0 px-3 py-3">
                                             <a href="{{ route('admin.reports.index', ['search' => $reportInvoice]) }}" class="block whitespace-nowrap text-xs font-black text-[#2b3a67] xl:text-sm">{{ $reportInvoice }}</a>
                                         </td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-bold text-[#8faaf3] xl:text-sm">{{ $formatDashboardTime($report->created_at) }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67] xl:text-sm">{{ $report->user?->name ?: '-' }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#8faaf3] xl:text-sm">{{ $report->category_label ?: '-' }}</td>
                                         <td class="px-3 py-3 text-center">
@@ -405,7 +486,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="px-4 py-10 text-center">
+                                        <td colspan="5" class="px-4 py-10 text-center">
                                             <p class="text-sm font-black text-[#2b3a67]">Belum ada laporan.</p>
                                         </td>
                                     </tr>
@@ -415,7 +496,9 @@
                     </div>
                 </div>
             </article>
+            @endif
         </section>
+        @endif
 
         <!-- Low Stock Alert -->
         @if(false && isset($lowStockProducts) && $lowStockProducts->count() > 0)
@@ -427,7 +510,7 @@
                         <p class="mt-3 text-xs sm:text-sm font-bold text-amber-700 bg-amber-50 p-3 sm:p-4 rounded-2xl border-2 border-white shadow-inner">Beberapa produk akun premium sudah menyentuh batas pengingat stok. Segera restock supaya order dari pengguna tetap lancar.</p>
                     </div>
                     <a href="{{ route('admin.products.index') }}" class="w-full sm:w-auto text-center inline-flex items-center justify-center gap-2 rounded-full border-4 border-white bg-amber-500 px-6 py-3 sm:py-4 text-sm font-black text-white shadow-lg shadow-amber-500/30 transition-transform active:scale-95 hover:bg-amber-600 mt-2 shrink-0">
-                        Kelola Produk 📦
+                        Kelola Produk
                     </a>
                 </div>
                 <div class="mt-6 flex flex-col sm:flex-row sm:flex-wrap gap-3 relative z-10">
@@ -467,7 +550,7 @@
             <article class="overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white p-6 sm:p-8 shadow-xl shadow-[#bde0fe]/30 transition-transform duration-300 hover:-translate-y-2 relative group min-w-0 sm:col-span-2 lg:col-span-1">
                 <div class="relative z-10">
                     <div class="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl border-2 border-white bg-[#e6fff7] text-emerald-500 shadow-inner text-2xl sm:text-3xl group-hover:scale-110 transition-transform">
-                        👤
+                        @include('partials.wiboost-icon', ['name' => 'users', 'class' => 'h-7 w-7'])
                     </div>
                     <p class="mt-4 sm:mt-6 text-[10px] font-black uppercase tracking-[0.2em] text-[#8faaf3] truncate">Total Pelanggan</p>
                     <p class="mt-1 text-3xl sm:text-4xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm truncate">{{ number_format($totalUsers ?? 0, 0, ',', '.') }}</p>
@@ -477,80 +560,85 @@
         @endif
 
         <!-- Tables Section -->
-        <section class="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8 w-full min-w-0">
+        @if($showDashboardTransactions || $showDashboardDeposits)
+        <section class="grid grid-cols-1 {{ ($showDashboardTransactions && $showDashboardDeposits) ? 'xl:grid-cols-2' : 'xl:grid-cols-1' }} gap-6 sm:gap-8 w-full min-w-0">
             
             <!-- Realtime Order -->
+            @if($showDashboardTransactions)
             <article class="flex flex-col overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
                 <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 sm:px-6 py-5 sm:py-6 md:flex-row md:items-center md:justify-between w-full">
                     <div class="min-w-0">
                         <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3] mb-1 truncate">Realtime Order</p>
-                        <h3 class="text-xl sm:text-2xl font-black tracking-tight text-[#2b3a67] truncate">Transaksi Terbaru ⚡</h3>
+                        <h3 class="text-xl sm:text-2xl font-black tracking-tight text-[#2b3a67] truncate">Transaksi Terbaru</h3>
                     </div>
                     <a href="{{ route('admin.transactions.index') }}" class="shrink-0 text-center w-full md:w-auto inline-flex items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform hover:scale-105 active:scale-95">
                         Lihat Semua
                     </a>
                 </div>
                 <div class="p-4 sm:p-6 md:p-8 w-full min-w-0">
-                    <!-- Mobile Card View -->
-                    <div class="space-y-4 md:hidden w-full">
-                        @forelse(collect($recentTransactions ?? [])->take(5) as $trx)
-                            @php($method = $paymentMethodMeta($trx))
-                            @php($status = $transactionStatusMeta($trx))
-                            <div class="rounded-2xl border-4 border-white bg-[#f8fbff] p-4 shadow-sm w-full min-w-0">
-                                <div class="flex items-start justify-between gap-2 mb-3">
-                                    <div class="min-w-0 flex-1">
-                                        <p class="truncate text-xs sm:text-sm font-black text-[#2b3a67]">{{ $trx->invoice_number }}</p>
-                                        <p class="mt-0.5 text-[9px] font-bold text-[#8faaf3] uppercase tracking-wider">{{ optional($trx->created_at)->diffForHumans() ?? '-' }}</p>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div class="rounded-xl border-2 border-white bg-white px-3 py-2 shadow-inner min-w-0">
-                                        <p class="text-[8px] font-black uppercase tracking-[0.2em] text-[#8faaf3] mb-0.5 truncate">User</p>
-                                        <p class="truncate text-xs font-black text-[#2b3a67]">{{ $trx->user->name ?? 'Guest' }}</p>
-                                    </div>
-                                    <div class="rounded-xl border-2 border-white bg-white px-3 py-2 shadow-inner min-w-0">
-                                        <p class="text-[8px] font-black uppercase tracking-[0.2em] text-[#8faaf3] mb-0.5 truncate">Nominal</p>
-                                        <p class="truncate text-xs font-black text-emerald-500">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</p>
-                                    </div>
-                                    <div class="rounded-xl border-2 border-white bg-white px-3 py-2 shadow-inner min-w-0">
-                                        <p class="text-[8px] font-black uppercase tracking-[0.2em] text-[#8faaf3] mb-0.5 truncate">Status</p>
-                                        <span class="inline-flex max-w-full truncate rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-widest {{ $status['class'] }}">{{ $status['label'] }}</span>
-                                    </div>
-                                    <div class="rounded-xl border-2 border-white bg-white px-3 py-2 text-left shadow-inner min-w-0">
-                                        <p class="text-[8px] font-black uppercase tracking-[0.2em] text-[#8faaf3] mb-0.5 truncate">Metode</p>
-                                        <span class="inline-flex max-w-full truncate rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-widest {{ $method['class'] }}">{{ $method['label'] }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="rounded-[2rem] border-4 border-dashed border-[#d6e5ff] bg-[#f8fbff] px-5 py-8 text-center">
-                                <span class="text-3xl opacity-50">📭</span>
-                                <p class="mt-2 text-xs sm:text-sm font-black text-[#2b3a67]">Belum ada transaksi.</p>
-                            </div>
-                        @endforelse
-                    </div>
-
-                    <!-- Desktop Table View -->
-                    <div class="hidden w-full overflow-x-auto md:block pb-2">
-                        <table class="min-w-[720px] w-full table-auto text-left">
+                    <!-- Mobile Table View -->
+                    <div class="table-scroll w-full overflow-x-auto pb-2 md:hidden">
+                        <table class="w-full min-w-[720px] text-left">
                             <thead>
-                                <tr class="text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">
-                                    <th class="w-[28%] px-3 py-3">Invoice</th>
-                                    <th class="w-[20%] px-3 py-3">User</th>
-                                    <th class="w-[18%] px-3 py-3">Nominal</th>
-                                    <th class="w-[17%] px-3 py-3 text-center">Status</th>
-                                    <th class="w-[17%] px-3 py-3 text-center">Metode</th>
+                                <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">
+                                    <th class="px-3 py-3">Invoice</th>
+                                    <th class="px-3 py-3">Waktu</th>
+                                    <th class="px-3 py-3">User</th>
+                                    <th class="px-3 py-3">Nominal</th>
+                                    <th class="px-3 py-3 text-center">Status</th>
+                                    <th class="px-3 py-3 text-center">Metode</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
                                 @forelse(collect($recentTransactions ?? [])->take(5) as $trx)
-                                    @php($method = $paymentMethodMeta($trx))
-                                    @php($status = $transactionStatusMeta($trx))
+                                    <?php $method = $paymentMethodMeta($trx); ?>
+                                    <?php $status = $transactionStatusMeta($trx); ?>
+                                    <tr class="transition hover:bg-[#f8faff]">
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67]">{{ $trx->invoice_number }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-[10px] font-bold text-[#8faaf3]">{{ $formatDashboardTime($trx->created_at) }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67]">{{ $trx->user->name ?? 'Guest' }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-emerald-500">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</td>
+                                        <td class="px-3 py-3 text-center">
+                                            <span class="inline-flex whitespace-nowrap rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm {{ $status['class'] }}">{{ $status['label'] }}</span>
+                                        </td>
+                                        <td class="px-3 py-3 text-center">
+                                            <span class="inline-flex whitespace-nowrap rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm {{ $method['class'] }}">{{ $method['label'] }}</span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="px-4 py-10 text-center">
+                                            @include('partials.wiboost-icon', ['name' => 'receipt', 'class' => 'mx-auto h-9 w-9 text-[#8faaf3] opacity-60'])
+                                            <p class="mt-2 text-xs sm:text-sm font-black text-[#2b3a67]">Belum ada transaksi.</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Desktop Table View -->
+                    <div class="hidden w-full overflow-x-auto md:block pb-2">
+                        <table class="min-w-[820px] w-full table-auto text-left">
+                            <thead>
+                                <tr class="text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">
+                                    <th class="w-[24%] px-3 py-3">Invoice</th>
+                                    <th class="w-[16%] px-3 py-3">Waktu</th>
+                                    <th class="w-[18%] px-3 py-3">User</th>
+                                    <th class="w-[16%] px-3 py-3">Nominal</th>
+                                    <th class="w-[13%] px-3 py-3 text-center">Status</th>
+                                    <th class="w-[13%] px-3 py-3 text-center">Metode</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
+                                @forelse(collect($recentTransactions ?? [])->take(5) as $trx)
+                                    <?php $method = $paymentMethodMeta($trx); ?>
+                                    <?php $status = $transactionStatusMeta($trx); ?>
                                     <tr class="transition hover:bg-[#f8faff] group">
                                         <td class="px-3 py-3 min-w-0">
                                             <p class="whitespace-nowrap text-xs font-black text-[#2b3a67] xl:text-sm">{{ $trx->invoice_number }}</p>
-                                            <p class="mt-0.5 whitespace-nowrap text-[9px] font-bold text-[#8faaf3] uppercase tracking-wider">{{ optional($trx->created_at)->diffForHumans() ?? '-' }}</p>
                                         </td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-bold text-[#8faaf3] xl:text-sm">{{ $formatDashboardTime($trx->created_at) }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67] xl:text-sm">{{ $trx->user->name ?? 'Guest' }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-emerald-500 xl:text-sm">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</td>
                                         <td class="px-3 py-3 text-center">
@@ -562,8 +650,8 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="px-4 py-10 text-center">
-                                            <span class="text-3xl opacity-50 block mb-2">📭</span>
+                                        <td colspan="6" class="px-4 py-10 text-center">
+                                            @include('partials.wiboost-icon', ['name' => 'receipt', 'class' => 'mx-auto mb-2 h-9 w-9 text-[#8faaf3] opacity-60'])
                                             <p class="text-sm font-black text-[#2b3a67]">Belum ada transaksi.</p>
                                         </td>
                                     </tr>
@@ -573,74 +661,81 @@
                     </div>
                 </div>
             </article>
+            @endif
 
             <!-- Arus Saldo -->
+            @if($showDashboardDeposits)
             <article class="flex flex-col overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
                 <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#fffcf0] px-5 sm:px-6 py-5 sm:py-6 md:flex-row md:items-center md:justify-between w-full">
                     <div class="min-w-0">
                         <p class="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 mb-1 truncate">Arus Saldo</p>
-                        <h3 class="text-xl sm:text-2xl font-black tracking-tight text-[#2b3a67] truncate">Mutasi Saldo 🔄</h3>
+                        <h3 class="text-xl sm:text-2xl font-black tracking-tight text-[#2b3a67] truncate">Mutasi Saldo</h3>
                     </div>
                     <a href="{{ route('admin.deposits.index') }}" class="shrink-0 text-center w-full md:w-auto inline-flex items-center justify-center rounded-full border-2 border-white bg-amber-500 px-5 py-2.5 text-xs font-black text-white shadow-md shadow-amber-500/30 transition-transform hover:scale-105 active:scale-95">
                         Lihat Semua
                     </a>
                 </div>
                 <div class="p-4 sm:p-6 md:p-8 w-full min-w-0">
-                    <!-- Mobile Card View -->
-                    <div class="space-y-4 md:hidden w-full">
-                        @forelse(collect($globalWalletLogs ?? [])->take(5) as $log)
-                            @php($logMeta = $walletLogMeta($log))
-                            <div class="rounded-2xl border-4 border-white bg-[#fffdf7] p-4 shadow-sm w-full min-w-0">
-                                <div class="flex items-start justify-between gap-2 mb-3">
-                                    <div class="min-w-0 flex-1">
-                                        <p class="truncate text-xs sm:text-sm font-black text-[#2b3a67]">{{ $log->invoice_number ?? '-' }}</p>
-                                        <p class="mt-0.5 text-[9px] font-bold text-[#8faaf3] uppercase tracking-wider">{{ optional($log->created_at)->diffForHumans() ?? '-' }}</p>
-                                    </div>
-                                    <span class="shrink-0 rounded-full px-2 py-1 text-[8px] uppercase tracking-widest border border-white shadow-sm font-black {{ $logMeta['class'] }}">{{ $logMeta['label'] }}</span>
-                                </div>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div class="rounded-xl border-2 border-white bg-white px-3 py-2 shadow-inner min-w-0">
-                                        <p class="text-[8px] font-black uppercase tracking-[0.2em] text-[#8faaf3] mb-0.5 truncate">User</p>
-                                        <p class="truncate text-xs font-black text-[#2b3a67]">{{ $log->user->name ?? 'Deleted' }}</p>
-                                    </div>
-                                    <div class="rounded-xl border-2 border-white bg-white px-3 py-2 shadow-inner min-w-0">
-                                        <p class="text-[8px] font-black uppercase tracking-[0.2em] text-[#8faaf3] mb-0.5 truncate">Nominal</p>
-                                        <p class="truncate text-xs font-black {{ $log->type === 'purchase' ? 'text-[#ff6b6b]' : 'text-emerald-500' }}">
-                                            {{ $log->type === 'purchase' ? '-' : '+' }} Rp {{ number_format($log->amount, 0, ',', '.') }}
-                                        </p>
-                                    </div>
-                                </div>
-                                @if($log->description)
-                                    <p class="mt-2 text-[10px] sm:text-xs font-bold text-[#8faaf3] bg-white px-3 py-2 rounded-lg border border-[#f0f5ff] truncate">{{ $log->description }}</p>
-                                @endif
-                            </div>
-                        @empty
-                            <div class="rounded-[2rem] border-4 border-dashed border-[#f5dfb7] bg-[#fffdf7] px-5 py-8 text-center">
-                                <span class="text-3xl opacity-50 block mb-2">📁</span>
-                                <p class="text-xs sm:text-sm font-black text-[#2b3a67]">Belum ada mutasi saldo.</p>
-                            </div>
-                        @endforelse
-                    </div>
-
-                    <!-- Desktop Table View -->
-                    <div class="hidden w-full overflow-x-auto md:block pb-2">
-                        <table class="min-w-[660px] w-full table-auto text-left">
+                    <!-- Mobile Table View -->
+                    <div class="table-scroll w-full overflow-x-auto pb-2 md:hidden">
+                        <table class="w-full min-w-[650px] text-left">
                             <thead>
-                                <tr class="text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">
-                                    <th class="w-[34%] px-3 py-3">Invoice</th>
-                                    <th class="w-[24%] px-3 py-3">User</th>
-                                    <th class="w-[22%] px-3 py-3">Nominal</th>
-                                    <th class="w-[20%] px-3 py-3 text-center">Tipe</th>
+                                <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">
+                                    <th class="px-3 py-3">Invoice</th>
+                                    <th class="px-3 py-3">Waktu</th>
+                                    <th class="px-3 py-3">User</th>
+                                    <th class="px-3 py-3">Nominal</th>
+                                    <th class="px-3 py-3 text-center">Tipe</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
                                 @forelse(collect($globalWalletLogs ?? [])->take(5) as $log)
-                                    @php($logMeta = $walletLogMeta($log))
+                                    <?php $logMeta = $walletLogMeta($log); ?>
+                                    <tr class="transition hover:bg-[#fffdf7]">
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67]">{{ $log->invoice_number ?? '-' }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-[10px] font-bold text-[#8faaf3]">{{ $formatDashboardTime($log->created_at) }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67]">{{ $log->user->name ?? 'Deleted' }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black {{ $log->type === 'purchase' ? 'text-[#ff6b6b]' : 'text-emerald-500' }}">
+                                            {{ $log->type === 'purchase' ? '-' : '+' }} Rp {{ number_format($log->amount, 0, ',', '.') }}
+                                        </td>
+                                        <td class="px-3 py-3 text-center">
+                                            <span class="inline-flex whitespace-nowrap rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm {{ $logMeta['class'] }}" title="{{ $log->description }}">
+                                                {{ $logMeta['label'] }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-4 py-10 text-center">
+                                            @include('partials.wiboost-icon', ['name' => 'wallet', 'class' => 'mx-auto mb-2 h-9 w-9 text-[#d99b16] opacity-60'])
+                                            <p class="text-xs sm:text-sm font-black text-[#2b3a67]">Belum ada mutasi saldo.</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Desktop Table View -->
+                    <div class="hidden w-full overflow-x-auto md:block pb-2">
+                        <table class="min-w-[760px] w-full table-auto text-left">
+                            <thead>
+                                <tr class="text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">
+                                    <th class="w-[28%] px-3 py-3">Invoice</th>
+                                    <th class="w-[18%] px-3 py-3">Waktu</th>
+                                    <th class="w-[22%] px-3 py-3">User</th>
+                                    <th class="w-[18%] px-3 py-3">Nominal</th>
+                                    <th class="w-[14%] px-3 py-3 text-center">Tipe</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
+                                @forelse(collect($globalWalletLogs ?? [])->take(5) as $log)
+                                    <?php $logMeta = $walletLogMeta($log); ?>
                                     <tr class="transition hover:bg-[#fffdf7] group">
                                         <td class="px-3 py-3 min-w-0">
                                             <p class="whitespace-nowrap text-xs font-black text-[#2b3a67] xl:text-sm">{{ $log->invoice_number ?? '-' }}</p>
-                                            <p class="mt-0.5 whitespace-nowrap text-[9px] font-bold text-[#8faaf3] uppercase tracking-wider">{{ optional($log->created_at)->diffForHumans() ?? '-' }}</p>
                                         </td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-bold text-[#8faaf3] xl:text-sm">{{ $formatDashboardTime($log->created_at) }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67] xl:text-sm">{{ $log->user->name ?? 'Deleted' }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black xl:text-sm {{ $log->type === 'purchase' ? 'text-[#ff6b6b]' : 'text-emerald-500' }}">
                                             {{ $log->type === 'purchase' ? '-' : '+' }} Rp {{ number_format($log->amount, 0, ',', '.') }}
@@ -653,8 +748,8 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="px-4 py-10 text-center">
-                                            <span class="text-3xl opacity-50 block mb-2">📁</span>
+                                        <td colspan="5" class="px-4 py-10 text-center">
+                                            @include('partials.wiboost-icon', ['name' => 'wallet', 'class' => 'mx-auto mb-2 h-9 w-9 text-[#d99b16] opacity-60'])
                                             <p class="text-sm font-black text-[#2b3a67]">Belum ada mutasi saldo.</p>
                                         </td>
                                     </tr>
@@ -664,48 +759,87 @@
                     </div>
                 </div>
             </article>
+            @endif
         </section>
+        @endif
 
-        <section class="mt-6 sm:mt-8 overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
-            <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 sm:px-6 py-5 sm:py-6 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3] mb-1">Kontak Admin</p>
-                    <h3 class="text-xl sm:text-2xl font-black tracking-tight text-[#2b3a67]">Nomor WhatsApp Aktif</h3>
-                </div>
-                <div class="grid grid-cols-2 gap-2 text-[9px] font-black uppercase tracking-widest text-[#5a76c8] sm:text-[10px]">
-                    <span class="min-w-0 rounded-full border-2 border-white bg-[#f4f9ff] px-3 py-2 text-center shadow-sm sm:px-4">CS: {{ filled($adminCsWhatsapp ?? null) ? '+' . $adminCsWhatsapp : '-' }}</span>
-                    <span class="min-w-0 rounded-full border-2 border-white bg-[#f4f9ff] px-3 py-2 text-center shadow-sm sm:px-4">OTP: {{ filled($adminOtpWhatsapp ?? null) ? '+' . $adminOtpWhatsapp : '-' }}</span>
-                </div>
-            </div>
-
-            <form action="{{ route('admin.dashboard.contact-numbers.update') }}" method="POST" class="p-4 sm:p-6 md:p-8">
-                @csrf
-                <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <div class="rounded-[1.6rem] border-4 border-white bg-[#f8fbff] p-4 shadow-inner">
-                        <label for="admin_cs_whatsapp" class="mb-2 ml-2 block text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">Nomor Admin CS</label>
-                        <input id="admin_cs_whatsapp" type="text" name="admin_cs_whatsapp" value="{{ old('admin_cs_whatsapp', $adminCsWhatsapp ?? '') }}" placeholder="0895611244000" class="w-full rounded-[1.25rem] border-4 border-white bg-white px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]">
-                        <p class="mt-2 ml-2 text-[10px] font-bold text-[#8faaf3]">Dipakai untuk icon WhatsApp kanan bawah dan laporan bantuan.</p>
-                        @error('admin_cs_whatsapp')
-                            <p class="mt-2 ml-2 text-[10px] font-black text-[#ff6b6b]">{{ $message }}</p>
-                        @enderror
+        @if($showDashboardCommissions || $showDashboardWithdrawals)
+        <section class="grid grid-cols-1 gap-6 sm:mt-8 {{ ($showDashboardCommissions && $showDashboardWithdrawals) ? 'xl:grid-cols-2' : 'xl:grid-cols-1' }}">
+            @if($showDashboardCommissions)
+            <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:rounded-[2.5rem]">
+                <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f6fffb] px-5 py-5 sm:px-6 md:flex-row md:items-center md:justify-between">
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500">Ringkasan Komisi</p>
+                        <h3 class="mt-1 text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Komisi Reseller</h3>
                     </div>
+                    <a href="{{ route('admin.commissions.index') }}" class="inline-flex w-full shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform hover:scale-105 active:scale-95 md:w-auto">
+                        Lihat Semua
+                    </a>
+                </div>
+                <div class="table-scroll w-full overflow-x-auto p-4 pb-2 sm:p-5 sm:pb-3">
+                    <table class="min-w-[820px] w-full table-auto text-left">
+                        <thead>
+                            <tr class="text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">
+                                <th class="w-[28%] px-3 py-3">Invoice</th>
+                                <th class="w-[18%] px-3 py-3">Waktu</th>
+                                <th class="w-[28%] px-3 py-3">Reseller</th>
+                                <th class="w-[18%] px-3 py-3">Komisi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
+                            @forelse(collect($latestIncomeCommissions ?? [])->take(5) as $commission)
+                                <tr class="transition hover:bg-[#f8faff] group">
+                                    <td class="px-3 py-3 min-w-0">
+                                        <p class="whitespace-nowrap text-xs font-black text-[#2b3a67] xl:text-sm">{{ $commission['invoice'] ?? '-' }}</p>
+                                    </td>
+                                    <td class="px-3 py-3">
+                                        <p class="whitespace-nowrap text-xs font-bold text-[#8faaf3] xl:text-sm">{{ $commission['time'] ?? '-' }}</p>
+                                    </td>
+                                    <td class="px-3 py-3">
+                                        <p class="whitespace-nowrap text-xs font-black text-[#2b3a67] xl:text-sm">{{ $commission['reseller'] ?? '-' }}</p>
+                                    </td>
+                                    <td class="px-3 py-3">
+                                        <p class="whitespace-nowrap text-sm font-black text-[#4bc6b9]">+ Rp {{ number_format($commission['amount'] ?? 0, 0, ',', '.') }}</p>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="px-4 py-10 text-center">
+                                        @include('partials.wiboost-icon', ['name' => 'cash', 'class' => 'mx-auto h-10 w-10 text-[#5a76c8]'])
+                                        <p class="mt-3 text-sm font-black text-[#8faaf3]">Belum ada komisi masuk.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+            @endif
 
-                    <div class="rounded-[1.6rem] border-4 border-white bg-[#f8fbff] p-4 shadow-inner">
-                        <label for="admin_otp_whatsapp" class="mb-2 ml-2 block text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">Nomor Admin OTP</label>
-                        <input id="admin_otp_whatsapp" type="text" name="admin_otp_whatsapp" value="{{ old('admin_otp_whatsapp', $adminOtpWhatsapp ?? '') }}" placeholder="0895611244000" class="w-full rounded-[1.25rem] border-4 border-white bg-white px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]">
-                        <p class="mt-2 ml-2 text-[10px] font-bold text-[#8faaf3]">Dipakai khusus tombol minta OTP di detail pesanan user.</p>
-                        @error('admin_otp_whatsapp')
-                            <p class="mt-2 ml-2 text-[10px] font-black text-[#ff6b6b]">{{ $message }}</p>
-                        @enderror
+            @if($showDashboardWithdrawals)
+            <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:rounded-[2.5rem]">
+                <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#fffdf7] px-5 py-5 sm:px-6 md:flex-row md:items-center md:justify-between">
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500">Ringkasan Penarikan</p>
+                        <h3 class="mt-1 text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Penarikan Komisi</h3>
+                    </div>
+                    <a href="{{ route('admin.withdrawals.index') }}" class="inline-flex w-full shrink-0 items-center justify-center rounded-full border-2 border-white bg-amber-500 px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-amber-500/20 transition-transform hover:scale-105 active:scale-95 md:w-auto">
+                        Lihat Semua
+                    </a>
+                </div>
+                <div class="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 sm:p-6">
+                    <div class="rounded-[1.5rem] border-2 border-white bg-[#f8fbff] p-4 shadow-inner">
+                        <p class="text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">Jumlah Pengajuan Penarikan</p>
+                        <p class="mt-2 text-2xl font-black text-[#2b3a67]">{{ number_format($withdrawalSummary['count'] ?? 0, 0, ',', '.') }}</p>
+                    </div>
+                    <div class="rounded-[1.5rem] border-2 border-white bg-[#f6fffb] p-4 shadow-inner">
+                        <p class="text-[9px] font-black uppercase tracking-widest text-emerald-500">Total Pengajuan Penarikan</p>
+                        <p class="mt-2 text-xl font-black text-[#4bc6b9]">Rp {{ number_format($withdrawalSummary['amount'] ?? 0, 0, ',', '.') }}</p>
                     </div>
                 </div>
-
-                <div class="mt-5 flex justify-end">
-                    <button type="submit" class="inline-flex w-full items-center justify-center rounded-full border-4 border-white bg-[#5a76c8] px-7 py-3 text-sm font-black text-white shadow-lg shadow-[#5a76c8]/25 transition-transform active:scale-95 sm:w-auto">
-                        Simpan Nomor Admin
-                    </button>
-                </div>
-            </form>
+            </article>
+            @endif
         </section>
+        @endif
     </div>
 @endsection

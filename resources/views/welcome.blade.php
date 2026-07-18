@@ -12,6 +12,18 @@
     @include('partials.ui-performance-tuning')
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+         html {
+             scrollbar-color: #bde0fe #f4f9ff;
+             scrollbar-width: thin;
+         }
+         ::-webkit-scrollbar { width: 8px; height: 8px; }
+         ::-webkit-scrollbar-track { background: #f4f9ff; }
+         ::-webkit-scrollbar-thumb {
+             background: #bde0fe;
+             border: 2px solid #f4f9ff;
+             border-radius: 999px;
+         }
+         ::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
          body { font-family: 'Nunito', sans-serif; }
          .bg-wiboost-sky { background: linear-gradient(180deg, #bde0fe 0%, #e0fbfc 100%); }
          .bg-wiboost-card { background-color: rgba(255, 255, 255, 0.9); }

@@ -1,166 +1,257 @@
 @extends('layouts.admin')
 
 @section('title', 'Manajemen Reseller')
-@section('admin_header_subtitle', 'Kelola reseller dan penarikan komisi.')
+@section('admin_header_subtitle', 'Kelola daftar reseller aktif.')
 
 @section('content')
 @php
     $formatRupiah = fn ($value) => 'Rp ' . number_format((float) $value, 0, ',', '.');
-    $statusClass = [
-        'pending' => 'bg-[#fff7e6] text-[#f2a516]',
-        'approved' => 'bg-[#e6fff7] text-[#08a878]',
-        'rejected' => 'bg-[#ffe5e5] text-[#ff6b6b]',
-    ];
 @endphp
 
 <style>
     .table-scroll::-webkit-scrollbar { height: 8px; }
-    .table-scroll::-webkit-scrollbar-track { background: #f0f5ff; border-radius: 999px; }
-    .table-scroll::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 999px; border: 2px solid #f0f5ff; }
-    .admin-reseller-cell {
-        white-space: normal;
+    .table-scroll::-webkit-scrollbar-track { background: #f0f5ff; border-radius: 10px; }
+    .table-scroll::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; border: 2px solid #f0f5ff; }
+    .table-scroll::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
+    .admin-detail-modal {
+        display: none;
+        background: rgba(43, 58, 103, .58) !important;
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+        overflow: hidden;
+        overscroll-behavior: contain;
+        inset: 0 !important;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 7rem .85rem 1rem;
+    }
+    @media (min-width: 640px) {
+        .admin-detail-modal { padding: 7.25rem 1.5rem 1.25rem; }
+    }
+    @media (min-width: 1280px) {
+        .admin-detail-modal {
+            padding-top: 7.5rem;
+            padding-left: 26rem;
+            padding-right: 2rem;
+        }
+    }
+    @media (max-width: 639px) {
+        .admin-detail-modal { padding-top: 8rem; }
+    }
+    .admin-detail-modal.modal-active {
+        display: flex;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+    .admin-detail-modal.modal-active .admin-detail-card { transform: scale(1) !important; }
+    .admin-detail-card {
+        width: min(100%, 52rem);
+        max-height: calc(100dvh - 9rem) !important;
+        overflow: hidden;
         overflow-wrap: anywhere;
         word-break: break-word;
     }
+    .admin-detail-card * { min-width: 0; }
+    .admin-detail-card p,
+    .admin-detail-card h3,
+    .admin-detail-card span {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    .admin-detail-header {
+        border-bottom: 3px dashed #f4f9ff;
+        padding: 0 0 .85rem 0;
+    }
+    .admin-detail-panel {
+        overflow: hidden;
+        border-radius: 1.2rem;
+        border: 1px solid #eaf2ff;
+        background: #f8faff;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+        padding: .85rem 1rem;
+    }
+    .admin-detail-panel-soft {
+        border-color: #fff1d6;
+        background: #fffdf7;
+    }
+    .admin-detail-body {
+        min-height: 0;
+        flex: 1 1 auto;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-right: .9rem;
+        padding-bottom: .25rem;
+        scrollbar-color: #bde0fe transparent;
+        scrollbar-width: thin;
+        scrollbar-gutter: stable both-edges;
+    }
+    .admin-detail-body::-webkit-scrollbar { width: 8px; }
+    .admin-detail-body::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 999px;
+        margin: .75rem 0;
+    }
+    .admin-detail-body::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #d8ecff, #8faaf3);
+        border: 2px solid #ffffff;
+        border-radius: 999px;
+    }
+    .admin-detail-close {
+        box-shadow: 0 10px 22px rgba(255, 107, 107, .14), inset 0 1px 0 rgba(255,255,255,.85);
+    }
 </style>
 
-<div class="wiboost-font pb-12">
+<div class="wiboost-font relative z-10 w-full min-w-0 pb-12">
+    <div class="relative z-10 mb-6 flex w-full min-w-0 flex-col gap-3 sm:mb-8 sm:gap-4">
+        <div class="min-w-0 rounded-[2rem] border-4 border-white bg-white/90 p-3 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm transition-transform duration-300 hover:border-[#bde0fe] sm:rounded-[2.5rem] sm:p-4">
+            <form action="{{ route('admin.resellers.index') }}" method="GET" class="flex w-full items-center gap-2 sm:gap-3">
+                <input
+                    type="text"
+                    name="search"
+                    value="{{ $search ?? request('search') }}"
+                    class="min-w-0 flex-1 truncate rounded-[1.2rem] border-4 border-white bg-[#f4f9ff] px-5 py-3 text-xs font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe] sm:rounded-[1.5rem] sm:px-6 sm:py-4 sm:text-sm"
+                    placeholder="Cari Reseller"
+                >
+
+                <button type="submit" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#5a76c8] text-xs font-black text-white shadow-md shadow-[#5a76c8]/25 transition-transform hover:bg-[#4760a9] active:scale-95 sm:rounded-[1.2rem]" title="Cari Reseller">
+                    Cari
+                </button>
+
+                @if(request('search'))
+                    <a href="{{ route('admin.resellers.index') }}" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#ffe5e5] text-xs font-black text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform hover:bg-[#ffcccc] active:scale-95 sm:rounded-[1.2rem]" title="Reset Pencarian">
+                        X
+                    </a>
+                @endif
+            </form>
+        </div>
+    </div>
+
     @if(session('success'))
-        <div class="mb-6 rounded-[1.5rem] border-4 border-[#d9fff5] bg-[#e9fff8] px-6 py-4 text-sm font-black text-[#08a878] shadow-sm">
-            {{ session('success') }}
+        <div class="relative z-10 mb-6 flex w-full items-center gap-3 rounded-[2rem] border-4 border-white bg-[#e6fff7] px-5 py-4 text-sm font-black text-emerald-500 shadow-lg shadow-emerald-100/50 sm:mb-8 sm:px-6 sm:text-base">
+            <span class="text-2xl drop-shadow-sm sm:text-3xl">OK</span>
+            <p>{{ session('success') }}</p>
         </div>
     @endif
 
     @if(session('error'))
-        <div class="mb-6 rounded-[1.5rem] border-4 border-[#ffe5e5] bg-[#fff3f3] px-6 py-4 text-sm font-black text-[#ff6b6b] shadow-sm">
-            {{ session('error') }}
+        <div class="relative z-10 mb-6 flex w-full items-center gap-3 rounded-[2rem] border-4 border-white bg-[#ffe5e5] px-5 py-4 text-sm font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 sm:mb-8 sm:px-6 sm:text-base">
+            <span class="text-2xl drop-shadow-sm sm:text-3xl">!</span>
+            <p>{{ session('error') }}</p>
         </div>
     @endif
 
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/25">
-            <p class="text-xs font-black uppercase tracking-[0.22em] text-[#8faaf3]">Reseller Aktif</p>
-            <p class="mt-3 text-4xl font-black text-[#2b3a67]">{{ $resellers->count() }}</p>
-        </div>
-        <div class="rounded-[2rem] border-4 border-white bg-[#ede9fe] p-6 shadow-xl shadow-[#8b5cf6]/15">
-            <p class="text-xs font-black uppercase tracking-[0.22em] text-[#8b5cf6]">Reseller Jadi Member</p>
-            <p class="mt-3 text-4xl font-black text-[#8b5cf6]">{{ $memberUpgrades ?? 0 }}</p>
-        </div>
-        <div class="rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/25">
-            <p class="text-xs font-black uppercase tracking-[0.22em] text-[#8faaf3]">Penarikan Pending</p>
-            <p class="mt-3 text-4xl font-black text-[#f2a516]">{{ $pendingWithdrawals->count() }}</p>
-        </div>
-        <div class="rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/25">
-            <p class="text-xs font-black uppercase tracking-[0.22em] text-[#8faaf3]">Komisi Tercatat</p>
-            <p class="mt-3 text-4xl font-black text-[#4bc6b9]">{{ $formatRupiah($resellers->sum('total_income')) }}</p>
+    <div class="relative z-10 flex w-full min-w-0 flex-col overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:rounded-[2.5rem]">
+        <div class="table-scroll w-full overflow-x-auto pb-2">
+            <div class="inline-block min-w-full p-4 align-middle sm:p-6">
+                <table class="w-full min-w-[760px] whitespace-nowrap text-left">
+                    <thead>
+                        <tr>
+                            <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nama & Email</th>
+                            <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nomor Kontak</th>
+                            <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Tujuan Penarikan</th>
+                            <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Total Komisi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
+                        @forelse($resellers as $reseller)
+                            <tr onclick="openAdminResellerDetail('admin-reseller-detail-{{ $reseller->id }}')" class="group cursor-pointer transition-colors hover:bg-[#f8faff]">
+                                <td class="min-w-[300px] px-5 py-4 align-middle sm:py-5">
+                                    <p class="mb-1 whitespace-nowrap text-sm font-black text-[#2b3a67]">{{ $reseller->name }}</p>
+                                    <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-3 py-1 text-[10px] font-bold text-[#8faaf3] sm:text-[11px]">{{ $reseller->email }}</p>
+                                </td>
+                                <td class="px-5 py-4 align-middle sm:py-5">
+                                    <p class="text-sm font-black text-[#5a76c8]">{{ $reseller->whatsapp ?? '-' }}</p>
+                                </td>
+                                <td class="px-5 py-4 align-middle sm:py-5">
+                                    <p class="text-sm font-black text-[#2b3a67]">{{ $reseller->reseller_payout_method ?: '-' }}</p>
+                                    <p class="mt-1 inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-3 py-1 text-[10px] font-bold text-[#8faaf3] sm:text-[11px]">{{ $reseller->reseller_payout_account ?: '-' }}</p>
+                                </td>
+                                <td class="px-5 py-4 align-middle sm:py-5">
+                                    <p class="text-sm font-black text-[#4bc6b9] sm:text-base">{{ $formatRupiah($reseller->total_income) }}</p>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="px-5 py-16 text-center">
+                                    <div class="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-[2rem] border-4 border-white bg-[#f0f5ff] shadow-inner sm:mb-5 sm:h-24 sm:w-24 sm:rounded-[2.5rem]">
+                                        <span class="text-4xl font-black text-[#5a76c8] sm:text-5xl">?</span>
+                                    </div>
+                                    <p class="text-lg font-black text-[#5a76c8] sm:text-xl">Belum ada reseller aktif.</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <section class="mt-8 rounded-[2rem] border-4 border-white bg-white p-5 shadow-xl shadow-[#bde0fe]/25 sm:p-7">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <p class="inline-flex rounded-full border-2 border-white bg-[#e0fbfc] px-5 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-[#4bc6b9] shadow-sm">Konfirmasi</p>
-                <h2 class="mt-3 text-2xl font-black text-[#2b3a67]">Penarikan Komisi</h2>
-            </div>
-            <a href="{{ route('admin.commissions.index') }}" class="rounded-full border-4 border-white bg-[#5a76c8] px-5 py-3 text-sm font-black text-white shadow-lg shadow-[#5a76c8]/25 transition active:scale-95">Halaman Komisi</a>
-        </div>
+    @foreach($resellers as $reseller)
+        <div id="admin-reseller-detail-{{ $reseller->id }}" class="admin-detail-modal fixed z-[9999] items-center justify-center opacity-0 pointer-events-none transition-all duration-200">
+            <div class="absolute inset-0" onclick="closeAdminResellerDetail('admin-reseller-detail-{{ $reseller->id }}')"></div>
+            <div class="admin-detail-card relative flex max-h-[calc(100dvh-8.25rem)] w-full max-w-3xl scale-95 flex-col rounded-[1.75rem] border-4 border-white bg-white p-4 shadow-2xl shadow-[#2b3a67]/20 transition-transform duration-200 sm:p-5">
+                <div class="admin-detail-header mb-3.5 flex items-start justify-between gap-3 p-3.5">
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Detail Reseller</p>
+                        <h3 class="mt-1 text-xl font-black text-[#2b3a67]">{{ $reseller->name }}</h3>
+                    </div>
+                    <button type="button" onclick="closeAdminResellerDetail('admin-reseller-detail-{{ $reseller->id }}')" class="admin-detail-close flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#ffe5e5] text-lg font-black text-[#ff6b6b]">x</button>
+                </div>
 
-        <div class="mt-6 space-y-4">
-            @forelse($pendingWithdrawals as $withdrawal)
-                <div class="rounded-[1.75rem] border-4 border-[#f4f9ff] bg-[#fbfdff] p-5">
-                    <div class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
-                        <div class="min-w-0">
-                            <p class="text-lg font-black text-[#2b3a67]">{{ $withdrawal->user?->name ?? '-' }}</p>
-                            <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $withdrawal->user?->email ?? '-' }}</p>
-                            <div class="mt-4 grid gap-3 sm:grid-cols-3">
-                                <div class="rounded-[1.25rem] bg-white px-4 py-3 shadow-sm">
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nominal</p>
-                                    <p class="mt-1 text-lg font-black text-[#4bc6b9]">{{ $formatRupiah($withdrawal->amount) }}</p>
-                                </div>
-                                <div class="rounded-[1.25rem] bg-white px-4 py-3 shadow-sm">
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Tujuan</p>
-                                    <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $withdrawal->payout_method ?: '-' }}</p>
-                                </div>
-                                <div class="rounded-[1.25rem] bg-white px-4 py-3 shadow-sm">
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nomor</p>
-                                    <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $withdrawal->payout_account ?: '-' }}</p>
-                                </div>
-                            </div>
+                <div class="admin-detail-body">
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nama</p>
+                            <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $reseller->name }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Email</p>
+                            <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $reseller->email }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nomor Kontak</p>
+                            <p class="mt-1 text-sm font-black text-[#5a76c8]">{{ $reseller->whatsapp ?? '-' }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Tujuan Penarikan</p>
+                            <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $reseller->reseller_payout_method ?: '-' }}</p>
+                            <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $reseller->reseller_payout_account ?: '-' }}</p>
+                        </div>
+                        <div class="admin-detail-panel md:col-span-2">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Total Komisi</p>
+                            <p class="mt-1 text-2xl font-black text-[#4bc6b9]">{{ $formatRupiah($reseller->total_income) }}</p>
                         </div>
 
-                        <form method="POST" action="{{ route('admin.resellers.withdrawals.update', $withdrawal) }}" class="grid gap-3 sm:grid-cols-[1fr_1fr] lg:w-72">
-                            @csrf
-                            @method('PATCH')
-                            <input type="hidden" name="notes" value="">
-                            <button type="submit" name="status" value="approved" class="rounded-full border-4 border-white bg-[#4bc6b9] px-5 py-3 text-sm font-black text-white shadow-lg shadow-[#4bc6b9]/25 transition active:scale-95">Setujui</button>
-                            <button type="submit" name="status" value="rejected" class="rounded-full border-4 border-white bg-[#ffe5e5] px-5 py-3 text-sm font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/15 transition active:scale-95">Tolak</button>
-                        </form>
                     </div>
                 </div>
-            @empty
-                <p class="rounded-[1.75rem] border-4 border-dashed border-[#d7ecff] bg-[#f8fbff] p-10 text-center text-sm font-black text-[#5a76c8]">Belum ada penarikan komisi yang menunggu konfirmasi.</p>
-            @endforelse
+            </div>
         </div>
-    </section>
-
-    <section class="mt-8 rounded-[2rem] border-4 border-white bg-white p-5 shadow-xl shadow-[#bde0fe]/25 sm:p-7">
-        <h2 class="text-2xl font-black text-[#2b3a67]">Daftar Reseller Aktif</h2>
-        <p class="mt-1 text-xs font-bold text-[#8faaf3]">User yang sudah aktif member tidak dihitung sebagai reseller aktif.</p>
-        <div class="table-scroll mt-5 overflow-x-auto pb-2">
-            <table class="w-full min-w-[820px] text-left">
-                <thead>
-                    <tr class="border-b-4 border-dashed border-[#f4f9ff]">
-                        <th class="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Reseller</th>
-                        <th class="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Tujuan Penarikan</th>
-                        <th class="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Transaksi Sukses</th>
-                        <th class="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Total Komisi</th>
-                        <th class="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Bisa Ditarik</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
-                    @forelse($resellers as $reseller)
-                        <tr>
-                            <td class="admin-reseller-cell px-4 py-4 align-top">
-                                <p class="text-sm font-black text-[#2b3a67]">{{ $reseller->name }}</p>
-                                <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $reseller->email }}</p>
-                            </td>
-                            <td class="admin-reseller-cell px-4 py-4 align-top">
-                                <p class="text-sm font-black text-[#2b3a67]">{{ $reseller->reseller_payout_method ?: '-' }}</p>
-                                <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $reseller->reseller_payout_account ?: '-' }}</p>
-                            </td>
-                            <td class="px-4 py-4 align-top text-sm font-black text-[#5a76c8]">{{ $reseller->total_sales }}</td>
-                            <td class="px-4 py-4 align-top text-sm font-black text-[#4bc6b9]">{{ $formatRupiah($reseller->total_income) }}</td>
-                            <td class="px-4 py-4 align-top text-sm font-black text-[#d99b16]">{{ $formatRupiah($reseller->available_commission) }}</td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="5" class="px-4 py-12 text-center text-sm font-black text-[#5a76c8]">Belum ada reseller aktif.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    <section class="mt-8 rounded-[2rem] border-4 border-white bg-white p-5 shadow-xl shadow-[#bde0fe]/25 sm:p-7">
-        <h2 class="text-2xl font-black text-[#2b3a67]">Riwayat Penarikan</h2>
-        <div class="mt-5 space-y-3">
-            @forelse($withdrawalHistories as $history)
-                <div class="flex flex-col gap-3 rounded-[1.5rem] bg-[#f8fbff] p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="min-w-0">
-                        <p class="text-sm font-black text-[#2b3a67]">{{ $history->user?->name ?? '-' }}</p>
-                        <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $history->created_at?->format('d M Y, H:i') }} - {{ $history->payout_method ?: '-' }} - {{ $history->payout_account ?: '-' }}</p>
-                        @if($history->approver)
-                            <p class="mt-1 text-xs font-bold text-[#8faaf3]">Admin: {{ $history->approver->name }}</p>
-                        @endif
-                    </div>
-                    <div class="flex shrink-0 items-center gap-3">
-                        <span class="rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest {{ $statusClass[$history->status] ?? 'bg-[#f4f9ff] text-[#5a76c8]' }}">{{ $history->display_status }}</span>
-                        <p class="text-sm font-black text-[#ff6b6b]">- {{ $formatRupiah($history->amount) }}</p>
-                    </div>
-                </div>
-            @empty
-                <p class="rounded-[1.75rem] border-4 border-dashed border-[#d7ecff] bg-[#f8fbff] p-10 text-center text-sm font-black text-[#5a76c8]">Riwayat penarikan reseller masih kosong.</p>
-            @endforelse
-        </div>
-    </section>
+    @endforeach
 </div>
+
+<script>
+    function openAdminResellerDetail(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.classList.add('modal-active');
+        document.body.classList.add('overflow-hidden', 'admin-detail-open');
+    }
+
+    function closeAdminResellerDetail(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.classList.remove('modal-active');
+        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+
+        document.querySelectorAll('.admin-detail-modal.modal-active').forEach((modal) => {
+            modal.classList.remove('modal-active');
+        });
+
+        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
+    });
+</script>
 @endsection

@@ -18,46 +18,47 @@
 
 <div class="wiboost-font pb-12 relative z-10 w-full min-w-0">
     <!-- Toolbar: Pencarian & Tombol Tambah -->
-    <div class="mb-6 sm:mb-8 flex flex-col md:flex-row gap-3 sm:gap-4 relative z-10 w-full min-w-0">
+    <div class="relative z-10 mb-10 flex w-full min-w-0 flex-col gap-3 rounded-[2rem] border-4 border-white bg-white/90 p-3 shadow-xl shadow-[#bde0fe]/25 backdrop-blur-sm sm:mb-12 sm:rounded-[2.5rem] sm:p-4 lg:mb-14 lg:flex-row lg:items-center">
         
         <!-- Form Pencarian (Kiri di Desktop / Atas di Mobile) -->
-        <div class="flex-1 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/90 backdrop-blur-sm p-3 sm:p-4 shadow-xl shadow-[#bde0fe]/30 transition-transform duration-300 hover:border-[#bde0fe] min-w-0">
+        <div class="min-w-0 flex-1">
             <form action="{{ route('admin.promos.index') }}" method="GET" class="flex gap-2 sm:gap-3 items-center w-full">
                 <!-- Input Field Tanpa SVG Kiri -->
                 <input type="text" name="search" value="{{ request('search') }}"
                     class="min-w-0 flex-1 rounded-[1.2rem] sm:rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] py-3 sm:py-4 px-5 sm:px-6 font-black text-[#2b3a67] outline-none transition shadow-inner placeholder-[#a3bbfb] focus:border-[#bde0fe] text-xs sm:text-sm truncate"
                     placeholder="Cari judul, badge, deskripsi, atau tema...">
                 
-                <!-- Tombol Cari Emoji -->
-                <button type="submit" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] w-12 h-12 text-white shadow-md shadow-[#5a76c8]/25 transition-transform active:scale-95 hover:bg-[#4760a9] text-base" title="Cari Banner">
-                    🔍
+                <!-- Tombol Cari -->
+                <button type="submit" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] w-12 h-12 text-[0px] text-white shadow-md shadow-[#5a76c8]/25 transition-transform active:scale-95 hover:bg-[#4760a9] text-base" title="Cari Banner">
+                    @include('partials.wiboost-icon', ['name' => 'search', 'class' => 'h-5 w-5'])
                 </button>
                 
-                <!-- Tombol Reset Emoji -->
+                <!-- Tombol Reset -->
                 @if(request('search'))
-                    <a href="{{ route('admin.promos.index') }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:bg-[#ffcccc] text-base" title="Reset Pencarian">
-                        ✖️
+                    <a href="{{ route('admin.promos.index') }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[0px] text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:bg-[#ffcccc] text-base" title="Reset Pencarian">
+                        @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])
                     </a>
                 @endif
             </form>
         </div>
 
         <!-- Tombol Tambah Banner (Kanan di Desktop / Bawah di Mobile) -->
-        <a href="{{ route('admin.promos.create') }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] px-5 py-3 text-sm font-black text-white shadow-md shadow-[#5a76c8]/25 transition-transform active:scale-95 hover:bg-[#4760a9] w-full md:w-auto md:min-w-[190px] md:px-8 md:py-4 md:text-base min-w-0">
-            <span class="text-base">➕</span> Tambah Banner
+        <a href="{{ route('admin.promos.create') }}" class="flex w-full min-w-0 shrink-0 items-center justify-center gap-2 rounded-[1rem] border-4 border-white bg-[#5a76c8] px-5 py-3 text-sm font-black text-white shadow-md shadow-[#5a76c8]/25 transition-transform hover:bg-[#4760a9] active:scale-95 sm:rounded-[1.2rem] lg:w-auto lg:min-w-[190px] lg:px-7">
+            @include('partials.wiboost-icon', ['name' => 'plus', 'class' => 'h-5 w-5'])
+            Tambah Banner
         </a>
     </div>
 
     <!-- Alert Messages (Aman dari 500 Error) -->
     @if(session('success'))
         <div class="mb-6 sm:mb-8 flex items-center gap-3 sm:gap-4 rounded-[2rem] border-4 border-white bg-[#e6fff7] px-5 sm:px-6 py-4 font-black text-emerald-500 shadow-lg shadow-emerald-100/50 relative z-10 text-sm sm:text-base w-full">
-            <span class="text-2xl sm:text-3xl drop-shadow-sm">✅</span>
+            @include('partials.wiboost-icon', ['name' => 'success', 'class' => 'h-6 w-6 shrink-0'])
             <p>{{ session('success') }}</p>
         </div>
     @endif
     @if (session('error'))
         <div class="mb-6 sm:mb-8 flex items-center gap-3 sm:gap-4 rounded-[2rem] border-4 border-white bg-[#ffe5e5] px-5 sm:px-6 py-4 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 relative z-10 text-sm sm:text-base w-full">
-            <span class="text-2xl sm:text-3xl drop-shadow-sm">⚠️</span>
+            @include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'h-6 w-6 shrink-0'])
             <p>{{ session('error') }}</p>
         </div>
     @endif
@@ -95,13 +96,13 @@
                     @endif
                     
                     <div class="flex gap-2 shrink-0">
-                        <a href="{{ route('admin.promos.edit', $promo->id) }}" class="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-[1rem] flex items-center justify-center transition-colors border border-white/30 text-sm sm:text-lg shadow-sm" title="Edit">
-                            ✏️
+                        <a href="{{ route('admin.promos.edit', $promo->id) }}" class="w-8 h-8 sm:w-10 sm:h-10 bg-[#fbbf24] hover:bg-[#d99b16] rounded-[1rem] flex items-center justify-center transition-colors border-2 border-white text-[0px] text-white shadow-md shadow-[#d99b16]/25" style="color:#ffffff;" title="Ubah Banner">
+                            @include('partials.wiboost-icon', ['name' => 'edit', 'class' => 'h-4 w-4'])
                         </a>
                         <form action="{{ route('admin.promos.destroy', $promo->id) }}" method="POST" onsubmit="return confirm('Hapus banner ini secara permanen?');" class="m-0">
                             @csrf @method('DELETE')
-                            <button type="submit" class="w-8 h-8 sm:w-10 sm:h-10 bg-rose-500/80 hover:bg-rose-500 backdrop-blur-md rounded-[1rem] flex items-center justify-center transition-colors border border-rose-400 text-sm sm:text-lg shadow-sm" title="Hapus">
-                                🗑️
+                            <button type="submit" class="w-8 h-8 sm:w-10 sm:h-10 bg-[#ff4d4d] hover:bg-[#e54444] rounded-[1rem] flex items-center justify-center transition-colors border-2 border-white text-[0px] text-white shadow-md shadow-[#ff6b6b]/25" style="color:#ffffff;" title="Buang Banner">
+                                @include('partials.wiboost-icon', ['name' => 'trash', 'class' => 'h-4 w-4'])
                             </button>
                         </form>
                     </div>
@@ -117,16 +118,18 @@
                     </p>
                 </div>
                 
-                <!-- Floating Emoji Decor (Only if no image) -->
+                <!-- Floating Icon Decor (Only if no image) -->
                 @if(empty($promo->image))
-                    <div class="text-6xl sm:text-8xl opacity-30 absolute -right-4 -bottom-4 transform rotate-12 pointer-events-none group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-500 drop-shadow-lg">
-                        {{ $promo->emoji ?? '📢' }}
+                    <div class="absolute -right-4 -bottom-4 transform rotate-12 pointer-events-none text-[0px] opacity-30 drop-shadow-lg transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-6">
+                        @include('partials.wiboost-icon', ['name' => 'image', 'class' => 'h-20 w-20 sm:h-28 sm:w-28 text-white'])
                     </div>
                 @endif
             </div>
         @empty
             <div class="col-span-full text-center py-16 sm:py-20 bg-white/90 backdrop-blur-sm rounded-[2rem] sm:rounded-[2.5rem] border-4 border-dashed border-[#bde0fe] shadow-lg shadow-[#bde0fe]/20">
-                <div class="text-6xl sm:text-7xl mb-4 sm:mb-5 animate-float opacity-50 block">🪧</div>
+                <div class="mb-4 flex justify-center sm:mb-5">
+                    @include('partials.wiboost-icon', ['name' => 'image', 'class' => 'h-14 w-14 text-[#8faaf3] opacity-60 sm:h-16 sm:w-16'])
+                </div>
                 <p class="text-[#5a76c8] font-black text-xl sm:text-2xl drop-shadow-sm">Belum ada banner yang dibuat.</p>
                 <p class="text-[#8faaf3] font-bold mt-2 text-sm sm:text-base">Buat pengumuman pertamamu sekarang!</p>
             </div>

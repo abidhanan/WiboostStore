@@ -15,20 +15,22 @@ class XoftwarePaymentService
     {
         $transaction->loadMissing('product', 'user');
 
-        $productName = $transaction->product?->name ?: 'Pesanan Wiboost';
+        $isMembershipPayment = $transaction->isMembershipPayment();
+        $productName = $transaction->product?->name ?: ($isMembershipPayment ? 'Membership Wiboost 30 Hari' : 'Pesanan Wiboost');
         $paymentUser = $user ?: $transaction->user;
 
         return $this->createPayment(
             merchantRef: $transaction->invoice_number,
             amount: (int) round((float) $transaction->amount),
             note: 'Pembayaran pesanan ' . $productName,
-            returnUrl: $this->publicUrl('user/history'),
-            buyerFeeShareOverride: $paymentUser?->isMember() ? 0.0 : null,
+            returnUrl: $this->publicUrl($isMembershipPayment ? 'user/membership' : 'user/history'),
+            buyerFeeShareOverride: $isMembershipPayment ? $this->membershipBuyerFeeShare() : ($paymentUser?->isMember() ? 0.0 : null),
+            feeDirectionOverride: $isMembershipPayment ? 'merchant' : null,
             metadata: $this->paymentMetadata(
                 user: $paymentUser,
                 productCode: (string) ($transaction->product?->provider_product_id ?: $transaction->product_id ?: $transaction->invoice_number),
                 productName: $productName,
-                productUrl: $this->publicUrl('user/history'),
+                productUrl: $this->publicUrl($isMembershipPayment ? 'user/membership' : 'user/history'),
             ),
         );
     }

@@ -12,6 +12,28 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    public const ROLE_SUPER_ADMIN = 1;
+    public const ROLE_BUYER = 2;
+    public const ROLE_RESELLER = 3;
+    public const ROLE_FINANCE = 4;
+    public const ROLE_LEGACY_BUYER = 5;
+    public const ROLE_WAREHOUSE = 6;
+    public const ROLE_MARKETING = 7;
+    public const ROLE_CUSTOMER_SERVICE = 8;
+
+    public const ADMIN_ROLE_IDS = [
+        self::ROLE_SUPER_ADMIN,
+        self::ROLE_FINANCE,
+        self::ROLE_WAREHOUSE,
+        self::ROLE_MARKETING,
+        self::ROLE_CUSTOMER_SERVICE,
+    ];
+
+    public const BUYER_ROLE_IDS = [
+        self::ROLE_BUYER,
+        self::ROLE_LEGACY_BUYER,
+    ];
+
     protected $fillable = [
         'name',
         'email',
@@ -47,22 +69,53 @@ class User extends Authenticatable
 
     public function isAdmin()
     {
-        return (int) $this->role_id === 1; 
+        return in_array((int) $this->role_id, self::ADMIN_ROLE_IDS, true); 
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return (int) $this->role_id === self::ROLE_SUPER_ADMIN;
     }
 
     public function isBuyer()
     {
-        return (int) $this->role_id === 2; 
+        return in_array((int) $this->role_id, self::BUYER_ROLE_IDS, true); 
     }
 
     public function isReseller(): bool
     {
-        return (int) $this->role_id === 3 && ! $this->isMember();
+        return (int) $this->role_id === self::ROLE_RESELLER && ! $this->isMember();
     }
 
     public function isMember(): bool
     {
-        return $this->membership_expires_at !== null && $this->membership_expires_at->isFuture();
+        return in_array((int) $this->role_id, [self::ROLE_BUYER, self::ROLE_RESELLER, self::ROLE_LEGACY_BUYER], true)
+            && $this->membership_expires_at !== null
+            && $this->membership_expires_at->isFuture();
+    }
+
+    public static function baseRoleLabels(): array
+    {
+        return [
+            self::ROLE_SUPER_ADMIN => 'Super Admin',
+            self::ROLE_BUYER => 'Buyer',
+            self::ROLE_RESELLER => 'Reseller',
+            self::ROLE_FINANCE => 'Keuangan',
+            self::ROLE_LEGACY_BUYER => 'Buyer',
+            self::ROLE_WAREHOUSE => 'Gudang',
+            self::ROLE_MARKETING => 'Marketing',
+            self::ROLE_CUSTOMER_SERVICE => 'Customer Service',
+        ];
+    }
+
+    public function baseRoleLabel(): string
+    {
+        return self::baseRoleLabels()[(int) $this->role_id] ?? 'Buyer';
+    }
+
+    public function effectiveRoleLabel(): string
+    {
+        return $this->isMember() ? 'Member' : $this->baseRoleLabel();
     }
 
     public function syncExpiredMembershipRole(): bool
@@ -93,7 +146,7 @@ class User extends Authenticatable
     public function activateMembership(int $days = 30): void
     {
         $base = $this->isMember() ? $this->membership_expires_at->copy() : now();
-        $roleId = in_array((int) $this->role_id, [2, 3], true) ? (int) $this->role_id : 2;
+        $roleId = in_array((int) $this->role_id, [self::ROLE_BUYER, self::ROLE_RESELLER], true) ? (int) $this->role_id : self::ROLE_BUYER;
 
         $this->forceFill([
             'role_id' => $roleId,

@@ -43,9 +43,13 @@ class AdminReportController extends Controller
         $validated = $request->validate([
             'category_key' => ['required', 'string', Rule::in($categories->pluck('key')->all())],
             'issue' => 'required|string|min:5|max:2000',
-            'record_id' => 'nullable|string|max:100',
+            'record_id' => 'required|string|max:100',
             'proof' => 'required|file|mimes:jpg,jpeg,png,webp,gif,heic,heif|max:12288',
         ], [
+            'category_key.required' => 'Pilih jenis kendala terlebih dahulu.',
+            'issue.required' => 'Tulis kendala terlebih dahulu.',
+            'record_id.required' => 'Pilih riwayat pesanan terlebih dahulu.',
+            'proof.required' => 'Upload bukti kendala terlebih dahulu.',
             'proof.uploaded' => 'Bukti kendala gagal diupload. Coba pilih gambar yang lebih kecil atau screenshot baru.',
             'proof.mimes' => 'Bukti kendala harus berupa gambar JPG, PNG, WEBP, GIF, HEIC, atau HEIF.',
             'proof.max' => 'Bukti kendala maksimal 12 MB.',
@@ -55,15 +59,9 @@ class AdminReportController extends Controller
             ?? $categories->firstWhere('key', 'umum');
         $records = $this->recordsFor($selectedCategory);
 
-        if (($selectedCategory['needs_record'] ?? false) && $records->isNotEmpty() && blank($validated['record_id'] ?? null)) {
-            return back()
-                ->withInput()
-                ->withErrors(['record_id' => 'Pilih data deposit atau pesanan yang bermasalah dulu ya.']);
-        }
-
         $selectedRecord = $records->firstWhere('id', $validated['record_id'] ?? null);
 
-        if (($selectedCategory['needs_record'] ?? false) && $records->isNotEmpty() && ! $selectedRecord) {
+        if (! $selectedRecord) {
             return back()
                 ->withInput()
                 ->withErrors(['record_id' => 'Data yang dipilih tidak ditemukan. Pilih ulang dari daftar yang tersedia.']);
@@ -161,16 +159,12 @@ class AdminReportController extends Controller
             ['key' => 'game', 'label' => 'Top Up Game', 'record_type' => 'top-up-game', 'needs_record' => true],
             ['key' => 'data', 'label' => 'Paket Data', 'record_type' => 'paket-data', 'needs_record' => true],
             ['key' => 'premium', 'label' => 'Aplikasi Premium', 'record_type' => 'aplikasi-premium', 'needs_record' => true],
-            ['key' => 'umum', 'label' => 'Umum', 'record_type' => 'general', 'needs_record' => false],
+            ['key' => 'umum', 'label' => 'Umum', 'record_type' => 'general', 'needs_record' => true],
         ];
     }
 
     protected function recordsFor(array $category)
     {
-        if (! ($category['needs_record'] ?? false)) {
-            return collect();
-        }
-
         if (($category['key'] ?? null) === 'deposit') {
             return Deposit::query()
                 ->where('user_id', auth()->id())
@@ -230,7 +224,8 @@ class AdminReportController extends Controller
                     'loginProofUrl' => $transaction->login_proof_path ? url(Storage::url($transaction->login_proof_path)) : null,
                 ];
             })
-            ->filter(fn (array $record) => $record['categoryKey'] === ($category['record_type'] ?? null))
+            ->filter(fn (array $record) => ($category['record_type'] ?? null) === 'general'
+                || $record['categoryKey'] === ($category['record_type'] ?? null))
             ->values();
     }
 

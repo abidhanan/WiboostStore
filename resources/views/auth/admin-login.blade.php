@@ -68,7 +68,7 @@
             </label>
 
             <button type="submit" class="flex w-full items-center justify-center rounded-full border-4 border-white bg-[#5a76c8] px-5 py-4 text-base font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform hover:bg-[#4760a9] active:scale-95">
-                Masuk Sebagai Admin
+                Masuk Sekarang
             </button>
         </form>
         

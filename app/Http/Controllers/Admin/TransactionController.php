@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Deposit;
 use App\Models\Transaction;
 use App\Services\OrderFulfillmentService;
 use App\Services\TransactionPaymentSyncService;
@@ -12,6 +13,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class TransactionController extends Controller
@@ -22,13 +24,27 @@ class TransactionController extends Controller
             return $this->refreshProviderStatusesFromIndex($request);
         }
 
+        $this->syncMembershipDepositsToTransactions();
+
         foreach (Transaction::whereIn('payment_status', ['unpaid', 'pending'])->get() as $transaction) {
             $paymentSyncService->expireIfPastDue($transaction);
         }
 
         // Pastikan memuat relasi product.category agar bisa mengecek slug kategori
         $query = Transaction::with(['user', 'product.category.parent.parent.parent'])->latest();
-        $query->whereHas('product', fn ($productQuery) => $productQuery->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()));
+        $query->where(function ($transactionQuery) {
+            $transactionQuery->where('invoice_number', 'like', 'MEM-%')
+                ->orWhere('target_data', 'like', '%Membership Wiboost%')
+                ->orWhere('response_data', 'like', '%membership%')
+                ->orWhereHas('product', fn ($productQuery) => $productQuery->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()));
+        });
+        $transactionFilter = (string) $request->query('transaction_filter', 'all');
+        $allowedTransactionFilters = ['all', 'pending', 'processing', 'success', 'failed'];
+
+        if (! in_array($transactionFilter, $allowedTransactionFilters, true)) {
+            $transactionFilter = 'all';
+        }
+
         // 1. Pencarian
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
@@ -60,10 +76,86 @@ class TransactionController extends Controller
         $query->whereMonth('created_at', $selectedMonth)
               ->whereYear('created_at', $selectedYear);
 
+        if ($transactionFilter !== 'all') {
+            $query->where('order_status', $transactionFilter);
+        }
+
         // Pagination
         $transactions = $query->paginate(20)->appends($request->all());
 
-        return view('admin.transactions.index', compact('transactions', 'selectedMonth', 'selectedYear'));
+        return view('admin.transactions.index', compact('transactions', 'selectedMonth', 'selectedYear', 'transactionFilter'));
+    }
+
+    protected function syncMembershipDepositsToTransactions(): void
+    {
+        if (! Schema::hasTable('deposits') || ! Schema::hasTable('transactions')) {
+            return;
+        }
+
+        Deposit::query()
+            ->where(function ($query) {
+                $query->where('invoice_number', 'like', 'MEM-%')
+                    ->orWhere('payment_response', 'like', '%membership%');
+            })
+            ->whereNotIn('invoice_number', Transaction::query()->select('invoice_number'))
+            ->oldest('id')
+            ->chunkById(100, function ($deposits) {
+                foreach ($deposits as $deposit) {
+                    $paymentStatus = match ((string) $deposit->payment_status) {
+                        'paid' => 'paid',
+                        'failed' => 'failed',
+                        default => 'unpaid',
+                    };
+                    $orderStatus = match ($paymentStatus) {
+                        'paid' => 'success',
+                        'failed' => 'failed',
+                        default => 'pending',
+                    };
+                    $paidAmount = (float) ($deposit->paid_amount ?: 0);
+
+                    $transaction = Transaction::firstOrCreate(
+                        ['invoice_number' => $deposit->invoice_number],
+                        [
+                            'user_id' => $deposit->user_id,
+                            'product_id' => null,
+                            'amount' => (float) $deposit->amount,
+                            'paid_amount' => $paymentStatus === 'paid'
+                                ? ($paidAmount > 0 ? $paidAmount : $deposit->tripay_total_payable)
+                                : null,
+                            'target_data' => 'Membership Wiboost 30 Hari',
+                            'order_input_data' => [
+                                'fields' => [
+                                    [
+                                        'name' => 'membership_period',
+                                        'label' => 'Masa Membership',
+                                        'value' => data_get($deposit->payment_response, 'membership_days', 30) . ' Hari',
+                                        'target_summary' => true,
+                                    ],
+                                ],
+                            ],
+                            'target_notes' => $paymentStatus === 'paid'
+                                ? 'Membership Wiboost 30 hari berhasil aktif.'
+                                : 'Pembayaran membership Wiboost 30 hari.',
+                            'response_data' => array_merge($deposit->payment_response ?? [], [
+                                'purpose' => 'membership',
+                                'membership_days' => (int) data_get($deposit->payment_response, 'membership_days', 30),
+                                'source_deposit_id' => $deposit->id,
+                            ]),
+                            'payment_status' => $paymentStatus,
+                            'order_status' => $orderStatus,
+                            'payment_method' => $deposit->payment_method ?: 'tripay',
+                            'snap_token' => $deposit->payment_url,
+                        ]
+                    );
+
+                    if ($transaction->wasRecentlyCreated) {
+                        $transaction->forceFill([
+                            'created_at' => $deposit->created_at,
+                            'updated_at' => $deposit->updated_at,
+                        ])->saveQuietly();
+                    }
+                }
+            });
     }
 
     public function updateStatus(Request $request, $id, OrderFulfillmentService $orderFulfillmentService)
@@ -155,7 +247,10 @@ class TransactionController extends Controller
             $transactions = Transaction::with(['user', 'product'])
                 ->where('payment_status', 'paid')
                 ->where('order_status', 'success')
-                ->whereHas('product', fn ($productQuery) => $productQuery->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
+                ->where(function ($transactionQuery) {
+                    $transactionQuery->where('invoice_number', 'like', 'MEM-%')
+                        ->orWhereHas('product', fn ($productQuery) => $productQuery->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()));
+                })
                 ->whereMonth('created_at', $month)
                 ->whereYear('created_at', $year)
                 ->latest()
@@ -194,7 +289,10 @@ class TransactionController extends Controller
             $transactions = Transaction::with(['user', 'product'])
                 ->where('payment_status', 'paid')
                 ->where('order_status', 'success')
-                ->whereHas('product', fn ($productQuery) => $productQuery->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
+                ->where(function ($transactionQuery) {
+                    $transactionQuery->where('invoice_number', 'like', 'MEM-%')
+                        ->orWhereHas('product', fn ($productQuery) => $productQuery->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()));
+                })
                 ->whereMonth('created_at', $month)
                 ->whereYear('created_at', $year)
                 ->latest()

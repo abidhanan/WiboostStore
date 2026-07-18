@@ -293,7 +293,7 @@
             <p class="mt-2 text-sm font-bold text-[#8faaf3]">Hubungi admin website untuk melengkapi konfigurasi kontak.</p>
         </section>
     @else
-        <form method="POST" action="{{ route('user.report.admin.store') }}" enctype="multipart/form-data" class="report-form space-y-6" onsubmit="return lockAdminReportSubmit(this, event)">
+        <form method="POST" action="{{ route('user.report.admin.store') }}" enctype="multipart/form-data" class="report-form space-y-6" novalidate onsubmit="return lockAdminReportSubmit(this, event)">
             @csrf
             <input type="hidden" name="category_key" value="{{ $selectedKey }}">
 
@@ -301,7 +301,7 @@
                 <div class="report-main-column space-y-6">
                     <section class="rounded-[2.5rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/25 md:p-6">
                         <label for="issue" class="mb-3 ml-1 block text-xs font-black uppercase tracking-widest text-[#5a76c8]">Tulis Kendala</label>
-                        <textarea id="issue" name="issue" rows="8" class="w-full rounded-[2rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 text-sm font-bold leading-relaxed text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]" placeholder="Cth: Saldo belum masuk, pesanan belum sukses, atau ada error di halaman website.">{{ old('issue') }}</textarea>
+                        <textarea id="issue" name="issue" rows="8" required minlength="5" class="w-full rounded-[2rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 text-sm font-bold leading-relaxed text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]" placeholder="Cth: Saldo belum masuk, pesanan belum sukses, atau ada error di halaman website.">{{ old('issue') }}</textarea>
                     </section>
 
                     <section class="rounded-[2.5rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/25 md:p-6">
@@ -340,7 +340,7 @@
                             @if($records->isEmpty())
                                 <div class="report-record-empty rounded-[2rem] border-4 border-dashed border-[#bde0fe] bg-[#f4f9ff] p-6 text-center">
                                     <p class="text-sm font-black text-[#5a76c8]">Belum ada data terkait yang bisa dipilih.</p>
-                                    <p class="mt-2 text-xs font-bold text-[#8faaf3]">Kamu tetap bisa mengirim laporan dengan menjelaskan kendalanya.</p>
+                                    <p class="mt-2 text-xs font-bold text-[#8faaf3]">Pilih jenis kendala lain yang memiliki riwayat pesanan atau deposit.</p>
                                 </div>
                             @else
                                 <div class="report-record-list space-y-3">
@@ -349,7 +349,7 @@
                                             $recordInputId = 'report-record-' . $loop->index;
                                         @endphp
                                         <label for="{{ $recordInputId }}" class="block cursor-pointer" data-report-record-option onclick="selectReportRecord(this)">
-                                            <input id="{{ $recordInputId }}" type="radio" name="record_id" value="{{ $record['id'] }}" class="sr-only" data-report-record-input onchange="selectReportRecord(this.closest('[data-report-record-option]'))" @checked($oldRecordId === $record['id'])>
+                                            <input id="{{ $recordInputId }}" type="radio" name="record_id" value="{{ $record['id'] }}" class="sr-only" data-report-record-input onchange="selectReportRecord(this.closest('[data-report-record-option]'))" required @checked($oldRecordId === $record['id'])>
                                             <span data-report-record-card class="flex items-center gap-3 rounded-[1.75rem] border-4 {{ $oldRecordId === $record['id'] ? 'border-[#25D366] bg-[#e9fff0]' : 'border-white bg-[#f8fbff]' }} px-5 py-4 text-left shadow-sm transition">
                                                 <span data-report-record-dot class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 {{ $oldRecordId === $record['id'] ? 'border-[#25D366] bg-[#25D366]' : 'border-[#bde0fe] bg-white' }}">
                                                     <span class="h-2 w-2 rounded-full bg-white"></span>
@@ -388,7 +388,9 @@
                     <button type="submit"
                             data-report-submit
                             data-submit-label="Mengirim Laporan..."
-                            class="w-full rounded-full border-4 border-white bg-[#25D366] px-6 py-4 text-sm font-black text-white shadow-xl shadow-[#25D366]/25 transition hover:bg-[#1fb458] active:scale-95">
+                            aria-disabled="true"
+                            class="w-full cursor-not-allowed rounded-full border-4 border-white px-6 py-4 text-sm font-black text-white shadow-xl transition active:scale-95"
+                            style="background:#cbd5e1;box-shadow:0 18px 30px rgba(148, 163, 184, .2);">
                         Kirim Laporan
                     </button>
                 </aside>
@@ -421,6 +423,7 @@
             emptyState.classList.remove('hidden');
             removeButton.classList.add('hidden');
             removeButton.classList.remove('flex');
+            updateAdminReportSubmitState(input?.form);
             return;
         }
 
@@ -430,6 +433,7 @@
         emptyState.classList.add('hidden');
         removeButton.classList.remove('hidden');
         removeButton.classList.add('flex');
+        updateAdminReportSubmitState(input?.form);
     }
 
     function clearProofPreview(event) {
@@ -443,6 +447,7 @@
         }
 
         handleProofPreview(input);
+        updateAdminReportSubmitState(input?.form);
     }
 
     function selectReportRecord(option) {
@@ -474,6 +479,49 @@
                 dot.classList.toggle('bg-white', !isActive);
             }
         });
+
+        updateAdminReportSubmitState(option.closest('form'));
+    }
+
+    function isAdminReportReady(form) {
+        if (!form) {
+            return false;
+        }
+
+        const category = form.querySelector('input[name="category_key"]');
+        const issue = form.querySelector('#issue');
+        const proof = form.querySelector('#proof');
+        const recordInputs = Array.from(form.querySelectorAll('[data-report-record-input]'));
+
+        return Boolean(category?.value?.trim())
+            && Boolean(issue?.value?.trim()) && issue.value.trim().length >= 5
+            && Boolean(proof?.files?.length)
+            && recordInputs.length > 0
+            && recordInputs.some((input) => input.checked);
+    }
+
+    function setReportButtonReady(button, isReady) {
+        if (!button) {
+            return;
+        }
+
+        button.setAttribute('aria-disabled', String(!isReady));
+        button.classList.toggle('cursor-not-allowed', !isReady);
+        button.classList.toggle('hover:bg-[#1fb458]', isReady);
+        button.style.background = isReady ? '#25D366' : '#cbd5e1';
+        button.style.boxShadow = isReady
+            ? '0 18px 30px rgba(37, 211, 102, .25)'
+            : '0 18px 30px rgba(148, 163, 184, .2)';
+    }
+
+    function updateAdminReportSubmitState(form = document.querySelector('.report-form')) {
+        const button = form?.querySelector('[data-report-submit]');
+
+        if (!button || form?.dataset.submitting === 'true') {
+            return;
+        }
+
+        setReportButtonReady(button, isAdminReportReady(form));
     }
 
     function setReportSubmitLoading(form, isLoading) {
@@ -484,16 +532,16 @@
         }
 
         if (isLoading) {
-            button.disabled = true;
+            setReportButtonReady(button, false);
             button.dataset.originalText = button.dataset.originalText || button.textContent.trim();
             button.textContent = button.dataset.submitLabel || 'Mengirim Laporan...';
             button.classList.add('cursor-not-allowed', 'opacity-70');
             return;
         }
 
-        button.disabled = false;
         button.textContent = button.dataset.originalText || 'Kirim Laporan';
         button.classList.remove('cursor-not-allowed', 'opacity-70');
+        setReportButtonReady(button, isAdminReportReady(form));
     }
 
     async function compressProofFile(file) {
@@ -569,6 +617,12 @@
             return false;
         }
 
+        if (!isAdminReportReady(form)) {
+            event?.preventDefault();
+            updateAdminReportSubmitState(form);
+            return false;
+        }
+
         if (typeof form.checkValidity === 'function' && !form.checkValidity()) {
             return true;
         }
@@ -601,5 +655,20 @@
 
         return true;
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.querySelector('.report-form');
+
+        if (!form) {
+            return;
+        }
+
+        form.querySelectorAll('#issue, #proof, [data-report-record-input]').forEach((field) => {
+            field.addEventListener('input', () => updateAdminReportSubmitState(form));
+            field.addEventListener('change', () => updateAdminReportSubmitState(form));
+        });
+
+        updateAdminReportSubmitState(form);
+    });
 </script>
 @endsection

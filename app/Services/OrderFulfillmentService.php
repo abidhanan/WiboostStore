@@ -35,6 +35,33 @@ class OrderFulfillmentService
             return;
         }
 
+        if ($transaction->isMembershipPayment()) {
+            DB::transaction(function () use ($transaction) {
+                $lockedTransaction = Transaction::query()
+                    ->with('user')
+                    ->lockForUpdate()
+                    ->find($transaction->id);
+
+                if (! $lockedTransaction
+                    || $lockedTransaction->payment_status !== 'paid'
+                    || $lockedTransaction->membershipActivated()) {
+                    return;
+                }
+
+                $lockedTransaction->user?->activateMembership((int) data_get($lockedTransaction->response_data, 'membership_days', 30));
+                $lockedTransaction->forceFill([
+                    'order_status' => 'success',
+                    'target_notes' => 'Membership Wiboost 30 hari berhasil aktif.',
+                    'response_data' => array_merge($lockedTransaction->response_data ?? [], [
+                        'purpose' => 'membership',
+                        'membership_activated_at' => now()->toDateTimeString(),
+                    ]),
+                ])->save();
+            });
+
+            return;
+        }
+
         if (! $transaction->product) {
             $this->markAsFailed($transaction, 'Produk untuk transaksi ini tidak ditemukan.');
 

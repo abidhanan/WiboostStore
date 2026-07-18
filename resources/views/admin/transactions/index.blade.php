@@ -348,16 +348,27 @@
 </style>
 
 <div class="wiboost-font pb-12 relative z-10 w-full min-w-0">
+    @php
+        $searchValue = request('search');
+        $activeTransactionFilter = $transactionFilter ?? request('transaction_filter', 'all');
+        $transactionFilters = [
+            'all' => ['label' => 'Semua'],
+            'pending' => ['label' => 'Menunggu'],
+            'processing' => ['label' => 'Proses'],
+            'success' => ['label' => 'Sukses'],
+            'failed' => ['label' => 'Gagal'],
+        ];
+    @endphp
     <!-- Alert Messages (Aman dari 500 Error) -->
     @if(session('success'))
         <div class="mb-6 flex items-center gap-3 rounded-[2rem] border-4 border-white bg-[#e6fff7] px-5 sm:px-6 py-4 font-black text-emerald-500 shadow-lg shadow-emerald-100/50 relative z-10 text-sm sm:text-base w-full">
-            <span class="text-2xl sm:text-3xl drop-shadow-sm">✅</span>
+            @include('partials.wiboost-icon', ['name' => 'success', 'class' => 'h-6 w-6 shrink-0'])
             <span>{{ session('success') }}</span>
         </div>
     @endif
     @if(session('error'))
         <div class="mb-6 flex items-center gap-3 rounded-[2rem] border-4 border-white bg-[#ffe5e5] px-5 sm:px-6 py-4 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 relative z-10 text-sm sm:text-base w-full">
-            <span class="text-2xl sm:text-3xl drop-shadow-sm">⚠️</span>
+            @include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'h-6 w-6 shrink-0'])
             <span>{{ session('error') }}</span>
         </div>
     @endif
@@ -370,24 +381,28 @@
             <div class="flex flex-col md:flex-row gap-3 w-full min-w-0">
                 <!-- Wrapper Input Cari -->
                 <div class="flex-1 flex gap-2 w-full min-w-0">
-                    <input type="text" name="search" value="{{ request('search') }}"
+                    @if($activeTransactionFilter !== 'all')
+                        <input type="hidden" name="transaction_filter" value="{{ $activeTransactionFilter }}">
+                    @endif
+                    <input type="text" name="search" value="{{ $searchValue }}"
                         class="min-w-0 flex-1 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#f4f9ff] py-3 px-4 sm:px-5 font-black text-[#2b3a67] outline-none transition shadow-inner placeholder-[#a3bbfb] focus:border-[#bde0fe] text-xs sm:text-sm truncate"
                         placeholder="Cari Invoice atau Pelanggan...">
                     
-                    <button type="submit" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] w-12 h-12 text-white shadow-md active:scale-95 transition-transform" title="Cari">
-                        🔍
+                    <button type="submit" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] w-12 h-12 text-[0px] text-white shadow-md active:scale-95 transition-transform" title="Cari">
+                        @include('partials.wiboost-icon', ['name' => 'search', 'class' => 'h-5 w-5'])
                     </button>
                     
-                    @if(request('search'))
-                        <a href="{{ route('admin.transactions.index') }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[#ff6b6b] shadow-md active:scale-95 transition-transform" title="Reset">
-                            ✖️
+                    @if($searchValue)
+                        <a href="{{ route('admin.transactions.index', array_filter(['transaction_filter' => $activeTransactionFilter === 'all' ? null : $activeTransactionFilter, 'month' => $selectedMonth ?? date('m'), 'year' => $selectedYear ?? date('Y')])) }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[0px] text-[#ff6b6b] shadow-md active:scale-95 transition-transform" title="Reset">
+                            @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])
                         </a>
                     @endif
                 </div>
                 
                 <!-- Tombol Segarkan (Samping Search di Desktop) -->
-                <a href="{{ route('admin.transactions.index', array_filter(['refresh_api' => 1, 'search' => request('search'), 'month' => $selectedMonth ?? date('m'), 'year' => $selectedYear ?? date('Y')])) }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#8faaf3] px-6 py-3 h-12 text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#6f8ddc] w-full md:w-auto">
-                    <span class="text-base">🔄</span> <span class="whitespace-nowrap">Segarkan</span>
+                <a href="{{ route('admin.transactions.index', array_filter(['refresh_api' => 1, 'search' => $searchValue, 'transaction_filter' => $activeTransactionFilter === 'all' ? null : $activeTransactionFilter, 'month' => $selectedMonth ?? date('m'), 'year' => $selectedYear ?? date('Y')])) }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#8faaf3] px-6 py-3 h-12 text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#6f8ddc] w-full md:w-auto">
+                    @include('partials.wiboost-icon', ['name' => 'refresh', 'class' => 'h-5 w-5'])
+                    <span class="whitespace-nowrap">Segarkan</span>
                 </a>
             </div>
 
@@ -443,7 +458,7 @@
 
                 <!-- Tombol Cetak Laporan -->
                 <a href="{{ route('admin.transactions.export_excel', ['month' => $selectedMonth ?? date('m'), 'year' => $selectedYear ?? date('Y')]) }}" target="_blank" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#4bc6b9] px-6 py-2 h-auto min-h-[2.8rem] sm:min-h-[3rem] text-xs sm:text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#3ba398] w-full md:w-auto">
-                    <span class="text-base leading-none" aria-hidden="true">&#x1F4CA;</span>
+                    @include('partials.wiboost-icon', ['name' => 'chart', 'class' => 'h-5 w-5'])
                     <span class="whitespace-nowrap">Cetak Laporan</span>
                 </a>
             </div>
@@ -451,18 +466,32 @@
 
     </div>
 
+    @include('admin.partials.filter-tabs', [
+        'filters' => $transactionFilters,
+        'activeFilter' => $activeTransactionFilter,
+        'filterParam' => 'transaction_filter',
+        'filterRoute' => 'admin.transactions.index',
+        'filterQuery' => [
+            'search' => $searchValue,
+            'month' => $selectedMonth ?? date('m'),
+            'year' => $selectedYear ?? date('Y'),
+        ],
+    ])
+
     <!-- Tabel Data Transaksi -->
     <div class="admin-transactions-table-shell overflow-visible rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 relative z-10 min-w-0 w-full">
         <div class="w-full overflow-x-auto table-scroll pb-2">
             <div class="inline-block min-w-full align-middle p-4 sm:p-6">
-                <table class="w-full text-left" style="min-width:1580px;table-layout:fixed;">
+                <table class="w-full text-left" style="min-width:1900px;table-layout:fixed;">
                     <thead>
                         <tr>
-                            <th style="font-size: 10px; width: 210px;" class="px-6 py-4 pr-8 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Waktu & Invoice</th>
-                            <th style="font-size: 10px; width: 220px;" class="px-6 py-4 pl-8 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Pelanggan</th>
-                            <th style="font-size: 10px; width: 390px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Layanan</th>
+                            <th style="font-size: 10px; width: 190px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Invoice</th>
+                            <th style="font-size: 10px; width: 150px;" class="px-6 py-4 pr-8 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Waktu</th>
+                            <th style="font-size: 10px; width: 190px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Nama</th>
+                            <th style="font-size: 10px; width: 240px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Email</th>
+                            <th style="font-size: 10px; width: 360px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Layanan</th>
                             <th style="font-size: 10px; width: 130px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga</th>
-                            <th style="font-size: 10px; width: 180px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Target</th>
+                            <th style="font-size: 10px; width: 320px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Target</th>
                             <th style="font-size: 10px; width: 120px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Metode</th>
                             <th style="font-size: 10px; width: 120px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Bukti Login</th>
                             <th style="font-size: 10px; width: 180px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Status</th>
@@ -471,10 +500,14 @@
                     <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
                         @forelse($transactions ?? [] as $trx)
                         @php
-                            $adminTargetSummary = $trx->order_input_summary
-                                ?: (filled($trx->target_data) && $trx->target_data !== '- (Tidak membutuhkan target tambahan)' ? $trx->target_data : null);
-                            $adminTargetText = $trx->order_input_text
-                                ?: $adminTargetSummary;
+                            $adminProductName = $trx->product?->name ?: ($trx->isMembershipPayment() ? 'Membership Wiboost 30 Hari' : 'Produk Dihapus');
+                            $adminTargetSummary = $trx->isMembershipPayment()
+                                ? null
+                                : ($trx->order_input_summary
+                                    ?: (filled($trx->target_data) && $trx->target_data !== '- (Tidak membutuhkan target tambahan)' ? $trx->target_data : null));
+                            $adminTargetText = $trx->isMembershipPayment()
+                                ? '-'
+                                : ($trx->order_input_text ?: $adminTargetSummary);
                             $canManualUpdate = $trx->payment_status === 'paid'
                                 && ($trx->product?->process_type === 'account')
                                 && (bool) ($trx->product?->requires_buyer_email);
@@ -490,21 +523,29 @@
                         @endphp
                         <tr onclick="openAdminDetailModal('admin-trx-detail-{{ $trx->id }}')" class="transition-colors hover:bg-[#f8faff] group cursor-pointer">
                             
-                            <!-- Invoice & Waktu -->
+                            <!-- Invoice -->
+                            <td class="px-5 py-4 sm:py-5 align-top">
+                                <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $trx->invoice_number ?? '-' }}</p>
+                            </td>
+
+                            <!-- Waktu -->
                             <td class="px-6 py-4 pr-8 sm:py-5 align-top">
-                                <p class="mb-1 inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $trx->invoice_number ?? '-' }}</p>
-                                <p class="ml-1 whitespace-nowrap text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ isset($trx->created_at) ? $trx->created_at->format('d M Y, H:i') : '-' }}</p>
+                                <p class="whitespace-nowrap text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ isset($trx->created_at) ? $trx->created_at->format('d M Y, H:i') : '-' }}</p>
                             </td>
                             
-                            <!-- User -->
-                            <td class="px-6 py-4 pl-8 sm:py-5 align-top">
+                            <!-- Nama User -->
+                            <td class="px-5 py-4 sm:py-5 align-top">
                                 <p class="admin-clamp-2 text-xs font-black leading-snug text-[#2b3a67] sm:text-sm">{{ $trx->user->name ?? 'Guest' }}</p>
-                                <p class="mt-1 whitespace-nowrap text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $trx->user->email ?? '-' }}</p>
+                            </td>
+
+                            <!-- Email User -->
+                            <td class="px-5 py-4 sm:py-5 align-top">
+                                <p class="whitespace-nowrap text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $trx->user->email ?? '-' }}</p>
                             </td>
                             
                             <!-- Layanan -->
-                            <td class="px-5 py-4 align-top sm:py-5" style="width:390px;max-width:390px;">
-                                <p class="text-[11px] font-black leading-tight text-[#2b3a67] sm:text-xs" style="display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;text-overflow:clip;white-space:normal;word-break:normal;overflow-wrap:anywhere;" title="{{ $trx->product->name ?? 'Produk Dihapus' }}">{{ $trx->product->name ?? 'Produk Dihapus' }}</p>
+                            <td class="px-5 py-4 align-top sm:py-5" style="width:360px;max-width:360px;">
+                                <p class="text-[11px] font-black leading-tight text-[#2b3a67] sm:text-xs" style="display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;text-overflow:clip;white-space:normal;word-break:normal;overflow-wrap:anywhere;" title="{{ $adminProductName }}">{{ $adminProductName }}</p>
                             </td>
                             
                             <!-- Harga -->
@@ -515,7 +556,7 @@
                             <!-- Target Input -->
                             <td class="px-5 py-4 sm:py-5 align-top text-center">
                                 @if($adminTargetSummary)
-                                    <span style="font-size: 9px;" class="inline-block whitespace-nowrap rounded-xl border-2 border-white bg-[#f0f5ff] px-3 py-1.5 font-black text-[#2b3a67] shadow-sm" title="{{ $adminTargetText ?? '' }}">
+                                    <span style="font-size: 9px;white-space:normal;overflow-wrap:anywhere;word-break:break-word;" class="inline-block w-full max-w-[320px] rounded-xl border-2 border-white bg-[#f0f5ff] px-3 py-1.5 font-black leading-snug text-[#2b3a67] shadow-sm" title="{{ $adminTargetText ?? '' }}">
                                         {{ $adminTargetSummary }}
                                     </span>
                                 @else
@@ -570,8 +611,8 @@
                                                 <button type="button" class="admin-theme-select-option {{ ($trx->order_status ?? '') == 'failed' ? 'is-selected' : '' }}" data-value="failed" data-label="Gagal">Gagal</button>
                                             </div>
                                         </div>
-                                        <button type="submit" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white p-1.5 rounded-[0.8rem] transition shadow-md active:scale-95 border-2 border-white shrink-0 text-xs" title="Simpan Status">
-                                            💾
+                                        <button type="submit" class="bg-[#5a76c8] hover:bg-[#4760a9] text-[0px] text-white p-1.5 rounded-[0.8rem] transition shadow-md active:scale-95 border-2 border-white shrink-0 text-xs" title="Simpan Status">
+                                            @include('partials.wiboost-icon', ['name' => 'save', 'class' => 'h-4 w-4'])
                                         </button>
                                     </form>
                                 @else
@@ -586,8 +627,10 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="px-5 py-16 sm:py-20 text-center">
-                                <div class="mb-4 sm:mb-5 inline-flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-[#f0f5ff] text-4xl sm:text-5xl shadow-inner animate-float">🧾</div>
+                            <td colspan="10" class="px-5 py-16 sm:py-20 text-center">
+                                <div class="mb-4 sm:mb-5 inline-flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-[#f0f5ff] text-[#5a76c8] shadow-inner animate-float">
+                                    @include('partials.wiboost-icon', ['name' => 'receipt', 'class' => 'h-10 w-10'])
+                                </div>
                                 <p class="text-lg sm:text-xl font-black text-[#5a76c8]">Tidak ada transaksi ditemukan.</p>
                             </td>
                         </tr>
@@ -599,17 +642,21 @@
 
         @foreach($transactions ?? [] as $trx)
             @php
-                $detailTargetSummary = $trx->order_input_summary
-                    ?: (filled($trx->target_data) && $trx->target_data !== '- (Tidak membutuhkan target tambahan)' ? $trx->target_data : null);
-                $detailTargetText = $trx->order_input_text
-                    ?: ($detailTargetSummary ?: '-');
+                $detailProductName = $trx->product?->name ?: ($trx->isMembershipPayment() ? 'Membership Wiboost 30 Hari' : 'Produk Dihapus');
+                $detailTargetSummary = $trx->isMembershipPayment()
+                    ? null
+                    : ($trx->order_input_summary
+                        ?: (filled($trx->target_data) && $trx->target_data !== '- (Tidak membutuhkan target tambahan)' ? $trx->target_data : null));
+                $detailTargetText = $trx->isMembershipPayment()
+                    ? '-'
+                    : ($trx->order_input_text ?: ($detailTargetSummary ?: '-'));
                 $detailInputFields = collect($trx->order_input_fields ?? []);
                 $detailInputText = $detailInputFields
                     ->reject(fn ($field) => ($field['name'] ?? '') === 'order_quantity')
                     ->map(fn ($field) => trim((string) ($field['value'] ?? '')))
                     ->filter()
                     ->implode("\n");
-                $detailInputText = $detailInputText !== '' ? $detailInputText : ($detailTargetSummary ?: '-');
+                $detailInputText = $trx->isMembershipPayment() ? '-' : ($detailInputText !== '' ? $detailInputText : ($detailTargetSummary ?: '-'));
                 $detailQuantity = $trx->provider_order_quantity;
                 $detailCategory = collect([
                     $trx->product?->category?->parent?->parent?->name,
@@ -702,7 +749,7 @@
                 $detailOrderLines = [];
                 $detailAppendLine($detailOrderLines, 'Invoice', $detailOrderData['invoice'] ?? $trx->invoice_number);
                 $detailAppendLine($detailOrderLines, 'Kategori', $detailOrderData['category'] ?? $detailCategory);
-                $detailAppendLine($detailOrderLines, 'Produk', $detailOrderData['product'] ?? $trx->product?->name);
+                $detailAppendLine($detailOrderLines, 'Produk', $detailOrderData['product'] ?? $detailProductName);
                 $detailAppendLine($detailOrderLines, 'Total Bayar', $detailOrderData['total'] ?? null);
                 $detailAppendLine($detailOrderLines, 'Metode', $detailOrderData['payment'] ?? $trx->display_payment_method);
                 $detailAppendLine($detailOrderLines, 'Status Pesanan', $detailOrderData['status'] ?? $trx->display_status);
@@ -744,7 +791,9 @@
                             <h3 class="mt-1 break-all text-xl font-black text-[#2b3a67]">{{ $trx->invoice_number }}</h3>
                             <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ optional($trx->created_at)->format('d M Y, H:i') }}</p>
                         </div>
-                        <button type="button" onclick="closeAdminDetailModal('admin-trx-detail-{{ $trx->id }}')" class="admin-detail-close flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#ffe5e5] text-lg font-black text-[#ff6b6b]">×</button>
+                        <button type="button" onclick="closeAdminDetailModal('admin-trx-detail-{{ $trx->id }}')" class="admin-detail-close flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#ffe5e5] text-[#ff6b6b]">
+                            @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-4 w-4'])
+                        </button>
                     </div>
 
                     <div class="admin-detail-body">
@@ -760,7 +809,7 @@
                         </div>
                         <div class="admin-detail-panel md:col-span-2">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Layanan</p>
-                            <p class="mt-1 font-black text-[#2b3a67]">{{ $trx->product->name ?? 'Produk Dihapus' }}</p>
+                            <p class="mt-1 font-black text-[#2b3a67]">{{ $detailProductName }}</p>
                         </div>
                         <div class="admin-detail-panel md:col-span-2">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Metode Pembayaran</p>

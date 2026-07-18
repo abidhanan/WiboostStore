@@ -6,7 +6,7 @@
 <section class="relative z-10 mb-10 overflow-visible rounded-[2.5rem] border-4 border-white bg-white/95 p-5 text-left shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:p-6 md:p-8">
     <div class="relative z-10 min-w-0 text-left">
         <div class="mb-3 flex items-center justify-start gap-2">
-            <a href="{{ $backUrl }}" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-105 hover:bg-[#e0fbfc] active:scale-95">
+            <a href="{{ $backUrl }}" data-wiboost-back aria-label="Kembali" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-105 hover:bg-[#e0fbfc] active:scale-95">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
             </svg>

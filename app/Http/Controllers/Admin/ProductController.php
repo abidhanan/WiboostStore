@@ -16,6 +16,13 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
+        $productFilter = (string) $request->query('product_filter', 'all');
+        $allowedProductFilters = ['all', 'api', 'account'];
+
+        if (! in_array($productFilter, $allowedProductFilters, true)) {
+            $productFilter = 'all';
+        }
+
         $rootCategorySlug = $this->rootCategorySlugExpression();
         $rootCategoryName = $this->rootCategoryNameExpression();
         $categoryPath = $this->categoryPathExpression();
@@ -33,6 +40,10 @@ class ProductController extends Controller
         $query->whereIn('products.process_type', WiboostCatalog::activeProductProcessTypes());
         $query->where('products.is_active', true)
             ->where('products.status', 'active');
+
+        if ($productFilter !== 'all') {
+            $query->where('products.process_type', $productFilter);
+        }
 
         if ($request->filled('search')) {
             $query->where(function ($innerQuery) use ($request) {
@@ -73,7 +84,7 @@ class ProductController extends Controller
             })
             ->values();
 
-        return view('admin.products.index', compact('products', 'productSections'));
+        return view('admin.products.index', compact('products', 'productSections', 'productFilter'));
     }
 
     public function create()

@@ -677,6 +677,9 @@
             'logout' => '<path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1" />',
             'admin' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3l2.6 5.2 5.7.85-4.15 4.05.98 5.7L12 16.1 6.87 18.8l.98-5.7L3.7 9.05l5.7-.85L12 3Z" />',
         ];
+
+        $activeDisplayPayload = collect();
+        $shouldShowDisplayPopup = false;
     @endphp
 
     <aside class="wiboost-user-sidebar fixed inset-y-0 left-0 z-40 hidden w-72 rounded-none lg:block">
@@ -692,7 +695,7 @@
 
             <nav class="hide-scroll flex-1 space-y-2 overflow-y-auto overscroll-contain px-5 py-4">
                 @foreach($mobileUserNav as $item)
-                    @php($isActiveUserNav = request()->routeIs($item['pattern']))
+                    <?php $isActiveUserNav = request()->routeIs($item['pattern']); ?>
                     <a href="{{ route($item['route']) }}" class="flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-black transition-all duration-300 {{ $isActiveUserNav ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 scale-[1.02]' : 'border-2 border-transparent text-[#5a76c8] hover:border-white hover:bg-[#f4f9ff] hover:scale-[1.02]' }}">
                         <span class="flex h-8 w-8 items-center justify-center rounded-xl {{ $isActiveUserNav ? 'bg-white/20 text-white' : 'bg-white text-[#5a76c8] shadow-sm' }}">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
@@ -859,6 +862,147 @@
         @yield('content')
     </main>
 
+    @include('partials.user-display-popup')
+
+    @if(false)
+        @php
+            $firstDisplay = $activeDisplayPayload->first() ?? [];
+            $firstDisplayHasImage = filled($firstDisplay['image'] ?? '');
+            $firstDisplayTheme = $firstDisplay['theme'] ?? 'blue';
+            $firstDisplayBackground = match ($firstDisplayTheme) {
+                'teal' => 'linear-gradient(135deg, #4bc6b9, #3ba398)',
+                'orange' => 'linear-gradient(135deg, #fbbf24, #d97706)',
+                'rose' => 'linear-gradient(135deg, #fb7185, #e11d48)',
+                default => 'linear-gradient(135deg, #8faaf3, #5a76c8)',
+            };
+            $firstDisplayLink = $firstDisplay['link'] ?? '';
+            $firstDisplayImageClass = $firstDisplayHasImage ? '' : 'hidden';
+            $firstDisplayShadeClass = $firstDisplayHasImage ? 'hidden' : '';
+            $firstDisplayEmoji = $firstDisplayHasImage ? '' : ($firstDisplay['emoji'] ?? '');
+            $firstDisplayBadgeClass = (! $firstDisplayHasImage && filled($firstDisplay['badge'] ?? '')) ? '' : 'hidden';
+            $firstDisplayTitleClass = (! $firstDisplayHasImage && filled($firstDisplay['title'] ?? '')) ? '' : 'hidden';
+            $firstDisplayDescriptionClass = (! $firstDisplayHasImage && filled($firstDisplay['description'] ?? '')) ? '' : 'hidden';
+        @endphp
+        <div id="wiboost-display-overlay" class="fixed inset-0 z-[120] flex items-center justify-center bg-[#17213e]/70 p-4 backdrop-blur-sm">
+            <div id="wiboost-display-card" class="relative aspect-[4/5] w-[min(92vw,24rem)] max-h-[86vh] overflow-hidden rounded-[2rem] border-4 border-white bg-[#5a76c8] text-white shadow-2xl shadow-[#2b3a67]/40" style="background: {{ $firstDisplayBackground }}; aspect-ratio: 4 / 5;">
+                <button id="wiboost-display-close" type="button" aria-label="Tutup display" class="absolute right-2 top-2 z-30 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-white text-[#ff4d4d] shadow-lg shadow-[#ff6b6b]/25 transition active:scale-95">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6 6 18" />
+                    </svg>
+                </button>
+
+                <a id="wiboost-display-link" href="{{ $firstDisplayLink ?: '#' }}" class="relative block h-full w-full overflow-hidden">
+                    <img id="wiboost-display-image" src="{{ $firstDisplayHasImage ? $firstDisplay['image'] : '' }}" alt="{{ $firstDisplay['title'] ?? 'Display Wiboost Store' }}" class="absolute inset-0 h-full w-full object-cover {{ $firstDisplayImageClass }}">
+                    <div id="wiboost-display-shade" class="absolute inset-0 bg-gradient-to-br from-[#17213e]/75 via-[#17213e]/25 to-transparent {{ $firstDisplayShadeClass }}"></div>
+                    <div id="wiboost-display-emoji" class="absolute right-6 top-16 text-6xl font-black text-white/25">{{ $firstDisplayEmoji }}</div>
+                    <div class="absolute inset-x-0 bottom-0 z-20 p-6 sm:p-7">
+                        <p id="wiboost-display-badge" class="mb-3 w-fit rounded-full border border-white/30 bg-white/20 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-white shadow-inner backdrop-blur-md {{ $firstDisplayBadgeClass }}">{{ $firstDisplay['badge'] ?? '' }}</p>
+                        <h2 id="wiboost-display-title" class="text-2xl font-black leading-tight drop-shadow-md sm:text-3xl {{ $firstDisplayTitleClass }}">{{ $firstDisplay['title'] ?? '' }}</h2>
+                        <p id="wiboost-display-description" class="mt-3 text-sm font-bold leading-relaxed text-white/90 drop-shadow-sm {{ $firstDisplayDescriptionClass }}">{{ $firstDisplay['description'] ?? '' }}</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <script>
+            (() => {
+                const displays = @json($activeDisplayPayload);
+                if (!Array.isArray(displays) || displays.length === 0) {
+                    return;
+                }
+
+                const queue = displays;
+                if (queue.length === 0) {
+                    return;
+                }
+
+                const themeMap = {
+                    blue: 'linear-gradient(135deg, #8faaf3, #5a76c8)',
+                    teal: 'linear-gradient(135deg, #4bc6b9, #3ba398)',
+                    orange: 'linear-gradient(135deg, #fbbf24, #d97706)',
+                    rose: 'linear-gradient(135deg, #fb7185, #e11d48)',
+                };
+
+                const overlay = document.getElementById('wiboost-display-overlay');
+                const card = document.getElementById('wiboost-display-card');
+                const closeButton = document.getElementById('wiboost-display-close');
+                const link = document.getElementById('wiboost-display-link');
+                const image = document.getElementById('wiboost-display-image');
+                const shade = document.getElementById('wiboost-display-shade');
+                const badge = document.getElementById('wiboost-display-badge');
+                const title = document.getElementById('wiboost-display-title');
+                const description = document.getElementById('wiboost-display-description');
+                const emoji = document.getElementById('wiboost-display-emoji');
+                let index = 0;
+
+                const hideOverlay = () => {
+                    overlay?.classList.add('hidden');
+                    overlay?.classList.remove('flex');
+                    document.body.style.overflow = '';
+                };
+
+                const showDisplay = () => {
+                    const display = queue[index];
+                    if (!display || !overlay || !card || !link) {
+                        hideOverlay();
+                        return;
+                    }
+
+                    card.style.background = themeMap[display.theme] || themeMap.blue;
+                    const hasImage = Boolean(display.image);
+
+                    title.textContent = hasImage ? '' : (display.title || '');
+                    description.textContent = hasImage ? '' : (display.description || '');
+                    title.classList.toggle('hidden', hasImage || !display.title);
+                    description.classList.toggle('hidden', hasImage || !display.description);
+                    shade?.classList.toggle('hidden', hasImage);
+                    emoji.textContent = hasImage ? '' : (display.emoji || '');
+
+                    if (!hasImage && display.badge) {
+                        badge.textContent = display.badge;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+
+                    if (hasImage) {
+                        image.src = display.image;
+                        image.alt = display.title || 'Display Wiboost Store';
+                        image.classList.remove('hidden');
+                    } else {
+                        image.removeAttribute('src');
+                        image.classList.add('hidden');
+                    }
+
+                    if (display.link) {
+                        link.href = display.link;
+                    } else {
+                        link.removeAttribute('href');
+                    }
+
+                    overlay.classList.remove('hidden');
+                    overlay.classList.add('flex');
+                    document.body.style.overflow = 'hidden';
+                };
+
+                closeButton?.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    index += 1;
+                    showDisplay();
+                });
+
+                link?.addEventListener('click', (event) => {
+                    if (!queue[index]?.link) {
+                        event.preventDefault();
+                    }
+                });
+
+                showDisplay();
+            })();
+        </script>
+    @endif
+
     {{-- Footer User --}}
     <footer class="bg-white pt-12 pb-8 relative overflow-hidden mt-auto">
         <div class="max-w-6xl mx-auto px-6 sm:px-8 relative z-10">
@@ -904,6 +1048,26 @@
     @include('partials.floating-admin-report')
     @include('partials.page-loading')
     <script>
+        document.addEventListener('click', (event) => {
+            const backLink = event.target.closest('a[data-wiboost-back], a[aria-label="Kembali"]');
+
+            if (!backLink) {
+                return;
+            }
+
+            if (window.history.length > 1) {
+                event.preventDefault();
+                if (window.wiboostBackDelayActive) {
+                    return;
+                }
+                window.wiboostBackDelayActive = true;
+                backLink.classList.add('is-backing', 'pointer-events-none');
+                window.setTimeout(() => {
+                    window.history.back();
+                }, 340);
+            }
+        });
+
         (() => {
             const cookieName = 'wiboost_after_admin_report';
             const pendingKey = 'wiboost_admin_report_pending';

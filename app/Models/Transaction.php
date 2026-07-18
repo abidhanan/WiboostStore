@@ -214,6 +214,27 @@ class Transaction extends Model
         return strtoupper(str_replace('_', ' ', (string) $this->payment_method));
     }
 
+    public function isMembershipPayment(): bool
+    {
+        return (string) data_get($this->response_data, 'purpose') === 'membership'
+            || str_starts_with((string) $this->invoice_number, 'MEM-');
+    }
+
+    public function membershipActivated(): bool
+    {
+        return filled(data_get($this->response_data, 'membership_activated_at'));
+    }
+
+    public function markMembershipActivated(): void
+    {
+        $this->forceFill([
+            'response_data' => array_merge($this->response_data ?? [], [
+                'purpose' => 'membership',
+                'membership_activated_at' => now()->toDateTimeString(),
+            ]),
+        ])->save();
+    }
+
     public function getDisplayTotalPayableAttribute(): int
     {
         if (! $this->usesQrisPayment()) {

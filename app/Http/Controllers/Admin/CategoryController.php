@@ -13,6 +13,13 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
+        $categoryFilter = (string) $request->query('category_filter', 'all');
+        $allowedCategoryFilters = ['all', 'main', 'level_1', 'level_2', 'level_3'];
+
+        if (! in_array($categoryFilter, $allowedCategoryFilters, true)) {
+            $categoryFilter = 'all';
+        }
+
         $query = Category::with('parent.parent.parent')
             ->withCount(['children', 'products'])
             ->orderBy('name')
@@ -42,7 +49,12 @@ class CategoryController extends Controller
             });
         }
 
-        $categories = $query->get();
+        $categories = $query->get()
+            ->when($categoryFilter === 'main', fn ($items) => $items->filter(fn (Category $category) => $category->depth === 0))
+            ->when($categoryFilter === 'level_1', fn ($items) => $items->filter(fn (Category $category) => $category->depth === 1))
+            ->when($categoryFilter === 'level_2', fn ($items) => $items->filter(fn (Category $category) => $category->depth === 2))
+            ->when($categoryFilter === 'level_3', fn ($items) => $items->filter(fn (Category $category) => $category->depth >= 3))
+            ->values();
 
         $categorySections = [
             'main' => $categories->filter(fn (Category $category) => $category->depth === 0)->values(),
@@ -55,6 +67,7 @@ class CategoryController extends Controller
             'categories' => $categories,
             'categorySections' => $categorySections,
             'search' => $request->search,
+            'categoryFilter' => $categoryFilter,
         ]);
     }
 

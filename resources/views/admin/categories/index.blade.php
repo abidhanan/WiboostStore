@@ -16,50 +16,88 @@
         50% { transform: translateY(-15px); }
         100% { transform: translateY(0px); }
     }
+
+    .admin-category-slug-cell {
+        min-width: 220px !important;
+        width: 220px !important;
+        white-space: nowrap !important;
+        word-break: keep-all !important;
+        overflow-wrap: normal !important;
+    }
+
+    .admin-category-slug {
+        display: inline-flex !important;
+        max-width: none !important;
+        width: max-content !important;
+        white-space: nowrap !important;
+        word-break: keep-all !important;
+        overflow-wrap: normal !important;
+    }
 </style>
 
 <div class="wiboost-font pb-12 relative z-10 w-full min-w-0">
+    @php
+        $searchValue = $search ?? request('search');
+        $activeCategoryFilter = $categoryFilter ?? request('category_filter', 'all');
+        $categoryFilters = [
+            'all' => ['label' => 'Semua'],
+            'main' => ['label' => 'Utama'],
+            'level_1' => ['label' => 'Level 1'],
+            'level_2' => ['label' => 'Level 2'],
+            'level_3' => ['label' => 'Level 3+'],
+        ];
+    @endphp
     <!-- Toolbar: Pencarian & Tombol Tambah -->
-    <div class="mb-6 sm:mb-8 flex flex-col md:flex-row gap-3 sm:gap-4 relative z-10 w-full min-w-0">
+    <div class="relative z-10 mb-10 flex w-full min-w-0 flex-col gap-3 rounded-[2rem] border-4 border-white bg-white/90 p-3 shadow-xl shadow-[#bde0fe]/25 backdrop-blur-sm sm:mb-12 sm:rounded-[2.5rem] sm:p-4 lg:mb-14 lg:flex-row lg:items-center">
         
         <!-- Form Pencarian (Kiri di Desktop / Atas di Mobile) -->
-        <div class="flex-1 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/90 backdrop-blur-sm p-3 sm:p-4 shadow-xl shadow-[#bde0fe]/30 transition-transform duration-300 hover:border-[#bde0fe] min-w-0">
+        <div class="min-w-0 flex-1">
             <form action="{{ route('admin.categories.index') }}" method="GET" class="flex gap-2 sm:gap-3 items-center w-full">
+                @if($activeCategoryFilter !== 'all')
+                    <input type="hidden" name="category_filter" value="{{ $activeCategoryFilter }}">
+                @endif
                 <!-- Input Field -->
-                <input type="text" name="search" value="{{ request('search') }}"
+                <input type="text" name="search" value="{{ $searchValue }}"
                     class="min-w-0 flex-1 rounded-[1.2rem] sm:rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] py-3 sm:py-4 px-5 sm:px-6 font-black text-[#2b3a67] outline-none transition shadow-inner placeholder-[#a3bbfb] focus:border-[#bde0fe] text-xs sm:text-sm truncate"
                     placeholder="Cari nama kategori...">
                 
-                <!-- Tombol Cari Emoji Saja -->
                 <button type="submit" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] w-12 h-12 text-white shadow-md shadow-[#5a76c8]/25 transition-transform active:scale-95 hover:bg-[#4760a9] text-base" title="Cari Kategori">
-                    🔍
+                    @include('partials.wiboost-icon', ['name' => 'search', 'class' => 'h-5 w-5'])
                 </button>
                 
-                <!-- Tombol Reset Emoji -->
-                @if(request('search'))
-                    <a href="{{ route('admin.categories.index') }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:bg-[#ffcccc] text-base" title="Reset Pencarian">
-                        ✖️
+                @if($searchValue)
+                    <a href="{{ route('admin.categories.index', array_filter(['category_filter' => $activeCategoryFilter === 'all' ? null : $activeCategoryFilter])) }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:bg-[#ffcccc] text-base" title="Reset Pencarian">
+                        @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])
                     </a>
                 @endif
             </form>
         </div>
 
         <!-- Tombol Tambah Kategori (Kanan di Desktop / Bawah di Mobile) -->
-        <a href="{{ route('admin.categories.create') }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] px-5 py-3 text-sm font-black text-white shadow-md shadow-[#5a76c8]/25 transition-transform active:scale-95 hover:bg-[#4760a9] w-full md:w-auto md:min-w-[190px] md:px-8 md:py-4 md:text-base min-w-0">
-            <span class="text-base">➕</span> Tambah Kategori
+        <a href="{{ route('admin.categories.create') }}" class="flex w-full min-w-0 shrink-0 items-center justify-center gap-2 rounded-[1rem] border-4 border-white bg-[#5a76c8] px-5 py-3 text-sm font-black text-white shadow-md shadow-[#5a76c8]/25 transition-transform hover:bg-[#4760a9] active:scale-95 sm:rounded-[1.2rem] lg:w-auto lg:min-w-[190px] lg:px-7">
+            @include('partials.wiboost-icon', ['name' => 'plus', 'class' => 'h-5 w-5'])
+            Tambah Kategori
         </a>
     </div>
+
+    @include('admin.partials.filter-tabs', [
+        'filters' => $categoryFilters,
+        'activeFilter' => $activeCategoryFilter,
+        'filterParam' => 'category_filter',
+        'filterRoute' => 'admin.categories.index',
+        'filterQuery' => ['search' => $searchValue],
+    ])
 
     <!-- Alert Messages (Aman dari 500 Error dengan Session Check) -->
     @if (session('success'))
         <div class="bg-[#e6fff7] border-4 border-white text-emerald-500 px-5 sm:px-6 py-4 rounded-[2rem] mb-6 sm:mb-8 font-black flex items-center gap-3 shadow-lg shadow-emerald-100/50 relative z-10 w-full text-sm sm:text-base">
-            <span class="text-2xl sm:text-3xl drop-shadow-sm">✅</span>
+            @include('partials.wiboost-icon', ['name' => 'success', 'class' => 'h-6 w-6 shrink-0'])
             <p>{{ session('success') }}</p>
         </div>
     @endif
     @if (session('error'))
         <div class="bg-[#ffe5e5] border-4 border-white text-[#ff6b6b] px-5 sm:px-6 py-4 rounded-[2rem] mb-6 sm:mb-8 font-black flex items-center gap-3 shadow-lg shadow-[#ff6b6b]/20 relative z-10 w-full text-sm sm:text-base">
-            <span class="text-2xl sm:text-3xl drop-shadow-sm">⚠️</span>
+            @include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'h-6 w-6 shrink-0'])
             <p>{{ session('error') }}</p>
         </div>
     @endif
@@ -89,24 +127,21 @@
                     <div class="border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-6">
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <span class="mb-2 inline-flex rounded-full border-2 border-white bg-white px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-[#5a76c8] shadow-sm">
-                                    Section Kategori
-                                </span>
                                 <h3 class="text-xl font-black text-[#2b3a67] sm:text-2xl">{{ $separatedCategoryLabels[$sectionKey] ?? 'Semua Kategori' }}</h3>
                             </div>
-                            <span class="w-fit rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
-                                {{ $sectionItems->count() }} kategori
-                            </span>
                         </div>
                     </div>
 
                     <div class="w-full overflow-x-auto table-scroll pb-2">
                         <div class="inline-block min-w-full align-middle p-4 sm:p-6">
-                            <table class="w-full min-w-[700px] text-left whitespace-nowrap">
+                            <table class="w-full min-w-[1080px] text-left whitespace-nowrap">
                                 <thead>
                                     <tr>
-                                        <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Nama & Visual</th>
-                                        <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Tipe Kategori</th>
+                                        <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Visual</th>
+                                        <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Nama</th>
+                                        <th class="admin-category-slug-cell px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Slug</th>
+                                        <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Tipe</th>
+                                        <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Induk</th>
                                         <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Deskripsi</th>
                                         <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff] text-center">Aksi</th>
                                     </tr>
@@ -114,32 +149,32 @@
                                 <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
                                     @foreach($sectionItems as $category)
                                         <tr class="hover:bg-[#f8faff] transition-colors group">
-                                            <td class="px-5 py-4 sm:py-5 align-middle min-w-[250px]">
-                                                <div class="flex items-center gap-3 sm:gap-4">
-                                                    @if(!empty($category->image))
-                                                        <div class="h-10 w-10 sm:h-12 sm:w-12 shrink-0 overflow-hidden rounded-xl border-2 border-white bg-[#f4f9ff] shadow-sm">
-                                                            <img src="{{ Storage::url($category->image) }}" class="h-full w-full object-cover">
-                                                        </div>
-                                                    @else
-                                                        <div class="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-[#f0f5ff] text-xl sm:text-2xl shadow-inner">
-                                                            {{ $category->emote ?? '📁' }}
-                                                        </div>
-                                                    @endif
-                                                    <div class="min-w-0">
-                                                        <p class="font-black text-[#2b3a67] text-sm mb-1 truncate">{{ $category->breadcrumb_name ?? $category->name ?? '-' }}</p>
-                                                        <p class="text-[9px] sm:text-[10px] font-bold text-[#8faaf3] bg-[#f4f9ff] inline-block px-2 py-1 rounded-md border border-white truncate max-w-full">Slug: {{ $category->slug ?? '-' }}</p>
+                                            <td class="px-5 py-4 sm:py-5 align-middle">
+                                                @if(!empty($category->image))
+                                                    <div class="h-10 w-10 sm:h-12 sm:w-12 shrink-0 overflow-hidden rounded-xl border-2 border-white bg-[#f4f9ff] shadow-sm">
+                                                        <img src="{{ Storage::url($category->image) }}" class="h-full w-full object-cover">
                                                     </div>
-                                                </div>
+                                                @else
+                                                    <div class="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-[#f0f5ff] text-xl sm:text-2xl shadow-inner">
+                                                        {{ $category->emote ?? '📁' }}
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            <td class="px-5 py-4 sm:py-5 align-middle min-w-[220px]">
+                                                <p class="font-black text-[#2b3a67] text-sm truncate">{{ $category->name ?? '-' }}</p>
+                                            </td>
+                                            <td class="admin-category-slug-cell px-5 py-4 align-middle sm:py-5">
+                                                <p class="admin-category-slug rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $category->slug ?? '-' }}</p>
                                             </td>
                                             <td class="px-5 py-4 sm:py-5 align-middle">
                                                 @if(empty($category->parent_id))
                                                     <span class="bg-[#e0fbfc] text-[#4bc6b9] px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest border border-white shadow-sm">Kategori Utama</span>
                                                 @else
-                                                    <div class="flex flex-col gap-1 items-start">
-                                                        <span class="bg-[#fff5eb] text-amber-500 px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest border border-white shadow-sm">Kategori Turunan {{ $category->depth }}</span>
-                                                        <p class="text-[10px] font-bold text-[#8faaf3]">Dari: {{ $category->parent->name ?? 'Tidak diketahui' }}</p>
-                                                    </div>
+                                                    <span class="bg-[#fff5eb] text-amber-500 px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest border border-white shadow-sm">Kategori Turunan {{ $category->depth }}</span>
                                                 @endif
+                                            </td>
+                                            <td class="px-5 py-4 sm:py-5 align-middle">
+                                                <p class="text-[10px] font-bold text-[#8faaf3]">{{ $category->parent->name ?? '-' }}</p>
                                             </td>
                                             <td class="px-5 py-4 sm:py-5 align-middle min-w-[200px] whitespace-normal">
                                                 <p class="text-xs font-bold text-[#8faaf3] line-clamp-2 leading-relaxed">
@@ -149,13 +184,13 @@
                                             <td class="px-5 py-4 sm:py-5 align-middle text-center">
                                                 <div class="flex items-center justify-center gap-2">
                                                     <a href="{{ route('admin.categories.edit', $category->id) }}" class="w-9 h-9 sm:w-10 sm:h-10 bg-white border-2 border-white rounded-[1rem] flex items-center justify-center text-lg sm:text-xl hover:bg-[#f0f5ff] transition-transform hover:scale-110 active:scale-95 shadow-md shadow-[#bde0fe]/20" title="Edit Kategori">
-                                                        &#x270F;&#xFE0F;
+                                                        @include('partials.wiboost-icon', ['name' => 'edit', 'class' => 'h-4 w-4'])
                                                     </a>
                                                     <form action="{{ route('admin.categories.destroy', $category->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus kategori ini? Jika ini kategori utama, pastikan tidak ada subkategori di dalamnya.');" class="inline-block m-0">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="w-9 h-9 sm:w-10 sm:h-10 bg-white border-2 border-white rounded-[1rem] flex items-center justify-center text-lg sm:text-xl hover:bg-[#ffe5e5] transition-transform hover:scale-110 active:scale-95 shadow-md shadow-[#ff6b6b]/20" title="Hapus Kategori">
-                                                            &#x1F5D1;&#xFE0F;
+                                                            @include('partials.wiboost-icon', ['name' => 'trash', 'class' => 'h-4 w-4'])
                                                         </button>
                                                     </form>
                                                 </div>
@@ -172,7 +207,7 @@
     @else
         <div class="bg-white/95 backdrop-blur-sm rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl shadow-[#bde0fe]/30 border-4 border-white relative z-10 min-w-0 w-full px-5 py-16 text-center">
             <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-[2rem] sm:rounded-[2.5rem] bg-[#f0f5ff] border-4 border-white mb-4 sm:mb-5 shadow-inner">
-                <span class="text-4xl sm:text-5xl animate-float">📭</span>
+                @include('partials.wiboost-icon', ['name' => 'category', 'class' => 'h-10 w-10 text-[#5a76c8] animate-float'])
             </div>
             <p class="text-[#5a76c8] font-black text-lg sm:text-xl">Belum ada kategori terdaftar.</p>
         </div>
@@ -182,7 +217,7 @@
     <div class="hidden bg-white/95 backdrop-blur-sm rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl shadow-[#bde0fe]/30 border-4 border-white flex-col overflow-hidden relative z-10 min-w-0 w-full">
         <div class="w-full overflow-x-auto table-scroll pb-2">
             <div class="inline-block min-w-full align-middle p-4 sm:p-6">
-                <table class="w-full min-w-[700px] text-left whitespace-nowrap">
+                <table class="w-full min-w-[860px] text-left whitespace-nowrap">
                     <thead>
                         <tr>
                             <th class="px-5 py-4 text-[10px] font-black text-[#8faaf3] uppercase tracking-widest border-b-4 border-dashed border-[#f4f9ff]">Nama & Visual</th>
@@ -231,8 +266,8 @@
                                             </div>
                                         @endif
                                         <div class="min-w-0">
-                                            <p class="font-black text-[#2b3a67] text-sm mb-1 truncate">{{ $category->breadcrumb_name ?? $category->name ?? '-' }}</p>
-                                            <p class="text-[9px] sm:text-[10px] font-bold text-[#8faaf3] bg-[#f4f9ff] inline-block px-2 py-1 rounded-md border border-white truncate max-w-full">Slug: {{ $category->slug ?? '-' }}</p>
+                                            <p class="font-black text-[#2b3a67] text-sm mb-1 truncate">{{ $category->name ?? '-' }}</p>
+                                            <p class="inline-block max-w-none whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-[9px] font-bold text-[#8faaf3] sm:text-[10px]" style="white-space:nowrap;word-break:normal;overflow-wrap:normal;">Slug: {{ $category->slug ?? '-' }}</p>
                                         </div>
                                     </div>
                                 </td>
@@ -254,14 +289,14 @@
                                 </td>
                                 <td class="px-5 py-4 sm:py-5 align-middle text-center">
                                     <div class="flex items-center justify-center gap-2">
-                                        <a href="{{ route('admin.categories.edit', $category->id) }}" class="w-9 h-9 sm:w-10 sm:h-10 bg-white border-2 border-white rounded-[1rem] flex items-center justify-center text-lg sm:text-xl hover:bg-[#f0f5ff] transition-transform hover:scale-110 active:scale-95 shadow-md shadow-[#bde0fe]/20" title="Edit Kategori">
-                                            ✏️
+                                        <a href="{{ route('admin.categories.edit', $category->id) }}" class="w-9 h-9 sm:w-10 sm:h-10 bg-white border-2 border-white rounded-[1rem] flex items-center justify-center text-[0px] text-[#5a76c8] hover:bg-[#f0f5ff] transition-transform hover:scale-110 active:scale-95 shadow-md shadow-[#bde0fe]/20" title="Edit Kategori">
+                                            @include('partials.wiboost-icon', ['name' => 'edit', 'class' => 'h-4 w-4'])
                                         </a>
                                         <form action="{{ route('admin.categories.destroy', $category->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus kategori ini? Jika ini kategori utama, pastikan tidak ada subkategori di dalamnya.');" class="inline-block m-0">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="w-9 h-9 sm:w-10 sm:h-10 bg-white border-2 border-white rounded-[1rem] flex items-center justify-center text-lg sm:text-xl hover:bg-[#ffe5e5] transition-transform hover:scale-110 active:scale-95 shadow-md shadow-[#ff6b6b]/20" title="Hapus Kategori">
-                                                🗑️
+                                            <button type="submit" class="w-9 h-9 sm:w-10 sm:h-10 bg-white border-2 border-white rounded-[1rem] flex items-center justify-center text-[0px] text-[#ff6b6b] hover:bg-[#ffe5e5] transition-transform hover:scale-110 active:scale-95 shadow-md shadow-[#ff6b6b]/20" title="Hapus Kategori">
+                                                @include('partials.wiboost-icon', ['name' => 'trash', 'class' => 'h-4 w-4'])
                                             </button>
                                         </form>
                                     </div>
@@ -273,7 +308,7 @@
                             <tr>
                                 <td colspan="4" class="px-5 py-16 text-center">
                                     <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-[2rem] sm:rounded-[2.5rem] bg-[#f0f5ff] border-4 border-white mb-4 sm:mb-5 shadow-inner">
-                                        <span class="text-4xl sm:text-5xl animate-float">📭</span>
+                                        @include('partials.wiboost-icon', ['name' => 'category', 'class' => 'h-10 w-10 text-[#5a76c8] animate-float'])
                                     </div>
                                     <p class="text-[#5a76c8] font-black text-lg sm:text-xl">Belum ada kategori terdaftar.</p>
                                 </td>

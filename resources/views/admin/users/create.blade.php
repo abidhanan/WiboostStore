@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 @section('title', 'Tambah Pengguna')
 @section('content')
 <style>
@@ -22,7 +22,7 @@
 
     @if ($errors->any())
         <div class="bg-[#ffe5e5] border-4 border-white text-[#ff6b6b] px-6 py-5 rounded-[2.5rem] mb-8 font-black shadow-lg shadow-[#ff6b6b]/20 flex items-start gap-4 relative z-10">
-            <span class="text-3xl mt-1 drop-shadow-sm">⚠️</span>
+            @include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'mt-1 h-6 w-6 shrink-0'])
             <ul class="list-disc list-inside text-sm font-bold mt-2 bg-white/50 p-4 rounded-2xl border border-white">
                 @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
             </ul>
@@ -55,7 +55,7 @@
         </div>
         
         <div class="mb-8 p-4 bg-[#e6fff7] rounded-2xl border-2 border-emerald-100 shadow-sm flex gap-3 items-center">
-            <span class="text-2xl">💡</span>
+            @include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'h-5 w-5 shrink-0'])
             <p class="text-xs font-bold text-emerald-600">Info: Saldo pengguna baru akan otomatis diatur menjadi <b>Rp 0</b>.</p>
         </div>
 

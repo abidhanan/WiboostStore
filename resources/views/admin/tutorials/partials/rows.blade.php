@@ -39,14 +39,14 @@
                         </td>
                         <td class="px-5 py-4 text-center align-middle sm:py-5">
                             <div class="flex items-center justify-center gap-2">
-                                <a href="{{ route('admin.tutorials.edit', $tutorial->id) }}" class="flex h-9 w-9 items-center justify-center rounded-[1rem] border-2 border-white bg-white text-lg text-[#5a76c8] shadow-md shadow-[#bde0fe]/20 transition-transform hover:scale-110 hover:bg-[#f0f5ff] active:scale-95 sm:h-10 sm:w-10 sm:text-xl" title="Edit Tutorial">
-                                    &#x270F;&#xFE0F;
+                                <a href="{{ route('admin.tutorials.edit', $tutorial->id) }}" class="flex h-9 w-9 items-center justify-center rounded-[1rem] border-2 border-white bg-white text-[#d99b16] shadow-md shadow-amber-100/50 transition-transform hover:scale-110 hover:bg-[#fff5eb] active:scale-95 sm:h-10 sm:w-10" title="Edit Tutorial">
+                                    @include('partials.wiboost-icon', ['name' => 'edit', 'class' => 'h-4 w-4'])
                                 </a>
                                 <form action="{{ route('admin.tutorials.destroy', $tutorial->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus tutorial ini?');" class="m-0 inline-block">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-[1rem] border-2 border-white bg-white text-lg text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform hover:scale-110 hover:bg-[#ffe5e5] active:scale-95 sm:h-10 sm:w-10 sm:text-xl" title="Hapus Tutorial">
-                                        &#x1F5D1;&#xFE0F;
+                                    <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-[1rem] border-2 border-white bg-white text-[#ff4d4d] shadow-md shadow-[#ff6b6b]/20 transition-transform hover:scale-110 hover:bg-[#ffe5e5] active:scale-95 sm:h-10 sm:w-10" title="Hapus Tutorial">
+                                        @include('partials.wiboost-icon', ['name' => 'trash', 'class' => 'h-4 w-4'])
                                     </button>
                                 </form>
                             </div>

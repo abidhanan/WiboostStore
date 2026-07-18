@@ -11,28 +11,42 @@
 </style>
 
 <div class="wiboost-font pb-12 relative z-10 w-full min-w-0">
-    <div class="mb-6 sm:mb-8 flex flex-col gap-3 sm:gap-4 relative z-10 w-full min-w-0">
+    @php
+        $searchValue = request('search');
+        $activeProductFilter = $productFilter ?? request('product_filter', 'all');
+        $productFilters = [
+            'all' => ['label' => 'Semua'],
+            'api' => ['label' => 'API'],
+            'account' => ['label' => 'Gudang Akun'],
+        ];
+    @endphp
+
+    <div class="relative z-10 mb-10 flex w-full min-w-0 flex-col gap-3 rounded-[2rem] border-4 border-white bg-white/90 p-3 shadow-xl shadow-[#bde0fe]/25 backdrop-blur-sm sm:mb-12 sm:rounded-[2.5rem] sm:p-4 lg:mb-14">
         <div class="flex flex-col md:flex-row gap-3 sm:gap-4 w-full min-w-0">
-            <div class="flex-1 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/90 backdrop-blur-sm p-3 sm:p-4 shadow-xl shadow-[#bde0fe]/30 transition-transform duration-300 hover:border-[#bde0fe] min-w-0">
+            <div class="min-w-0 flex-1">
                 <form action="{{ route('admin.products.index') }}" method="GET" class="flex gap-2 sm:gap-3 items-center w-full">
-                    <input type="text" name="search" value="{{ request('search') }}"
+                    @if($activeProductFilter !== 'all')
+                        <input type="hidden" name="product_filter" value="{{ $activeProductFilter }}">
+                    @endif
+                    <input type="text" name="search" value="{{ $searchValue }}"
                         class="min-w-0 flex-1 rounded-[1.2rem] sm:rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] py-3 sm:py-4 px-5 sm:px-6 font-black text-[#2b3a67] outline-none transition shadow-inner placeholder-[#a3bbfb] focus:border-[#bde0fe] text-xs sm:text-sm truncate"
                         placeholder="Cari nama produk atau SKU provider...">
 
                     <button type="submit" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] w-12 h-12 text-white shadow-md shadow-[#5a76c8]/25 transition-transform active:scale-95 hover:bg-[#4760a9] text-base" title="Cari Produk">
-                        &#x1F50D;
+                        @include('partials.wiboost-icon', ['name' => 'search', 'class' => 'h-5 w-5'])
                     </button>
 
-                    @if(request('search'))
-                        <a href="{{ route('admin.products.index') }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:bg-[#ffcccc] text-base" title="Reset Pencarian">
-                            &#x2716;&#xFE0F;
+                    @if($searchValue)
+                        <a href="{{ route('admin.products.index', array_filter(['product_filter' => $activeProductFilter === 'all' ? null : $activeProductFilter])) }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:bg-[#ffcccc] text-base" title="Reset Pencarian">
+                            @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])
                         </a>
                     @endif
                 </form>
             </div>
 
-            <a href="{{ route('admin.products.create') }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] px-5 py-3 text-sm font-black text-white shadow-md shadow-[#5a76c8]/25 transition-transform active:scale-95 hover:bg-[#4760a9] w-full md:w-auto md:min-w-[190px] md:px-8 md:py-4 md:text-base min-w-0">
-                <span class="text-base">&#x2795;</span> Tambah Produk
+            <a href="{{ route('admin.products.create') }}" class="flex w-full min-w-0 shrink-0 items-center justify-center gap-2 rounded-[1rem] border-4 border-white bg-[#5a76c8] px-5 py-3 text-sm font-black text-white shadow-md shadow-[#5a76c8]/25 transition-transform hover:bg-[#4760a9] active:scale-95 sm:rounded-[1.2rem] lg:w-auto lg:min-w-[190px] lg:px-7">
+                @include('partials.wiboost-icon', ['name' => 'plus', 'class' => 'h-5 w-5'])
+                Tambah Produk
             </a>
         </div>
 
@@ -48,6 +62,14 @@
             </form>
         </div>
     </div>
+
+    @include('admin.partials.filter-tabs', [
+        'filters' => $productFilters,
+        'activeFilter' => $activeProductFilter,
+        'filterParam' => 'product_filter',
+        'filterRoute' => 'admin.products.index',
+        'filterQuery' => ['search' => $searchValue],
+    ])
 
     @if(session('success'))
         <div class="mb-6 sm:mb-8 flex items-center gap-3 sm:gap-4 rounded-[2rem] border-4 border-white bg-[#e6fff7] px-5 sm:px-6 py-4 font-black text-emerald-500 shadow-lg shadow-emerald-100/50 relative z-10 text-sm sm:text-base w-full">
@@ -79,25 +101,22 @@
                     <div class="border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-6">
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <span class="mb-2 inline-flex rounded-full border-2 border-white bg-white px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-[#5a76c8] shadow-sm">
-                                    Kategori Utama
-                                </span>
                                 <h3 class="text-xl font-black text-[#2b3a67] sm:text-2xl">{{ $section['name'] }}</h3>
                             </div>
-                            <span class="w-fit rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
-                                {{ $section['count'] }} produk di halaman ini
-                            </span>
                         </div>
                     </div>
 
                     <div class="w-full overflow-x-auto table-scroll pb-2">
                         <div class="inline-block min-w-full align-middle p-4 sm:p-6">
-                            <table class="w-full text-left" style="min-width: 1170px; table-layout: fixed;">
+                            <table class="w-full text-left" style="min-width: 1370px; table-layout: fixed;">
                                 <thead>
                                     <tr>
-                                        <th style="font-size: 10px; width: 360px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Produk</th>
+                                        <th style="font-size: 10px; width: 90px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Visual</th>
+                                        <th style="font-size: 10px; width: 320px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Produk</th>
                                         <th style="font-size: 10px; width: 170px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Tipe Proses</th>
-                                        <th style="font-size: 10px; width: 190px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga Buyer / Member</th>
+                                        <th style="font-size: 10px; width: 150px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga Buyer</th>
+                                        <th style="font-size: 10px; width: 160px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga Member</th>
+                                        <th style="font-size: 10px; width: 135px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Modal</th>
                                         <th style="font-size: 10px; width: 210px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Provider</th>
                                         <th style="font-size: 10px; width: 115px;" class="whitespace-nowrap px-5 py-4 pr-8 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Stok</th>
                                         <th style="font-size: 10px; width: 145px;" class="whitespace-nowrap px-5 py-4 pl-8 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Aksi</th>
@@ -105,19 +124,6 @@
                                 </thead>
                                 <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
                                     @foreach($categorySections as $categorySection)
-                                        <tr class="bg-[#f8faff]">
-                                            <td colspan="6" class="px-5 py-3">
-                                                <div class="flex flex-wrap items-center justify-start gap-4 sm:gap-5">
-                                                    <span class="inline-flex rounded-full border-2 border-white bg-white px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-[#5a76c8] shadow-sm">
-                                                        {{ $categorySection['name'] }}
-                                                    </span>
-                                                    <span class="rounded-full border-2 border-white bg-[#eef8ff] px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#8faaf3] shadow-sm">
-                                                        {{ $categorySection['count'] }} produk
-                                                    </span>
-                                                </div>
-                                            </td>
-                                        </tr>
-
                                         @foreach($categorySection['products'] as $product)
                                             @php
                                                 $productRootCategory = $product->category;
@@ -145,24 +151,22 @@
                                                     : null;
                                             @endphp
                                             <tr class="transition-colors hover:bg-[#f8faff] group">
-                                                <td class="px-5 py-4 align-middle sm:py-5" style="width: 360px; max-width: 360px;">
-                                                    <div class="flex items-center gap-3 sm:gap-4">
-                                                        @if(!empty($product->display_logo_image))
-                                                            <div class="h-10 w-10 shrink-0 overflow-hidden rounded-[1rem] border-2 border-white bg-[#f4f9ff] shadow-sm">
-                                                                <img src="{{ Storage::url($product->display_logo_image) }}" class="h-full w-full object-cover" alt="{{ $product->name }}">
-                                                            </div>
-                                                        @else
-                                                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#f0f5ff] text-xl shadow-inner group-hover:scale-110 transition-transform">
-                                                                {{ $product->display_logo_emote ?? 'P' }}
-                                                            </div>
-                                                        @endif
-
-                                                        <div class="flex-1" style="min-width: 0;">
-                                                            <p class="text-[11px] font-black leading-tight text-[#2b3a67] sm:text-sm sm:leading-snug" title="{{ $product->name ?? '-' }}" style="display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; text-overflow: clip; white-space: normal; word-break: normal; overflow-wrap: anywhere;">
-                                                                {{ $product->name ?? '-' }}
-                                                            </p>
+                                                <td class="px-5 py-4 align-middle sm:py-5">
+                                                    @if(!empty($product->display_logo_image))
+                                                        <div class="h-10 w-10 shrink-0 overflow-hidden rounded-[1rem] border-2 border-white bg-[#f4f9ff] shadow-sm">
+                                                            <img src="{{ Storage::url($product->display_logo_image) }}" class="h-full w-full object-cover" alt="{{ $product->name }}">
                                                         </div>
-                                                    </div>
+                                                    @else
+                                                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#f0f5ff] text-xl shadow-inner group-hover:scale-110 transition-transform">
+                                                            {{ $product->display_logo_emote ?? 'P' }}
+                                                        </div>
+                                                    @endif
+                                                </td>
+
+                                                <td class="px-5 py-4 align-middle sm:py-5" style="width: 320px; max-width: 320px;">
+                                                    <p class="text-[11px] font-black leading-tight text-[#2b3a67] sm:text-sm sm:leading-snug" title="{{ $product->name ?? '-' }}" style="display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; text-overflow: clip; white-space: normal; word-break: normal; overflow-wrap: anywhere;">
+                                                        {{ $product->name ?? '-' }}
+                                                    </p>
                                                 </td>
 
                                                 <td class="px-5 py-4 pr-8 sm:py-5 align-middle text-center">
@@ -179,17 +183,19 @@
                                                 </td>
 
                                                 <td class="px-5 py-4 sm:py-5 align-middle">
-                                                    <p class="text-xs sm:text-sm font-black text-[#5a76c8] drop-shadow-sm">Buyer: Rp {{ number_format($product->selling_price ?? 0, 0, ',', '.') }}</p>
-                                                    @if($memberDisplayPrice !== null)
-                                                        <p style="font-size: 10px; color:#8b5cf6;" class="mt-1 whitespace-nowrap font-black uppercase tracking-widest">
-                                                            Member: Rp {{ number_format($memberDisplayPrice, 0, ',', '.') }}
-                                                        </p>
-                                                    @endif
-                                                    @if($product->uses_api_selling_markup)
-                                                        <p style="font-size: 9px;" class="mt-1 whitespace-nowrap font-black uppercase tracking-widest text-[#8faaf3]">
-                                                            Modal: Rp {{ number_format($product->price ?? 0, 0, ',', '.') }}
-                                                        </p>
-                                                    @endif
+                                                    <p class="text-xs sm:text-sm font-black text-[#5a76c8] drop-shadow-sm">Rp {{ number_format($product->selling_price ?? 0, 0, ',', '.') }}</p>
+                                                </td>
+
+                                                <td class="px-5 py-4 sm:py-5 align-middle">
+                                                    <p style="font-size: 10px; color:#8b5cf6;" class="whitespace-nowrap font-black uppercase tracking-widest">
+                                                        {{ $memberDisplayPrice !== null ? 'Rp ' . number_format($memberDisplayPrice, 0, ',', '.') : '-' }}
+                                                    </p>
+                                                </td>
+
+                                                <td class="px-5 py-4 sm:py-5 align-middle">
+                                                    <p style="font-size: 9px;" class="whitespace-nowrap font-black uppercase tracking-widest text-[#8faaf3]">
+                                                        {{ $product->uses_api_selling_markup ? 'Rp ' . number_format($product->price ?? 0, 0, ',', '.') : '-' }}
+                                                    </p>
                                                 </td>
 
                                                 <td class="px-5 py-4 pl-8 sm:py-5 align-middle text-center">
@@ -230,13 +236,13 @@
                                                 <td class="px-5 py-4 sm:py-5 align-middle text-center">
                                                     <div class="flex items-center justify-center gap-2">
                                                         <a href="{{ route('admin.products.edit', $product->id) }}" class="flex h-9 w-9 items-center justify-center rounded-[1rem] border-2 border-white bg-white text-lg text-[#5a76c8] shadow-md shadow-[#bde0fe]/20 transition-transform active:scale-95 hover:scale-110 hover:bg-[#f0f5ff]" title="Edit">
-                                                            &#x270F;&#xFE0F;
+                                                            @include('partials.wiboost-icon', ['name' => 'edit', 'class' => 'h-4 w-4'])
                                                         </a>
                                                         <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus produk ini? Semua data gudang terkait juga akan hilang!');" class="m-0">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-[1rem] border-2 border-white bg-white text-lg text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:scale-110 hover:bg-[#ffe5e5]" title="Hapus">
-                                                                &#x1F5D1;&#xFE0F;
+                                                                @include('partials.wiboost-icon', ['name' => 'trash', 'class' => 'h-4 w-4'])
                                                             </button>
                                                         </form>
                                                     </div>

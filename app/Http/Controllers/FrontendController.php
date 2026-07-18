@@ -26,7 +26,7 @@ class FrontendController extends Controller
         $categoryOrderSql = WiboostCatalog::categoryOrderSql();
 
         // 1. Mengambil data untuk statistik metrik real-time
-        $totalUsers = User::whereIn('role_id', [2, 3])->count();
+        $totalUsers = User::whereIn('role_id', [2, 3, 5])->count();
         $totalTransactions = Transaction::where('payment_status', 'paid')->count();
         $activeProducts = Product::where('is_active', true)
             ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes())

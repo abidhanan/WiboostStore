@@ -18,6 +18,36 @@
 @endphp
 
 @switch($iconName)
+    @case('image')
+        <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="m7.5 16 3.4-3.4 2.4 2.4 2.8-3.2 2.4 4.2M8.5 9h.01"/></svg>
+        @break
+    @case('users')
+        <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.5 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM3.5 20a6 6 0 0 1 12 0M16.5 11a3 3 0 1 0 0-6M16.5 14.5A5 5 0 0 1 21 20"/></svg>
+        @break
+    @case('category')
+        <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5h6.5L12.3 10H20v8.5H4z"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5v-2h5.5l1.8 2"/></svg>
+        @break
+    @case('search')
+        <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.7" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path stroke-linecap="round" stroke-linejoin="round" d="m16 16 4 4"/></svg>
+        @break
+    @case('refresh')
+        <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7v5h-5M4 17v-5h5"/><path stroke-linecap="round" stroke-linejoin="round" d="M18.5 10A7 7 0 0 0 6.2 6.2M5.5 14A7 7 0 0 0 17.8 17.8"/></svg>
+        @break
+    @case('plus')
+        <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
+        @break
+    @case('edit')
+        <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 20h4.5L19 9.5 14.5 5 4 15.5V20Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m13.5 6 4.5 4.5"/></svg>
+        @break
+    @case('trash')
+        <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 7h14M9 7V5h6v2M8 10v8M12 10v8M16 10v8M7 7l1 13h8l1-13"/></svg>
+        @break
+    @case('chart')
+        <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg>
+        @break
+    @case('save')
+        <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 4h12l2 2v14H5zM8 4v6h8V4M8 20v-6h8v6"/></svg>
+        @break
     @case('cart')
         <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5h2.1l1.7 9.2a2 2 0 0 0 2 1.65h6.5a2 2 0 0 0 1.95-1.55L19.6 8.5H7.15M9.4 20h.01M16.6 20h.01"/></svg>
         @break

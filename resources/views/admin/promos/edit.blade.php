@@ -27,11 +27,6 @@
             ['value' => 'orange', 'label' => 'Oranye'],
             ['value' => 'rose', 'label' => 'Merah Muda'],
         ];
-
-        $statusOptions = [
-            ['value' => '1', 'label' => 'Aktif (Tampil)'],
-            ['value' => '0', 'label' => 'Sembunyikan'],
-        ];
     @endphp
 
     <form action="{{ route('admin.promos.update', $promo->id) }}" method="POST" enctype="multipart/form-data" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-10 relative z-10 overflow-visible">
@@ -78,7 +73,7 @@
             <input type="url" name="link" value="{{ old('link', $promo->link) }}" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" placeholder="Cth: https://wiboost.com/order/kategori">
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
                 <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Emoji (Opsional)</label>
                 <input type="text" name="emoji" value="{{ old('emoji', $promo->emoji) }}" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition text-2xl placeholder-[#a3bbfb]" placeholder="Opsional">
@@ -91,16 +86,6 @@
                     'options' => $themeOptions,
                     'selectedValue' => (string) old('theme', $promo->theme ?: 'blue'),
                     'placeholder' => 'Biru Langit',
-                ])
-            </div>
-            <div>
-                <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Status Banner</label>
-                @include('admin.promos.partials.theme-select', [
-                    'name' => 'is_active',
-                    'id' => 'promo_status_select',
-                    'options' => $statusOptions,
-                    'selectedValue' => (string) old('is_active', (string) (int) $promo->is_active),
-                    'placeholder' => 'Aktif (Tampil)',
                 ])
             </div>
         </div>

@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Mendaftarkan alias 'role' untuk middleware CheckRole
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
+            'admin.access' => \App\Http\Middleware\AdminPageAccess::class,
         ]);
 
         $middleware->redirectGuestsTo(

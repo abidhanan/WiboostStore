@@ -16,7 +16,15 @@ class DepositController extends Controller
      */
     public function index(Request $request)
     {
+        $depositFilter = (string) $request->query('deposit_filter', 'all');
+        $allowedDepositFilters = ['all', 'paid', 'failed', 'topup'];
+
+        if (! in_array($depositFilter, $allowedDepositFilters, true)) {
+            $depositFilter = 'all';
+        }
+
         $query = Deposit::with('user')
+            ->where('invoice_number', 'not like', 'MEM-%')
             ->where(function ($statusQuery) {
                 $statusQuery->whereNull('payment_status')
                     ->orWhereNotIn('payment_status', ['unpaid', 'pending']);
@@ -34,9 +42,17 @@ class DepositController extends Controller
             });
         }
 
-        $deposits = $query->paginate(20);
+        if ($depositFilter === 'paid') {
+            $query->where('payment_status', 'paid');
+        } elseif ($depositFilter === 'failed') {
+            $query->whereIn('payment_status', ['failed', 'expired']);
+        } elseif ($depositFilter === 'topup') {
+            $query->where('invoice_number', 'not like', 'MEM-%');
+        }
 
-        return view('admin.deposits.index', compact('deposits'));
+        $deposits = $query->paginate(20)->withQueryString();
+
+        return view('admin.deposits.index', compact('deposits', 'depositFilter'));
     }
 
     /**

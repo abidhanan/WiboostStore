@@ -176,11 +176,18 @@
 
 @php
     $roleOptions = [
-        '2' => 'Buyer (Pelanggan)',
+        '2' => 'Buyer',
         '3' => 'Reseller',
-        '1' => 'Admin',
+        '1' => 'Super Admin',
+        '4' => 'Keuangan',
+        '6' => 'Gudang',
+        '7' => 'Marketing',
+        '8' => 'Customer Service',
     ];
     $selectedRole = (string) ($selectedRole ?? '2');
+    if (! array_key_exists($selectedRole, $roleOptions)) {
+        $selectedRole = '2';
+    }
     $selectedRoleLabel = $roleOptions[$selectedRole] ?? $roleOptions['2'];
 @endphp
 

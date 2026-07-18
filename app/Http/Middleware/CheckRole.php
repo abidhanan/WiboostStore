@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,28 +36,34 @@ class CheckRole
             return $next($request);
         }
 
-        // 3. Konversi parameter role yang diminta menjadi ID Role sistem baru
-        // Ini membuat middleware sangat fleksibel (bisa pakai angka atau teks)
         $allowedRoles = [];
         foreach ($roles as $role) {
-            $roleLower = strtolower(trim($role));
+            $roleLower = str_replace(['_', '-'], ' ', strtolower(trim((string) $role)));
             
-            if ($roleLower === 'admin' || $role == 1) {
-                $allowedRoles[] = 1; // Admin = 1
-            } elseif ($roleLower === 'buyer' || $roleLower === 'user' || $role == 2) {
-                $allowedRoles[] = 2; // Buyer = 2
-            } elseif ($roleLower === 'reseller' || $role == 3) {
-                $allowedRoles[] = 3; // Reseller = 3
-            } elseif ($role == 5) {
-                // Sisaan sistem lama: Jika route masih minta role 5, kita arahkan ke 2 (Buyer)
-                $allowedRoles[] = 2; 
+            if ($roleLower === 'admin') {
+                $allowedRoles = array_merge($allowedRoles, User::ADMIN_ROLE_IDS);
+            } elseif ($roleLower === 'super admin' || (string) $role === '1') {
+                $allowedRoles[] = User::ROLE_SUPER_ADMIN;
+            } elseif ($roleLower === 'keuangan' || $roleLower === 'kuangan' || $roleLower === 'finance' || (string) $role === '4') {
+                $allowedRoles[] = User::ROLE_FINANCE;
+            } elseif ($roleLower === 'gudang' || $roleLower === 'warehouse' || (string) $role === '6') {
+                $allowedRoles[] = User::ROLE_WAREHOUSE;
+            } elseif ($roleLower === 'marketing' || (string) $role === '7') {
+                $allowedRoles[] = User::ROLE_MARKETING;
+            } elseif ($roleLower === 'customer service' || $roleLower === 'cs' || (string) $role === '8') {
+                $allowedRoles[] = User::ROLE_CUSTOMER_SERVICE;
+            } elseif ($roleLower === 'buyer' || $roleLower === 'user' || (string) $role === '2' || (string) $role === '5') {
+                $allowedRoles = array_merge($allowedRoles, User::BUYER_ROLE_IDS);
+            } elseif ($roleLower === 'reseller' || (string) $role === '3') {
+                $allowedRoles[] = User::ROLE_RESELLER;
             } else {
                 $allowedRoles[] = (int) $role;
             }
         }
 
-        // 4. Cek apakah role_id user ada di dalam daftar role yang diizinkan
-        if (in_array($user->role_id, $allowedRoles)) {
+        $allowedRoles = array_values(array_unique(array_map('intval', $allowedRoles)));
+
+        if (in_array((int) $user->role_id, $allowedRoles, true)) {
             return $next($request);
         }
 

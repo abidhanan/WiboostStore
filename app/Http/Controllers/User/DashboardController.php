@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use App\Models\Deposit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Category;
@@ -109,37 +108,47 @@ class DashboardController extends Controller
 
             if (! Cache::add($lockKey, true, now()->addSeconds(20))) {
                 usleep(500000);
-                $deposit = $this->findReusableMembershipDeposit((int) $user->id);
+                $transaction = $this->findReusableMembershipTransaction((int) $user->id);
 
-                if ($deposit) {
-                    $this->restoreReusableMembershipDeposit($deposit);
-                    return redirect()->route('user.qris.show', $deposit->invoice_number);
+                if ($transaction) {
+                    return redirect()->route('user.qris.show', $transaction->invoice_number);
                 }
 
                 return back()->with('error', 'Tagihan QRIS membership sedang disiapkan. Tunggu sebentar lalu coba lagi.');
             }
 
-            $deposit = $this->findReusableMembershipDeposit((int) $user->id) ?: Deposit::create([
+            $transaction = $this->findReusableMembershipTransaction((int) $user->id) ?: Transaction::create([
                 'user_id' => $user->id,
                 'invoice_number' => 'MEM-' . strtoupper(Str::random(10)),
+                'product_id' => null,
                 'amount' => $amount,
+                'target_data' => 'Membership Wiboost 30 Hari',
+                'order_input_data' => [
+                    'fields' => [
+                        [
+                            'name' => 'membership_period',
+                            'label' => 'Masa Membership',
+                            'value' => '30 Hari',
+                            'target_summary' => true,
+                        ],
+                    ],
+                ],
                 'payment_status' => 'unpaid',
+                'order_status' => 'pending',
                 'payment_method' => 'tripay',
-                'payment_response' => [
+                'response_data' => [
                     'purpose' => 'membership',
                     'membership_days' => 30,
                 ],
             ]);
 
-            $this->restoreReusableMembershipDeposit($deposit);
+            if (blank(data_get($transaction->response_data, 'xoftware_create_response'))) {
+                $payment = $paymentService->createTransactionPayment($transaction->fresh('user'), $user);
 
-            if (blank($deposit->payment_url)) {
-                $payment = $paymentService->createDepositPayment($deposit->fresh('user'), $user);
-
-                $deposit->update([
-                    'payment_url' => route('user.qris.show', $deposit->invoice_number),
-                    'tripay_reference' => $payment['reference'] ?? null,
-                    'payment_response' => array_merge($deposit->payment_response ?? [], [
+                $transaction->update([
+                    'snap_token' => route('user.qris.show', $transaction->invoice_number),
+                    'payment_method' => $payment['payment_method'] ?? 'tripay',
+                    'response_data' => array_merge($transaction->response_data ?? [], [
                         'purpose' => 'membership',
                         'membership_days' => 30,
                         'payment_gateway' => 'xoftware',
@@ -150,7 +159,7 @@ class DashboardController extends Controller
                 ]);
             }
 
-            return redirect()->route('user.qris.show', $deposit->invoice_number);
+            return redirect()->route('user.qris.show', $transaction->invoice_number);
         } catch (\Throwable $exception) {
             return back()->with('error', 'Gagal menyiapkan pembayaran membership: ' . $exception->getMessage());
         } finally {
@@ -158,40 +167,25 @@ class DashboardController extends Controller
         }
     }
 
-    protected function findReusableMembershipDeposit(int $userId): ?Deposit
+    protected function findReusableMembershipTransaction(int $userId): ?Transaction
     {
         $expiresInMinutes = max(1, (int) config('xoftware.expired_minutes', 60));
 
-        return Deposit::query()
+        return Transaction::query()
             ->where('user_id', $userId)
-            ->whereIn('payment_status', ['unpaid', 'pending', 'failed'])
-            ->where('payment_method', 'tripay')
+            ->whereIn('payment_status', ['unpaid', 'pending'])
             ->where('amount', 30000)
             ->where('invoice_number', 'like', 'MEM-%')
             ->where('created_at', '>=', now()->subMinutes($expiresInMinutes))
             ->latest()
             ->get()
-            ->first(function (Deposit $deposit) {
-                if ($deposit->payment_status === 'failed'
-                    && data_get($deposit->payment_response, 'membership_recreate_reason') !== 'admin_fee_missing') {
-                    return false;
-                }
+            ->first(function (Transaction $transaction) {
+                $hasPreparedQris = filled($transaction->snap_token)
+                    || filled(data_get($transaction->response_data, 'xoftware_create_response'))
+                    || filled(data_get($transaction->response_data, 'data.qris'));
 
-                return filled($deposit->payment_url);
+                return $hasPreparedQris && $transaction->tripay_admin_fee > 0;
             });
-    }
-
-    protected function restoreReusableMembershipDeposit(Deposit $deposit): void
-    {
-        if ($deposit->payment_status === 'failed'
-            && data_get($deposit->payment_response, 'membership_recreate_reason') === 'admin_fee_missing') {
-            $deposit->update([
-                'payment_status' => 'unpaid',
-                'payment_response' => array_merge($deposit->payment_response ?? [], [
-                    'membership_recreate_restored_at' => now()->toDateTimeString(),
-                ]),
-            ]);
-        }
     }
 
     public function tutorialCategory(Request $request)

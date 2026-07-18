@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminReport;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ResellerCommission;
 use App\Models\SiteSetting;
 use App\Models\Transaction;
 use App\Models\User;
@@ -14,13 +15,21 @@ use App\Support\WiboostAdminContact;
 use App\Support\WiboostCatalog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
     public function index()
     {
+        Carbon::setLocale('id');
+
         $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
+
+        $activeProductOrMembership = function ($query) {
+            $query->where('invoice_number', 'like', 'MEM-%')
+                ->orWhereHas('product', fn ($productQuery) => $productQuery->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()));
+        };
 
         $totalTransactionsMonth = Transaction::whereMonth('created_at', $currentMonth)
             ->whereYear('created_at', $currentYear)
@@ -30,17 +39,17 @@ class DashboardController extends Controller
                     ->orWhereNull('payment_method')
                     ->orWhereNotIn('payment_status', ['unpaid', 'pending']);
             })
-            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
+            ->where($activeProductOrMembership)
             ->count();
 
         $revenueMonth = Transaction::where('payment_status', 'paid')
             ->where('order_status', '!=', 'failed')
             ->whereMonth('created_at', $currentMonth)
             ->whereYear('created_at', $currentYear)
-            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
+            ->where($activeProductOrMembership)
             ->sum('amount');
 
-        $totalUsers = User::whereIn('role_id', [2, 3])->count();
+        $totalUsers = User::count();
         $totalMembers = User::where('membership_expires_at', '>', now())->count();
         $totalResellers = User::where('role_id', 3)
             ->where(function ($query) {
@@ -48,7 +57,7 @@ class DashboardController extends Controller
                     ->orWhere('membership_expires_at', '<=', now());
             })
             ->count();
-        $totalBuyers = User::where('role_id', 2)
+        $totalBuyers = User::whereIn('role_id', [2, 5])
             ->where(function ($query) {
                 $query->whereNull('membership_expires_at')
                     ->orWhere('membership_expires_at', '<=', now());
@@ -61,7 +70,7 @@ class DashboardController extends Controller
                     ->orWhereNull('payment_method')
                     ->orWhereNotIn('payment_status', ['unpaid', 'pending']);
             })
-            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
+            ->where($activeProductOrMembership)
             ->latest()
             ->take(5)
             ->get();
@@ -84,10 +93,10 @@ class DashboardController extends Controller
         $paidTransactionsForChart = Transaction::where('created_at', '>=', $chartStart)
             ->where('payment_status', 'paid')
             ->where('order_status', '!=', 'failed')
-            ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
+            ->where($activeProductOrMembership)
             ->get(['created_at', 'amount']);
 
-        $newUsersForChart = User::whereIn('role_id', [2, 3])
+        $newUsersForChart = User::whereIn('role_id', [2, 3, 5])
             ->where('created_at', '>=', $chartStart)
             ->get(['created_at']);
 
@@ -157,6 +166,42 @@ class DashboardController extends Controller
             })
             ->values();
 
+        $commissionSummary = ['count' => 0, 'amount' => 0, 'pending' => 0];
+        $latestIncomeCommissions = collect();
+        $withdrawalSummary = ['count' => 0, 'amount' => 0, 'pending' => 0];
+
+        if (Schema::hasTable('reseller_commissions')) {
+            $commissionSummary = [
+                'count' => ResellerCommission::where('type', 'income')->count(),
+                'amount' => (float) ResellerCommission::where('type', 'income')->sum('amount'),
+                'pending' => (float) ResellerCommission::where('type', 'income')->where('status', 'pending')->sum('amount'),
+            ];
+
+            $latestIncomeCommissions = ResellerCommission::query()
+                ->with(['user', 'transaction.product'])
+                ->where('type', 'income')
+                ->latest()
+                ->take(5)
+                ->get()
+                ->map(function (ResellerCommission $commission) {
+                    $commissionTime = $commission->transaction?->created_at ?: $commission->created_at;
+
+                    return [
+                        'invoice' => $commission->transaction?->invoice_number ?: '-',
+                        'time' => optional($commissionTime)->diffForHumans() ?: '-',
+                        'product' => $commission->product_name ?: ($commission->transaction?->product?->name ?: '-'),
+                        'reseller' => $commission->user?->name ?: '-',
+                        'amount' => (float) ($commission->amount ?? 0),
+                    ];
+                });
+
+            $withdrawalSummary = [
+                'count' => ResellerCommission::where('type', 'withdrawal')->count(),
+                'amount' => (float) ResellerCommission::where('type', 'withdrawal')->sum('amount'),
+                'pending' => (float) ResellerCommission::where('type', 'withdrawal')->where('status', 'pending')->sum('amount'),
+            ];
+        }
+
         $adminCsWhatsapp = WiboostAdminContact::csWhatsappNumber();
         $adminOtpWhatsapp = WiboostAdminContact::otpWhatsappNumber();
 
@@ -171,10 +216,11 @@ class DashboardController extends Controller
             'globalWalletLogs',
             'lowStockProducts',
             'dashboardCharts',
+            'commissionSummary',
+            'latestIncomeCommissions',
+            'withdrawalSummary',
             'latestReports',
             'topProductsByRootCategory',
-            'adminCsWhatsapp',
-            'adminOtpWhatsapp'
         ));
     }
 

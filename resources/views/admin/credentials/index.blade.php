@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Kelola Stok: ' . $product->name)
 
@@ -40,12 +40,14 @@
     </div>
     @if (session('success'))
         <div class="bg-[#e6fff7] border-4 border-white text-emerald-500 px-6 py-4 rounded-[2.5rem] mb-8 font-black shadow-lg shadow-emerald-100/50 flex items-center gap-4 relative z-10">
-            <span class="text-3xl drop-shadow-sm">✅</span><p>{{ session('success') }}</p>
+            @include('partials.wiboost-icon', ['name' => 'success', 'class' => 'h-6 w-6 shrink-0'])
+            <p>{{ session('success') }}</p>
         </div>
     @endif
     @if (session('error'))
         <div class="bg-[#ffe5e5] border-4 border-white text-[#ff6b6b] px-6 py-4 rounded-[2.5rem] mb-8 font-black shadow-lg shadow-[#ff6b6b]/20 flex items-center gap-4 relative z-10">
-            <span class="text-3xl drop-shadow-sm">⚠️</span><p>{{ session('error') }}</p>
+            @include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'h-6 w-6 shrink-0'])
+            <p>{{ session('error') }}</p>
         </div>
     @endif
 
@@ -61,7 +63,7 @@
                 <div class="space-y-5">
                     @if($product->process_type == 'account')
                         <div class="p-4 bg-[#e6fff7] border-4 border-white rounded-[1.5rem] mb-5 shadow-sm">
-                            <p class="text-xs text-emerald-600 font-bold leading-relaxed">💡 Semua form di bawah <span class="font-black underline">opsional</span>. Cukup isi yang diperlukan sesuai dengan jenis aplikasi premiumnya.</p>
+                            <p class="text-xs text-emerald-600 font-bold leading-relaxed">Semua form di bawah <span class="font-black underline">opsional</span>. Cukup isi yang diperlukan sesuai dengan jenis aplikasi premiumnya.</p>
                         </div>
 
                         <div>
@@ -132,7 +134,10 @@
 
         <div class="lg:col-span-2 bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-2xl shadow-[#bde0fe]/30 border-4 border-white overflow-hidden flex flex-col">
             <div class="px-6 py-6 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff]">
-                <h4 class="font-black text-[#2b3a67] text-2xl flex items-center gap-3"><span class="text-3xl drop-shadow-sm">📋</span> Daftar Data Tersedia</h4>
+                <h4 class="font-black text-[#2b3a67] text-2xl flex items-center gap-3">
+                    @include('partials.wiboost-icon', ['name' => 'package', 'class' => 'h-7 w-7 text-[#5a76c8]'])
+                    Daftar Data Tersedia
+                </h4>
             </div>
             
             <div class="overflow-x-auto flex-1 p-4 md:p-6">
@@ -199,7 +204,7 @@
                                     </div>
                                 </div>
                                 <p class="text-[9px] font-black text-[#8faaf3] mt-3 uppercase tracking-widest">
-                                    Ditambahkan oleh {{ $cred->createdBy->name ?? 'Admin' }} • {{ $cred->created_at?->timezone(config('app.timezone', 'Asia/Jakarta'))->locale('id')->translatedFormat('d F Y, H:i') }}
+                                    Ditambahkan oleh {{ $cred->createdBy->name ?? 'Admin' }} â€¢ {{ $cred->created_at?->timezone(config('app.timezone', 'Asia/Jakarta'))->locale('id')->translatedFormat('d F Y, H:i') }}
                                 </p>
                             </td>
                             
@@ -215,14 +220,18 @@
                             <td class="px-5 py-5 align-middle text-center">
                                 <form action="{{ route('admin.credentials.destroy', $cred->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus data kredensial ini?');">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="w-12 h-12 mx-auto bg-[#ffe5e5] border-4 border-white rounded-[1.2rem] flex items-center justify-center text-xl hover:bg-[#ff6b6b] transition-transform active:scale-95 shadow-md shadow-[#ff6b6b]/20 group-hover:scale-110" title="Hapus Data">🗑️</button>
+                                    <button type="submit" class="w-12 h-12 mx-auto bg-[#ffe5e5] border-4 border-white rounded-[1.2rem] flex items-center justify-center text-[#ff6b6b] hover:bg-[#ffcccc] transition-transform active:scale-95 shadow-md shadow-[#ff6b6b]/20 group-hover:scale-110" title="Hapus Data">
+                                        @include('partials.wiboost-icon', ['name' => 'trash', 'class' => 'h-5 w-5'])
+                                    </button>
                                 </form>
                             </td>
                         </tr>
                         @empty
                         <tr>
                             <td colspan="3" class="px-5 py-24 text-center">
-                                <div class="inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-[#f0f5ff] border-4 border-white mb-4 shadow-inner animate-float"><span class="text-4xl">📭</span></div>
+                                <div class="inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-[#f0f5ff] border-4 border-white mb-4 text-[#5a76c8] shadow-inner animate-float">
+                                    @include('partials.wiboost-icon', ['name' => 'key', 'class' => 'h-9 w-9'])
+                                </div>
                                 <p class="text-[#5a76c8] font-black text-xl">Belum ada stok data.</p>
                                 <p class="text-[#8faaf3] font-bold mt-1">Silakan tambahkan melalui form di samping kiri.</p>
                             </td>

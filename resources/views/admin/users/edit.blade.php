@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 @section('title', 'Edit Role Pengguna')
 @section('content')
 <style>
@@ -22,7 +22,7 @@
 
     @if ($errors->any())
         <div class="bg-[#ffe5e5] border-4 border-white text-[#ff6b6b] px-6 py-5 rounded-[2.5rem] mb-8 font-black shadow-lg shadow-[#ff6b6b]/20 flex items-start gap-4 relative z-10">
-            <span class="text-3xl mt-1 drop-shadow-sm">⚠️</span>
+            @include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'mt-1 h-6 w-6 shrink-0'])
             <ul class="list-disc list-inside text-sm font-bold mt-2 bg-white/50 p-4 rounded-2xl border border-white">
                 @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
             </ul>
@@ -32,14 +32,18 @@
     @php
         $defaultAdminProfilePhotoUrl = \App\Models\User::defaultProfilePhotoUrl();
         $adminUserPhotoUrl = $user->profile_photo_url ?: $defaultAdminProfilePhotoUrl;
-        $effectiveRoleLabel = $user->isMember()
-            ? 'Member'
-            : ($user->isAdmin() ? 'Admin' : ($user->role_id == 3 ? 'Reseller' : 'Buyer'));
+        $effectiveRoleLabel = $user->effectiveRoleLabel();
         $effectiveRoleStyle = $user->isMember()
             ? 'background:#ede9fe; color:#8b5cf6;'
-            : ($user->role_id == 3
-                ? 'background:#fff7d6; color:#d99b16;'
-                : ($user->isAdmin() ? 'background:#ffe5e5; color:#ff6b6b;' : 'background:#e0fbfc; color:#5a76c8;'));
+            : match ((int) $user->role_id) {
+                1 => 'background:#e6fff7; color:#22c55e;',
+                3 => 'background:#fff7d6; color:#d99b16;',
+                4 => 'background:#e0f2fe; color:#0ea5e9;',
+                6 => 'background:#ccfbf1; color:#14b8a6;',
+                7 => 'background:#fff7d6; color:#f59e0b;',
+                8 => 'background:#e6fff7; color:#22c55e;',
+                default => 'background:#e0fbfc; color:#5a76c8;',
+            };
     @endphp
 
     <form action="{{ route('admin.users.update', $user->id) }}" method="POST" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-10 relative z-10 overflow-visible">
@@ -54,19 +58,19 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
-                <label class="block text-sm font-black text-[#a3bbfb] mb-3 ml-2 flex items-center gap-2">Nama Lengkap 🔒</label>
+                <label class="block text-sm font-black text-[#a3bbfb] mb-3 ml-2 flex items-center gap-2">Nama Lengkap</label>
                 <input type="text" value="{{ $user->name }}" disabled class="w-full bg-[#f0f5ff] border-4 border-white rounded-[1.5rem] px-6 py-4 text-[#8faaf3] font-black outline-none cursor-not-allowed shadow-inner opacity-80">
             </div>
             <div>
-                <label class="block text-sm font-black text-[#a3bbfb] mb-3 ml-2 flex items-center gap-2">Email 🔒</label>
+                <label class="block text-sm font-black text-[#a3bbfb] mb-3 ml-2 flex items-center gap-2">Email</label>
                 <input type="email" value="{{ $user->email }}" disabled class="w-full bg-[#f0f5ff] border-4 border-white rounded-[1.5rem] px-6 py-4 text-[#8faaf3] font-black outline-none cursor-not-allowed shadow-inner opacity-80">
             </div>
             <div>
-                <label class="block text-sm font-black text-[#a3bbfb] mb-3 ml-2 flex items-center gap-2">Nomor Kontak 🔒</label>
+                <label class="block text-sm font-black text-[#a3bbfb] mb-3 ml-2 flex items-center gap-2">Nomor Kontak</label>
                 <input type="text" value="{{ $user->whatsapp }}" disabled class="w-full bg-[#f0f5ff] border-4 border-white rounded-[1.5rem] px-6 py-4 text-[#8faaf3] font-black outline-none cursor-not-allowed shadow-inner opacity-80">
             </div>
             <div>
-                <label class="block text-sm font-black text-[#a3bbfb] mb-3 ml-2 flex items-center gap-2">Saldo Saat Ini 🔒</label>
+                <label class="block text-sm font-black text-[#a3bbfb] mb-3 ml-2 flex items-center gap-2">Saldo Saat Ini</label>
                 <input type="text" value="Rp {{ number_format($user->balance, 0, ',', '.') }}" disabled class="w-full bg-[#f0f5ff] border-4 border-white rounded-[1.5rem] px-6 py-4 text-[#4bc6b9] font-black outline-none cursor-not-allowed shadow-inner opacity-80">
             </div>
             <div class="md:col-span-2">
@@ -90,8 +94,11 @@
                 <div class="relative z-10">
                     <label class="block text-lg font-black text-amber-600 mb-4 ml-2">Ubah Role Akses</label>
                     @include('admin.users.partials.role-select', ['selectedRole' => old('role_id', (string) $user->role_id)])
+                    <p class="hidden text-xs font-bold text-amber-600 mt-4 ml-2 bg-amber-100/50 px-3 py-1.5 rounded-lg border border-amber-200">
+                        <b>Peringatan:</b> Mengubah menjadi Admin akan memberikan akses penuh ke dashboard pengelolaan.
+                    </p>
                     <p class="text-xs font-bold text-amber-600 mt-4 ml-2 bg-amber-100/50 inline-block px-3 py-1.5 rounded-lg border border-amber-200">
-                        ⚠️ <b>Peringatan:</b> Mengubah menjadi Admin akan memberikan akses penuh ke dashboard pengelolaan.
+                        <b>Peringatan:</b> Super Admin punya akses penuh. Role staf hanya dapat membuka halaman sesuai jatahnya.
                     </p>
                     <p class="text-xs font-bold text-[#8b5cf6] mt-3 ml-2 bg-[#f5f3ff] inline-block px-3 py-1.5 rounded-lg border border-[#ddd6fe]">
                         Membership aktif tetap tampil sebagai Member sampai masa aktif habis.

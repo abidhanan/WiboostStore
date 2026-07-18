@@ -42,9 +42,11 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $this->forgetOrderCheckoutIntendedUrl($request);
+        $request->session()->forget('wiboost_display_seen_dashboard');
+        $request->session()->put('wiboost_show_displays_after_login', true);
 
         // 3. Arahkan user biasa langsung ke dashboard user.
-        return redirect()->intended(route('user.dashboard', absolute: false));
+        return redirect()->route('user.dashboard');
     }
 
     protected function forgetOrderCheckoutIntendedUrl(Request $request): void

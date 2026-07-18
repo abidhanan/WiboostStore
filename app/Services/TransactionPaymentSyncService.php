@@ -25,6 +25,10 @@ class TransactionPaymentSyncService
         }
 
         if ($pendingTransaction->payment_status === 'paid') {
+            if ($this->activateMembershipIfNeeded($pendingTransaction)) {
+                return;
+            }
+
             $this->orderFulfillmentService->handlePaidTransaction(
                 $pendingTransaction->fresh(['product', 'user'])
             );
@@ -89,6 +93,10 @@ class TransactionPaymentSyncService
                 $transaction = Transaction::with(['product', 'user'])->find($transactionId);
 
                 if ($transaction) {
+                    if ($this->activateMembershipIfNeeded($transaction)) {
+                        return;
+                    }
+
                     $this->orderFulfillmentService->handlePaidTransaction($transaction);
                 }
             }
@@ -166,5 +174,38 @@ class TransactionPaymentSyncService
 
             return true;
         });
+    }
+
+    protected function activateMembershipIfNeeded(Transaction $transaction): bool
+    {
+        if (! $transaction->isMembershipPayment()) {
+            return false;
+        }
+
+        DB::transaction(function () use ($transaction) {
+            $lockedTransaction = Transaction::query()
+                ->with('user')
+                ->lockForUpdate()
+                ->find($transaction->id);
+
+            if (! $lockedTransaction
+                || $lockedTransaction->payment_status !== 'paid'
+                || ! $lockedTransaction->isMembershipPayment()
+                || $lockedTransaction->membershipActivated()) {
+                return;
+            }
+
+            $lockedTransaction->user?->activateMembership((int) data_get($lockedTransaction->response_data, 'membership_days', 30));
+            $lockedTransaction->forceFill([
+                'order_status' => 'success',
+                'target_notes' => 'Membership Wiboost 30 hari berhasil aktif.',
+                'response_data' => array_merge($lockedTransaction->response_data ?? [], [
+                    'purpose' => 'membership',
+                    'membership_activated_at' => now()->toDateTimeString(),
+                ]),
+            ])->save();
+        });
+
+        return true;
     }
 }

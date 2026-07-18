@@ -295,8 +295,8 @@
                                 <div class="relative z-10">
                                     @if($hasCredentialAccess)
                                     <div class="flex items-center gap-3 mb-5">
-                                        <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['name' => 'key', 'class' => 'h-6 w-6'])</span>
-                                        <p class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Akses Kredensial Kamu</p>
+                                        <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['name' => 'profile', 'class' => 'h-6 w-6'])</span>
+                                        <p class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Akses Akun Kamu</p>
                                     </div>
 
                                     <div class="space-y-4">
@@ -622,7 +622,7 @@
 
                     <div class="mt-4 pt-4 border-t-4 border-dashed border-[#f4f9ff] shrink-0">
                         @if($isUnpaid)
-                            @php($paymentUrl = filter_var($trx->snap_token, FILTER_VALIDATE_URL) ? $trx->snap_token : null)
+                            <?php $paymentUrl = filter_var($trx->snap_token, FILTER_VALIDATE_URL) ? $trx->snap_token : null; ?>
                             @if($paymentUrl)
                                 <a href="{{ $paymentUrl }}" class="w-full bg-[#4bc6b9] hover:bg-[#3ba398] text-white py-4 rounded-full font-black transition-transform active:scale-95 shadow-xl shadow-[#4bc6b9]/30 border-4 border-white flex justify-center items-center gap-2 text-lg mb-3">
                                     Lanjut Bayar

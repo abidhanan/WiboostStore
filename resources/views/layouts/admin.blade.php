@@ -62,6 +62,28 @@
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%235a76c8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m18 15-6-6-6 6'/%3E%3C/svg%3E");
         }
 
+        body.wiboost-admin-shell main a[title*="Edit"],
+        body.wiboost-admin-shell main button[title*="Edit"] {
+            color: #d99b16 !important;
+            box-shadow: 0 10px 22px rgba(217, 155, 22, .16) !important;
+        }
+
+        body.wiboost-admin-shell main a[title*="Edit"]:hover,
+        body.wiboost-admin-shell main button[title*="Edit"]:hover {
+            background: #fff5eb !important;
+        }
+
+        body.wiboost-admin-shell main a[title*="Hapus"],
+        body.wiboost-admin-shell main button[title*="Hapus"] {
+            color: #ff4d4d !important;
+            box-shadow: 0 10px 22px rgba(255, 107, 107, .18) !important;
+        }
+
+        body.wiboost-admin-shell main a[title*="Hapus"]:hover,
+        body.wiboost-admin-shell main button[title*="Hapus"]:hover {
+            background: #ffe5e5 !important;
+        }
+
         body.wiboost-admin-shell {
             width: 100%;
             max-width: 100%;
@@ -355,17 +377,50 @@
         restoreSidebarScroll() {
             this.$nextTick(() => {
                 try {
-                    const savedScroll = window.localStorage.getItem('wiboost-admin-sidebar-scroll');
-                    if (savedScroll && this.$refs.adminSidebarNav) {
-                        this.$refs.adminSidebarNav.scrollTop = Number(savedScroll);
-                    }
+                    const sidebarTargets = [
+                        ['wiboost-admin-sidebar-nav', 'wiboost-admin-sidebar-scroll'],
+                        ['wiboost-admin-mobile-sidebar-nav', 'wiboost-admin-mobile-sidebar-scroll'],
+                    ];
+                    const applyScroll = () => {
+                        sidebarTargets.forEach(([id, key]) => {
+                            const nav = document.getElementById(id);
+                            const savedScroll = Number(window.localStorage.getItem(key) || 0);
+
+                            if (nav && Number.isFinite(savedScroll)) {
+                                nav.scrollTop = savedScroll;
+                            }
+                        });
+                    };
+                    applyScroll();
+                    window.requestAnimationFrame(applyScroll);
+                    window.setTimeout(applyScroll, 90);
+                    window.setTimeout(applyScroll, 160);
+                    window.setTimeout(applyScroll, 260);
                 } catch (error) {}
             });
         },
-        saveSidebarScroll() {
+        saveSidebarScroll(event = null) {
             try {
-                if (this.$refs.adminSidebarNav) {
-                    window.localStorage.setItem('wiboost-admin-sidebar-scroll', this.$refs.adminSidebarNav.scrollTop);
+                const sidebarTargets = [
+                    ['wiboost-admin-sidebar-nav', 'wiboost-admin-sidebar-scroll'],
+                    ['wiboost-admin-mobile-sidebar-nav', 'wiboost-admin-mobile-sidebar-scroll'],
+                ];
+
+                sidebarTargets.forEach(([id, key]) => {
+                    const nav = document.getElementById(id);
+
+                    if (nav) {
+                        window.localStorage.setItem(key, String(nav.scrollTop || 0));
+                    }
+                });
+
+                const current = event?.currentTarget;
+                if (current?.id === 'wiboost-admin-sidebar-nav') {
+                    window.localStorage.setItem('wiboost-admin-sidebar-scroll', String(current.scrollTop || 0));
+                }
+
+                if (current?.id === 'wiboost-admin-mobile-sidebar-nav') {
+                    window.localStorage.setItem('wiboost-admin-mobile-sidebar-scroll', String(current.scrollTop || 0));
                 }
             } catch (error) {}
         }
@@ -388,12 +443,42 @@
     </script>
 
     @php
+        $currentAdmin = Auth::user();
+        $currentAdminRoleId = (int) ($currentAdmin?->role_id ?? 0);
+        $adminRoleLabels = [
+            1 => 'Super Admin',
+            4 => 'Keuangan',
+            6 => 'Gudang',
+            7 => 'Marketing',
+            8 => 'Customer Service',
+        ];
+        $adminRoleLabel = $adminRoleLabels[$currentAdminRoleId] ?? 'Admin';
+        $adminProfileBorderColors = [
+            1 => '#22c55e',
+            4 => '#8b5a2b',
+            6 => '#111827',
+            7 => '#991b1b',
+            8 => '#ec4899',
+        ];
+        $adminProfileBorderColor = $adminProfileBorderColors[$currentAdminRoleId] ?? '#22c55e';
+        $adminCanAccessArea = function (string $area) use ($currentAdminRoleId): bool {
+            if ($currentAdminRoleId === 1) {
+                return true;
+            }
+
+            $adminAccessMap = [
+                4 => ['dashboard', 'commissions', 'users', 'transactions', 'deposits', 'withdrawals'],
+                6 => ['dashboard', 'users', 'categories', 'products', 'tutorials', 'transactions'],
+                7 => ['dashboard', 'users', 'transactions', 'promos', 'displays'],
+                8 => ['dashboard', 'commissions', 'users', 'transactions', 'deposits', 'reports'],
+            ];
+
+            return in_array($area, $adminAccessMap[$currentAdminRoleId] ?? [], true);
+        };
+
         $adminNav = [
-            ['route' => 'admin.resellers.index', 'pattern' => 'admin.resellers.*', 'label' => 'Reseller', 'title' => 'Manajemen Reseller', 'description' => 'Kelola reseller dan penarikan komisi.', 'icon' => 'R'],
-            ['route' => 'admin.commissions.index', 'pattern' => 'admin.commissions.*', 'label' => 'Komisi', 'title' => 'Halaman Komisi', 'description' => 'Pantau komisi dan status pencairan.', 'icon' => 'K'],
-            ['route' => 'admin.members.index', 'pattern' => 'admin.members.*', 'label' => 'Member', 'title' => 'Halaman Member', 'description' => 'Pantau member aktif dan masa berlaku.', 'icon' => 'M'],
-            ['route' => 'admin.admins.index', 'pattern' => 'admin.admins.*', 'label' => 'Admin', 'title' => 'Halaman Admin', 'description' => 'Kelola akun admin Wiboost Store.', 'icon' => 'A'],
-            ['route' => 'admin.dashboard', 'pattern' => 'admin.dashboard', 'label' => 'Dashboard', 'description' => 'Ringkasan transaksi dan aktivitas toko.', 'icon' => '📊'],
+            ['route' => 'admin.commissions.index', 'pattern' => 'admin.commissions.*', 'label' => 'Komisi', 'title' => 'Halaman Komisi', 'description' => 'Pantau komisi masuk reseller.', 'icon' => 'K'],
+            ['route' => 'admin.dashboard', 'pattern' => 'admin.dashboard', 'label' => 'Dashboard', 'description' => 'Ringkasan transaksi dan aktivitas toko.', 'icon' => 'dashboard'],
             ['route' => 'admin.users.index', 'pattern' => 'admin.users.*', 'label' => 'Pengguna', 'title' => 'Manajemen Pengguna', 'description' => 'Kelola data pengguna dan role akun.', 'icon' => '👥'],
             ['route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'label' => 'Kategori', 'title' => 'Manajemen Kategori', 'description' => 'Atur kategori layanan dan produk.', 'icon' => '📂'],
             ['route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Produk', 'title' => 'Manajemen Produk', 'description' => 'Kelola harga, stok, dan provider.', 'icon' => '📦'],
@@ -401,7 +486,7 @@
             ['route' => 'admin.tutorials.index', 'pattern' => 'admin.tutorials.*', 'label' => 'Tutorial', 'title' => 'Manajemen Tutorial', 'description' => 'Kelola panduan dan tutorial pelanggan.', 'icon' => '📖'],
             ['route' => 'admin.transactions.index', 'pattern' => 'admin.transactions.*', 'label' => 'Transaksi', 'title' => 'Manajemen Transaksi', 'description' => 'Pantau transaksi dan pesanan pelanggan.', 'icon' => '💳'],
             ['route' => 'admin.manual-orders.index', 'pattern' => 'admin.manual-orders.*', 'label' => 'Manual Order', 'description' => 'Kelola pesanan manual pelanggan.', 'icon' => '✍️'],
-            ['route' => 'admin.deposits.index', 'pattern' => 'admin.deposits.*', 'label' => 'Deposit', 'title' => 'Manajemen Deposit', 'description' => 'Pantau top-up saldo pengguna.', 'icon' => '💰'],
+            ['route' => 'admin.deposits.index', 'pattern' => 'admin.deposits.*', 'label' => 'Deposit', 'title' => 'Manajemen Deposit', 'description' => 'Pantau top-up saldo pengguna.', 'icon' => 'deposit'],
             ['route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Laporan', 'title' => 'Manajemen Laporan', 'description' => 'Pantau laporan kendala pelanggan.', 'icon' => '📩'],
             ['route' => 'profile.edit', 'pattern' => 'profile.edit', 'label' => 'Profil', 'description' => 'Kelola profil dan keamanan akun.', 'icon' => '👤'],
         ];
@@ -420,31 +505,34 @@
         };
 
         $adminNav = [
-            ['route' => 'admin.dashboard', 'pattern' => 'admin.dashboard', 'label' => 'Dashboard', 'description' => 'Ringkasan transaksi dan aktivitas toko.', 'icon' => 'dashboard'],
-            ['route' => 'admin.resellers.index', 'pattern' => 'admin.resellers.*', 'label' => 'Reseller', 'title' => 'Manajemen Reseller', 'description' => 'Kelola reseller dan penarikan komisi.', 'icon' => 'reseller'],
-            ['route' => 'admin.commissions.index', 'pattern' => 'admin.commissions.*', 'label' => 'Komisi', 'title' => 'Halaman Komisi', 'description' => 'Pantau komisi dan status pencairan.', 'icon' => 'commission'],
-            ['route' => 'admin.members.index', 'pattern' => 'admin.members.*', 'label' => 'Member', 'title' => 'Halaman Member', 'description' => 'Pantau member aktif dan masa berlaku.', 'icon' => 'member'],
-            ['route' => 'admin.admins.index', 'pattern' => 'admin.admins.*', 'label' => 'Admin', 'title' => 'Halaman Admin', 'description' => 'Kelola akun admin Wiboost Store.', 'icon' => 'admin'],
-            ['route' => 'admin.users.index', 'pattern' => 'admin.users.*', 'label' => 'Pengguna', 'title' => 'Manajemen Pengguna', 'description' => 'Kelola data pengguna dan role akun.', 'icon' => 'users'],
-            ['route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'label' => 'Kategori', 'title' => 'Manajemen Kategori', 'description' => 'Atur kategori layanan dan produk.', 'icon' => 'category'],
-            ['route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Produk', 'title' => 'Manajemen Produk', 'description' => 'Kelola harga, stok, dan provider.', 'icon' => 'product'],
-            ['route' => 'admin.promos.index', 'pattern' => 'admin.promos.*', 'label' => 'Banner', 'title' => 'Manajemen Banner', 'description' => 'Kelola banner dan pengumuman user.', 'icon' => 'banner'],
-            ['route' => 'admin.tutorials.index', 'pattern' => 'admin.tutorials.*', 'label' => 'Tutorial', 'title' => 'Manajemen Tutorial', 'description' => 'Kelola panduan dan tutorial pelanggan.', 'icon' => 'tutorial'],
-            ['route' => 'admin.transactions.index', 'pattern' => 'admin.transactions.*', 'label' => 'Transaksi', 'title' => 'Manajemen Transaksi', 'description' => 'Pantau transaksi dan pesanan pelanggan.', 'icon' => 'transaction'],
-            ['route' => 'admin.deposits.index', 'pattern' => 'admin.deposits.*', 'label' => 'Deposit', 'title' => 'Manajemen Deposit', 'description' => 'Pantau top-up saldo pengguna.', 'icon' => 'deposit'],
-            ['route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Laporan', 'title' => 'Manajemen Laporan', 'description' => 'Pantau laporan kendala pelanggan.', 'icon' => 'report'],
+            ['access' => 'dashboard', 'route' => 'admin.dashboard', 'pattern' => 'admin.dashboard', 'label' => 'Dashboard', 'description' => 'Ringkasan transaksi dan aktivitas toko.', 'icon' => 'dashboard'],
+            ['access' => 'users', 'route' => 'admin.users.index', 'pattern' => 'admin.users.*', 'label' => 'Pengguna', 'title' => 'Manajemen Pengguna', 'description' => 'Kelola data pengguna dan role akun.', 'icon' => 'users'],
+            ['access' => 'categories', 'route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'label' => 'Kategori', 'title' => 'Manajemen Kategori', 'description' => 'Atur kategori layanan dan produk.', 'icon' => 'category'],
+            ['access' => 'products', 'route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Produk', 'title' => 'Manajemen Produk', 'description' => 'Kelola harga, stok, dan provider.', 'icon' => 'product'],
+            ['access' => 'transactions', 'route' => 'admin.transactions.index', 'pattern' => 'admin.transactions.*', 'label' => 'Transaksi', 'title' => 'Manajemen Transaksi', 'description' => 'Pantau transaksi dan pesanan pelanggan.', 'icon' => 'transaction'],
+            ['access' => 'reports', 'route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Laporan', 'title' => 'Manajemen Laporan', 'description' => 'Pantau laporan kendala pelanggan.', 'icon' => 'report'],
+            ['access' => 'deposits', 'route' => 'admin.deposits.index', 'pattern' => 'admin.deposits.*', 'label' => 'Deposit', 'title' => 'Manajemen Deposit', 'description' => 'Pantau top-up saldo pengguna.', 'icon' => 'deposit'],
+            ['access' => 'commissions', 'route' => 'admin.commissions.index', 'pattern' => 'admin.commissions.*', 'label' => 'Komisi', 'title' => 'Halaman Komisi', 'description' => 'Pantau komisi masuk reseller.', 'icon' => 'commission'],
+            ['access' => 'withdrawals', 'route' => 'admin.withdrawals.index', 'pattern' => 'admin.withdrawals.*', 'label' => 'Penarikan', 'title' => 'Penarikan Komisi', 'description' => 'Konfirmasi penarikan reseller setelah transfer.', 'icon' => 'withdrawal'],
+            ['access' => 'promos', 'route' => 'admin.promos.index', 'pattern' => 'admin.promos.*', 'label' => 'Banner', 'title' => 'Manajemen Banner', 'description' => 'Kelola banner dan pengumuman user.', 'icon' => 'banner'],
+            ['access' => 'displays', 'route' => 'admin.displays.index', 'pattern' => 'admin.displays.*', 'label' => 'Display', 'title' => 'Manajemen Display', 'description' => 'Kelola display popup user.', 'icon' => 'display'],
+            ['access' => 'tutorials', 'route' => 'admin.tutorials.index', 'pattern' => 'admin.tutorials.*', 'label' => 'Tutorial', 'title' => 'Manajemen Tutorial', 'description' => 'Kelola panduan dan tutorial pelanggan.', 'icon' => 'tutorial'],
         ];
+
+        $adminNav = array_values(array_filter($adminNav, fn (array $item) => $adminCanAccessArea($item['access'])));
 
         $adminNavIconPaths = [
             'dashboard' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 13.5h6.5V4H4v9.5Zm9.5 6.5H20V4h-6.5v16ZM4 20h6.5v-3.5H4V20Z" />',
             'reseller' => '<path stroke-linecap="round" stroke-linejoin="round" d="M8.5 10.5V8A3.5 3.5 0 0 1 12 4.5 3.5 3.5 0 0 1 15.5 8v2.5M5.5 10.5h13l-1 9h-11l-1-9ZM9 14h6" />',
             'commission' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18M7 7.5h7.5a3 3 0 0 1 0 6H9.5a3 3 0 0 0 0 6H17" />',
+            'withdrawal' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 8h12.5A2.5 2.5 0 0 1 19 10.5V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z M4 8l10.5-3v3M7 13h4M16 12h5m0 0-2.5-2.5M21 12l-2.5 2.5" />',
             'member' => '<path stroke-linecap="round" stroke-linejoin="round" d="M6.5 4.5h11L21 9l-9 11L3 9l3.5-4.5Z M3 9h18" />',
             'admin' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3.5 18 6v5.5c0 4-2.45 7.35-6 8.8-3.55-1.45-6-4.8-6-8.8V6l6-2.5Z M9.5 12l1.7 1.7 3.6-3.9" />',
             'users' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm6.5 9a6.5 6.5 0 0 0-13 0M17 10.5a3 3 0 1 0 0-6M21.5 20a5.5 5.5 0 0 0-4-5.3" />',
             'category' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 5.5h6l2 2h8v11H4v-13Z" />',
             'product' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3.5 20 8v8.5L12 21l-8-4.5V8l8-4.5Z M4 8l8 4.5L20 8 M12 12.5V21" />',
             'banner' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6.5h16v11H4v-11Zm3 7 2.2-2.2 2 2 3.3-3.3L18 13.5" />',
+            'display' => '<path stroke-linecap="round" stroke-linejoin="round" d="M7.25 3.5h9.5A2.25 2.25 0 0 1 19 5.75v12.5a2.25 2.25 0 0 1-2.25 2.25h-9.5A2.25 2.25 0 0 1 5 18.25V5.75A2.25 2.25 0 0 1 7.25 3.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M8.5 7.5h7M8.5 16.5h7" /><path stroke-linecap="round" stroke-linejoin="round" d="m8.7 13.2 2.05-2.05 1.75 1.65 2.2-2.85 1.6 3.25H8.7Z" />',
             'tutorial' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 5.5A2.5 2.5 0 0 1 7 3h11.5v16H7a2.5 2.5 0 0 0-2.5 2.5v-16Zm0 0v16M8.25 7.25h6.5M8.25 10.75h5M8.25 14.25h4" />',
             'transaction' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5h16v11H4v-11Zm0 3.5h16M8 15h4" />',
             'deposit' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-10a2 2 0 0 1 2-2Zm0 0 12-3v3M17 13.5h.01" />',
@@ -482,11 +570,11 @@
                 </a>
             </div>
 
-            <nav x-ref="adminSidebarNav" @scroll.debounce.150ms="saveSidebarScroll()" class="hide-scroll flex-1 space-y-2 overflow-y-auto overscroll-contain px-5 py-4">
+            <nav id="wiboost-admin-sidebar-nav" x-ref="adminSidebarNav" @scroll.debounce.100ms="saveSidebarScroll()" class="hide-scroll flex-1 space-y-2 overflow-y-auto overscroll-contain px-5 py-4">
                 @foreach($adminNav as $item)
-                    @php($isActiveAdminNav = $adminNavMatches($item))
-                    @php($adminIconStyle = $item['icon'] === 'commission' ? 'transform: scaleX(-1); transform-origin: center;' : '')
-                    <a href="{{ route($item['route']) }}" @click="saveSidebarScroll()" class="flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-black transition-all duration-300 {{ $isActiveAdminNav ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 scale-[1.02]' : 'border-2 border-transparent text-[#5a76c8] hover:border-white hover:bg-[#f4f9ff] hover:scale-[1.02]' }}">
+                    <?php $isActiveAdminNav = $adminNavMatches($item); ?>
+                    <?php $adminIconStyle = $item['icon'] === 'commission' ? 'transform: scaleX(-1); transform-origin: center;' : ''; ?>
+                    <a href="{{ route($item['route']) }}" data-admin-sidebar-link @click="saveSidebarScroll()" class="flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-black transition-all duration-300 {{ $isActiveAdminNav ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 scale-[1.02]' : 'border-2 border-transparent text-[#5a76c8] hover:border-white hover:bg-[#f4f9ff] hover:scale-[1.02]' }}">
                         <span class="flex h-8 w-8 items-center justify-center rounded-xl {{ $isActiveAdminNav ? 'bg-white/20 text-white' : 'bg-white text-[#5a76c8] shadow-sm' }}">
                             <svg class="h-5 w-5" style="{{ $adminIconStyle }}" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">
                                 {!! $adminNavIconPaths[$item['icon']] ?? $adminNavIconPaths['dashboard'] !!}
@@ -499,12 +587,12 @@
 
             <div class="wiboost-admin-sidebar-footer flex shrink-0 items-center gap-3 border-t-4 border-dashed border-[#f4f9ff] p-4">
                 <a href="{{ route('profile.edit') }}" class="flex min-w-0 flex-1 items-center gap-3 rounded-[1.5rem] border-2 border-white bg-[#f4f9ff] px-4 py-3 text-[#2b3a67] shadow-sm transition hover:bg-[#e0fbfc]">
-                    <span class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white ring-2 ring-white" style="border-color: #22c55e;">
+                    <span class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white ring-2 ring-white" style="border-color: {{ $adminProfileBorderColor }};">
                         <img src="{{ $adminPhotoUrl }}" onerror="this.onerror=null;this.src='{{ $adminDefaultPhotoUrl }}';" alt="Foto profil {{ $adminShortName }}" class="h-full w-full object-cover">
                     </span>
                     <span class="wiboost-sidebar-profile-text min-w-0">
                         <span class="block truncate text-sm font-black">{{ $adminShortName }}</span>
-                        <span class="block text-[10px] font-black uppercase tracking-widest" style="color: #22c55e;">Admin</span>
+                        <span class="block text-[10px] font-black uppercase tracking-widest" style="color: {{ $adminProfileBorderColor }};">{{ $adminRoleLabel }}</span>
                     </span>
                 </a>
             </div>
@@ -514,7 +602,7 @@
     <div class="wiboost-admin-navbar pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-6 lg:px-0 lg:pt-0">
         <div class="pointer-events-auto mx-auto max-w-6xl lg:max-w-none">
             <div class="wiboost-admin-navbar-card flex items-center justify-between gap-3 border-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/40 backdrop-blur-md sm:px-6 lg:border-x-0 lg:border-t-0 transition-all">
-                <button type="button" @click="mobileNavOpen = true; profileMenuOpen = false" aria-label="Buka menu" class="wiboost-admin-mobile-toggle flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition active:scale-95 lg:hidden">
+                <button type="button" @click="mobileNavOpen = true; profileMenuOpen = false; restoreSidebarScroll(); window.wiboostRestoreAdminSidebarScroll?.(); setTimeout(() => window.wiboostRestoreAdminSidebarScroll?.(), 120); setTimeout(() => window.wiboostRestoreAdminSidebarScroll?.(), 320)" aria-label="Buka menu" class="wiboost-admin-mobile-toggle flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition active:scale-95 lg:hidden">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16" />
                     </svg>
@@ -548,7 +636,7 @@
                 @endif
 
                 <div class="relative" @click.outside="profileMenuOpen = false">
-                    <button type="button" @click="profileMenuOpen = !profileMenuOpen; mobileNavOpen = false" :aria-expanded="profileMenuOpen.toString()" aria-label="Menu profil admin" class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white shadow-sm ring-2 ring-white transition active:scale-95 sm:h-12 sm:w-12" style="border-color: #22c55e;">
+                    <button type="button" @click="profileMenuOpen = !profileMenuOpen; mobileNavOpen = false" :aria-expanded="profileMenuOpen.toString()" aria-label="Menu profil admin" class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white shadow-sm ring-2 ring-white transition active:scale-95 sm:h-12 sm:w-12" style="border-color: {{ $adminProfileBorderColor }};">
                         <img src="{{ $adminPhotoUrl }}" onerror="this.onerror=null;this.src='{{ $adminDefaultPhotoUrl }}';" alt="Foto profil {{ $adminShortName }}" class="h-full w-full object-cover">
                     </button>
 
@@ -611,11 +699,11 @@
                     <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></p>
                 </div>
                 
-                <nav class="wiboost-admin-mobile-sidebar-nav hide-scroll flex min-h-0 flex-col gap-2 overflow-y-auto py-4">
+                <nav id="wiboost-admin-mobile-sidebar-nav" @scroll.debounce.100ms="saveSidebarScroll($event)" class="wiboost-admin-mobile-sidebar-nav hide-scroll flex min-h-0 flex-col gap-2 overflow-y-auto py-4">
                     @foreach($adminNav as $item)
-                        @php($isActiveAdminNav = $adminNavMatches($item))
-                        @php($adminIconStyle = $item['icon'] === 'commission' ? 'transform: scaleX(-1); transform-origin: center;' : '')
-                        <a href="{{ route($item['route']) }}" class="flex items-center rounded-[1.5rem] border-2 {{ $isActiveAdminNav ? 'border-white bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/30' : 'border-transparent bg-[#f8fbff] text-[#5a76c8] hover:border-white hover:bg-[#e0fbfc]' }} px-5 py-3 font-black transition-all">
+                        <?php $isActiveAdminNav = $adminNavMatches($item); ?>
+                        <?php $adminIconStyle = $item['icon'] === 'commission' ? 'transform: scaleX(-1); transform-origin: center;' : ''; ?>
+                        <a href="{{ route($item['route']) }}" data-admin-sidebar-link @click="saveSidebarScroll($event)" class="flex items-center rounded-[1.5rem] border-2 {{ $isActiveAdminNav ? 'border-white bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/30' : 'border-transparent bg-[#f8fbff] text-[#5a76c8] hover:border-white hover:bg-[#e0fbfc]' }} px-5 py-3 font-black transition-all">
                             <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {{ $isActiveAdminNav ? 'bg-white/20 shadow-inner' : 'bg-white shadow-sm border border-[#f0f5ff]' }}">
                                 <svg class="h-5 w-5" style="{{ $adminIconStyle }}" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">
                                     {!! $adminNavIconPaths[$item['icon']] ?? $adminNavIconPaths['dashboard'] !!}
@@ -628,12 +716,12 @@
 
                 <div class="wiboost-admin-mobile-sidebar-footer flex shrink-0 items-center gap-3 border-t-4 border-dashed border-[#d7ecff] pt-4">
                     <a href="{{ route('profile.edit') }}" class="flex min-w-0 flex-1 items-center gap-3 rounded-[1.5rem] border-2 border-white bg-[#f4f9ff] px-4 py-3 text-[#2b3a67] shadow-sm transition hover:bg-[#e0fbfc]">
-                        <span class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white ring-2 ring-white" style="border-color: #22c55e;">
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white ring-2 ring-white" style="border-color: {{ $adminProfileBorderColor }};">
                             <img src="{{ $adminPhotoUrl }}" onerror="this.onerror=null;this.src='{{ $adminDefaultPhotoUrl }}';" alt="Foto profil {{ $adminShortName }}" class="h-full w-full object-cover">
                         </span>
                         <span class="min-w-0">
                             <span class="block truncate text-sm font-black text-[#2b3a67]">{{ $adminShortName }}</span>
-                            <span class="block text-[10px] font-black uppercase tracking-widest" style="color: #22c55e;">Admin</span>
+                            <span class="block text-[10px] font-black uppercase tracking-widest" style="color: {{ $adminProfileBorderColor }};">{{ $adminRoleLabel }}</span>
                         </span>
                     </a>
                 </div>
@@ -655,7 +743,7 @@
             </div>
             <nav x-ref="adminSidebarNav" @scroll.debounce.150ms="saveSidebarScroll()" class="flex-1 space-y-2 overflow-y-auto overscroll-contain px-5 py-6 hide-scroll">
                 @foreach($adminNav as $item)
-                    @php($isActiveAdminNav = $adminNavMatches($item))
+                    <?php $isActiveAdminNav = $adminNavMatches($item); ?>
                     <a href="{{ route($item['route']) }}" @click="saveSidebarScroll()" class="flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-black transition-all duration-300 {{ $isActiveAdminNav ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 scale-[1.02]' : 'border-2 border-transparent text-[#5a76c8] hover:border-white hover:bg-[#f4f9ff] hover:scale-[1.02]' }}">
                         <span class="text-lg">{{ $item['icon'] }}</span>
                         <span>{{ $item['label'] }}</span>
@@ -666,7 +754,7 @@
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="flex w-full items-center justify-center rounded-full border-4 border-white bg-[#ffe5e5] px-6 py-3.5 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 transition-all hover:bg-[#ffcccc] active:scale-95 gap-2">
-                        Keluar Akun 🚪
+                        Keluar Akun
                     </button>
                 </form>
             </div>
@@ -733,7 +821,7 @@
             <!-- Nav Menu Mobile Sidebar (Scrollable & Hide Scrollbar) -->
             <nav class="flex-1 space-y-2 overflow-y-auto overscroll-contain hide-scroll pr-1">
                 @foreach($adminNav as $item)
-                    @php($isActiveAdminNav = $adminNavMatches($item))
+                    <?php $isActiveAdminNav = $adminNavMatches($item); ?>
                     <a href="{{ route($item['route']) }}" class="flex items-center gap-3 rounded-full px-5 py-3 text-sm font-black transition-all {{ $isActiveAdminNav ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white' : 'bg-[#f4f9ff] text-[#2b3a67] border-2 border-transparent hover:border-white' }}">
                         <span class="text-lg">{{ $item['icon'] }}</span>
                         <span>{{ $item['label'] }}</span>
@@ -746,7 +834,7 @@
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="flex w-full items-center justify-center rounded-full border-4 border-white bg-[#ffe5e5] px-6 py-3.5 text-sm font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 active:scale-95 transition-transform gap-2">
-                        Keluar Akun 🚪
+                        Keluar Akun
                     </button>
                 </form>
             </div>
@@ -757,6 +845,71 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const sidebarTargets = [
+                ['wiboost-admin-sidebar-nav', 'wiboost-admin-sidebar-scroll'],
+                ['wiboost-admin-mobile-sidebar-nav', 'wiboost-admin-mobile-sidebar-scroll'],
+            ];
+            const restoreAdminSidebarScroll = () => {
+                sidebarTargets.forEach(([id, key]) => {
+                    const nav = document.getElementById(id);
+                    const saved = Number(window.localStorage.getItem(key) || 0);
+
+                    if (nav && Number.isFinite(saved)) {
+                        nav.scrollTop = saved;
+                    }
+                });
+            };
+            const saveAdminSidebarScroll = () => {
+                sidebarTargets.forEach(([id, key]) => {
+                    const nav = document.getElementById(id);
+
+                    if (nav) {
+                        window.localStorage.setItem(key, String(nav.scrollTop || 0));
+                    }
+                });
+            };
+
+            try {
+                window.wiboostRestoreAdminSidebarScroll = restoreAdminSidebarScroll;
+                window.wiboostSaveAdminSidebarScroll = saveAdminSidebarScroll;
+                restoreAdminSidebarScroll();
+                window.requestAnimationFrame(restoreAdminSidebarScroll);
+                window.setTimeout(restoreAdminSidebarScroll, 100);
+                window.setTimeout(restoreAdminSidebarScroll, 300);
+                window.addEventListener('pageshow', restoreAdminSidebarScroll);
+                window.addEventListener('beforeunload', saveAdminSidebarScroll);
+                sidebarTargets.forEach(([id]) => {
+                    const nav = document.getElementById(id);
+
+                    if (nav) {
+                        nav.addEventListener('scroll', saveAdminSidebarScroll, { passive: true });
+                    }
+                });
+                document.querySelectorAll('[data-admin-sidebar-link]').forEach((link) => {
+                    link.addEventListener('click', saveAdminSidebarScroll, { capture: true });
+                });
+            } catch (error) {}
+
+            document.addEventListener('click', function (event) {
+                const backLink = event.target.closest('a[data-wiboost-back], a[aria-label="Kembali"]');
+
+                if (!backLink) {
+                    return;
+                }
+
+                if (window.history.length > 1) {
+                    event.preventDefault();
+                    if (window.wiboostBackDelayActive) {
+                        return;
+                    }
+                    window.wiboostBackDelayActive = true;
+                    backLink.classList.add('is-backing', 'pointer-events-none');
+                    window.setTimeout(() => {
+                        window.history.back();
+                    }, 340);
+                }
+            });
+
             document.querySelectorAll('body.wiboost-admin-shell select:not([multiple])').forEach(function (select) {
                 const open = () => select.classList.add('wiboost-select-open');
                 const close = () => select.classList.remove('wiboost-select-open');

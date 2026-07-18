@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('title', 'Tambah Kategori')
 
@@ -24,7 +24,7 @@
 
     @if ($errors->any())
         <div class="bg-[#ffe5e5] border-4 border-white text-[#ff6b6b] px-6 py-5 rounded-[2.5rem] mb-8 font-black shadow-lg shadow-[#ff6b6b]/20 flex items-start gap-4 relative z-10">
-            <span class="text-3xl mt-1 drop-shadow-sm">⚠️</span>
+            @include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'mt-1 h-6 w-6 shrink-0'])
             <div>
                 <p class="mb-3 text-lg">Periksa data berikut:</p>
                 <ul class="list-disc list-inside text-sm font-bold bg-white/50 p-4 rounded-2xl border border-white">
@@ -89,7 +89,7 @@
 
         <div class="mb-6" id="emote_container">
             <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Emote <span class="text-amber-500 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100 text-[10px] uppercase">(Opsional)</span></label>
-            <input type="text" name="emote" value="{{ old('emote') }}" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition text-2xl placeholder-[#a3bbfb]" placeholder="Cth: 🎮 atau 📱">
+            <input type="text" name="emote" value="{{ old('emote') }}" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition text-2xl placeholder-[#a3bbfb]" placeholder="Cth: emoji game atau mobile">
         </div>
 
         <div class="mb-6" id="image_container">

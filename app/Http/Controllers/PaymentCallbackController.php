@@ -45,7 +45,7 @@ class PaymentCallbackController extends Controller
             ?: 'tripay'
         );
 
-        if (str_starts_with($merchantRef, 'DEP-') || str_starts_with($merchantRef, 'MEM-')) {
+        if ($this->shouldHandleDepositReference($merchantRef)) {
             $result = DB::transaction(function () use ($merchantRef, $status, $paidAmount, $paymentMethod, $payload) {
                 $deposit = Deposit::where('invoice_number', $merchantRef)
                     ->lockForUpdate()
@@ -130,7 +130,7 @@ class PaymentCallbackController extends Controller
             return response()->json(['success' => true]);
         }
 
-        if (str_starts_with($merchantRef, 'WIB-')) {
+        if ($this->shouldHandleTransactionReference($merchantRef)) {
             $result = DB::transaction(function () use ($merchantRef, $status, $paidAmount, $paymentMethod, $payload) {
                 $transaction = Transaction::where('invoice_number', $merchantRef)
                     ->lockForUpdate()
@@ -241,7 +241,7 @@ class PaymentCallbackController extends Controller
         $isFailed = in_array($status, ['FAILED', 'EXPIRED', 'REFUND', 'CANCELED', 'CANCELLED'], true)
             || in_array($paymentStatus, ['FAILED', 'EXPIRED', 'REFUND', 'CANCELED', 'CANCELLED'], true);
 
-        if (str_starts_with($merchantRef, 'DEP-') || str_starts_with($merchantRef, 'MEM-')) {
+        if ($this->shouldHandleDepositReference($merchantRef)) {
             $result = DB::transaction(function () use ($merchantRef, $providerReference, $isPaid, $isFailed, $paidAmount, $paymentMethod, $payload, $status, $paymentStatus) {
                 $deposit = Deposit::where('invoice_number', $merchantRef)
                     ->lockForUpdate()
@@ -331,7 +331,7 @@ class PaymentCallbackController extends Controller
             return response()->json(['success' => true]);
         }
 
-        if (str_starts_with($merchantRef, 'WIB-')) {
+        if ($this->shouldHandleTransactionReference($merchantRef)) {
             $result = DB::transaction(function () use ($merchantRef, $providerReference, $isPaid, $isFailed, $paidAmount, $paymentMethod, $payload, $status, $paymentStatus) {
                 $transaction = Transaction::where('invoice_number', $merchantRef)
                     ->lockForUpdate()
@@ -420,7 +420,7 @@ class PaymentCallbackController extends Controller
         $orderId = $notification->order_id;
         $paidAmount = (int) round((float) $notification->gross_amount);
 
-        if (str_starts_with($orderId, 'DEP-') || str_starts_with($orderId, 'MEM-')) {
+        if ($this->shouldHandleDepositReference($orderId)) {
             $result = DB::transaction(function () use ($orderId, $transactionStatus, $paidAmount, $notification) {
                 $deposit = Deposit::where('invoice_number', $orderId)
                     ->lockForUpdate()
@@ -494,7 +494,7 @@ class PaymentCallbackController extends Controller
             return response()->json(['message' => 'Deposit handled successfully']);
         }
 
-        if (str_starts_with($orderId, 'WIB-')) {
+        if ($this->shouldHandleTransactionReference($orderId)) {
             $transaction = Transaction::where('invoice_number', $orderId)->first();
 
             if (! $transaction) {
@@ -521,5 +521,21 @@ class PaymentCallbackController extends Controller
         }
 
         return response()->json(['message' => 'Unknown Order ID format'], 400);
+    }
+
+    protected function shouldHandleDepositReference(string $merchantRef): bool
+    {
+        if (str_starts_with($merchantRef, 'DEP-')) {
+            return true;
+        }
+
+        return str_starts_with($merchantRef, 'MEM-')
+            && Deposit::where('invoice_number', $merchantRef)->exists();
+    }
+
+    protected function shouldHandleTransactionReference(string $merchantRef): bool
+    {
+        return str_starts_with($merchantRef, 'WIB-')
+            || str_starts_with($merchantRef, 'MEM-');
     }
 }

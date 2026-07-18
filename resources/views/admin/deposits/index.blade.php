@@ -154,16 +154,27 @@
 </style>
 
 <div class="wiboost-font pb-12 relative z-10 w-full min-w-0">
+    @php
+        $searchValue = request('search');
+        $activeDepositFilter = $depositFilter ?? request('deposit_filter', 'all');
+        $depositFilters = [
+            'all' => ['label' => 'Semua'],
+            'paid' => ['label' => 'Berhasil'],
+            'failed' => ['label' => 'Gagal'],
+            'topup' => ['label' => 'Top Up'],
+        ];
+    @endphp
+
     <!-- Alert Messages (Aman dari 500 Error) -->
     @if(session('success'))
         <div class="mb-6 flex items-center gap-3 rounded-[2rem] border-4 border-white bg-[#e6fff7] px-5 sm:px-6 py-4 font-black text-emerald-500 shadow-lg shadow-emerald-100/50 relative z-10 text-sm sm:text-base w-full">
-            <span class="text-2xl sm:text-3xl drop-shadow-sm">✅</span>
+            @include('partials.wiboost-icon', ['name' => 'success', 'class' => 'h-6 w-6 shrink-0'])
             <span>{{ session('success') }}</span>
         </div>
     @endif
     @if(session('error'))
         <div class="mb-6 flex items-center gap-3 rounded-[2rem] border-4 border-white bg-[#ffe5e5] px-5 sm:px-6 py-4 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 relative z-10 text-sm sm:text-base w-full">
-            <span class="text-2xl sm:text-3xl drop-shadow-sm">⚠️</span>
+            @include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'h-6 w-6 shrink-0'])
             <span>{{ session('error') }}</span>
         </div>
     @endif
@@ -174,40 +185,55 @@
             
             <!-- Wrapper Input Cari -->
             <div class="flex-1 flex gap-2 w-full min-w-0">
-                <input type="text" name="search" value="{{ request('search') }}"
+                @if($activeDepositFilter !== 'all')
+                    <input type="hidden" name="deposit_filter" value="{{ $activeDepositFilter }}">
+                @endif
+                <input type="text" name="search" value="{{ $searchValue }}"
                     class="min-w-0 flex-1 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#f4f9ff] py-3 px-4 sm:px-5 font-black text-[#2b3a67] outline-none transition shadow-inner placeholder-[#a3bbfb] focus:border-[#bde0fe] text-xs sm:text-sm truncate"
                     placeholder="Cari Invoice atau Pelanggan...">
                 
                 <button type="submit" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#5a76c8] w-12 h-12 text-white shadow-md active:scale-95 transition-transform" title="Cari Deposit">
-                    🔍
+                    @include('partials.wiboost-icon', ['name' => 'search', 'class' => 'h-5 w-5'])
                 </button>
                 
-                @if(request('search'))
-                    <a href="{{ route('admin.deposits.index') }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[#ff6b6b] shadow-md active:scale-95 transition-transform" title="Reset">
-                        ✖️
+                @if($searchValue)
+                    <a href="{{ route('admin.deposits.index', array_filter(['deposit_filter' => $activeDepositFilter === 'all' ? null : $activeDepositFilter])) }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[#ff6b6b] shadow-md active:scale-95 transition-transform" title="Reset">
+                        @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])
                     </a>
                 @endif
             </div>
             
             <!-- Tombol Segarkan -->
-            <a href="{{ route('admin.deposits.index') }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#8faaf3] px-6 py-3 h-12 text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#6f8ddc] w-full md:w-auto">
-                <span class="text-base">🔄</span> <span class="whitespace-nowrap">Segarkan</span>
+            <a href="{{ route('admin.deposits.index', array_filter(['deposit_filter' => $activeDepositFilter === 'all' ? null : $activeDepositFilter])) }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#8faaf3] px-6 py-3 h-12 text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#6f8ddc] w-full md:w-auto">
+                @include('partials.wiboost-icon', ['name' => 'refresh', 'class' => 'h-5 w-5'])
+                <span class="whitespace-nowrap">Segarkan</span>
             </a>
             
         </form>
     </div>
 
+    @include('admin.partials.filter-tabs', [
+        'filters' => $depositFilters,
+        'activeFilter' => $activeDepositFilter,
+        'filterParam' => 'deposit_filter',
+        'filterRoute' => 'admin.deposits.index',
+        'filterQuery' => ['search' => $searchValue],
+    ])
+
     <!-- Tabel Data Deposit -->
     <div class="overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm shadow-2xl shadow-[#bde0fe]/30 relative z-10 min-w-0 w-full">
         <div class="w-full overflow-x-auto table-scroll pb-2">
             <div class="inline-block min-w-full align-middle p-4 sm:p-6">
-                <table class="w-full min-w-[920px] text-left whitespace-nowrap">
+                <table class="w-full min-w-[1240px] text-left whitespace-nowrap">
                     <thead>
                         <tr>
-                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Waktu & Invoice</th>
-                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Pelanggan</th>
+                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Invoice</th>
+                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Waktu</th>
+                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Nama</th>
+                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Email</th>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Jenis</th>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Nominal</th>
+                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Dibayar</th>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Metode</th>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Status</th>
                         </tr>
@@ -216,16 +242,24 @@
                         @forelse($deposits ?? [] as $deposit)
                         <tr onclick="openAdminDepositDetail('admin-deposit-detail-{{ $deposit->id }}')" class="transition-colors hover:bg-[#f8faff] group cursor-pointer">
                             
-                            <!-- Invoice & Waktu -->
+                            <!-- Invoice -->
                             <td class="px-5 py-4 sm:py-5 align-middle min-w-[150px]">
-                                <p class="font-black text-[#5a76c8] text-xs sm:text-sm mb-1 bg-[#f4f9ff] inline-block px-2 py-1 rounded-md border border-white truncate max-w-full">{{ $deposit->invoice_number ?? '-' }}</p>
-                                <p class="text-[9px] sm:text-[10px] font-bold text-[#8faaf3] ml-1">{{ isset($deposit->created_at) ? $deposit->created_at->format('d M Y, H:i') : '-' }}</p>
+                                <p class="font-black text-[#5a76c8] text-xs sm:text-sm bg-[#f4f9ff] inline-block px-2 py-1 rounded-md border border-white max-w-full" style="white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;">{{ $deposit->invoice_number ?? '-' }}</p>
+                            </td>
+
+                            <!-- Waktu -->
+                            <td class="px-5 py-4 sm:py-5 align-middle min-w-[150px]">
+                                <p class="text-[9px] sm:text-[10px] font-bold text-[#8faaf3]">{{ isset($deposit->created_at) ? $deposit->created_at->format('d M Y, H:i') : '-' }}</p>
                             </td>
                             
-                            <!-- User -->
+                            <!-- Nama -->
                             <td class="px-5 py-4 sm:py-5 align-middle min-w-[150px] max-w-[200px]">
                                 <p class="font-black text-[#2b3a67] text-xs sm:text-sm truncate">{{ $deposit->user->name ?? 'Guest' }}</p>
-                                <p class="text-[9px] sm:text-[10px] font-bold text-[#8faaf3] truncate mt-1">{{ $deposit->user->email ?? '-' }}</p>
+                            </td>
+
+                            <!-- Email -->
+                            <td class="px-5 py-4 sm:py-5 align-middle min-w-[210px]">
+                                <p class="text-[9px] sm:text-[10px] font-bold text-[#8faaf3]" style="white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;">{{ $deposit->user->email ?? '-' }}</p>
                             </td>
 
                             <td class="px-5 py-4 sm:py-5 align-middle text-center">
@@ -239,11 +273,10 @@
                             <!-- Nominal -->
                             <td class="px-5 py-4 sm:py-5 align-middle">
                                 <p class="font-black text-[#4bc6b9] text-sm sm:text-base drop-shadow-sm">Rp {{ number_format($deposit->amount ?? 0, 0, ',', '.') }}</p>
-                                @if(($deposit->paid_amount ?? null) && (float) $deposit->paid_amount !== (float) $deposit->amount)
-                                    <p class="mt-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">
-                                        Dibayar: Rp {{ number_format($deposit->paid_amount, 0, ',', '.') }}
-                                    </p>
-                                @endif
+                            </td>
+
+                            <td class="px-5 py-4 sm:py-5 align-middle">
+                                <p class="font-black text-[#5a76c8] text-sm sm:text-base drop-shadow-sm">Rp {{ number_format($deposit->paid_amount ?? $deposit->amount ?? 0, 0, ',', '.') }}</p>
                             </td>
                             
                             <!-- Metode Pembayaran -->
@@ -283,8 +316,10 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="px-5 py-16 sm:py-20 text-center">
-                                <div class="mb-4 sm:mb-5 inline-flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-[#f0f5ff] text-4xl sm:text-5xl shadow-inner animate-float">💰</div>
+                            <td colspan="9" class="px-5 py-16 sm:py-20 text-center">
+                                <div class="mb-4 sm:mb-5 inline-flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-[#f0f5ff] text-[#5a76c8] shadow-inner animate-float">
+                                    @include('partials.wiboost-icon', ['name' => 'wallet', 'class' => 'h-10 w-10'])
+                                </div>
                                 <p class="text-lg sm:text-xl font-black text-[#5a76c8]">Belum ada riwayat deposit.</p>
                             </td>
                         </tr>
@@ -316,7 +351,9 @@
                             <h3 class="mt-1 break-all text-xl font-black text-[#2b3a67]">{{ $deposit->invoice_number }}</h3>
                             <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ optional($deposit->created_at)->format('d M Y, H:i') }}</p>
                         </div>
-                        <button type="button" onclick="closeAdminDepositDetail('admin-deposit-detail-{{ $deposit->id }}')" class="admin-detail-close flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#ffe5e5] text-lg font-black text-[#ff6b6b]">×</button>
+                        <button type="button" onclick="closeAdminDepositDetail('admin-deposit-detail-{{ $deposit->id }}')" class="admin-detail-close flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#ffe5e5] text-[#ff6b6b]">
+                            @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-4 w-4'])
+                        </button>
                     </div>
 
                     <div class="admin-detail-body">

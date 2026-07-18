@@ -55,11 +55,12 @@ class QrisPaymentController extends Controller
     protected function showTransaction(Transaction $transaction)
     {
         $raw = (array) ($transaction->response_data ?? []);
+        $isMembershipPayment = $transaction->isMembershipPayment();
 
         return view('user.qris.show', [
             'kind' => 'transaction',
             'invoice' => $transaction->invoice_number,
-            'title' => $transaction->product?->name ?: 'Pesanan Wiboost',
+            'title' => $transaction->product?->name ?: ($isMembershipPayment ? 'Membership Wiboost 30 Hari' : 'Pesanan Wiboost'),
             'baseAmount' => (int) round((float) $transaction->amount),
             'adminFee' => $transaction->tripay_admin_fee,
             'totalPayable' => $transaction->display_total_payable,
@@ -67,10 +68,10 @@ class QrisPaymentController extends Controller
             'qrisImageUrl' => $this->resolveQrisImageUrl($raw),
             'qrisText' => $this->resolveQrisText($raw),
             'expiresAt' => $transaction->qris_expires_at,
-            'backUrl' => route('user.history'),
-            'backLabel' => 'Cek Riwayat',
+            'backUrl' => $isMembershipPayment ? route('user.membership.index') : route('user.history'),
+            'backLabel' => $isMembershipPayment ? 'Kembali ke Membership' : 'Cek Riwayat',
             'statusUrl' => route('user.qris.status', $transaction->invoice_number),
-            'redirectUrl' => route('user.history', ['auto_open' => $transaction->id]),
+            'redirectUrl' => $isMembershipPayment ? route('user.membership.index') : route('user.history', ['auto_open' => $transaction->id]),
         ]);
     }
 
@@ -119,7 +120,7 @@ class QrisPaymentController extends Controller
 
             return response()->json($this->statusPayload(
                 status: $transaction->cancelled_due_to_qris_expiry ? 'cancelled' : (string) $transaction->payment_status,
-                redirectUrl: route('user.history', ['auto_open' => $transaction->id])
+                redirectUrl: $transaction->isMembershipPayment() ? route('user.membership.index') : route('user.history', ['auto_open' => $transaction->id])
             ));
         }
 

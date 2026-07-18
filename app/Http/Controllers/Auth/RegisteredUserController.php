@@ -44,8 +44,18 @@ class RegisteredUserController extends Controller
         ]);
 
         // 2. Pastikan role bawaan selalu memakai ID yang dipakai middleware.
-        Role::query()->updateOrCreate(['id' => 1], ['name' => 'Admin']);
-        Role::query()->updateOrCreate(['id' => 2], ['name' => 'Buyer']);
+        foreach ([
+            1 => 'Super Admin',
+            2 => 'Buyer',
+            3 => 'Reseller',
+            4 => 'Keuangan',
+            5 => 'Buyer',
+            6 => 'Gudang',
+            7 => 'Marketing',
+            8 => 'Customer Service',
+        ] as $roleId => $roleName) {
+            Role::query()->updateOrCreate(['id' => $roleId], ['name' => $roleName]);
+        }
 
         $user = User::create([
             'name' => $request->name,
@@ -62,6 +72,8 @@ class RegisteredUserController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
         $request->session()->forget('url.intended');
+        $request->session()->forget('wiboost_display_seen_dashboard');
+        $request->session()->put('wiboost_show_displays_after_login', true);
 
         // 5. Arahkan ke dashboard user, bukan kembali ke halaman order/checkout guest.
         return redirect()->route('user.dashboard');

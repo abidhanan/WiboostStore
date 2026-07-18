@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\TransactionController as AdminTransactionControll
 use App\Http\Controllers\Admin\DepositController as AdminDepositController;
 use App\Http\Controllers\Admin\AdminReportController as AdminAdminReportController;
 use App\Http\Controllers\Admin\PromoController;
+use App\Http\Controllers\Admin\DisplayController;
 use App\Http\Controllers\Admin\TutorialController; // <-- IMPORT BARU UNTUK TUTORIAL
 use App\Http\Controllers\Admin\ResellerController as AdminResellerController;
 
@@ -152,52 +153,55 @@ Route::middleware(['auth', 'role:buyer,reseller'])->prefix('user')->name('user.'
 
 /*
 |--------------------------------------------------------------------------
-| 5. ADMIN PANEL ROUTES (Role: Admin / 1)
+| 5. ADMIN PANEL ROUTES (Super Admin & Staff)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/contact-numbers', fn () => redirect()->route('admin.dashboard'));
-    Route::post('/dashboard/contact-numbers', [AdminDashboardController::class, 'updateContactNumbers'])->name('dashboard.contact-numbers.update');
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard')->middleware('admin.access:dashboard');
+    Route::get('/dashboard/contact-numbers', fn () => redirect()->route('admin.reports.index'))->middleware('admin.access:reports');
+    Route::post('/dashboard/contact-numbers', [AdminDashboardController::class, 'updateContactNumbers'])->name('dashboard.contact-numbers.update')->middleware('admin.access:reports');
 
     // Master Data (CRUD)
-    Route::resource('users', AdminUserController::class);
-    Route::resource('categories', CategoryController::class);
+    Route::resource('users', AdminUserController::class)->middleware('admin.access:users');
+    Route::resource('categories', CategoryController::class)->middleware('admin.access:categories');
+    Route::get('/resellers', [AdminUserController::class, 'legacyResellers'])->name('resellers.index')->middleware('admin.access:users');
+    Route::get('/members', [AdminUserController::class, 'legacyMembers'])->name('members.index')->middleware('admin.access:users');
+    Route::get('/admins', [AdminUserController::class, 'legacyAdmins'])->name('admins.index')->middleware('admin.access:users');
 
-    // Reseller
-    Route::get('/resellers', [AdminResellerController::class, 'index'])->name('resellers.index');
-    Route::get('/commissions', [AdminResellerController::class, 'commissions'])->name('commissions.index');
-    Route::get('/members', [AdminUserController::class, 'members'])->name('members.index');
-    Route::get('/admins', [AdminUserController::class, 'admins'])->name('admins.index');
-    Route::patch('/resellers/withdrawals/{commission}', [AdminResellerController::class, 'updateWithdrawal'])->name('resellers.withdrawals.update');
+    // Komisi
+    Route::get('/commissions', [AdminResellerController::class, 'commissions'])->name('commissions.index')->middleware('admin.access:commissions');
+    Route::get('/commissions/export', [AdminResellerController::class, 'exportCommissions'])->name('commissions.export')->middleware('admin.access:commissions');
+    Route::get('/withdrawals', [AdminResellerController::class, 'withdrawals'])->name('withdrawals.index')->middleware('admin.access:withdrawals');
+    Route::patch('/withdrawals/{commission}', [AdminResellerController::class, 'updateWithdrawal'])->name('withdrawals.update')->middleware('admin.access:withdrawals');
     
     // Produk & Manajemen Stok Kredensial (Akun Premium)
-    Route::post('/products/sync/digiflazz', [ProductController::class, 'syncDigiflazz'])->name('products.sync.digiflazz');
-    Route::post('/products/sync/ordersosmed', [ProductController::class, 'syncOrderSosmed'])->name('products.sync.ordersosmed');
-    Route::resource('products', ProductController::class);
-    Route::get('/products/{product}/credentials', [CredentialController::class, 'index'])->name('credentials.index');
-    Route::post('/products/{product}/credentials', [CredentialController::class, 'store'])->name('credentials.store');
-    Route::delete('/credentials/{credential}', [CredentialController::class, 'destroy'])->name('credentials.destroy');
+    Route::post('/products/sync/digiflazz', [ProductController::class, 'syncDigiflazz'])->name('products.sync.digiflazz')->middleware('admin.access:products');
+    Route::post('/products/sync/ordersosmed', [ProductController::class, 'syncOrderSosmed'])->name('products.sync.ordersosmed')->middleware('admin.access:products');
+    Route::resource('products', ProductController::class)->middleware('admin.access:products');
+    Route::get('/products/{product}/credentials', [CredentialController::class, 'index'])->name('credentials.index')->middleware('admin.access:products');
+    Route::post('/products/{product}/credentials', [CredentialController::class, 'store'])->name('credentials.store')->middleware('admin.access:products');
+    Route::delete('/credentials/{credential}', [CredentialController::class, 'destroy'])->name('credentials.destroy')->middleware('admin.access:products');
 
     // Promos, Stocks, & TUTORIAL
-    Route::resource('promos', PromoController::class);
-    Route::resource('stocks', StockController::class);
-    Route::resource('tutorials', TutorialController::class); // <-- ROUTE BARU TUTORIAL
+    Route::resource('promos', PromoController::class)->middleware('admin.access:promos');
+    Route::resource('displays', DisplayController::class)->except(['show'])->middleware('admin.access:displays');
+    Route::resource('stocks', StockController::class)->middleware('admin.access:products');
+    Route::resource('tutorials', TutorialController::class)->middleware('admin.access:tutorials');
 
     // Transaksi
-    Route::get('/transactions', [AdminTransactionController::class, 'index'])->name('transactions.index');
-    Route::get('/transactions/refresh-provider-statuses', fn () => redirect()->route('admin.transactions.index'));
-    Route::post('/transactions/refresh-provider-statuses', [AdminTransactionController::class, 'refreshProviderStatuses'])->name('transactions.refresh-provider-statuses');
-    Route::get('/transactions/export-pdf', [AdminTransactionController::class, 'exportPdf'])->name('transactions.export_pdf');
-    Route::get('/transactions/export-excel', [AdminTransactionController::class, 'exportExcel'])->name('transactions.export_excel');
-    Route::patch('/transactions/{id}/update', [AdminTransactionController::class, 'updateStatus'])->name('transactions.update');
+    Route::get('/transactions', [AdminTransactionController::class, 'index'])->name('transactions.index')->middleware('admin.access:transactions');
+    Route::get('/transactions/refresh-provider-statuses', fn () => redirect()->route('admin.transactions.index'))->middleware('admin.access:transactions');
+    Route::post('/transactions/refresh-provider-statuses', [AdminTransactionController::class, 'refreshProviderStatuses'])->name('transactions.refresh-provider-statuses')->middleware('admin.access:transactions');
+    Route::get('/transactions/export-pdf', [AdminTransactionController::class, 'exportPdf'])->name('transactions.export_pdf')->middleware('admin.access:transactions');
+    Route::get('/transactions/export-excel', [AdminTransactionController::class, 'exportExcel'])->name('transactions.export_excel')->middleware('admin.access:transactions');
+    Route::patch('/transactions/{id}/update', [AdminTransactionController::class, 'updateStatus'])->name('transactions.update')->middleware('admin.access:transactions');
     
     // Deposit Management
-    Route::get('/deposits', [AdminDepositController::class, 'index'])->name('deposits.index');
-    Route::patch('/deposits/{id}', [AdminDepositController::class, 'update'])->name('deposits.update');
-    Route::get('/reports', [AdminAdminReportController::class, 'index'])->name('reports.index');
-    Route::patch('/reports/{report}', [AdminAdminReportController::class, 'update'])->name('reports.update');
+    Route::get('/deposits', [AdminDepositController::class, 'index'])->name('deposits.index')->middleware('admin.access:deposits');
+    Route::patch('/deposits/{id}', [AdminDepositController::class, 'update'])->name('deposits.update')->middleware('admin.access:deposits');
+    Route::get('/reports', [AdminAdminReportController::class, 'index'])->name('reports.index')->middleware('admin.access:reports');
+    Route::patch('/reports/{report}', [AdminAdminReportController::class, 'update'])->name('reports.update')->middleware('admin.access:reports');
 
 });
 
