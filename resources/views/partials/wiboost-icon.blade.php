@@ -27,6 +27,9 @@
     @case('category')
         <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5h6.5L12.3 10H20v8.5H4z"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5v-2h5.5l1.8 2"/></svg>
         @break
+    @case('shield')
+        <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3.5 19 6v5.4c0 4.2-2.7 7.35-7 9.1-4.3-1.75-7-4.9-7-9.1V6z"/><path stroke-linecap="round" stroke-linejoin="round" d="m8.8 12 2.1 2.1 4.5-4.8"/></svg>
+        @break
     @case('search')
         <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.7" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path stroke-linecap="round" stroke-linejoin="round" d="m16 16 4 4"/></svg>
         @break

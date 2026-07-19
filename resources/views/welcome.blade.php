@@ -229,16 +229,15 @@
              overflow: hidden;
              border-radius: 1.25rem;
              border: 4px solid #ffffff;
-             background: #ffffff;
+             background: linear-gradient(180deg, #ffffff 0%, #f4f9ff 100%);
+             color: #5a76c8;
              box-shadow: inset 0 0 0 2px rgba(189, 224, 254, 0.45), 0 8px 18px rgba(189, 224, 254, 0.28);
-             padding: 0;
+             padding: 1.3rem;
          }
          .welcome-feature-icon {
              width: 100%;
              height: 100%;
-             object-fit: contain;
-             object-position: center;
-             border-radius: 0.95rem;
+             filter: drop-shadow(0 8px 14px rgba(90, 118, 200, 0.16));
          }
          .welcome-why-heading {
              white-space: nowrap;
@@ -509,28 +508,28 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
                 <div class="bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
                     <div class="welcome-feature-icon-wrap mb-5 mx-auto">
-                        <img src="{{ asset('images/feature-lightning.jpeg') }}?v=20260513" alt="Proses otomatis" class="welcome-feature-icon">
+                        @include('partials.wiboost-icon', ['name' => 'zap', 'class' => 'welcome-feature-icon'])
                     </div>
                     <h3 class="font-black text-[#2b3a67] text-lg mb-3">Proses Otomatis</h3>
                     <p class="text-sm text-[#4a5f96] font-bold leading-relaxed">Sistem kami berjalan 24/7. Transaksi diproses seketika tanpa perlu konfirmasi manual dari admin.</p>
                 </div>
                 <div class="bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
                     <div class="welcome-feature-icon-wrap mb-5 mx-auto">
-                        <img src="{{ asset('images/feature-shield.jpeg') }}?v=20260513" alt="Aman dan terpercaya" class="welcome-feature-icon">
+                        @include('partials.wiboost-icon', ['name' => 'shield', 'class' => 'welcome-feature-icon'])
                     </div>
                     <h3 class="font-black text-[#2b3a67] text-lg mb-3">Aman & Terpercaya</h3>
                     <p class="text-sm text-[#4a5f96] font-bold leading-relaxed">Pembayaran menggunakan QRIS resmi yang aman, serta privasi akun media sosial Anda terjamin 100%.</p>
                 </div>
                 <div class="bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
                     <div class="welcome-feature-icon-wrap mb-5 mx-auto">
-                        <img src="{{ asset('images/feature-boxes.jpeg') }}?v=20260513" alt="Layanan terlengkap" class="welcome-feature-icon">
+                        @include('partials.wiboost-icon', ['name' => 'package', 'class' => 'welcome-feature-icon'])
                     </div>
                     <h3 class="font-black text-[#2b3a67] text-lg mb-3">Layanan Terlengkap</h3>
                     <p class="text-sm text-[#4a5f96] font-bold leading-relaxed">Mulai dari Top Up Game, SMM Panel, hingga Aplikasi Premium tersedia lengkap dalam satu platform.</p>
                 </div>
                 <div class="bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
                     <div class="welcome-feature-icon-wrap mb-5 mx-auto">
-                        <img src="{{ asset('images/feature-wallet.jpeg') }}?v=20260513" alt="Harga kompetitif" class="welcome-feature-icon">
+                        @include('partials.wiboost-icon', ['name' => 'wallet', 'class' => 'welcome-feature-icon'])
                     </div>
                     <h3 class="font-black text-[#2b3a67] text-lg mb-3">Harga Kompetitif</h3>
                     <p class="text-sm text-[#4a5f96] font-bold leading-relaxed">Dapatkan layanan berkualitas dengan harga termurah. Sangat cocok untuk digunakan sendiri atau dijual kembali.</p>

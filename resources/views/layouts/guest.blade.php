@@ -19,7 +19,15 @@
     @include('partials.ui-performance-tuning')
     
     <style>
-        body { font-family: 'Nunito', sans-serif; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            scrollbar-color: #bde0fe #f4f9ff;
+            scrollbar-width: thin;
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f4f9ff; }
+        ::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
         .bg-wiboost-sky { background: linear-gradient(180deg, #bde0fe 0%, #e0fbfc 100%); }
         .animate-float { animation: float 6s ease-in-out infinite; }
         .animate-float-delayed { animation: float 6s ease-in-out 3s infinite; }

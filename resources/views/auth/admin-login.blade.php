@@ -5,12 +5,10 @@
 @section('content')
     <div class="mx-auto w-full max-w-md text-center sm:text-left">
         <div class="mb-8">
-            <div class="mb-4 flex justify-center sm:justify-start">
-            </div>
             <div class="inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1 text-xs font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
                 Login Admin
             </div>
-            <h2 class="mt-3 text-3xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm sm:text-4xl">
+            <h2 class="font-black tracking-tight text-[#2b3a67] drop-shadow-sm" style="white-space: nowrap; font-size: clamp(1.35rem, 6.6vw, 2.25rem); line-height: 1.1;">
                 Selamat Datang Admin!
             </h2>
             <p class="mt-2 text-sm font-bold text-[#8faaf3]">Portal masuk khusus admin Wiboost Store.</p>
@@ -62,13 +60,13 @@
                 @enderror
             </div>
 
-            <label for="remember_me" class="flex cursor-pointer items-center gap-3 rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-4 py-3 shadow-sm transition hover:border-[#bde0fe]">
-                <input id="remember_me" type="checkbox" name="remember" class="h-5 w-5 rounded-md border-2 border-white bg-white text-[#5a76c8] shadow-inner focus:ring-[#5a76c8]">
+            <label for="remember_me" class="flex cursor-pointer items-center gap-3 px-1">
+                <input id="remember_me" type="checkbox" name="remember" class="h-5 w-5 rounded-md border-2 border-[#5a76c8] bg-white text-[#5a76c8] shadow-sm focus:ring-2 focus:ring-[#bde0fe]" style="accent-color: #5a76c8;">
                 <span class="text-sm font-black text-[#5a76c8]">Tetap masuk di perangkat ini</span>
             </label>
 
             <button type="submit" class="flex w-full items-center justify-center rounded-full border-4 border-white bg-[#5a76c8] px-5 py-4 text-base font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform hover:bg-[#4760a9] active:scale-95">
-                Masuk sekarang
+                Masuk Sekarang
             </button>
         </form>
         

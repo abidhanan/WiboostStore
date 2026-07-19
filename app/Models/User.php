@@ -38,6 +38,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'email_verified_at',
+        'google_id',
         'whatsapp',
         'password',
         'role_id',
@@ -46,6 +48,7 @@ class User extends Authenticatable
         'point_reward_stage',
         'point_reward_period',
         'profile_photo_path',
+        'google_avatar',
         'reseller_payout_method',
         'reseller_payout_account',
         'reseller_payout_name',
@@ -256,6 +259,10 @@ class User extends Authenticatable
     {
         if ($this->profile_photo_path) {
             return Storage::disk('public')->url($this->profile_photo_path);
+        }
+
+        if ($this->google_avatar) {
+            return $this->google_avatar;
         }
 
         return self::defaultProfilePhotoUrl();

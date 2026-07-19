@@ -93,6 +93,15 @@
             <button type="submit" class="mt-2 flex w-full items-center justify-center rounded-full border-4 border-white bg-[#5a76c8] px-5 py-4 text-base font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform hover:bg-[#4760a9] active:scale-95">
                 Daftar Sekarang
             </button>
+
+            <div class="space-y-4">
+                <div class="flex items-center gap-3 text-center">
+                    <span class="h-1 flex-1 rounded-full bg-[#edf5ff]"></span>
+                    <span class="text-xs font-black uppercase tracking-widest text-[#8faaf3]">atau</span>
+                    <span class="h-1 flex-1 rounded-full bg-[#edf5ff]"></span>
+                </div>
+                @include('auth.partials.google-button', ['label' => 'Daftar dengan Google'])
+            </div>
         </form>
 
         <p class="mt-6 text-center text-sm font-black text-[#8faaf3]">

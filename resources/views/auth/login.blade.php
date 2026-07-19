@@ -60,14 +60,23 @@
                 @enderror
             </div>
 
-            <label for="remember_me" class="flex cursor-pointer items-center gap-3 rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-4 py-3 shadow-sm transition hover:border-[#bde0fe]">
-                <input id="remember_me" type="checkbox" name="remember" class="h-5 w-5 rounded-md border-2 border-white bg-white text-[#5a76c8] shadow-inner focus:ring-[#5a76c8]">
+            <label for="remember_me" class="flex cursor-pointer items-center gap-3 px-1">
+                <input id="remember_me" type="checkbox" name="remember" class="h-5 w-5 rounded-md border-2 border-[#5a76c8] bg-white text-[#5a76c8] shadow-sm focus:ring-2 focus:ring-[#bde0fe]" style="accent-color: #5a76c8;">
                 <span class="text-sm font-black text-[#5a76c8]">Tetap masuk di perangkat ini</span>
             </label>
 
             <button type="submit" class="flex w-full items-center justify-center rounded-full border-4 border-white bg-[#5a76c8] px-5 py-4 text-base font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform hover:bg-[#4760a9] active:scale-95">
                 Masuk Sekarang
             </button>
+
+            <div class="space-y-4">
+                <div class="flex items-center gap-3 text-center">
+                    <span class="h-1 flex-1 rounded-full bg-[#edf5ff]"></span>
+                    <span class="text-xs font-black uppercase tracking-widest text-[#8faaf3]">atau</span>
+                    <span class="h-1 flex-1 rounded-full bg-[#edf5ff]"></span>
+                </div>
+                @include('auth.partials.google-button', ['label' => 'Masuk dengan Google'])
+            </div>
         </form>
 
         <p class="mt-6 text-center text-sm font-black text-[#8faaf3]">
