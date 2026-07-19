@@ -139,7 +139,7 @@ class UserController extends Controller
             'whatsapp' => $request->whatsapp,
             'password' => Hash::make($request->password),
             'role_id' => $request->role_id,
-            'balance' => 0, // Saldo otomatis di-set 0
+            'balance' => 0,
         ]);
 
         return $this->redirectToReturnTo($request, 'admin.users.index')->with('success', 'Pengguna baru berhasil ditambahkan.');
@@ -152,7 +152,6 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        // Admin SEKARANG HANYA BISA MENGUBAH ROLE
         $request->validate([
             'role_id' => 'required|in:1,2,3,4,6,7,8',
         ]);
@@ -170,6 +169,7 @@ class UserController extends Controller
         }
 
         $user->delete();
+
         return back()->with('success', 'Pengguna berhasil dihapus.');
     }
 }

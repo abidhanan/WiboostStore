@@ -42,12 +42,8 @@ for (const image of images) {
 
 fs.writeFileSync(path.join(publicDir, 'favicon.ico'), Buffer.concat([header, ...entries, ...payloads]));
 
-for (const size of [16, 32, 180, 192, 512]) {
-    fs.copyFileSync(path.join(iconDir, `wiboost-icon-${size}.png`), path.join(publicDir, `wiboost-icon-${size}.png`));
-}
-
 fs.copyFileSync(path.join(iconDir, 'wiboost-icon-32.png'), path.join(publicDir, 'favicon-32x32.png'));
 fs.copyFileSync(path.join(iconDir, 'wiboost-icon-16.png'), path.join(publicDir, 'favicon-16x16.png'));
 fs.copyFileSync(path.join(iconDir, 'wiboost-icon-180.png'), path.join(publicDir, 'apple-touch-icon.png'));
 
-console.log('Rebuilt round favicon.ico and public fallback icons.');
+console.log('Rebuilt round favicon.ico and browser fallback icons.');

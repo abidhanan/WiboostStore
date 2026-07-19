@@ -16,7 +16,7 @@ class Promo extends Model
         'emoji',
         'theme',
         'image',
-        'link', // <-- Menambahkan field link
-        'is_active'
+        'link',
+        'is_active',
     ];
 }

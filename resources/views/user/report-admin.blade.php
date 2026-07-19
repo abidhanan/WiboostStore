@@ -272,7 +272,7 @@
 
     <section class="report-category-panel mb-8 rounded-[2.5rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/25 md:p-6">
         <p class="mb-4 ml-1 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Pilih Jenis Kendala</p>
-        <div class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
             @foreach($categories as $category)
                 <a href="{{ route('user.report.admin', ['type' => $category['key']]) }}"
                    class="report-type-button rounded-[1.75rem] border-4 px-4 py-3 text-center text-xs font-black transition active:scale-95 {{ $selectedKey === $category['key'] ? 'border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/25' : 'border-white bg-[#f4f9ff] text-[#5a76c8] hover:bg-[#e0fbfc]' }}">
@@ -387,7 +387,6 @@
 
                     <button type="submit"
                             data-report-submit
-                            data-submit-label="Mengirim Laporan..."
                             aria-disabled="true"
                             class="w-full cursor-not-allowed rounded-full border-4 border-white px-6 py-4 text-sm font-black text-white shadow-xl transition active:scale-95"
                             style="background:#cbd5e1;box-shadow:0 18px 30px rgba(148, 163, 184, .2);">
@@ -533,13 +532,10 @@
 
         if (isLoading) {
             setReportButtonReady(button, false);
-            button.dataset.originalText = button.dataset.originalText || button.textContent.trim();
-            button.textContent = button.dataset.submitLabel || 'Mengirim Laporan...';
             button.classList.add('cursor-not-allowed', 'opacity-70');
             return;
         }
 
-        button.textContent = button.dataset.originalText || 'Kirim Laporan';
         button.classList.remove('cursor-not-allowed', 'opacity-70');
         setReportButtonReady(button, isAdminReportReady(form));
     }

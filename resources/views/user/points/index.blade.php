@@ -102,7 +102,7 @@
         </div>
 
         <p class="mt-6 text-center text-xs font-extrabold leading-relaxed text-[#8faaf3]">
-            Tahap akan reset setiap berganti bulan, namun poin tidak berkurang.
+            Tahap akan reset setiap berganti bulan, dan sisa poin tetap bisa dipakai untuk tahap berikutnya.
         </p>
     </section>
 </div>

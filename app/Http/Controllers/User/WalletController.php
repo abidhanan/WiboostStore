@@ -162,7 +162,7 @@ class WalletController extends Controller
             $nextStage = min($currentRewardIndex + 1, count($rewards) - 1);
 
             $updates = [
-                'points' => 0,
+                'points' => max(0, (int) $user->points - (int) $reward['points']),
                 'balance' => (float) $user->balance + (float) $reward['amount'],
             ];
 

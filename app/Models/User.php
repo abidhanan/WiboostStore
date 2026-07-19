@@ -14,12 +14,19 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     public const ROLE_SUPER_ADMIN = 1;
+
     public const ROLE_BUYER = 2;
+
     public const ROLE_RESELLER = 3;
+
     public const ROLE_FINANCE = 4;
+
     public const ROLE_LEGACY_BUYER = 5;
+
     public const ROLE_WAREHOUSE = 6;
+
     public const ROLE_MARKETING = 7;
+
     public const ROLE_CUSTOMER_SERVICE = 8;
 
     public const ADMIN_ROLE_IDS = [
@@ -44,7 +51,7 @@ class User extends Authenticatable
         'password',
         'role_id',
         'balance',
-        'points', // <-- TAMBAHAN KOLOM POIN
+        'points',
         'point_reward_stage',
         'point_reward_period',
         'profile_photo_path',
@@ -73,7 +80,7 @@ class User extends Authenticatable
 
     public function isAdmin()
     {
-        return in_array((int) $this->role_id, self::ADMIN_ROLE_IDS, true); 
+        return in_array((int) $this->role_id, self::ADMIN_ROLE_IDS, true);
     }
 
     public function isSuperAdmin(): bool
@@ -83,7 +90,7 @@ class User extends Authenticatable
 
     public function isBuyer()
     {
-        return in_array((int) $this->role_id, self::BUYER_ROLE_IDS, true); 
+        return in_array((int) $this->role_id, self::BUYER_ROLE_IDS, true);
     }
 
     public function isReseller(): bool
@@ -278,7 +285,7 @@ class User extends Authenticatable
 </svg>
 SVG;
 
-        return 'data:image/svg+xml;base64,' . base64_encode($svg);
+        return 'data:image/svg+xml;base64,'.base64_encode($svg);
     }
 
     public function getShortNameAttribute(): string

@@ -18,7 +18,7 @@
         $mascotPath = public_path("images/wiboost-cs-mascot/{$fileName}");
         $mascotImageSources[$expression] = is_file($mascotPath)
             ? 'data:image/png;base64,'.base64_encode(file_get_contents($mascotPath))
-            : asset("images/wiboost-cs-mascot/{$fileName}").'?v=20260719-cs2';
+            : asset("images/wiboost-cs-mascot/{$fileName}").'?v=20260719-cs5';
     }
 
     $mascotSessionMarker = sha1(session()->getId().'|'.(auth()->id() ?? 'guest'));
@@ -149,19 +149,28 @@
                 <img class="wiboost-cs-mascot-image"
                      data-wiboost-expression="hello"
                      src="{{ $mascotImageSources['hello'] }}"
-                     alt="">
+                     alt=""
+                     loading="eager"
+                     decoding="async"
+                     fetchpriority="high">
                 <img class="wiboost-cs-mascot-image is-active"
                      data-wiboost-expression="idle"
                      src="{{ $mascotImageSources['idle'] }}"
-                     alt="">
+                     alt=""
+                     loading="eager"
+                     decoding="async">
                 <img class="wiboost-cs-mascot-image"
                      data-wiboost-expression="bored"
                      src="{{ $mascotImageSources['bored'] }}"
-                     alt="">
+                     alt=""
+                     loading="eager"
+                     decoding="async">
                 <img class="wiboost-cs-mascot-image"
                      data-wiboost-expression="drag"
                      src="{{ $mascotImageSources['drag'] }}"
-                     alt="">
+                     alt=""
+                     loading="eager"
+                     decoding="async">
             </span>
         </span>
     </button>
@@ -203,6 +212,17 @@
                     queueExpression(element, () => startExpressionLoop(element), 16500);
                 };
 
+                const playHelloThenLoop = (element, delay = 2300) => {
+                    clearExpressionTimers(element);
+                    setExpression(element, 'hello');
+                    queueExpression(element, () => startExpressionLoop(element), delay);
+                };
+
+                const playDragFinishedWelcome = (element) => {
+                    element.dataset.wiboostJustDraggedUntil = String(Date.now() + 2600);
+                    playHelloThenLoop(element, 2600);
+                };
+
                 const viewportBounds = (element) => {
                     const margin = 8;
                     const width = element.offsetWidth || 92;
@@ -236,18 +256,19 @@
                             localStorage.removeItem(storageKey);
                             localStorage.setItem(sessionStorageKey, currentSessionMarker);
                             defaultPosition(element);
-                            return;
+                            return true;
                         }
 
                         const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
 
                         if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) {
                             applyPosition(element, saved.left, saved.top);
-                            return;
+                            return false;
                         }
                     } catch (error) {}
 
                     defaultPosition(element);
+                    return true;
                 };
 
                 const savePosition = (element) => {
@@ -281,8 +302,12 @@
                     }
 
                     element.dataset.wiboostMascotReady = 'true';
-                    restorePosition(element);
-                    startExpressionLoop(element);
+                    const shouldGreet = restorePosition(element);
+                    if (shouldGreet) {
+                        playHelloThenLoop(element);
+                    } else {
+                        startExpressionLoop(element);
+                    }
 
                     let pointerId = null;
                     let startX = 0;
@@ -375,12 +400,7 @@
                             draggedOnce = true;
                             suppressClickUntil = Date.now() + 1200;
                             savePosition(element);
-                            if (element.matches(':hover')) {
-                                clearExpressionTimers(element);
-                                setExpression(element, 'hello');
-                            } else {
-                                startExpressionLoop(element);
-                            }
+                            playDragFinishedWelcome(element);
                             window.setTimeout(() => {
                                 blockClick = false;
                                 draggedOnce = false;
@@ -401,6 +421,9 @@
                         pointerId = null;
                         element.classList.remove('is-pressing', 'is-dragging');
                         resetTilt(element);
+                        if (Number(element.dataset.wiboostJustDraggedUntil || 0) > Date.now()) {
+                            return;
+                        }
                         if (element.matches(':hover')) {
                             clearExpressionTimers(element);
                             setExpression(element, 'hello');
@@ -419,7 +442,10 @@
 
                         const reportUrl = element.dataset.reportUrl;
                         if (reportUrl) {
-                            window.location.assign(reportUrl);
+                            event.preventDefault();
+                            clearExpressionTimers(element);
+                            setExpression(element, 'hello');
+                            window.setTimeout(() => window.location.assign(reportUrl), 160);
                         }
                     }, true);
 
@@ -441,10 +467,10 @@
                     document.querySelectorAll('[data-wiboost-mascot-float]').forEach(setupMascot);
                 };
 
+                setupAllMascots();
+
                 if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', setupAllMascots, { once: true });
-                } else {
-                    setupAllMascots();
                 }
             })();
         </script>

@@ -1,39 +1,31 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Response;
-
-// --- 1. CONTROLLER IMPORTS ---
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\FrontendController;
-
-// Admin Controllers
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\AdminReportController as AdminAdminReportController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CredentialController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\DepositController as AdminDepositController;
+use App\Http\Controllers\Admin\DisplayController;
 use App\Http\Controllers\Admin\ProductController;
-use App\Http\Controllers\Admin\CredentialController; 
+use App\Http\Controllers\Admin\PromoController;
+use App\Http\Controllers\Admin\RefundController as AdminRefundController;
+use App\Http\Controllers\Admin\ResellerController as AdminResellerController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
-use App\Http\Controllers\Admin\RefundController as AdminRefundController;
-use App\Http\Controllers\Admin\DepositController as AdminDepositController;
-use App\Http\Controllers\Admin\AdminReportController as AdminAdminReportController;
-use App\Http\Controllers\Admin\PromoController;
-use App\Http\Controllers\Admin\DisplayController;
-use App\Http\Controllers\Admin\TutorialController; // <-- IMPORT BARU UNTUK TUTORIAL
-use App\Http\Controllers\Admin\ResellerController as AdminResellerController;
-
-// User / Customer Controllers
+use App\Http\Controllers\Admin\TutorialController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\FrontendController;
+use App\Http\Controllers\PaymentCallbackController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\User\AdminReportController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
-use App\Http\Controllers\User\TransactionHistoryController;
 use App\Http\Controllers\User\OrderController;
 use App\Http\Controllers\User\QrisPaymentController;
-use App\Http\Controllers\User\WalletController; 
-use App\Http\Controllers\User\AdminReportController;
 use App\Http\Controllers\User\ResellerController;
-
-// Webhook Controller
-use App\Http\Controllers\PaymentCallbackController;
+use App\Http\Controllers\User\TransactionHistoryController;
+use App\Http\Controllers\User\WalletController;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -124,7 +116,7 @@ Route::middleware(['auth', 'role:buyer,reseller'])->prefix('user')->name('user.'
     Route::delete('/history/{transaction}/login-proof', [TransactionHistoryController::class, 'destroyLoginProof'])->name('history.login-proof.destroy');
     Route::get('/report-admin', [AdminReportController::class, 'create'])->name('report.admin');
     Route::post('/report-admin', [AdminReportController::class, 'store'])->name('report.admin.store');
-    
+
     // Order & Checkout
     Route::get('/order/category/{category}/ordersosmed-services', [OrderController::class, 'ordersosmedCategoryServices'])->name('order.ordersosmed-services');
     Route::get('/order/service/{product}/ordersosmed', [OrderController::class, 'ordersosmedServiceMeta'])->name('order.ordersosmed-service');
@@ -158,12 +150,10 @@ Route::middleware(['auth', 'role:buyer,reseller'])->prefix('user')->name('user.'
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    // Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard')->middleware('admin.access:dashboard');
     Route::get('/dashboard/contact-numbers', fn () => redirect()->route('admin.reports.index'))->middleware('admin.access:reports');
     Route::post('/dashboard/contact-numbers', [AdminDashboardController::class, 'updateContactNumbers'])->name('dashboard.contact-numbers.update')->middleware('admin.access:reports');
 
-    // Master Data (CRUD)
     Route::resource('users', AdminUserController::class)->middleware('admin.access:users');
     Route::resource('categories', CategoryController::class)->middleware('admin.access:categories');
     Route::get('/resellers', [AdminUserController::class, 'legacyResellers'])->name('resellers.index')->middleware('admin.access:users');
@@ -175,7 +165,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/commissions/export', [AdminResellerController::class, 'exportCommissions'])->name('commissions.export')->middleware('admin.access:commissions');
     Route::get('/withdrawals', [AdminResellerController::class, 'withdrawals'])->name('withdrawals.index')->middleware('admin.access:withdrawals');
     Route::patch('/withdrawals/{commission}', [AdminResellerController::class, 'updateWithdrawal'])->name('withdrawals.update')->middleware('admin.access:withdrawals');
-    
+
     // Produk & Manajemen Stok Kredensial (Akun Premium)
     Route::post('/products/sync/digiflazz', [ProductController::class, 'syncDigiflazz'])->name('products.sync.digiflazz')->middleware('admin.access:products');
     Route::post('/products/sync/ordersosmed', [ProductController::class, 'syncOrderSosmed'])->name('products.sync.ordersosmed')->middleware('admin.access:products');
@@ -203,7 +193,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/refunds/{refund}/edit', [AdminRefundController::class, 'edit'])->name('refunds.edit')->middleware('admin.access:refunds');
     Route::patch('/refunds/{refund}', [AdminRefundController::class, 'update'])->name('refunds.update')->middleware('admin.access:refunds');
     Route::delete('/refunds/{refund}', [AdminRefundController::class, 'destroy'])->name('refunds.destroy')->middleware('admin.access:refunds');
-    
+
     // Deposit Management
     Route::get('/deposits', [AdminDepositController::class, 'index'])->name('deposits.index')->middleware('admin.access:deposits');
     Route::patch('/deposits/{id}', [AdminDepositController::class, 'update'])->name('deposits.update')->middleware('admin.access:deposits');

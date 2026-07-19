@@ -156,11 +156,8 @@ class AdminReportController extends Controller
     {
         return [
             ['key' => 'deposit', 'label' => 'Deposit', 'record_type' => 'deposit', 'needs_record' => true],
+            ['key' => 'transaction', 'label' => 'Transaksi', 'record_type' => 'general', 'needs_record' => true],
             ['key' => 'commission', 'label' => 'Komisi', 'record_type' => 'commission', 'needs_record' => true],
-            ['key' => 'sosmed', 'label' => 'Suntik Sosmed', 'record_type' => 'suntik-sosmed', 'needs_record' => true],
-            ['key' => 'game', 'label' => 'Top Up Game', 'record_type' => 'top-up-game', 'needs_record' => true],
-            ['key' => 'data', 'label' => 'Paket Data', 'record_type' => 'paket-data', 'needs_record' => true],
-            ['key' => 'premium', 'label' => 'Aplikasi Premium', 'record_type' => 'aplikasi-premium', 'needs_record' => true],
             ['key' => 'umum', 'label' => 'Umum', 'record_type' => 'general', 'needs_record' => true],
         ];
     }
