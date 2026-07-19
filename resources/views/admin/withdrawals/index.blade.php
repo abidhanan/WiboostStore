@@ -1,24 +1,43 @@
 @extends('layouts.admin')
 
-@section('title', 'Penarikan Komisi')
+@section('title', 'Manajemen Penarikan')
 @section('admin_header_subtitle', 'Konfirmasi penarikan reseller setelah transfer.')
 
 @section('content')
 @php
     $searchValue = $search ?? request('search');
     $activeStatus = $status ?? request('status', 'all');
+    $selectedMonth = $selectedMonth ?? request('month', date('m'));
+    $selectedYear = $selectedYear ?? request('year', date('Y'));
+    $adminMonthNames = [
+        1 => 'Januari',
+        2 => 'Februari',
+        3 => 'Maret',
+        4 => 'April',
+        5 => 'Mei',
+        6 => 'Juni',
+        7 => 'Juli',
+        8 => 'Agustus',
+        9 => 'September',
+        10 => 'Oktober',
+        11 => 'November',
+        12 => 'Desember',
+    ];
+    $selectedMonthNumber = (int) $selectedMonth;
     $formatRupiah = fn ($value) => 'Rp ' . number_format((float) $value, 0, ',', '.');
     $formatDate = fn ($value) => $value ? $value->timezone(config('app.timezone'))->format('d M Y, H:i') : '-';
     $statusFilters = [
         'all' => ['label' => 'Semua', 'text' => '#5a76c8', 'bg' => '#f4f9ff'],
         'pending' => ['label' => 'Menunggu', 'text' => '#d99b16', 'bg' => '#fff7d6'],
-        'approved' => ['label' => 'Disetujui', 'text' => '#22c55e', 'bg' => '#e6fff7'],
-        'rejected' => ['label' => 'Ditolak', 'text' => '#ff6b6b', 'bg' => '#ffe5e5'],
+        'processing' => ['label' => 'Proses', 'text' => '#5a76c8', 'bg' => '#e0fbfc'],
+        'success' => ['label' => 'Sukses', 'text' => '#22c55e', 'bg' => '#e6fff7'],
+        'failed' => ['label' => 'Gagal', 'text' => '#ff6b6b', 'bg' => '#ffe5e5'],
     ];
     $statusMeta = function (?string $status): array {
         return match ($status) {
-            'approved' => ['label' => 'Disetujui', 'class' => 'bg-[#e6fff7] text-emerald-500'],
-            'rejected' => ['label' => 'Ditolak', 'class' => 'bg-[#ffe5e5] text-[#ff6b6b]'],
+            'processing' => ['label' => 'Proses', 'class' => 'bg-[#e0fbfc] text-[#5a76c8]'],
+            'success', 'approved' => ['label' => 'Sukses', 'class' => 'bg-[#e6fff7] text-emerald-500'],
+            'failed', 'rejected' => ['label' => 'Gagal', 'class' => 'bg-[#ffe5e5] text-[#ff6b6b]'],
             default => ['label' => 'Menunggu', 'class' => 'bg-[#fff7d6] text-[#d99b16]'],
         };
     };
@@ -101,6 +120,26 @@
         border-color: #d9fff5;
         background: #f2fffb;
     }
+    .admin-theme-select-month,
+    .admin-theme-select-year {
+        flex: 1 1 0;
+        width: auto;
+    }
+    .admin-theme-select-status {
+        width: 8.8rem;
+        flex: 0 0 8.8rem;
+    }
+    .admin-withdrawal-status-form {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .45rem;
+        width: 100%;
+    }
+    @media (min-width: 768px) {
+        .admin-theme-select-month { width: 9rem; flex: 0 0 9rem; }
+        .admin-theme-select-year { width: 7rem; flex: 0 0 7rem; }
+    }
 </style>
 
 <div class="wiboost-font relative z-10 w-full min-w-0 pb-12">
@@ -117,11 +156,14 @@
     @endif
 
     <div class="relative z-10 mb-5 w-full min-w-0 rounded-[2rem] border-4 border-white bg-white/90 p-4 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm transition-transform duration-300 hover:border-[#bde0fe] sm:mb-6 sm:rounded-[2.5rem] sm:p-5">
-        <form action="{{ route('admin.withdrawals.index') }}" method="GET" class="flex w-full flex-col gap-3 md:flex-row">
+        <form action="{{ route('admin.withdrawals.index') }}" method="GET" class="flex w-full flex-col gap-3">
+            <div class="flex w-full flex-col gap-3 md:flex-row">
             <div class="flex w-full min-w-0 flex-1 gap-2">
                 @if($activeStatus !== 'all')
                     <input type="hidden" name="status" value="{{ $activeStatus }}">
                 @endif
+                <input type="hidden" name="month" value="{{ $selectedMonth }}">
+                <input type="hidden" name="year" value="{{ $selectedYear }}">
                 <input type="text" name="search" value="{{ $searchValue }}"
                        class="min-w-0 flex-1 truncate rounded-[1rem] border-4 border-white bg-[#f4f9ff] px-4 py-3 text-xs font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe] sm:rounded-[1.2rem] sm:px-5 sm:text-sm"
                        placeholder="Cari reseller, e-wallet, atau nomor tujuan...">
@@ -129,16 +171,42 @@
                     @include('partials.wiboost-icon', ['name' => 'search', 'class' => 'h-5 w-5'])
                 </button>
                 @if($searchValue)
-                    <a href="{{ route('admin.withdrawals.index', array_filter(['status' => $activeStatus === 'all' ? null : $activeStatus])) }}" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#ffe5e5] text-xs font-black text-[#ff6b6b] shadow-md transition-transform active:scale-95 sm:rounded-[1.2rem]" title="Reset">
+                    <a href="{{ route('admin.withdrawals.index', array_filter(['status' => $activeStatus === 'all' ? null : $activeStatus, 'month' => $selectedMonth, 'year' => $selectedYear])) }}" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#ffe5e5] text-xs font-black text-[#ff6b6b] shadow-md transition-transform active:scale-95 sm:rounded-[1.2rem]" title="Reset">
                         @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])
                     </a>
                 @endif
             </div>
 
-            <a href="{{ route('admin.withdrawals.index') }}" class="flex h-12 w-full shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#8faaf3] px-6 py-3 text-sm font-black text-white shadow-md transition-transform hover:bg-[#6f8ddc] active:scale-95 md:w-auto sm:rounded-[1.2rem]">
+            <a href="{{ route('admin.withdrawals.index', array_filter(['status' => $activeStatus === 'all' ? null : $activeStatus, 'month' => $selectedMonth, 'year' => $selectedYear])) }}" class="flex h-12 w-full shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#8faaf3] px-6 py-3 text-sm font-black text-white shadow-md transition-transform hover:bg-[#6f8ddc] active:scale-95 md:w-auto sm:rounded-[1.2rem]">
                 @include('partials.wiboost-icon', ['name' => 'refresh', 'class' => 'mr-2 h-5 w-5'])
                 Segarkan
             </a>
+            </div>
+
+            <div class="flex w-full items-center justify-start gap-2 border-t-4 border-dashed border-[#f4f9ff] pt-4 md:justify-end md:border-t-0 md:pt-0">
+                <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
+                    <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                        <span data-admin-theme-select-label>{{ $adminMonthNames[$selectedMonthNumber] ?? '-' }}</span>
+                        <span class="admin-theme-select-arrow">v</span>
+                    </button>
+                    <div class="admin-theme-select-menu">
+                        @for($m = 1; $m <= 12; $m++)
+                            <button type="button" class="admin-theme-select-option {{ (string) $selectedMonth === sprintf('%02d', $m) ? 'is-selected' : '' }}" data-value="{{ sprintf('%02d', $m) }}" data-label="{{ $adminMonthNames[$m] }}">{{ $adminMonthNames[$m] }}</button>
+                        @endfor
+                    </div>
+                </div>
+                <div class="admin-theme-select admin-theme-select-year" data-admin-theme-select data-submit-on-change="true" data-input-name="year">
+                    <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                        <span data-admin-theme-select-label>{{ $selectedYear }}</span>
+                        <span class="admin-theme-select-arrow">v</span>
+                    </button>
+                    <div class="admin-theme-select-menu">
+                        @for($y = date('Y'); $y >= date('Y') - 3; $y--)
+                            <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
+                        @endfor
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
 
@@ -147,7 +215,7 @@
         'activeFilter' => $activeStatus,
         'filterParam' => 'status',
         'filterRoute' => 'admin.withdrawals.index',
-        'filterQuery' => ['search' => $searchValue],
+        'filterQuery' => ['search' => $searchValue, 'month' => $selectedMonth, 'year' => $selectedYear],
     ])
 
     <div class="relative z-10 w-full min-w-0 overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:rounded-[2.5rem]">
@@ -199,9 +267,30 @@
                                     <p class="text-lg font-black text-[#4bc6b9]">{{ $formatRupiah($withdrawal->amount) }}</p>
                                 </td>
                                 <td class="px-5 py-5 text-center align-middle">
-                                    <span class="{{ $meta['class'] }} inline-flex w-32 justify-center rounded-full border-2 border-white px-4 py-1.5 text-[9px] font-black uppercase tracking-widest shadow-sm">
-                                        {{ $meta['label'] }}
-                                    </span>
+                                    <form onclick="event.stopPropagation()" action="{{ route('admin.withdrawals.update', $withdrawal) }}" method="POST" class="admin-withdrawal-status-form" data-no-submit-lock="true">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="search" value="{{ $searchValue }}">
+                                        <input type="hidden" name="filter_status" value="{{ $activeStatus }}">
+                                        <input type="hidden" name="month" value="{{ $selectedMonth }}">
+                                        <input type="hidden" name="year" value="{{ $selectedYear }}">
+                                        <input type="hidden" name="status" value="{{ match ($withdrawal->status ?? 'pending') { 'approved' => 'success', 'rejected' => 'failed', default => $withdrawal->status ?? 'pending' } }}">
+                                        <div class="admin-theme-select admin-theme-select-status" data-admin-theme-select data-input-name="status">
+                                            <button type="button" class="admin-theme-select-button rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest">
+                                                <span data-admin-theme-select-label>{{ $meta['label'] }}</span>
+                                                <span class="admin-theme-select-arrow">v</span>
+                                            </button>
+                                            <div class="admin-theme-select-menu">
+                                                <button type="button" class="admin-theme-select-option {{ ($withdrawal->status ?? 'pending') === 'pending' ? 'is-selected' : '' }}" data-value="pending" data-label="Menunggu">Menunggu</button>
+                                                <button type="button" class="admin-theme-select-option {{ ($withdrawal->status ?? '') === 'processing' ? 'is-selected' : '' }}" data-value="processing" data-label="Proses">Proses</button>
+                                                <button type="button" class="admin-theme-select-option {{ in_array(($withdrawal->status ?? ''), ['success', 'approved'], true) ? 'is-selected' : '' }}" data-value="success" data-label="Sukses">Sukses</button>
+                                                <button type="button" class="admin-theme-select-option {{ in_array(($withdrawal->status ?? ''), ['failed', 'rejected'], true) ? 'is-selected' : '' }}" data-value="failed" data-label="Gagal">Gagal</button>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#5a76c8] text-white shadow-md active:scale-95" title="Simpan Status">
+                                            @include('partials.wiboost-icon', ['name' => 'save', 'class' => 'h-4 w-4'])
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         @empty
@@ -219,6 +308,12 @@
             </div>
         </div>
     </div>
+
+    @if(method_exists($withdrawals, 'links') && $withdrawals->hasPages())
+        <div class="mt-6 w-full min-w-0 rounded-[2rem] border-4 border-white bg-[#f8faff] p-5 shadow-xl shadow-[#bde0fe]/25 sm:p-8">
+            {{ $withdrawals->links() }}
+        </div>
+    @endif
 
     @foreach($withdrawals ?? [] as $withdrawal)
         @php
@@ -283,17 +378,26 @@
                         @method('PATCH')
                         <input type="hidden" name="search" value="{{ $searchValue }}">
                         <input type="hidden" name="filter_status" value="{{ $activeStatus }}">
+                        <input type="hidden" name="month" value="{{ $selectedMonth }}">
+                        <input type="hidden" name="year" value="{{ $selectedYear }}">
                         <label class="mb-2 block text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Catatan Admin</label>
                         <textarea name="notes" rows="3" class="w-full rounded-[1.2rem] border-4 border-white bg-white px-4 py-3 text-sm font-bold text-[#2b3a67] shadow-inner outline-none focus:border-[#bde0fe]" placeholder="Tambahkan catatan konfirmasi transfer...">{{ old('notes', $withdrawal->notes) }}</textarea>
-                        <div class="mt-3 grid gap-2 sm:grid-cols-3">
-                            <button type="submit" name="status" value="approved" class="rounded-full border-2 border-white bg-[#22c55e] px-4 py-3 text-xs font-black uppercase tracking-widest text-white shadow-md shadow-emerald-100 transition active:scale-95">
-                                Setujui
-                            </button>
-                            <button type="submit" name="status" value="rejected" class="rounded-full border-2 border-white bg-[#ff6b6b] px-4 py-3 text-xs font-black uppercase tracking-widest text-white shadow-md shadow-[#ff6b6b]/20 transition active:scale-95">
-                                Tolak
-                            </button>
-                            <button type="submit" name="status" value="pending" class="rounded-full border-2 border-white bg-[#f4b740] px-4 py-3 text-xs font-black uppercase tracking-widest text-white shadow-md shadow-amber-100 transition active:scale-95">
-                                Menunggu
+                        <div class="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                            <input type="hidden" name="status" value="{{ match ($withdrawal->status ?? 'pending') { 'approved' => 'success', 'rejected' => 'failed', default => $withdrawal->status ?? 'pending' } }}">
+                            <div class="admin-theme-select" data-admin-theme-select data-input-name="status">
+                                <button type="button" class="admin-theme-select-button rounded-full px-4 py-2.5 text-xs font-black uppercase tracking-widest">
+                                    <span data-admin-theme-select-label>{{ $detailMeta['label'] }}</span>
+                                    <span class="admin-theme-select-arrow">v</span>
+                                </button>
+                                <div class="admin-theme-select-menu">
+                                    <button type="button" class="admin-theme-select-option {{ ($withdrawal->status ?? 'pending') === 'pending' ? 'is-selected' : '' }}" data-value="pending" data-label="Menunggu">Menunggu</button>
+                                    <button type="button" class="admin-theme-select-option {{ ($withdrawal->status ?? '') === 'processing' ? 'is-selected' : '' }}" data-value="processing" data-label="Proses">Proses</button>
+                                    <button type="button" class="admin-theme-select-option {{ in_array(($withdrawal->status ?? ''), ['success', 'approved'], true) ? 'is-selected' : '' }}" data-value="success" data-label="Sukses">Sukses</button>
+                                    <button type="button" class="admin-theme-select-option {{ in_array(($withdrawal->status ?? ''), ['failed', 'rejected'], true) ? 'is-selected' : '' }}" data-value="failed" data-label="Gagal">Gagal</button>
+                                </div>
+                            </div>
+                            <button type="submit" class="rounded-full border-4 border-white bg-[#5a76c8] px-6 py-3 text-xs font-black uppercase tracking-widest text-white shadow-md shadow-[#5a76c8]/25 transition active:scale-95">
+                                Simpan Status
                             </button>
                         </div>
                     </form>

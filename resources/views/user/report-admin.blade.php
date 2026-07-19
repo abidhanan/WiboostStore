@@ -334,13 +334,13 @@
                     @if($needsRecord)
                         <section class="report-record-section rounded-[2.5rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/25 md:p-6">
                             <label class="mb-3 ml-1 block text-xs font-black uppercase tracking-widest text-[#5a76c8]">
-                                {{ $selectedKey === 'deposit' ? 'Pilih Riwayat Deposit' : 'Pilih Riwayat Pesanan' }}
+                                {{ $selectedKey === 'deposit' ? 'Pilih Riwayat Deposit' : ($selectedKey === 'commission' ? 'Pilih Riwayat Komisi' : 'Pilih Riwayat Pesanan') }}
                             </label>
 
                             @if($records->isEmpty())
                                 <div class="report-record-empty rounded-[2rem] border-4 border-dashed border-[#bde0fe] bg-[#f4f9ff] p-6 text-center">
                                     <p class="text-sm font-black text-[#5a76c8]">Belum ada data terkait yang bisa dipilih.</p>
-                                    <p class="mt-2 text-xs font-bold text-[#8faaf3]">Pilih jenis kendala lain yang memiliki riwayat pesanan atau deposit.</p>
+                                    <p class="mt-2 text-xs font-bold text-[#8faaf3]">Pilih jenis kendala lain yang memiliki riwayat pesanan, deposit, atau komisi.</p>
                                 </div>
                             @else
                                 <div class="report-record-list space-y-3">
@@ -376,7 +376,7 @@
                             <p>2. Ceritakan kendalanya dengan singkat dan jelas.</p>
                             <p>3. Upload bukti agar admin lebih cepat mengecek.</p>
                             @if($needsRecord)
-                                <p>4. Pilih deposit atau pesanan yang bermasalah jika ada.</p>
+                                <p>4. Pilih deposit, pesanan, atau komisi yang bermasalah jika ada.</p>
                                 <p>5. Tekan Kirim Laporan. WhatsApp admin akan terbuka otomatis.</p>
                             @else
                                 <p>4. Tekan Kirim Laporan. WhatsApp admin akan terbuka otomatis.</p>

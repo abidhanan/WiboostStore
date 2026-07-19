@@ -47,6 +47,22 @@
 
         <main class="relative z-10 mx-auto flex w-full max-w-xl items-center justify-center {{ $isCompactAuth ? 'flex-1 py-8 lg:py-10' : 'min-h-[calc(100vh-7rem)] py-12 lg:py-16' }}">
             <section class="w-full rounded-[2.5rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/50 backdrop-blur p-6 md:p-8">
+                @auth
+                    @if(! \App\Support\WiboostInputRules::validName(auth()->user()?->name))
+                        <div class="mb-6 rounded-[1.5rem] border-4 border-white bg-[#fff5eb] px-5 py-4 text-sm font-black text-amber-600 shadow-lg shadow-amber-100/60">
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div class="flex min-w-0 items-start gap-3">
+                                    <span class="mt-0.5 shrink-0 drop-shadow-sm">@include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'h-6 w-6'])</span>
+                                    <span class="min-w-0">{{ \App\Support\WiboostInputRules::invalidNameWarning() }}</span>
+                                </div>
+                                <a href="{{ route('profile.edit') }}" class="inline-flex shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-4 py-2 text-xs font-black text-white shadow-md shadow-[#5a76c8]/25">
+                                    Ubah Nama
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+                @endauth
+
                 @hasSection('content')
                     @yield('content')
                 @else
@@ -102,5 +118,6 @@
     @unless($isCompactAuth)
         @include('partials.floating-admin-report')
     @endunless
+    @include('partials.wiboost-input-guards')
 </body>
 </html>

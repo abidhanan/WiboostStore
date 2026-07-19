@@ -91,6 +91,13 @@
             transform: translateY(0) scale(1);
         }
 
+        .admin-promo-theme-select-menu.is-floating-open {
+            display: block !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            transform: none !important;
+        }
+
         .admin-promo-theme-select-option {
             width: 100%;
             display: flex;
@@ -128,6 +135,7 @@
                     if (dropdown !== except) {
                         dropdown.classList.remove('is-open');
                         dropdown.querySelector('.admin-promo-theme-select-button')?.setAttribute('aria-expanded', 'false');
+                        window.wiboostResetFloatingMenu?.(dropdown, '.admin-promo-theme-select-menu');
                     }
                 });
             };
@@ -144,6 +152,11 @@
                     closePromoSelects(dropdown);
                     dropdown.classList.toggle('is-open', willOpen);
                     button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                    if (willOpen) {
+                        window.requestAnimationFrame(() => window.wiboostPositionFloatingMenu?.(dropdown, '.admin-promo-theme-select-menu', 220, 288));
+                    } else {
+                        window.wiboostResetFloatingMenu?.(dropdown, '.admin-promo-theme-select-menu');
+                    }
                 });
 
                 dropdown.querySelectorAll('[data-admin-promo-theme-select-option]').forEach((option) => {
@@ -155,6 +168,7 @@
                         dropdown.classList.remove('is-open');
                         button.setAttribute('aria-expanded', 'false');
                         input.dispatchEvent(new Event('change', { bubbles: true }));
+                        window.wiboostResetFloatingMenu?.(dropdown, '.admin-promo-theme-select-menu');
                     });
                 });
             });
@@ -170,6 +184,13 @@
                     closePromoSelects();
                 }
             });
+
+            window.addEventListener('resize', () => {
+                document.querySelectorAll('[data-admin-promo-theme-select].is-open').forEach((dropdown) => window.wiboostPositionFloatingMenu?.(dropdown, '.admin-promo-theme-select-menu', 220, 288));
+            });
+            window.addEventListener('scroll', () => {
+                document.querySelectorAll('[data-admin-promo-theme-select].is-open').forEach((dropdown) => window.wiboostPositionFloatingMenu?.(dropdown, '.admin-promo-theme-select-menu', 220, 288));
+            }, true);
         });
     </script>
 @endonce

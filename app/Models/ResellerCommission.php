@@ -56,8 +56,9 @@ class ResellerCommission extends Model
     public function getDisplayStatusAttribute(): string
     {
         return match ($this->status) {
-            'approved' => 'Disetujui',
-            'rejected' => 'Ditolak',
+            'processing' => 'Proses',
+            'success', 'approved' => 'Sukses',
+            'failed', 'rejected' => 'Gagal',
             'pending' => 'Menunggu',
             default => 'Sukses',
         };

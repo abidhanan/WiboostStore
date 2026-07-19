@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Halaman Komisi')
+@section('title', 'Manajemen Komisi')
 @section('admin_header_subtitle', 'Pantau komisi masuk reseller.')
 
 @section('content')
@@ -189,6 +189,13 @@
         background: #fff;
         padding: .35rem;
         box-shadow: 0 18px 40px rgba(90, 118, 200, .22);
+    }
+
+    .admin-theme-select-menu.is-floating-open {
+        display: block !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        transform: none !important;
     }
     .admin-theme-select:not(.is-open) .admin-theme-select-menu {
         display: none;
@@ -384,6 +391,12 @@
             </div>
         </div>
     </div>
+
+    @if(method_exists($incomeCommissions, 'links') && $incomeCommissions->hasPages())
+        <div class="mt-6 w-full min-w-0 rounded-[2rem] border-4 border-white bg-[#f8faff] p-5 shadow-xl shadow-[#bde0fe]/25 sm:mt-8 sm:p-8">
+            {{ $incomeCommissions->links() }}
+        </div>
+    @endif
 
     @foreach($incomeCommissions as $commission)
         @php
@@ -643,6 +656,7 @@
         });
         document.querySelectorAll('[data-admin-theme-select].is-open').forEach((dropdown) => {
             dropdown.classList.remove('is-open');
+            window.wiboostResetFloatingMenu?.(dropdown);
         });
 
         document.body.classList.remove('overflow-hidden', 'admin-detail-open');
@@ -653,11 +667,89 @@
             document.querySelectorAll('[data-admin-theme-select].is-open').forEach((dropdown) => {
                 if (dropdown !== except) {
                     dropdown.classList.remove('is-open');
+                    resetFloatingMenu(dropdown);
                 }
             });
         };
 
+        const resetFloatingMenu = (dropdown) => {
+            const menu = dropdown.querySelector('.admin-theme-select-menu') || dropdown._wiboostFloatingMenu;
+
+            if (!menu) {
+                return;
+            }
+
+            if (dropdown._wiboostFloatingMenuParent && menu.parentElement !== dropdown._wiboostFloatingMenuParent) {
+                if (dropdown._wiboostFloatingMenuNext && dropdown._wiboostFloatingMenuNext.parentElement === dropdown._wiboostFloatingMenuParent) {
+                    dropdown._wiboostFloatingMenuParent.insertBefore(menu, dropdown._wiboostFloatingMenuNext);
+                } else {
+                    dropdown._wiboostFloatingMenuParent.appendChild(menu);
+                }
+            }
+
+            menu.style.position = '';
+            menu.style.left = '';
+            menu.style.right = '';
+            menu.style.top = '';
+            menu.style.bottom = '';
+            menu.style.width = '';
+            menu.style.minWidth = '';
+            menu.style.maxHeight = '';
+            menu.style.zIndex = '';
+            menu.style.display = '';
+            menu.classList.remove('is-floating-open');
+        };
+
+        const positionFloatingMenu = (dropdown) => {
+            const menu = dropdown.querySelector('.admin-theme-select-menu') || dropdown._wiboostFloatingMenu;
+
+            if (!menu) {
+                return;
+            }
+
+            if (!dropdown._wiboostFloatingMenuParent) {
+                dropdown._wiboostFloatingMenuParent = menu.parentElement;
+                dropdown._wiboostFloatingMenuNext = menu.nextSibling;
+                dropdown._wiboostFloatingMenu = menu;
+                dropdown._wiboostSharedFloatingMenuParent = menu.parentElement;
+                dropdown._wiboostSharedFloatingMenuNext = menu.nextSibling;
+                dropdown._wiboostSharedFloatingMenu = menu;
+            }
+
+            if (menu.parentElement !== document.body) {
+                document.body.appendChild(menu);
+            }
+
+            const rect = dropdown.getBoundingClientRect();
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+            const gap = 8;
+            const maxHeight = 256;
+            menu.style.display = 'block';
+            menu.classList.add('is-floating-open');
+            const desiredHeight = Math.min(menu.scrollHeight || maxHeight, maxHeight);
+            const openUp = viewportHeight - rect.bottom < Math.min(desiredHeight, 160) && rect.top > desiredHeight;
+            const availableHeight = openUp
+                ? Math.max(120, rect.top - (gap * 2))
+                : Math.max(120, viewportHeight - rect.bottom - (gap * 2));
+            const width = Math.max(rect.width, 152);
+            const left = Math.min(Math.max(gap, rect.left), Math.max(gap, viewportWidth - width - gap));
+
+            menu.style.position = 'fixed';
+            menu.style.left = `${left}px`;
+            menu.style.right = 'auto';
+            menu.style.width = `${width}px`;
+            menu.style.minWidth = `${width}px`;
+            menu.style.maxHeight = `${Math.min(maxHeight, availableHeight)}px`;
+            menu.style.bottom = 'auto';
+            menu.style.top = openUp
+                ? `${Math.max(gap, rect.top - Math.min(desiredHeight, availableHeight) - gap)}px`
+                : `${Math.min(viewportHeight - gap, rect.bottom + gap)}px`;
+            menu.style.zIndex = '100000';
+        };
+
         document.querySelectorAll('[data-admin-theme-select]').forEach((dropdown) => {
+            dropdown.dataset.adminThemeSelectReady = 'true';
             const button = dropdown.querySelector('.admin-theme-select-button');
             const label = dropdown.querySelector('[data-admin-theme-select-label]');
             const inputName = dropdown.dataset.inputName;
@@ -670,6 +762,11 @@
                 const willOpen = ! dropdown.classList.contains('is-open');
                 closeAllDropdowns(dropdown);
                 dropdown.classList.toggle('is-open', willOpen);
+                if (willOpen) {
+                    window.requestAnimationFrame(() => positionFloatingMenu(dropdown));
+                } else {
+                    resetFloatingMenu(dropdown);
+                }
             });
 
             dropdown.querySelectorAll('[data-value]').forEach((option) => {
@@ -688,6 +785,7 @@
                     dropdown.querySelectorAll('[data-value]').forEach((item) => item.classList.remove('is-selected'));
                     option.classList.add('is-selected');
                     dropdown.classList.remove('is-open');
+                    resetFloatingMenu(dropdown);
 
                     if (dropdown.dataset.submitOnChange === 'true' && form) {
                         form.submit();
@@ -697,6 +795,12 @@
         });
 
         document.addEventListener('click', () => closeAllDropdowns());
+        window.addEventListener('resize', () => {
+            document.querySelectorAll('[data-admin-theme-select].is-open').forEach(positionFloatingMenu);
+        });
+        window.addEventListener('scroll', () => {
+            document.querySelectorAll('[data-admin-theme-select].is-open').forEach(positionFloatingMenu);
+        }, true);
     })();
 </script>
 @endsection

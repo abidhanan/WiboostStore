@@ -20,7 +20,17 @@
             display: flex;
             gap: 1rem;
             justify-content: space-between;
+            min-width: 0;
+            overflow-x: auto;
+            -ms-overflow-style: none;
             padding: 1.2rem 1.35rem;
+            scrollbar-width: none;
+        }
+
+        .wiboost-pagination-wrap::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
         }
 
         .wiboost-pagination-info {
@@ -32,9 +42,11 @@
         .wiboost-pagination-nav {
             align-items: center;
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: .45rem;
             justify-content: center;
+            min-width: max-content;
+            white-space: nowrap;
         }
 
         .wiboost-pagination-link,
@@ -49,8 +61,9 @@
             height: 2.45rem;
             justify-content: center;
             min-width: 2.45rem;
-            padding: 0 .9rem;
+            padding: 0 .72rem;
             transition: all 120ms ease-out;
+            white-space: nowrap;
         }
 
         .wiboost-pagination-link {

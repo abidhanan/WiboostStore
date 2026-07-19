@@ -859,6 +859,22 @@
     <div class="h-24 sm:h-28 lg:hidden"></div>
 
     <main class="flex-1 mx-auto w-full max-w-6xl px-4 pb-20 sm:px-6 lg:px-8 md:pb-16 relative z-10">
+        @auth
+            @if(! \App\Support\WiboostInputRules::validName(auth()->user()?->name))
+                <div class="mb-6 rounded-[1.5rem] border-4 border-white bg-[#fff5eb] px-5 py-4 text-sm font-black text-amber-600 shadow-lg shadow-amber-100/60">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="flex min-w-0 items-start gap-3">
+                            <span class="mt-0.5 shrink-0 drop-shadow-sm">@include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'h-6 w-6'])</span>
+                            <span class="min-w-0">{{ \App\Support\WiboostInputRules::invalidNameWarning() }}</span>
+                        </div>
+                        <a href="{{ route('profile.edit') }}" class="inline-flex shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-4 py-2 text-xs font-black text-white shadow-md shadow-[#5a76c8]/25">
+                            Ubah Nama
+                        </a>
+                    </div>
+                </div>
+            @endif
+        @endauth
+
         @yield('content')
     </main>
 
@@ -1047,6 +1063,7 @@
     {{-- Widget Lapor Admin --}}
     @include('partials.floating-admin-report')
     @include('partials.page-loading')
+    @include('partials.wiboost-input-guards')
     <script>
         document.addEventListener('click', (event) => {
             const backLink = event.target.closest('a[data-wiboost-back], a[aria-label="Kembali"]');

@@ -199,7 +199,10 @@
                 $isCancelled = $trx->cancelled_due_to_qris_expiry;
                 $transactionTime = $trx->created_at?->copy()->locale('id')->translatedFormat('d F Y, H:i') ?? '-';
 
-                if ($isCancelled) {
+                if ($trx->hasManualRefund()) {
+                    $statusLabel = 'Refund';
+                    $statusClass = 'bg-[#e0fbfc] text-[#5a76c8] border-[#bde0fe]';
+                } elseif ($isCancelled) {
                     $statusLabel = 'Batal';
                     $statusClass = 'bg-[#ffe5e5] text-[#ff6b6b] border-red-200';
                 } elseif (in_array($trx->payment_status, ['unpaid', 'pending'], true)) {
@@ -240,6 +243,7 @@
                 ];
                 $hasCredentialAccess = collect($credentialAccessLabels)->keys()->contains(fn ($key) => ! empty($credentials[$key]));
                 $hasCredentialInfo = ! empty($credentials['notes']) || ! empty($credentials['requires_login_proof']);
+                $historyProductName = $trx->product->name ?? ($trx->isMembershipPayment() ? 'Membership Wiboost 30 Hari' : 'Produk Dihapus');
             @endphp
 
             <div onclick="openModal('modal-{{ $trx->id }}')" class="history-order-card bg-white/95 backdrop-blur-sm rounded-[2.5rem] p-6 md:p-8 shadow-xl shadow-[#bde0fe]/30 border-4 border-white flex flex-col md:flex-row justify-between items-start md:items-center hover:border-[#bde0fe] md:hover:-translate-y-2 transition-all duration-300 group cursor-pointer relative overflow-hidden">
@@ -249,7 +253,7 @@
                         <span class="shrink-0 whitespace-nowrap font-black uppercase tracking-widest text-[#8faaf3]" style="font-size: 8.5px; line-height: 1.1;">{{ $transactionTime }}</span>
                     </div>
 
-                    <h4 class="font-black text-xl md:text-2xl text-[#2b3a67] line-clamp-2 group-hover:text-[#5a76c8] transition-colors leading-tight drop-shadow-sm">{{ $trx->product->name ?? 'Produk Dihapus' }}</h4>
+                    <h4 class="font-black text-xl md:text-2xl text-[#2b3a67] line-clamp-2 group-hover:text-[#5a76c8] transition-colors leading-tight drop-shadow-sm">{{ $historyProductName }}</h4>
 
                     @if($trx->has_order_input && filled($trx->order_input_summary))
                         <div class="mt-3 w-full overflow-hidden rounded-xl border border-white bg-[#f8faff] px-4 py-2 shadow-inner md:inline-block md:w-auto md:max-w-full">
@@ -590,7 +594,7 @@
 
                         <div class="bg-[#f8faff] p-6 rounded-[1.5rem] border-4 border-white shadow-sm">
                             <p class="text-[10px] font-black text-[#8faaf3] uppercase tracking-widest mb-1">Produk</p>
-                            <p class="font-black text-[#2b3a67] text-base leading-tight">{{ $trx->product->name ?? 'Produk Dihapus' }}</p>
+                            <p class="font-black text-[#2b3a67] text-base leading-tight">{{ $historyProductName }}</p>
                         </div>
 
                         @if($trx->has_order_input)

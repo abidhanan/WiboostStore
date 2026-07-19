@@ -34,7 +34,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
                 <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Nama Lengkap</label>
-                <input type="text" name="name" required value="{{ old('name') }}" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" placeholder="John Doe">
+                <input type="text" name="name" required value="{{ old('name') }}" data-wiboost-name-only class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" placeholder="John Doe">
             </div>
             <div>
                 <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Email</label>
@@ -42,7 +42,7 @@
             </div>
             <div>
                 <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Nomor Kontak</label>
-                <input type="text" name="whatsapp" required value="{{ old('whatsapp') }}" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" placeholder="Cth: 081234567890">
+                <input type="text" name="whatsapp" required value="{{ old('whatsapp') }}" inputmode="numeric" pattern="[0-9]*" data-wiboost-number-only class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] shadow-inner rounded-[1.5rem] px-6 py-4 text-[#2b3a67] font-black outline-none transition placeholder-[#a3bbfb]" placeholder="Cth: 081234567890">
             </div>
             <div>
                 <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2">Kata Sandi</label>

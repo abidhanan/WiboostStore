@@ -34,7 +34,7 @@ class TransactionHistoryController extends Controller
         }
 
         $transactions = Transaction::where('user_id', Auth::id())
-                                    ->with('product.category.parent.parent.parent')
+                                    ->with('refund', 'product.category.parent.parent.parent')
                                     ->orderBy('created_at', 'desc')
                                     ->paginate(10);
 

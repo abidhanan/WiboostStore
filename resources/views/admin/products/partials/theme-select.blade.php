@@ -87,6 +87,13 @@
             transform: translateY(0) scale(1);
         }
 
+        .admin-product-theme-select-menu.is-floating-open {
+            display: grid !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            transform: none !important;
+        }
+
         .admin-product-theme-select-option {
             width: 100%;
             border: 2px solid transparent;
@@ -122,6 +129,7 @@
                     if (dropdown !== except) {
                         dropdown.classList.remove('is-open');
                         dropdown.querySelector('.admin-product-theme-select-button')?.setAttribute('aria-expanded', 'false');
+                        window.wiboostResetFloatingMenu?.(dropdown, '.admin-product-theme-select-menu');
                     }
                 });
             };
@@ -136,6 +144,11 @@
                     closeProductSelects(dropdown);
                     dropdown.classList.toggle('is-open', willOpen);
                     button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                    if (willOpen) {
+                        window.requestAnimationFrame(() => window.wiboostPositionFloatingMenu?.(dropdown, '.admin-product-theme-select-menu', 220, 288));
+                    } else {
+                        window.wiboostResetFloatingMenu?.(dropdown, '.admin-product-theme-select-menu');
+                    }
                 });
 
                 dropdown.querySelectorAll('[data-admin-product-theme-select-option]').forEach((option) => {
@@ -160,6 +173,7 @@
                         option.classList.add('is-selected');
                         dropdown.classList.remove('is-open');
                         button?.setAttribute('aria-expanded', 'false');
+                        window.wiboostResetFloatingMenu?.(dropdown, '.admin-product-theme-select-menu');
                     });
                 });
             });
@@ -175,6 +189,13 @@
                     closeProductSelects();
                 }
             });
+
+            window.addEventListener('resize', () => {
+                document.querySelectorAll('[data-admin-product-theme-select].is-open').forEach((dropdown) => window.wiboostPositionFloatingMenu?.(dropdown, '.admin-product-theme-select-menu', 220, 288));
+            });
+            window.addEventListener('scroll', () => {
+                document.querySelectorAll('[data-admin-product-theme-select].is-open').forEach((dropdown) => window.wiboostPositionFloatingMenu?.(dropdown, '.admin-product-theme-select-menu', 220, 288));
+            }, true);
         });
     </script>
 @endonce

@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CredentialController; 
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
+use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 use App\Http\Controllers\Admin\DepositController as AdminDepositController;
 use App\Http\Controllers\Admin\AdminReportController as AdminAdminReportController;
 use App\Http\Controllers\Admin\PromoController;
@@ -196,6 +197,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/transactions/export-pdf', [AdminTransactionController::class, 'exportPdf'])->name('transactions.export_pdf')->middleware('admin.access:transactions');
     Route::get('/transactions/export-excel', [AdminTransactionController::class, 'exportExcel'])->name('transactions.export_excel')->middleware('admin.access:transactions');
     Route::patch('/transactions/{id}/update', [AdminTransactionController::class, 'updateStatus'])->name('transactions.update')->middleware('admin.access:transactions');
+    Route::get('/refunds', [AdminRefundController::class, 'index'])->name('refunds.index')->middleware('admin.access:refunds');
+    Route::get('/refunds/create', [AdminRefundController::class, 'create'])->name('refunds.create')->middleware('admin.access:refunds');
+    Route::post('/refunds', [AdminRefundController::class, 'store'])->name('refunds.store')->middleware('admin.access:refunds');
+    Route::get('/refunds/{refund}/edit', [AdminRefundController::class, 'edit'])->name('refunds.edit')->middleware('admin.access:refunds');
+    Route::patch('/refunds/{refund}', [AdminRefundController::class, 'update'])->name('refunds.update')->middleware('admin.access:refunds');
+    Route::delete('/refunds/{refund}', [AdminRefundController::class, 'destroy'])->name('refunds.destroy')->middleware('admin.access:refunds');
     
     // Deposit Management
     Route::get('/deposits', [AdminDepositController::class, 'index'])->name('deposits.index')->middleware('admin.access:deposits');

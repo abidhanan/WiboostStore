@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\ResellerCommissionService;
+use App\Support\WiboostInputRules;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -20,7 +22,20 @@ class UserController extends Controller
             $roleFilter = 'all';
         }
 
+        $commissionStartDate = app(ResellerCommissionService::class)->commissionStartDate();
+
         $users = User::query()
+            ->withSum(['resellerCommissions as commission_total' => function ($query) use ($commissionStartDate) {
+                $query->where('type', 'income')
+                    ->where(function ($statusQuery) {
+                        $statusQuery->whereNull('status')
+                            ->orWhereNotIn('status', ['failed', 'rejected']);
+                    })
+                    ->whereHas('transaction', fn ($transactionQuery) => $transactionQuery
+                        ->where('created_at', '>=', $commissionStartDate)
+                        ->where('payment_status', 'paid')
+                        ->where('order_status', 'success'));
+            }], 'amount')
             ->when($roleFilter === 'super_admin', fn ($query) => $query->where('role_id', User::ROLE_SUPER_ADMIN))
             ->when($roleFilter === 'keuangan', fn ($query) => $query->where('role_id', User::ROLE_FINANCE))
             ->when($roleFilter === 'gudang', fn ($query) => $query->where('role_id', User::ROLE_WAREHOUSE))
@@ -28,18 +43,13 @@ class UserController extends Controller
             ->when($roleFilter === 'customer_service', fn ($query) => $query->where('role_id', User::ROLE_CUSTOMER_SERVICE))
             ->when($roleFilter === 'member', fn ($query) => $query->where('membership_expires_at', '>', now()))
             ->when($roleFilter === 'reseller', function ($query) {
-                $query->where('role_id', User::ROLE_RESELLER)
-                    ->where(function ($innerQuery) {
-                        $innerQuery->whereNull('membership_expires_at')
-                            ->orWhere('membership_expires_at', '<=', now());
-                    });
+                $query->where(function ($innerQuery) {
+                    $innerQuery->where('role_id', User::ROLE_RESELLER)
+                        ->orWhereNotNull('reseller_joined_at');
+                });
             })
             ->when($roleFilter === 'buyer', function ($query) {
-                $query->whereIn('role_id', User::BUYER_ROLE_IDS)
-                    ->where(function ($innerQuery) {
-                        $innerQuery->whereNull('membership_expires_at')
-                            ->orWhere('membership_expires_at', '<=', now());
-                    });
+                $query->whereIn('role_id', User::BUYER_ROLE_IDS);
             })
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($innerQuery) use ($search) {
@@ -110,12 +120,12 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => WiboostInputRules::nameRules(),
             'email' => 'required|string|email|max:255|unique:users',
-            'whatsapp' => 'required|string|max:20',
+            'whatsapp' => WiboostInputRules::numberRules(20),
             'password' => 'required|string|min:8',
             'role_id' => 'required|in:1,2,3,4,6,7,8',
-        ], [], [
+        ], WiboostInputRules::validationMessages(), [
             'name' => 'nama lengkap',
             'email' => 'email',
             'whatsapp' => 'nomor kontak',
@@ -132,7 +142,7 @@ class UserController extends Controller
             'balance' => 0, // Saldo otomatis di-set 0
         ]);
 
-        return redirect()->route('admin.users.index')->with('success', 'Pengguna baru berhasil ditambahkan.');
+        return $this->redirectToReturnTo($request, 'admin.users.index')->with('success', 'Pengguna baru berhasil ditambahkan.');
     }
 
     public function edit(User $user)
@@ -150,7 +160,7 @@ class UserController extends Controller
         $user->role_id = $request->role_id;
         $user->save();
 
-        return redirect()->route('admin.users.index')->with('success', 'Role akses pengguna berhasil diperbarui.');
+        return $this->redirectToReturnTo($request, 'admin.users.index')->with('success', 'Role akses pengguna berhasil diperbarui.');
     }
 
     public function destroy(User $user)

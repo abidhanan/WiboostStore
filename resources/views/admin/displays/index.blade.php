@@ -87,5 +87,11 @@
             </div>
         @endforelse
     </div>
+
+    @if(isset($displays) && method_exists($displays, 'links') && $displays->hasPages())
+        <div class="mt-6 w-full min-w-0 rounded-[2rem] border-4 border-white bg-white/90 p-5 shadow-xl shadow-[#bde0fe]/25 sm:mt-8 sm:p-8">
+            {{ $displays->links() }}
+        </div>
+    @endif
 </div>
 @endsection

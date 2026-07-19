@@ -113,7 +113,7 @@ class ProductController extends Controller
 
         Product::create($this->buildPayload($validated, $request, $imagePath));
 
-        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan.');
+        return $this->redirectToReturnTo($request, 'admin.products.index')->with('success', 'Produk berhasil ditambahkan.');
     }
 
     public function edit(Product $product)
@@ -143,7 +143,7 @@ class ProductController extends Controller
 
         $product->update($this->buildPayload($validated, $request, $imagePath, $product));
 
-        return redirect()->route('admin.products.index')->with('success', 'Perubahan produk berhasil disimpan.');
+        return $this->redirectToReturnTo($request, 'admin.products.index')->with('success', 'Perubahan produk berhasil disimpan.');
     }
 
     public function destroy(Product $product)

@@ -37,7 +37,8 @@ class TutorialController extends Controller
                 });
             })
             ->latest()
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
         $tutorialMainOrder = [
             'suntik sosmed' => 0,
@@ -47,7 +48,7 @@ class TutorialController extends Controller
             'aplikasi premium' => 3,
         ];
 
-        $tutorialSections = $tutorials
+        $tutorialSections = collect($tutorials->items())
             ->groupBy(fn (Tutorial $tutorial) => $tutorial->main_category ?: ($tutorial->category ?: 'Umum'))
             ->map(function ($mainTutorials, $mainCategory) {
                 $directTutorials = $mainTutorials
@@ -130,7 +131,7 @@ class TutorialController extends Controller
 
         Tutorial::create($data);
 
-        return redirect()->route('admin.tutorials.index')->with('success', 'Tutorial berhasil ditambahkan!');
+        return $this->redirectToReturnTo($request, 'admin.tutorials.index')->with('success', 'Tutorial berhasil ditambahkan!');
     }
 
     public function edit(Tutorial $tutorial)
@@ -182,7 +183,7 @@ class TutorialController extends Controller
 
         $tutorial->update($data);
 
-        return redirect()->route('admin.tutorials.index')->with('success', 'Tutorial berhasil diperbarui!');
+        return $this->redirectToReturnTo($request, 'admin.tutorials.index')->with('success', 'Tutorial berhasil diperbarui!');
     }
 
     public function destroy(Tutorial $tutorial)

@@ -124,12 +124,38 @@
     .admin-detail-close {
         box-shadow: 0 10px 22px rgba(255,107,107,.14), inset 0 1px 0 rgba(255,255,255,.85);
     }
+    .admin-theme-select-month,
+    .admin-theme-select-year {
+        flex: 1 1 0;
+        width: auto;
+    }
+    @media (min-width: 768px) {
+        .admin-theme-select-month { width: 9rem; flex: 0 0 9rem; }
+        .admin-theme-select-year { width: 7rem; flex: 0 0 7rem; }
+    }
 </style>
 
 <div class="wiboost-font relative z-10 w-full min-w-0 pb-12">
     @php
         $searchValue = $search ?? request('search');
         $activeReportFilter = $reportFilter ?? request('report_filter', 'all');
+        $selectedMonth = $selectedMonth ?? request('month', date('m'));
+        $selectedYear = $selectedYear ?? request('year', date('Y'));
+        $adminMonthNames = [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember',
+        ];
+        $selectedMonthNumber = (int) $selectedMonth;
         $reportFilters = [
             'all' => ['label' => 'Semua'],
             'new' => ['label' => 'Baru'],
@@ -145,11 +171,14 @@
     @endif
 
     <div class="relative z-10 mb-6 w-full min-w-0 rounded-[2rem] border-4 border-white bg-white/90 p-4 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm transition-transform duration-300 hover:border-[#bde0fe] sm:mb-8 sm:rounded-[2.5rem] sm:p-5">
-        <form action="{{ route('admin.reports.index') }}" method="GET" class="flex w-full flex-col gap-3 md:flex-row">
+        <form action="{{ route('admin.reports.index') }}" method="GET" class="flex w-full flex-col gap-3">
+            <div class="flex w-full flex-col gap-3 md:flex-row">
             <div class="flex w-full min-w-0 flex-1 gap-2">
                 @if($activeReportFilter !== 'all')
                     <input type="hidden" name="report_filter" value="{{ $activeReportFilter }}">
                 @endif
+                <input type="hidden" name="month" value="{{ $selectedMonth }}">
+                <input type="hidden" name="year" value="{{ $selectedYear }}">
                 <input type="text" name="search" value="{{ $searchValue }}"
                        class="min-w-0 flex-1 truncate rounded-[1rem] border-4 border-white bg-[#f4f9ff] px-4 py-3 text-xs font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe] sm:rounded-[1.2rem] sm:px-5 sm:text-sm"
                        placeholder="Cari invoice, pelanggan, atau kendala...">
@@ -157,16 +186,42 @@
                     @include('partials.wiboost-icon', ['name' => 'search', 'class' => 'h-5 w-5'])
                 </button>
                 @if($searchValue)
-                    <a href="{{ route('admin.reports.index', array_filter(['report_filter' => $activeReportFilter === 'all' ? null : $activeReportFilter])) }}" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-md transition-transform active:scale-95 sm:rounded-[1.2rem]" title="Reset">
+                    <a href="{{ route('admin.reports.index', array_filter(['report_filter' => $activeReportFilter === 'all' ? null : $activeReportFilter, 'month' => $selectedMonth, 'year' => $selectedYear])) }}" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-md transition-transform active:scale-95 sm:rounded-[1.2rem]" title="Reset">
                         @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])
                     </a>
                 @endif
             </div>
 
-            <a href="{{ route('admin.reports.index', array_filter(['report_filter' => $activeReportFilter === 'all' ? null : $activeReportFilter])) }}" class="flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-[1rem] border-4 border-white bg-[#8faaf3] px-6 py-3 text-sm font-black text-white shadow-md transition-transform hover:bg-[#6f8ddc] active:scale-95 md:w-auto sm:rounded-[1.2rem]">
+            <a href="{{ route('admin.reports.index', array_filter(['report_filter' => $activeReportFilter === 'all' ? null : $activeReportFilter, 'month' => $selectedMonth, 'year' => $selectedYear])) }}" class="flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-[1rem] border-4 border-white bg-[#8faaf3] px-6 py-3 text-sm font-black text-white shadow-md transition-transform hover:bg-[#6f8ddc] active:scale-95 md:w-auto sm:rounded-[1.2rem]">
                 @include('partials.wiboost-icon', ['name' => 'refresh', 'class' => 'h-5 w-5'])
                 <span class="whitespace-nowrap">Segarkan</span>
             </a>
+            </div>
+
+            <div class="flex w-full items-center justify-start gap-2 border-t-4 border-dashed border-[#f4f9ff] pt-4 md:justify-end md:border-t-0 md:pt-0">
+                <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
+                    <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                        <span data-admin-theme-select-label>{{ $adminMonthNames[$selectedMonthNumber] ?? '-' }}</span>
+                        <span class="admin-theme-select-arrow">v</span>
+                    </button>
+                    <div class="admin-theme-select-menu">
+                        @for($m = 1; $m <= 12; $m++)
+                            <button type="button" class="admin-theme-select-option {{ (string) $selectedMonth === sprintf('%02d', $m) ? 'is-selected' : '' }}" data-value="{{ sprintf('%02d', $m) }}" data-label="{{ $adminMonthNames[$m] }}">{{ $adminMonthNames[$m] }}</button>
+                        @endfor
+                    </div>
+                </div>
+                <div class="admin-theme-select admin-theme-select-year" data-admin-theme-select data-submit-on-change="true" data-input-name="year">
+                    <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                        <span data-admin-theme-select-label>{{ $selectedYear }}</span>
+                        <span class="admin-theme-select-arrow">v</span>
+                    </button>
+                    <div class="admin-theme-select-menu">
+                        @for($y = date('Y'); $y >= date('Y') - 3; $y--)
+                            <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
+                        @endfor
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
 
@@ -187,13 +242,13 @@
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <div class="rounded-[1.6rem] border-4 border-white bg-[#f8fbff] p-4 shadow-inner">
                     <label for="admin_cs_whatsapp" class="mb-2 ml-2 block text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">Nomor Admin CS</label>
-                    <input id="admin_cs_whatsapp" type="text" name="admin_cs_whatsapp" x-model="cs" value="{{ old('admin_cs_whatsapp', $adminCsWhatsapp ?? '') }}" placeholder="0895611244000" class="w-full rounded-[1.25rem] border-4 border-white bg-white px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]">
+                    <input id="admin_cs_whatsapp" type="text" name="admin_cs_whatsapp" x-model="cs" value="{{ old('admin_cs_whatsapp', $adminCsWhatsapp ?? '') }}" placeholder="0895611244000" inputmode="numeric" pattern="[0-9]*" data-wiboost-number-only class="w-full rounded-[1.25rem] border-4 border-white bg-white px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]">
                     <p class="mt-2 ml-2 text-[10px] font-bold text-[#8faaf3]">Dipakai untuk tombol WhatsApp dan bantuan laporan.</p>
                 </div>
 
                 <div class="rounded-[1.6rem] border-4 border-white bg-[#f8fbff] p-4 shadow-inner">
                     <label for="admin_otp_whatsapp" class="mb-2 ml-2 block text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">Nomor Admin OTP</label>
-                    <input id="admin_otp_whatsapp" type="text" name="admin_otp_whatsapp" x-model="otp" value="{{ old('admin_otp_whatsapp', $adminOtpWhatsapp ?? '') }}" placeholder="0895611244000" class="w-full rounded-[1.25rem] border-4 border-white bg-white px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]">
+                    <input id="admin_otp_whatsapp" type="text" name="admin_otp_whatsapp" x-model="otp" value="{{ old('admin_otp_whatsapp', $adminOtpWhatsapp ?? '') }}" placeholder="0895611244000" inputmode="numeric" pattern="[0-9]*" data-wiboost-number-only class="w-full rounded-[1.25rem] border-4 border-white bg-white px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]">
                     <p class="mt-2 ml-2 text-[10px] font-bold text-[#8faaf3]">Dipakai khusus tombol minta OTP di detail pesanan user.</p>
                 </div>
             </div>
@@ -212,7 +267,7 @@
         'activeFilter' => $activeReportFilter,
         'filterParam' => 'report_filter',
         'filterRoute' => 'admin.reports.index',
-        'filterQuery' => ['search' => $searchValue],
+        'filterQuery' => ['search' => $searchValue, 'month' => $selectedMonth, 'year' => $selectedYear],
     ])
 
     <div class="relative z-10 w-full min-w-0 overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:rounded-[2.5rem]">
@@ -375,6 +430,18 @@
 
                     if ($depositLines !== []) {
                         $relatedSections[] = ['title' => 'Data Deposit', 'lines' => $depositLines];
+                    }
+                } elseif (($report->category_key ?? null) === 'commission') {
+                    $commissionLines = [];
+                    $appendReportDetailLine($commissionLines, 'Invoice', $snapshot['invoice'] ?? $report->related_invoice);
+                    $appendReportDetailLine($commissionLines, 'Jenis Komisi', $snapshot['category'] ?? null);
+                    $appendReportDetailLine($commissionLines, 'Produk', $snapshot['product'] ?? $report->related_title);
+                    $appendReportDetailLine($commissionLines, 'Nominal Komisi', $snapshot['commission'] ?? ($snapshot['amount'] ?? null));
+                    $appendReportDetailLine($commissionLines, 'Status', $snapshot['status'] ?? null);
+                    $appendReportDetailLine($commissionLines, 'Waktu', $snapshot['created'] ?? null);
+
+                    if ($commissionLines !== []) {
+                        $relatedSections[] = ['title' => 'Data Komisi', 'lines' => $commissionLines];
                     }
                 } elseif ($snapshot !== []) {
                     if ($isFilledReportValue($snapshot['loginProofUrl'] ?? null)) {

@@ -6,6 +6,7 @@ use App\Notifications\WiboostResetPasswordNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
@@ -87,6 +88,33 @@ class User extends Authenticatable
         return (int) $this->role_id === self::ROLE_RESELLER && ! $this->isMember();
     }
 
+    public function hasResellerCommissionAccess(): bool
+    {
+        return (int) $this->role_id === self::ROLE_RESELLER
+            || $this->reseller_joined_at !== null
+            || filled($this->reseller_payout_method)
+            || filled($this->reseller_payout_account)
+            || filled($this->reseller_payout_name)
+            || $this->resellerCommissions()->where('type', 'income')->exists();
+    }
+
+    public function scopeWithResellerCommissionAccess($query)
+    {
+        return $query->where(function ($query) {
+            $query->where('role_id', self::ROLE_RESELLER)
+                ->orWhereNotNull('reseller_joined_at')
+                ->orWhere(function ($payoutQuery) {
+                    $payoutQuery->whereNotNull('reseller_payout_account')
+                        ->where('reseller_payout_account', '!=', '');
+                })
+                ->orWhere(function ($payoutQuery) {
+                    $payoutQuery->whereNotNull('reseller_payout_name')
+                        ->where('reseller_payout_name', '!=', '');
+                })
+                ->orWhereHas('resellerCommissions', fn ($commissionQuery) => $commissionQuery->where('type', 'income'));
+        });
+    }
+
     public function isMember(): bool
     {
         return in_array((int) $this->role_id, [self::ROLE_BUYER, self::ROLE_RESELLER, self::ROLE_LEGACY_BUYER], true)
@@ -127,7 +155,7 @@ class User extends Authenticatable
         $targetRoleId = (int) $this->role_id;
 
         if (! $this->isAdmin()) {
-            $targetRoleId = $this->reseller_joined_at ? 3 : 2;
+            $targetRoleId = $this->hasResellerCommissionAccess() ? self::ROLE_RESELLER : self::ROLE_BUYER;
         }
 
         if ((int) $this->role_id === $targetRoleId) {
@@ -146,13 +174,62 @@ class User extends Authenticatable
     public function activateMembership(int $days = 30): void
     {
         $base = $this->isMember() ? $this->membership_expires_at->copy() : now();
-        $roleId = in_array((int) $this->role_id, [self::ROLE_BUYER, self::ROLE_RESELLER], true) ? (int) $this->role_id : self::ROLE_BUYER;
+        $hasResellerAccess = $this->hasResellerCommissionAccess();
+        $roleId = $hasResellerAccess
+            ? self::ROLE_RESELLER
+            : (in_array((int) $this->role_id, [self::ROLE_BUYER, self::ROLE_LEGACY_BUYER], true) ? (int) $this->role_id : self::ROLE_BUYER);
 
-        $this->forceFill([
+        $updates = [
             'role_id' => $roleId,
             'membership_started_at' => $this->membership_started_at ?: now(),
             'membership_expires_at' => $base->addDays($days),
-        ])->save();
+        ];
+
+        if ($hasResellerAccess && $this->reseller_joined_at === null) {
+            $updates['reseller_joined_at'] = now();
+        }
+
+        $this->forceFill($updates)->save();
+
+        $this->sendMembershipJoinedEmail();
+    }
+
+    public function sendMembershipJoinedEmail(): void
+    {
+        if (! filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
+        try {
+            Mail::raw(
+                "Halo {$this->short_name},\n\nSelamat bergabung menjadi member Wiboost Store!\n\nMembership kamu sudah aktif. Nikmati produk dan layanan dengan harga yang lebih murah serta bebas biaya admin untuk transaksi.\n\nTerima kasih,\nWiboost Store",
+                function ($message) {
+                    $message->to($this->email, $this->name)
+                        ->subject('Selamat Bergabung Menjadi Member Wiboost Store');
+                }
+            );
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+    }
+
+    public function sendResellerJoinedEmail(): void
+    {
+        if (! filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
+        try {
+            Mail::raw(
+                "Halo {$this->short_name},\n\nSelamat bergabung menjadi reseller Wiboost Store!\n\nDashboard reseller kamu sudah aktif. Kamu bisa mulai promosikan produk dan mendapatkan komisi dari transaksi sukses.\n\nTerima kasih,\nWiboost Store",
+                function ($message) {
+                    $message->to($this->email, $this->name)
+                        ->subject('Selamat Bergabung Menjadi Reseller Wiboost Store');
+                }
+            );
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
     }
 
     public function role()

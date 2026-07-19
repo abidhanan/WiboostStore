@@ -69,7 +69,10 @@
     @endif
 
     @if(session('success'))
-        <div class="rounded-[1.5rem] border-4 border-[#d8f8ef] bg-[#eafff7] px-6 py-4 text-sm font-black text-[#12b886] shadow-sm">{{ session('success') }}</div>
+        <div class="mb-8 flex items-center gap-4 rounded-[2.5rem] border-4 border-white bg-[#e6fff7] px-6 py-5 font-black text-emerald-500 shadow-lg shadow-emerald-100/50">
+            <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['name' => 'success', 'class' => 'h-8 w-8'])</span>
+            <span>{{ session('success') }}</span>
+        </div>
     @endif
 
     @unless($isReseller)
@@ -123,11 +126,11 @@
                 @error('reseller_payout_method')<p class="mt-2 text-xs font-bold text-[#ff6b6b]">{{ $message }}</p>@enderror
 
                 <label class="mt-5 block text-sm font-black text-[#5a76c8]">Nomor E-wallet</label>
-                <input name="reseller_payout_account" value="{{ old('reseller_payout_account') }}" placeholder="Masukkan nomor e-wallet" class="mt-3 w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none ring-2 ring-transparent focus:ring-[#bde0fe]" required>
+                <input name="reseller_payout_account" value="{{ old('reseller_payout_account') }}" placeholder="Masukkan nomor e-wallet" inputmode="numeric" pattern="[0-9]*" data-wiboost-number-only class="mt-3 w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none ring-2 ring-transparent focus:ring-[#bde0fe]" required>
                 @error('reseller_payout_account')<p class="mt-2 text-xs font-bold text-[#ff6b6b]">{{ $message }}</p>@enderror
 
                 <label class="mt-5 block text-sm font-black text-[#5a76c8]">Nama Pemilik E-wallet</label>
-                <input name="reseller_payout_name" value="{{ old('reseller_payout_name') }}" placeholder="Masukkan nama pemilik e-wallet" class="mt-3 w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none ring-2 ring-transparent focus:ring-[#bde0fe]" required>
+                <input name="reseller_payout_name" value="{{ old('reseller_payout_name') }}" placeholder="Masukkan nama pemilik e-wallet" data-wiboost-name-only class="mt-3 w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none ring-2 ring-transparent focus:ring-[#bde0fe]" required>
                 @error('reseller_payout_name')<p class="mt-2 text-xs font-bold text-[#ff6b6b]">{{ $message }}</p>@enderror
 
             </form>
@@ -143,7 +146,7 @@
                 </span>
                 <div class="min-w-0">
                     <p class="text-xs font-black uppercase tracking-[0.2em] text-[#4bc6b9]">Total Komisi</p>
-                    <p class="mt-2 truncate text-3xl font-black text-[#2b3a67]">{{ $formatRupiah($totals['income']) }}</p>
+                    <p class="mt-2 truncate text-3xl font-black text-[#2b3a67]">{{ $formatRupiah($availableCommission ?? 0) }}</p>
                 </div>
             </div>
             <div class="flex items-center gap-5 rounded-[1.75rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/20">
@@ -196,12 +199,12 @@
 
                     <div>
                         <label class="block text-sm font-black text-[#5a76c8]">Nomor E-wallet</label>
-                        <input name="reseller_payout_account" x-model="payoutAccount" class="mt-2 w-full rounded-[1.5rem] border-4 border-white bg-white px-4 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]" required>
+                        <input name="reseller_payout_account" x-model="payoutAccount" inputmode="numeric" pattern="[0-9]*" data-wiboost-number-only class="mt-2 w-full rounded-[1.5rem] border-4 border-white bg-white px-4 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]" required>
                     </div>
 
                     <div>
                         <label class="block text-sm font-black text-[#5a76c8]">Nama Pemilik</label>
-                        <input name="reseller_payout_name" x-model="payoutName" class="mt-2 w-full rounded-[1.5rem] border-4 border-white bg-white px-4 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]" required>
+                        <input name="reseller_payout_name" x-model="payoutName" data-wiboost-name-only class="mt-2 w-full rounded-[1.5rem] border-4 border-white bg-white px-4 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]" required>
                     </div>
 
                     <button x-cloak x-show="payoutMethod !== originalMethod || payoutAccount !== originalAccount || payoutName !== originalName"
@@ -211,21 +214,18 @@
                     </button>
                 </form>
 
-                @if($pendingWithdrawal)
-                    <div class="mt-5 rounded-[1.5rem] border-2 border-[#d7ecff] bg-[#eef5ff] p-5 text-sm font-black text-[#5a76c8]">
-                        Penarikan {{ $formatRupiah($pendingWithdrawal->amount) }} sedang dalam proses penarikan admin.
-                    </div>
-                @else
+                @unless($pendingWithdrawal)
                     <form method="POST" action="{{ route('user.reseller.withdraw') }}" class="mt-5">
                         @csrf
                         <p class="mb-3 text-left text-xs font-black text-amber-500">*Pajak ditanggung reseller</p>
                         <button type="submit"
-                                @if(! $canWithdrawNow) onclick="event.preventDefault(); alert('Jumlah minimal penarikan komisi yaitu Rp 20.000.');" @endif
-                                class="w-full rounded-full border-4 border-white bg-[#5a76c8] px-6 py-4 text-sm font-black text-white shadow-xl shadow-[#5a76c8]/25 transition active:scale-[0.98]">
+                                @disabled(! $canWithdrawNow)
+                                class="w-full rounded-full border-4 border-white px-6 py-4 text-sm font-black text-white shadow-xl transition active:scale-95 {{ $canWithdrawNow ? 'bg-[#5a76c8] shadow-[#5a76c8]/25' : 'cursor-not-allowed' }}"
+                                @unless($canWithdrawNow) style="background:#cbd5e1;box-shadow:0 18px 30px rgba(148, 163, 184, .2);" @endunless>
                             Tarik
                         </button>
                     </form>
-                @endif
+                @endunless
             </div>
         </div>
 
@@ -236,10 +236,16 @@
                     @forelse($commissionHistories as $history)
                         <div class="flex flex-col gap-3 rounded-[1.5rem] bg-[#f8fbff] p-4 sm:flex-row sm:items-center sm:justify-between">
                             <div class="min-w-0">
+                                @php
+                                    $historyProduct = $history->product_name ?: ($history->transaction?->product?->name ?: null);
+                                @endphp
                                 <p class="text-sm font-black text-[#2b3a67]">{{ $history->display_type }}</p>
                                 <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $history->created_at?->format('d M Y, H:i') }} - {{ $history->display_status }}</p>
                                 @if($history->transaction)
                                     <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $history->transaction->invoice_number }}</p>
+                                @endif
+                                @if($history->type === 'income')
+                                    <p class="mt-2 text-xs font-bold leading-snug text-[#5a76c8]">{{ $historyProduct ?: '-' }}</p>
                                 @endif
                             </div>
                             <p @class([

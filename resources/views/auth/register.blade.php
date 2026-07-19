@@ -19,7 +19,7 @@
 
             <div>
                 <label for="name" class="mb-2 block text-sm font-black text-[#5a76c8]">Nama Lengkap</label>
-                <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus
+                <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus data-wiboost-name-only
                     class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 text-sm font-bold text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] focus:bg-white"
                     placeholder="Ketik namamu">
                 @error('name')
@@ -39,7 +39,7 @@
 
             <div>
                 <label for="whatsapp" class="mb-2 block text-sm font-black text-[#5a76c8]">Nomor WhatsApp</label>
-                <input id="whatsapp" type="text" name="whatsapp" value="{{ old('whatsapp') }}" required
+                <input id="whatsapp" type="text" name="whatsapp" value="{{ old('whatsapp') }}" required inputmode="numeric" pattern="[0-9]*" data-wiboost-number-only
                     class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 text-sm font-bold text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] focus:bg-white"
                     placeholder="081234567890">
                 @error('whatsapp')

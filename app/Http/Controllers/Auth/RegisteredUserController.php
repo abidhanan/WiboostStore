@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\WiboostInputRules;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,11 +33,11 @@ class RegisteredUserController extends Controller
     {
         // 1. Validasi input dari form register
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => WiboostInputRules::nameRules(),
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'whatsapp' => ['required', 'string', 'max:20'],
+            'whatsapp' => WiboostInputRules::numberRules(20),
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ], [], [
+        ], WiboostInputRules::validationMessages(), [
             'name' => 'nama panggilan',
             'email' => 'alamat email',
             'whatsapp' => 'nomor kontak',

@@ -308,6 +308,132 @@
             word-break: break-word;
         }
 
+        body.wiboost-admin-shell main table tbody td {
+            vertical-align: middle !important;
+        }
+
+        body.wiboost-admin-shell main nav[role="navigation"] {
+            max-width: 100%;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        body.wiboost-admin-shell main nav[role="navigation"]::-webkit-scrollbar {
+            display: none;
+        }
+
+        body.wiboost-admin-shell main nav[role="navigation"] > div {
+            min-width: max-content;
+            flex-wrap: nowrap !important;
+        }
+
+        body.wiboost-admin-shell .admin-theme-select {
+            position: relative;
+            min-width: 0;
+        }
+
+        body.wiboost-admin-shell .admin-theme-select.is-open {
+            z-index: 5000;
+        }
+
+        body.wiboost-admin-shell .admin-theme-select-button {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .6rem;
+            min-height: 2.75rem;
+            border: 4px solid #fff;
+            background: #f4f9ff;
+            color: #2b3a67;
+            box-shadow: inset 0 2px 8px rgba(143, 170, 243, .16), 0 8px 18px rgba(189, 224, 254, .18);
+            transition: border-color .18s ease, background .18s ease, transform .18s ease;
+        }
+
+        body.wiboost-admin-shell .admin-theme-select-button [data-admin-theme-select-label] {
+            min-width: 0;
+            flex: 1 1 auto;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        body.wiboost-admin-shell .admin-theme-select-button:hover,
+        body.wiboost-admin-shell .admin-theme-select.is-open .admin-theme-select-button {
+            border-color: #bde0fe;
+            background: #eef8ff;
+        }
+
+        body.wiboost-admin-shell .admin-theme-select-arrow {
+            display: inline-flex;
+            flex: 0 0 .5rem;
+            width: .5rem;
+            height: .5rem;
+            border-right: 2px solid currentColor;
+            border-bottom: 2px solid currentColor;
+            color: #5a76c8;
+            font-size: 0;
+            line-height: 0;
+            transform: rotate(45deg) translate(-1px, -1px);
+            transform-origin: center;
+            transition: transform .18s ease;
+        }
+
+        body.wiboost-admin-shell .admin-theme-select.is-open .admin-theme-select-arrow {
+            transform: rotate(225deg) translate(-1px, -1px);
+        }
+
+        body.wiboost-admin-shell .admin-theme-select-menu {
+            position: absolute;
+            z-index: 5200;
+            left: 0;
+            right: 0;
+            top: calc(100% + .45rem);
+            min-width: 100%;
+            max-height: 16rem;
+            overflow-y: auto;
+            border: 4px solid #fff;
+            border-radius: 1.1rem;
+            background: #fff;
+            padding: .35rem;
+            box-shadow: 0 18px 40px rgba(90, 118, 200, .22);
+        }
+
+        body.wiboost-admin-shell .admin-theme-select-menu.is-floating-open {
+            display: block !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            transform: none !important;
+        }
+
+        body.wiboost-admin-shell .admin-theme-select:not(.is-open) .admin-theme-select-menu {
+            display: none;
+        }
+
+        body.wiboost-admin-shell .admin-theme-select-option {
+            width: 100%;
+            display: block;
+            border-radius: .85rem;
+            padding: .65rem .8rem;
+            text-align: left;
+            font-size: .72rem;
+            font-weight: 900;
+            color: #2b3a67;
+            white-space: nowrap;
+            transition: background .16s ease, color .16s ease;
+        }
+
+        body.wiboost-admin-shell .admin-theme-select-option:hover,
+        body.wiboost-admin-shell .admin-theme-select-option.is-selected {
+            background: #e0fbfc;
+            color: #5a76c8;
+        }
+
+        body.wiboost-admin-shell .table-scroll tr:has(.admin-theme-select.is-open) {
+            position: relative;
+            z-index: 5100;
+        }
+
         @media (max-width: 767px) {
             body.wiboost-admin-shell {
                 overflow-x: hidden;
@@ -462,12 +588,16 @@
         ];
         $adminProfileBorderColor = $adminProfileBorderColors[$currentAdminRoleId] ?? '#22c55e';
         $adminCanAccessArea = function (string $area) use ($currentAdminRoleId): bool {
+            if ($area === 'refunds') {
+                return in_array($currentAdminRoleId, [1, 4], true);
+            }
+
             if ($currentAdminRoleId === 1) {
                 return true;
             }
 
             $adminAccessMap = [
-                4 => ['dashboard', 'commissions', 'users', 'transactions', 'deposits', 'withdrawals'],
+                4 => ['dashboard', 'commissions', 'users', 'transactions', 'refunds', 'deposits', 'withdrawals'],
                 6 => ['dashboard', 'users', 'categories', 'products', 'tutorials', 'transactions'],
                 7 => ['dashboard', 'users', 'transactions', 'promos', 'displays'],
                 8 => ['dashboard', 'commissions', 'users', 'transactions', 'deposits', 'reports'],
@@ -475,26 +605,6 @@
 
             return in_array($area, $adminAccessMap[$currentAdminRoleId] ?? [], true);
         };
-
-        $adminNav = [
-            ['route' => 'admin.commissions.index', 'pattern' => 'admin.commissions.*', 'label' => 'Komisi', 'title' => 'Halaman Komisi', 'description' => 'Pantau komisi masuk reseller.', 'icon' => 'K'],
-            ['route' => 'admin.dashboard', 'pattern' => 'admin.dashboard', 'label' => 'Dashboard', 'description' => 'Ringkasan transaksi dan aktivitas toko.', 'icon' => 'dashboard'],
-            ['route' => 'admin.users.index', 'pattern' => 'admin.users.*', 'label' => 'Pengguna', 'title' => 'Manajemen Pengguna', 'description' => 'Kelola data pengguna dan role akun.', 'icon' => '👥'],
-            ['route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'label' => 'Kategori', 'title' => 'Manajemen Kategori', 'description' => 'Atur kategori layanan dan produk.', 'icon' => '📂'],
-            ['route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Produk', 'title' => 'Manajemen Produk', 'description' => 'Kelola harga, stok, dan provider.', 'icon' => '📦'],
-            ['route' => 'admin.promos.index', 'pattern' => 'admin.promos.*', 'label' => 'Banner', 'title' => 'Manajemen Banner', 'description' => 'Kelola banner dan pengumuman user.', 'icon' => '📢'],
-            ['route' => 'admin.tutorials.index', 'pattern' => 'admin.tutorials.*', 'label' => 'Tutorial', 'title' => 'Manajemen Tutorial', 'description' => 'Kelola panduan dan tutorial pelanggan.', 'icon' => '📖'],
-            ['route' => 'admin.transactions.index', 'pattern' => 'admin.transactions.*', 'label' => 'Transaksi', 'title' => 'Manajemen Transaksi', 'description' => 'Pantau transaksi dan pesanan pelanggan.', 'icon' => '💳'],
-            ['route' => 'admin.manual-orders.index', 'pattern' => 'admin.manual-orders.*', 'label' => 'Manual Order', 'description' => 'Kelola pesanan manual pelanggan.', 'icon' => '✍️'],
-            ['route' => 'admin.deposits.index', 'pattern' => 'admin.deposits.*', 'label' => 'Deposit', 'title' => 'Manajemen Deposit', 'description' => 'Pantau top-up saldo pengguna.', 'icon' => 'deposit'],
-            ['route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Laporan', 'title' => 'Manajemen Laporan', 'description' => 'Pantau laporan kendala pelanggan.', 'icon' => '📩'],
-            ['route' => 'profile.edit', 'pattern' => 'profile.edit', 'label' => 'Profil', 'description' => 'Kelola profil dan keamanan akun.', 'icon' => '👤'],
-        ];
-
-        $adminNav = array_values(array_filter(
-            $adminNav,
-            fn (array $item) => $item['route'] !== 'admin.manual-orders.index'
-        ));
 
         $adminNavMatches = function (array $item): bool {
             if ($item['route'] === 'admin.products.index' && request()->routeIs('admin.credentials.*')) {
@@ -510,10 +620,11 @@
             ['access' => 'categories', 'route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'label' => 'Kategori', 'title' => 'Manajemen Kategori', 'description' => 'Atur kategori layanan dan produk.', 'icon' => 'category'],
             ['access' => 'products', 'route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Produk', 'title' => 'Manajemen Produk', 'description' => 'Kelola harga, stok, dan provider.', 'icon' => 'product'],
             ['access' => 'transactions', 'route' => 'admin.transactions.index', 'pattern' => 'admin.transactions.*', 'label' => 'Transaksi', 'title' => 'Manajemen Transaksi', 'description' => 'Pantau transaksi dan pesanan pelanggan.', 'icon' => 'transaction'],
+            ['access' => 'refunds', 'route' => 'admin.refunds.index', 'pattern' => 'admin.refunds.*', 'label' => 'Refund', 'title' => 'Manajemen Refund', 'description' => 'Catat refund transaksi ke saldo user.', 'icon' => 'refund'],
             ['access' => 'reports', 'route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Laporan', 'title' => 'Manajemen Laporan', 'description' => 'Pantau laporan kendala pelanggan.', 'icon' => 'report'],
             ['access' => 'deposits', 'route' => 'admin.deposits.index', 'pattern' => 'admin.deposits.*', 'label' => 'Deposit', 'title' => 'Manajemen Deposit', 'description' => 'Pantau top-up saldo pengguna.', 'icon' => 'deposit'],
-            ['access' => 'commissions', 'route' => 'admin.commissions.index', 'pattern' => 'admin.commissions.*', 'label' => 'Komisi', 'title' => 'Halaman Komisi', 'description' => 'Pantau komisi masuk reseller.', 'icon' => 'commission'],
-            ['access' => 'withdrawals', 'route' => 'admin.withdrawals.index', 'pattern' => 'admin.withdrawals.*', 'label' => 'Penarikan', 'title' => 'Penarikan Komisi', 'description' => 'Konfirmasi penarikan reseller setelah transfer.', 'icon' => 'withdrawal'],
+            ['access' => 'commissions', 'route' => 'admin.commissions.index', 'pattern' => 'admin.commissions.*', 'label' => 'Komisi', 'title' => 'Manajemen Komisi', 'description' => 'Pantau komisi masuk reseller.', 'icon' => 'commission'],
+            ['access' => 'withdrawals', 'route' => 'admin.withdrawals.index', 'pattern' => 'admin.withdrawals.*', 'label' => 'Penarikan', 'title' => 'Manajemen Penarikan', 'description' => 'Konfirmasi penarikan reseller setelah transfer.', 'icon' => 'withdrawal'],
             ['access' => 'promos', 'route' => 'admin.promos.index', 'pattern' => 'admin.promos.*', 'label' => 'Banner', 'title' => 'Manajemen Banner', 'description' => 'Kelola banner dan pengumuman user.', 'icon' => 'banner'],
             ['access' => 'displays', 'route' => 'admin.displays.index', 'pattern' => 'admin.displays.*', 'label' => 'Display', 'title' => 'Manajemen Display', 'description' => 'Kelola display popup user.', 'icon' => 'display'],
             ['access' => 'tutorials', 'route' => 'admin.tutorials.index', 'pattern' => 'admin.tutorials.*', 'label' => 'Tutorial', 'title' => 'Manajemen Tutorial', 'description' => 'Kelola panduan dan tutorial pelanggan.', 'icon' => 'tutorial'],
@@ -525,16 +636,17 @@
             'dashboard' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 13.5h6.5V4H4v9.5Zm9.5 6.5H20V4h-6.5v16ZM4 20h6.5v-3.5H4V20Z" />',
             'reseller' => '<path stroke-linecap="round" stroke-linejoin="round" d="M8.5 10.5V8A3.5 3.5 0 0 1 12 4.5 3.5 3.5 0 0 1 15.5 8v2.5M5.5 10.5h13l-1 9h-11l-1-9ZM9 14h6" />',
             'commission' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18M7 7.5h7.5a3 3 0 0 1 0 6H9.5a3 3 0 0 0 0 6H17" />',
-            'withdrawal' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 8h12.5A2.5 2.5 0 0 1 19 10.5V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z M4 8l10.5-3v3M7 13h4M16 12h5m0 0-2.5-2.5M21 12l-2.5 2.5" />',
+            'withdrawal' => '<path stroke-linecap="round" stroke-linejoin="round" d="M5 4.5h14A2.5 2.5 0 0 1 21.5 7v10A2.5 2.5 0 0 1 19 19.5H5A2.5 2.5 0 0 1 2.5 17V7A2.5 2.5 0 0 1 5 4.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6.5 8h11M7.5 12h3M13.5 12h3M8 15.5h8" /><path stroke-linecap="round" stroke-linejoin="round" d="M10 19.5v1.5M14 19.5v1.5" />',
             'member' => '<path stroke-linecap="round" stroke-linejoin="round" d="M6.5 4.5h11L21 9l-9 11L3 9l3.5-4.5Z M3 9h18" />',
             'admin' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3.5 18 6v5.5c0 4-2.45 7.35-6 8.8-3.55-1.45-6-4.8-6-8.8V6l6-2.5Z M9.5 12l1.7 1.7 3.6-3.9" />',
             'users' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm6.5 9a6.5 6.5 0 0 0-13 0M17 10.5a3 3 0 1 0 0-6M21.5 20a5.5 5.5 0 0 0-4-5.3" />',
             'category' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 5.5h6l2 2h8v11H4v-13Z" />',
             'product' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3.5 20 8v8.5L12 21l-8-4.5V8l8-4.5Z M4 8l8 4.5L20 8 M12 12.5V21" />',
             'banner' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6.5h16v11H4v-11Zm3 7 2.2-2.2 2 2 3.3-3.3L18 13.5" />',
-            'display' => '<path stroke-linecap="round" stroke-linejoin="round" d="M7.25 3.5h9.5A2.25 2.25 0 0 1 19 5.75v12.5a2.25 2.25 0 0 1-2.25 2.25h-9.5A2.25 2.25 0 0 1 5 18.25V5.75A2.25 2.25 0 0 1 7.25 3.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M8.5 7.5h7M8.5 16.5h7" /><path stroke-linecap="round" stroke-linejoin="round" d="m8.7 13.2 2.05-2.05 1.75 1.65 2.2-2.85 1.6 3.25H8.7Z" />',
+            'display' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.5h15v10h-15v-10Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M8 19h8M10 16.5 9.5 19M14 16.5l.5 2.5" />',
             'tutorial' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 5.5A2.5 2.5 0 0 1 7 3h11.5v16H7a2.5 2.5 0 0 0-2.5 2.5v-16Zm0 0v16M8.25 7.25h6.5M8.25 10.75h5M8.25 14.25h4" />',
             'transaction' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5h16v11H4v-11Zm0 3.5h16M8 15h4" />',
+            'refund' => '<path stroke-linecap="round" stroke-linejoin="round" d="M7.2 7.1A7.2 7.2 0 0 1 18.5 9.2" /><path stroke-linecap="round" stroke-linejoin="round" d="M18.5 5.6v3.6h-3.6" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.8 16.9A7.2 7.2 0 0 1 5.5 14.8" /><path stroke-linecap="round" stroke-linejoin="round" d="M5.5 18.4v-3.6h3.6" />',
             'deposit' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-10a2 2 0 0 1 2-2Zm0 0 12-3v3M17 13.5h.01" />',
             'report' => '<path stroke-linecap="round" stroke-linejoin="round" d="M5 4.5h14v15H5v-15Zm3.5 4h7M8.5 12h7M8.5 15.5h4" />',
             'profile' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0" />',
@@ -677,6 +789,22 @@
         @endif
 
         <main class="flex-1 min-w-0 w-full overflow-hidden">
+            @auth
+                @if(! \App\Support\WiboostInputRules::validName(auth()->user()?->name))
+                    <div class="mb-6 rounded-[1.5rem] border-4 border-white bg-[#fff5eb] px-5 py-4 text-sm font-black text-amber-600 shadow-lg shadow-amber-100/60">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="flex min-w-0 items-start gap-3">
+                                <span class="mt-0.5 shrink-0 drop-shadow-sm">@include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'h-6 w-6'])</span>
+                                <span class="min-w-0">{{ \App\Support\WiboostInputRules::invalidNameWarning() }}</span>
+                            </div>
+                            <a href="{{ route('profile.edit') }}" class="inline-flex shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-4 py-2 text-xs font-black text-white shadow-md shadow-[#5a76c8]/25">
+                                Ubah Nama
+                            </a>
+                        </div>
+                    </div>
+                @endif
+            @endauth
+
             @yield('content')
         </main>
     </div>
@@ -844,6 +972,78 @@
     @endif
 
     <script>
+        window.wiboostResetFloatingMenu = window.wiboostResetFloatingMenu || function (dropdown, menuSelector = '.admin-theme-select-menu') {
+            const menu = dropdown.querySelector(menuSelector) || dropdown._wiboostSharedFloatingMenu;
+
+            if (!menu) {
+                return;
+            }
+
+            if (dropdown._wiboostSharedFloatingMenuParent && menu.parentElement !== dropdown._wiboostSharedFloatingMenuParent) {
+                if (dropdown._wiboostSharedFloatingMenuNext && dropdown._wiboostSharedFloatingMenuNext.parentElement === dropdown._wiboostSharedFloatingMenuParent) {
+                    dropdown._wiboostSharedFloatingMenuParent.insertBefore(menu, dropdown._wiboostSharedFloatingMenuNext);
+                } else {
+                    dropdown._wiboostSharedFloatingMenuParent.appendChild(menu);
+                }
+            }
+
+            menu.style.position = '';
+            menu.style.left = '';
+            menu.style.right = '';
+            menu.style.top = '';
+            menu.style.bottom = '';
+            menu.style.width = '';
+            menu.style.minWidth = '';
+            menu.style.maxHeight = '';
+            menu.style.zIndex = '';
+            menu.style.display = '';
+            menu.classList.remove('is-floating-open');
+        };
+
+        window.wiboostPositionFloatingMenu = window.wiboostPositionFloatingMenu || function (dropdown, menuSelector = '.admin-theme-select-menu', minimumWidth = 152, maximumHeight = 288) {
+            const menu = dropdown.querySelector(menuSelector) || dropdown._wiboostSharedFloatingMenu;
+
+            if (!menu) {
+                return;
+            }
+
+            if (!dropdown._wiboostSharedFloatingMenuParent) {
+                dropdown._wiboostSharedFloatingMenuParent = menu.parentElement;
+                dropdown._wiboostSharedFloatingMenuNext = menu.nextSibling;
+                dropdown._wiboostSharedFloatingMenu = menu;
+            }
+
+            if (menu.parentElement !== document.body) {
+                document.body.appendChild(menu);
+            }
+
+            const rect = dropdown.getBoundingClientRect();
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+            const gap = 8;
+            menu.style.display = 'block';
+            menu.classList.add('is-floating-open');
+            const desiredHeight = Math.min(menu.scrollHeight || maximumHeight, maximumHeight);
+            const openUp = viewportHeight - rect.bottom < Math.min(desiredHeight, 160) && rect.top > desiredHeight;
+            const availableHeight = openUp
+                ? Math.max(120, rect.top - (gap * 2))
+                : Math.max(120, viewportHeight - rect.bottom - (gap * 2));
+            const width = Math.max(rect.width, minimumWidth);
+            const left = Math.min(Math.max(gap, rect.left), Math.max(gap, viewportWidth - width - gap));
+
+            menu.style.position = 'fixed';
+            menu.style.left = `${left}px`;
+            menu.style.right = 'auto';
+            menu.style.width = `${width}px`;
+            menu.style.minWidth = `${width}px`;
+            menu.style.maxHeight = `${Math.min(maximumHeight, availableHeight)}px`;
+            menu.style.bottom = 'auto';
+            menu.style.top = openUp
+                ? `${Math.max(gap, rect.top - Math.min(desiredHeight, availableHeight) - gap)}px`
+                : `${Math.min(viewportHeight - gap, rect.bottom + gap)}px`;
+            menu.style.zIndex = '100000';
+        };
+
         document.addEventListener('DOMContentLoaded', function () {
             const sidebarTargets = [
                 ['wiboost-admin-sidebar-nav', 'wiboost-admin-sidebar-scroll'],
@@ -897,6 +1097,26 @@
                     return;
                 }
 
+                const returnTo = new URLSearchParams(window.location.search).get('return_to');
+                if (returnTo) {
+                    try {
+                        const returnUrl = new URL(returnTo, window.location.origin);
+
+                        if (returnUrl.origin === window.location.origin) {
+                            event.preventDefault();
+                            if (window.wiboostBackDelayActive) {
+                                return;
+                            }
+                            window.wiboostBackDelayActive = true;
+                            backLink.classList.add('is-backing', 'pointer-events-none');
+                            window.setTimeout(() => {
+                                window.location.href = returnUrl.href;
+                            }, 340);
+                            return;
+                        }
+                    } catch (error) {}
+                }
+
                 if (window.history.length > 1) {
                     event.preventDefault();
                     if (window.wiboostBackDelayActive) {
@@ -909,6 +1129,31 @@
                     }, 340);
                 }
             });
+
+            document.addEventListener('click', function (event) {
+                const link = event.target.closest('a[href]');
+
+                if (!link || event.defaultPrevented || link.target === '_blank' || link.hasAttribute('download')) {
+                    return;
+                }
+
+                try {
+                    const url = new URL(link.href, window.location.origin);
+
+                    if (url.origin !== window.location.origin || !url.pathname.startsWith('/admin/')) {
+                        return;
+                    }
+
+                    const isEditorLink = url.pathname.endsWith('/create') || /\/edit$/.test(url.pathname);
+
+                    if (!isEditorLink || url.searchParams.has('return_to')) {
+                        return;
+                    }
+
+                    url.searchParams.set('return_to', window.location.href);
+                    link.href = url.href;
+                } catch (error) {}
+            }, true);
 
             document.querySelectorAll('body.wiboost-admin-shell select:not([multiple])').forEach(function (select) {
                 const open = () => select.classList.add('wiboost-select-open');
@@ -929,6 +1174,154 @@
                     }
                 });
             });
+
+            const resetThemeMenu = (dropdown) => {
+                const menu = dropdown.querySelector('.admin-theme-select-menu') || dropdown._wiboostThemeMenu;
+
+                if (!menu) {
+                    return;
+                }
+
+                if (dropdown._wiboostThemeMenuParent && menu.parentElement !== dropdown._wiboostThemeMenuParent) {
+                    if (dropdown._wiboostThemeMenuNext && dropdown._wiboostThemeMenuNext.parentElement === dropdown._wiboostThemeMenuParent) {
+                        dropdown._wiboostThemeMenuParent.insertBefore(menu, dropdown._wiboostThemeMenuNext);
+                    } else {
+                        dropdown._wiboostThemeMenuParent.appendChild(menu);
+                    }
+                }
+
+                menu.style.position = '';
+                menu.style.left = '';
+                menu.style.right = '';
+                menu.style.top = '';
+                menu.style.bottom = '';
+                menu.style.width = '';
+                menu.style.minWidth = '';
+                menu.style.maxHeight = '';
+                menu.style.zIndex = '';
+                menu.style.display = '';
+                menu.classList.remove('is-floating-open');
+            };
+
+            const positionThemeMenu = (dropdown) => {
+                const menu = dropdown.querySelector('.admin-theme-select-menu') || dropdown._wiboostThemeMenu;
+
+                if (!menu) {
+                    return;
+                }
+
+                if (!dropdown._wiboostThemeMenuParent) {
+                    dropdown._wiboostThemeMenuParent = menu.parentElement;
+                    dropdown._wiboostThemeMenuNext = menu.nextSibling;
+                    dropdown._wiboostThemeMenu = menu;
+                }
+
+                if (menu.parentElement !== document.body) {
+                    document.body.appendChild(menu);
+                }
+
+                const rect = dropdown.getBoundingClientRect();
+                const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+                const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+                const gap = 8;
+                const maxHeight = 256;
+                menu.style.display = 'block';
+                menu.classList.add('is-floating-open');
+                const desiredHeight = Math.min(menu.scrollHeight || maxHeight, maxHeight);
+                const openUp = viewportHeight - rect.bottom < Math.min(desiredHeight, 160) && rect.top > desiredHeight;
+                const availableHeight = openUp
+                    ? Math.max(120, rect.top - (gap * 2))
+                    : Math.max(120, viewportHeight - rect.bottom - (gap * 2));
+                const width = Math.max(rect.width, 152);
+                const left = Math.min(Math.max(gap, rect.left), Math.max(gap, viewportWidth - width - gap));
+
+                menu.style.position = 'fixed';
+                menu.style.left = `${left}px`;
+                menu.style.right = 'auto';
+                menu.style.width = `${width}px`;
+                menu.style.minWidth = `${width}px`;
+                menu.style.maxHeight = `${Math.min(maxHeight, availableHeight)}px`;
+                menu.style.bottom = 'auto';
+                menu.style.top = openUp
+                    ? `${Math.max(gap, rect.top - Math.min(desiredHeight, availableHeight) - gap)}px`
+                    : `${Math.min(viewportHeight - gap, rect.bottom + gap)}px`;
+                menu.style.zIndex = '100000';
+            };
+
+            const closeThemeDropdowns = (except = null) => {
+                document.querySelectorAll('[data-admin-theme-select][data-input-name].is-open').forEach((dropdown) => {
+                    if (dropdown !== except) {
+                        dropdown.classList.remove('is-open');
+                        resetThemeMenu(dropdown);
+                    }
+                });
+            };
+
+            document.querySelectorAll('[data-admin-theme-select]').forEach((dropdown) => {
+                if (!dropdown.dataset.inputName) {
+                    return;
+                }
+
+                if (dropdown.dataset.adminThemeSelectReady === 'true') {
+                    return;
+                }
+
+                dropdown.dataset.adminThemeSelectReady = 'true';
+                const button = dropdown.querySelector('.admin-theme-select-button');
+                const label = dropdown.querySelector('[data-admin-theme-select-label]');
+                const inputName = dropdown.dataset.inputName;
+                const form = dropdown.closest('form');
+                const input = form?.querySelector(`input[type="hidden"][name="${inputName}"]`);
+
+                button?.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const willOpen = ! dropdown.classList.contains('is-open');
+                    closeThemeDropdowns(dropdown);
+                    dropdown.classList.toggle('is-open', willOpen);
+                    if (willOpen) {
+                        window.requestAnimationFrame(() => positionThemeMenu(dropdown));
+                    } else {
+                        resetThemeMenu(dropdown);
+                    }
+                });
+
+                dropdown.querySelectorAll('[data-value]').forEach((option) => {
+                    option.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        if (input) {
+                            input.value = option.dataset.value ?? '';
+                        }
+
+                        if (label) {
+                            label.textContent = option.dataset.label || option.textContent.trim();
+                        }
+
+                        dropdown.querySelectorAll('[data-value]').forEach((item) => item.classList.remove('is-selected'));
+                        option.classList.add('is-selected');
+                        dropdown.classList.remove('is-open');
+                        resetThemeMenu(dropdown);
+
+                        if (dropdown.dataset.submitOnChange === 'true' && form) {
+                            form.submit();
+                        }
+                    });
+                });
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!event.target.closest('[data-admin-theme-select][data-input-name]') && !event.target.closest('.admin-theme-select-menu.is-floating-open')) {
+                    closeThemeDropdowns();
+                }
+            });
+            window.addEventListener('resize', () => {
+                document.querySelectorAll('[data-admin-theme-select][data-input-name].is-open').forEach(positionThemeMenu);
+            });
+            window.addEventListener('scroll', () => {
+                document.querySelectorAll('[data-admin-theme-select][data-input-name].is-open').forEach(positionThemeMenu);
+            }, true);
         });
 
         document.addEventListener('submit', function (event) {
@@ -948,6 +1341,15 @@
                 return;
             }
 
+            const returnTo = new URLSearchParams(window.location.search).get('return_to');
+            if (returnTo && !form.querySelector('input[name="return_to"]')) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'return_to';
+                input.value = returnTo;
+                form.appendChild(input);
+            }
+
             if (form.dataset.submitting === 'true') {
                 event.preventDefault();
                 return;
@@ -964,6 +1366,7 @@
             button.classList.add('cursor-wait', 'opacity-75');
         });
     </script>
+    @include('partials.wiboost-input-guards')
     @include('partials.page-loading')
 </body>
 </html>

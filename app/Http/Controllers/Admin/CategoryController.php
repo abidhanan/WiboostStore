@@ -7,6 +7,7 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Pagination\LengthAwarePaginator;
 use App\Support\WiboostCatalog;
 
 class CategoryController extends Controller
@@ -49,18 +50,30 @@ class CategoryController extends Controller
             });
         }
 
-        $categories = $query->get()
+        $filteredCategories = $query->get()
             ->when($categoryFilter === 'main', fn ($items) => $items->filter(fn (Category $category) => $category->depth === 0))
             ->when($categoryFilter === 'level_1', fn ($items) => $items->filter(fn (Category $category) => $category->depth === 1))
             ->when($categoryFilter === 'level_2', fn ($items) => $items->filter(fn (Category $category) => $category->depth === 2))
             ->when($categoryFilter === 'level_3', fn ($items) => $items->filter(fn (Category $category) => $category->depth >= 3))
             ->values();
 
+        $page = max(1, (int) $request->query('page', 1));
+        $perPage = 20;
+        $categories = new LengthAwarePaginator(
+            $filteredCategories->forPage($page, $perPage)->values(),
+            $filteredCategories->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        $categoryItems = $categories->getCollection();
+
         $categorySections = [
-            'main' => $categories->filter(fn (Category $category) => $category->depth === 0)->values(),
-            'level_1' => $categories->filter(fn (Category $category) => $category->depth === 1)->values(),
-            'level_2' => $categories->filter(fn (Category $category) => $category->depth === 2)->values(),
-            'level_3' => $categories->filter(fn (Category $category) => $category->depth >= 3)->values(),
+            'main' => $categoryItems->filter(fn (Category $category) => $category->depth === 0)->values(),
+            'level_1' => $categoryItems->filter(fn (Category $category) => $category->depth === 1)->values(),
+            'level_2' => $categoryItems->filter(fn (Category $category) => $category->depth === 2)->values(),
+            'level_3' => $categoryItems->filter(fn (Category $category) => $category->depth >= 3)->values(),
         ];
 
         return view('admin.categories.index', [
@@ -124,8 +137,7 @@ class CategoryController extends Controller
 
         if ($existingCategory) {
             if ($this->matchesSubmittedCategory($existingCategory, $request)) {
-                return redirect()
-                    ->route('admin.categories.index')
+                return $this->redirectToReturnTo($request, 'admin.categories.index')
                     ->with('success', 'Kategori baru berhasil ditambahkan!');
             }
 
@@ -151,7 +163,7 @@ class CategoryController extends Controller
             'fulfillment_type' => $fulfillmentType,
         ]);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Kategori baru berhasil ditambahkan!');
+        return $this->redirectToReturnTo($request, 'admin.categories.index')->with('success', 'Kategori baru berhasil ditambahkan!');
     }
 
     public function edit(Category $category)
@@ -228,7 +240,7 @@ class CategoryController extends Controller
 
         $category->update($data);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil diperbarui!');
+        return $this->redirectToReturnTo($request, 'admin.categories.index')->with('success', 'Kategori berhasil diperbarui!');
     }
 
     public function destroy(Category $category)

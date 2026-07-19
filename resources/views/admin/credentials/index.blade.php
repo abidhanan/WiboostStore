@@ -230,7 +230,7 @@
                         <tr>
                             <td colspan="3" class="px-5 py-24 text-center">
                                 <div class="inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-[#f0f5ff] border-4 border-white mb-4 text-[#5a76c8] shadow-inner animate-float">
-                                    @include('partials.wiboost-icon', ['name' => 'key', 'class' => 'h-9 w-9'])
+                                    @include('partials.wiboost-icon', ['name' => 'package', 'class' => 'h-9 w-9'])
                                 </div>
                                 <p class="text-[#5a76c8] font-black text-xl">Belum ada stok data.</p>
                                 <p class="text-[#8faaf3] font-bold mt-1">Silakan tambahkan melalui form di samping kiri.</p>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\AdminReport;
 use App\Models\Deposit;
+use App\Models\ResellerCommission;
 use App\Models\Transaction;
 use App\Support\WiboostAdminContact;
 use App\Support\WiboostOrderDetailData;
@@ -48,7 +49,7 @@ class AdminReportController extends Controller
         ], [
             'category_key.required' => 'Pilih jenis kendala terlebih dahulu.',
             'issue.required' => 'Tulis kendala terlebih dahulu.',
-            'record_id.required' => 'Pilih riwayat pesanan terlebih dahulu.',
+            'record_id.required' => 'Pilih riwayat terkait terlebih dahulu.',
             'proof.required' => 'Upload bukti kendala terlebih dahulu.',
             'proof.uploaded' => 'Bukti kendala gagal diupload. Coba pilih gambar yang lebih kecil atau screenshot baru.',
             'proof.mimes' => 'Bukti kendala harus berupa gambar JPG, PNG, WEBP, GIF, HEIC, atau HEIF.',
@@ -155,6 +156,7 @@ class AdminReportController extends Controller
     {
         return [
             ['key' => 'deposit', 'label' => 'Deposit', 'record_type' => 'deposit', 'needs_record' => true],
+            ['key' => 'commission', 'label' => 'Komisi', 'record_type' => 'commission', 'needs_record' => true],
             ['key' => 'sosmed', 'label' => 'Suntik Sosmed', 'record_type' => 'suntik-sosmed', 'needs_record' => true],
             ['key' => 'game', 'label' => 'Top Up Game', 'record_type' => 'top-up-game', 'needs_record' => true],
             ['key' => 'data', 'label' => 'Paket Data', 'record_type' => 'paket-data', 'needs_record' => true],
@@ -189,6 +191,42 @@ class AdminReportController extends Controller
                         'method' => $deposit->display_payment_method,
                         'reference' => $deposit->tripay_reference ?: '-',
                         'created' => $created,
+                    ];
+                })
+                ->values();
+        }
+
+        if (($category['key'] ?? null) === 'commission') {
+            return ResellerCommission::query()
+                ->with('transaction.product.category.parent.parent.parent')
+                ->where('user_id', auth()->id())
+                ->latest()
+                ->take(50)
+                ->get()
+                ->map(function (ResellerCommission $commission) {
+                    $created = $this->formatReportDate($commission->transaction?->created_at ?: $commission->created_at);
+                    $isWithdrawal = $commission->type === 'withdrawal';
+                    $invoice = $commission->transaction?->invoice_number
+                        ?: ($isWithdrawal ? 'WD-' . str_pad((string) $commission->id, 5, '0', STR_PAD_LEFT) : 'KOM-' . str_pad((string) $commission->id, 5, '0', STR_PAD_LEFT));
+                    $productName = $isWithdrawal
+                        ? 'Penarikan Komisi'
+                        : ($commission->product_name ?: ($commission->transaction?->product?->name ?: 'Komisi Transaksi'));
+
+                    return [
+                        'id' => 'commission-' . $commission->id,
+                        'invoice' => $invoice,
+                        'title' => $productName,
+                        'meta' => strtoupper($created . ' - ' . $commission->display_status),
+                        'category' => $isWithdrawal ? 'Penarikan Komisi' : 'Komisi Masuk',
+                        'product' => $productName,
+                        'amount' => 'Rp ' . number_format((float) $commission->amount, 0, ',', '.'),
+                        'commission' => 'Rp ' . number_format((float) $commission->amount, 0, ',', '.'),
+                        'status' => $commission->display_status,
+                        'payment' => '-',
+                        'target' => '-',
+                        'providerId' => '-',
+                        'created' => $created,
+                        'type' => $commission->type,
                     ];
                 })
                 ->values();
@@ -265,6 +303,22 @@ class AdminReportController extends Controller
                     $lines[] = '';
                     $lines[] = 'Data Deposit:';
                     array_push($lines, ...$depositLines);
+                }
+            }
+        } elseif (($category['key'] ?? null) === 'commission') {
+            if ($record) {
+                $commissionLines = [];
+                $this->appendFilledLine($commissionLines, 'Invoice', $record['invoice'] ?? null);
+                $this->appendFilledLine($commissionLines, 'Jenis Komisi', $record['category'] ?? null);
+                $this->appendFilledLine($commissionLines, 'Produk', $record['product'] ?? null);
+                $this->appendFilledLine($commissionLines, 'Nominal Komisi', $record['commission'] ?? $record['amount'] ?? null);
+                $this->appendFilledLine($commissionLines, 'Status', $record['status'] ?? null);
+                $this->appendFilledLine($commissionLines, 'Waktu', $record['created'] ?? null);
+
+                if ($commissionLines !== []) {
+                    $lines[] = '';
+                    $lines[] = 'Data Komisi:';
+                    array_push($lines, ...$commissionLines);
                 }
             }
         } elseif ($category['needs_record'] ?? false) {

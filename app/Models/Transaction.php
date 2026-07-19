@@ -56,6 +56,20 @@ class Transaction extends Model
         return $this->hasMany(ResellerCommission::class);
     }
 
+    public function refund()
+    {
+        return $this->hasOne(Refund::class);
+    }
+
+    public function hasManualRefund(): bool
+    {
+        if ($this->relationLoaded('refund')) {
+            return $this->refund !== null;
+        }
+
+        return $this->refund()->exists();
+    }
+
     protected static function booted(): void
     {
         static::saved(function (Transaction $transaction): void {
@@ -297,6 +311,10 @@ class Transaction extends Model
 
     public function getDisplayStatusAttribute(): string
     {
+        if ($this->hasManualRefund()) {
+            return 'Refund';
+        }
+
         if ($this->cancelled_due_to_qris_expiry) {
             return 'Batal';
         }

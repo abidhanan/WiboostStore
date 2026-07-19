@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Support\WiboostCatalog;
+use App\Support\WiboostInputRules;
 use Throwable;
 
 class OrderController extends Controller
@@ -84,6 +85,13 @@ class OrderController extends Controller
         );
 
         $user = Auth::user();
+
+        if (! WiboostInputRules::validName($user?->name)) {
+            return redirect()
+                ->route('profile.edit')
+                ->with('error', WiboostInputRules::invalidNameWarning());
+        }
+
         $checkoutFields = $product->checkout_fields;
 
         $rules = [
@@ -174,7 +182,7 @@ class OrderController extends Controller
                 $orderFulfillmentService->handlePaidTransaction($transaction->fresh(['product', 'user']));
 
                 return redirect()->route('user.history', ['auto_open' => $transaction->id])
-                    ->with('success', 'Pesanan berhasil dibuat dan langsung diproses.')
+                    ->with('success', 'Pesanan berhasil dibuat.')
                     ->with('new_trx_id', $transaction->id);
             }
 

@@ -601,6 +601,11 @@ class Product extends Model
         return $this->applyActiveDiscount($this->original_selling_price);
     }
 
+    public function getMembershipSellingPriceAttribute(): float
+    {
+        return $this->applyActiveDiscount($this->original_membership_selling_price);
+    }
+
     public function getOriginalSellingPriceAttribute(): float
     {
         if ($this->shouldUseMembershipPrice()) {
@@ -608,6 +613,11 @@ class Product extends Model
         }
 
         return $this->calculateSellingPrice((float) $this->price);
+    }
+
+    public function getOriginalMembershipSellingPriceAttribute(): float
+    {
+        return $this->calculateMembershipSellingPrice((float) $this->price);
     }
 
     public function getHasActiveDiscountAttribute(): bool

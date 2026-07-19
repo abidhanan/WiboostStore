@@ -13,6 +13,7 @@
         };
         $transactionStatusMeta = static function ($trx): array {
             return match ($trx->display_status) {
+                'Refund' => ['label' => 'Refund', 'class' => 'bg-[#e0fbfc] text-[#5a76c8] border-white'],
                 'Sukses' => ['label' => 'Sukses', 'class' => 'bg-[#e6fff7] text-emerald-500 border-white'],
                 'Proses' => ['label' => 'Proses', 'class' => 'bg-[#e0fbfc] text-[#5a76c8] border-white'],
                 'Batal', 'Gagal' => ['label' => $trx->display_status, 'class' => 'bg-[#ffe5e5] text-[#ff6b6b] border-white'],
@@ -69,7 +70,7 @@
             }
 
             $accessMap = [
-                4 => ['dashboard', 'commissions', 'users', 'transactions', 'deposits', 'withdrawals'],
+                4 => ['dashboard', 'commissions', 'users', 'transactions', 'refunds', 'deposits', 'withdrawals'],
                 6 => ['dashboard', 'users', 'categories', 'products', 'tutorials', 'transactions'],
                 7 => ['dashboard', 'users', 'transactions', 'promos', 'displays'],
                 8 => ['dashboard', 'commissions', 'users', 'transactions', 'deposits', 'reports'],
@@ -86,6 +87,7 @@
         $showDashboardDeposits = $dashboardCanAccess('deposits');
         $showDashboardCommissions = $dashboardCanAccess('commissions');
         $showDashboardWithdrawals = $dashboardCanAccess('withdrawals');
+        $showDashboardRefunds = $dashboardCanAccess('refunds');
         $dashboardChartCards = collect([
             ['enabled' => $showDashboardTransactions, 'key' => 'transactions', 'title' => 'Transaksi', 'max' => $transactionMax, 'stroke' => '#5a76c8', 'bg' => 'bg-[#f8fbff]', 'text' => 'text-[#8faaf3]', 'suffix' => ' transaksi'],
             ['enabled' => $showDashboardRevenue, 'key' => 'revenue', 'title' => 'Pendapatan', 'max' => $revenueMax, 'stroke' => '#4bc6b9', 'bg' => 'bg-[#f6fffb]', 'text' => 'text-emerald-500', 'suffix' => ''],
@@ -120,7 +122,7 @@
     <div class="wiboost-admin-dashboard space-y-6 sm:space-y-8 pb-12 relative z-10 w-full min-w-0">
         
         <!-- Monthly Summary -->
-        @if($showDashboardTransactions || $showDashboardRevenue || $showDashboardUsers || $showDashboardResellers)
+        @if($showDashboardTransactions || $showDashboardRevenue || $showDashboardUsers || $showDashboardResellers || $showDashboardCommissions || $showDashboardRefunds)
         <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
             @if($showDashboardTransactions)
             <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
@@ -136,10 +138,36 @@
             </article>
             @endif
 
+            @if($showDashboardCommissions)
+            <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
+                <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Komisi Bulan Ini</p>
+                <p class="mt-3 truncate text-4xl font-black tracking-tight text-[#2b3a67]">Rp {{ number_format($commissionMonth ?? 0, 0, ',', '.') }}</p>
+            </article>
+            @endif
+
+            @if($showDashboardRefunds)
+            <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
+                <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Refund Bulan Ini</p>
+                <p class="mt-3 truncate text-4xl font-black tracking-tight text-[#2b3a67]">Rp {{ number_format($refundMonth ?? 0, 0, ',', '.') }}</p>
+            </article>
+            @endif
+
             @if($showDashboardUsers)
             <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
                 <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Total Pengguna</p>
                 <p class="mt-3 text-4xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalUsers ?? 0, 0, ',', '.') }}</p>
+            </article>
+            <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
+                <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Total Admin</p>
+                <p class="mt-3 text-4xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalAdmins ?? 0, 0, ',', '.') }}</p>
+            </article>
+            <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
+                <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Total Member</p>
+                <p class="mt-3 text-4xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalMembers ?? 0, 0, ',', '.') }}</p>
+            </article>
+            <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
+                <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Total Buyer</p>
+                <p class="mt-3 text-4xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalBuyers ?? 0, 0, ',', '.') }}</p>
             </article>
             @endif
 

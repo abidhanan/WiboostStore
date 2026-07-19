@@ -25,7 +25,8 @@ class DisplayController extends Controller
             })
             ->latest('created_at')
             ->latest('id')
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
         return view('admin.displays.index', compact('displays'));
     }
@@ -58,7 +59,7 @@ class DisplayController extends Controller
 
         Display::create($data);
 
-        return redirect()->route('admin.displays.index')->with('success', 'Display berhasil ditambahkan.');
+        return $this->redirectToReturnTo($request, 'admin.displays.index')->with('success', 'Display berhasil ditambahkan.');
     }
 
     public function edit(Display $display)
@@ -86,7 +87,7 @@ class DisplayController extends Controller
 
         $display->update($data);
 
-        return redirect()->route('admin.displays.index')->with('success', 'Display berhasil diperbarui.');
+        return $this->redirectToReturnTo($request, 'admin.displays.index')->with('success', 'Display berhasil diperbarui.');
     }
 
     public function destroy(Display $display)

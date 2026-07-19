@@ -187,7 +187,7 @@
                                                 </td>
 
                                                 <td class="px-5 py-4 sm:py-5 align-middle">
-                                                    <p style="font-size: 10px; color:#8b5cf6;" class="whitespace-nowrap font-black uppercase tracking-widest">
+                                                    <p class="whitespace-nowrap text-xs font-black drop-shadow-sm sm:text-sm" style="color:#8b5cf6;">
                                                         {{ $memberDisplayPrice !== null ? 'Rp ' . number_format($memberDisplayPrice, 0, ',', '.') : '-' }}
                                                     </p>
                                                 </td>

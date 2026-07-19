@@ -17,6 +17,46 @@
     $remainingMinutes = $remainingMinutes ?? intdiv($remainingTotalSeconds % 3600, 60);
     $remainingSeconds = $remainingSeconds ?? ($remainingTotalSeconds % 60);
     $memberName = $user?->short_name ?? $user?->name ?? 'Member';
+    $membershipTickerItems = collect($membershipTickerProducts ?? [])
+        ->map(fn ($product) => is_array($product)
+            ? trim(($product['name'] ?? '') . ': Rp ' . number_format((int) ($product['price'] ?? 0), 0, ',', '.'))
+            : null)
+        ->filter()
+        ->values();
+@endphp
+
+<style>
+    .membership-price-ticker {
+        background: linear-gradient(135deg, rgba(139, 92, 246, .14), rgba(255, 255, 255, .96) 48%, rgba(224, 251, 252, .9));
+        box-shadow: 0 16px 30px rgba(139, 92, 246, .16), inset 0 1px 0 rgba(255, 255, 255, .85);
+    }
+
+    .membership-price-track {
+        animation: membershipPriceTicker 78s linear infinite;
+        width: max-content;
+    }
+
+    .membership-price-ticker:hover .membership-price-track {
+        animation-play-state: paused;
+    }
+
+    @keyframes membershipPriceTicker {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .membership-price-track {
+            animation: none;
+            transform: translateX(0);
+        }
+    }
+</style>
+
+@php
+    $membershipTicker = function () use ($membershipTickerItems) {
+        return $membershipTickerItems->isNotEmpty();
+    };
 @endphp
 
 <section class="space-y-8">
@@ -45,9 +85,28 @@
                         </svg>
                     </span>
                 </h1>
-                <p class="wiboost-dashboard-subtitle whitespace-nowrap font-extrabold" style="color: #8b5cf6; font-size: clamp(0.82rem, 3.8vw, 1rem); line-height: 1.25;" data-fit-single-line>Selamat menikmati produk dan layanan dengan harga yang lebih murah.</p>
+                <p class="wiboost-dashboard-subtitle max-w-3xl font-extrabold" style="color: #8b5cf6; font-size: clamp(0.82rem, 3.8vw, 1rem); line-height: 1.35;">Selamat menikmati produk dan layanan dengan harga yang lebih murah.</p>
             </div>
         </header>
+
+        @if($membershipTicker())
+            <div class="membership-price-ticker -mt-4 overflow-hidden rounded-[1.75rem] border-4 border-white py-3 shadow-xl">
+                <div class="membership-price-track flex items-center gap-4 whitespace-nowrap px-4 text-sm font-black text-[#8b5cf6]">
+                    @foreach(range(1, 2) as $loopRound)
+                        @foreach($membershipTickerItems as $tickerText)
+                            <span class="inline-flex items-center gap-3 rounded-full border-2 border-white bg-white/80 px-4 py-2 shadow-sm">
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#ede9fe] text-[#8b5cf6]">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.5 4.5h11L21 9l-9 11L3 9l3.5-4.5Z M3 9h18" />
+                                    </svg>
+                                </span>
+                                {{ $tickerText }}
+                            </span>
+                        @endforeach
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         <div class="rounded-[2rem] border-4 border-white bg-[#f8fbff] p-6 shadow-xl shadow-[#bde0fe]/20 sm:p-8">
             <p class="text-sm font-black uppercase tracking-[0.2em]" style="color: #8b5cf6;">Durasi Membership</p>
@@ -73,6 +132,25 @@
                 </p>
             </div>
         </header>
+
+        @if($membershipTicker())
+            <div class="membership-price-ticker -mt-4 overflow-hidden rounded-[1.75rem] border-4 border-white py-3 shadow-xl">
+                <div class="membership-price-track flex items-center gap-4 whitespace-nowrap px-4 text-sm font-black text-[#8b5cf6]">
+                    @foreach(range(1, 2) as $loopRound)
+                        @foreach($membershipTickerItems as $tickerText)
+                            <span class="inline-flex items-center gap-3 rounded-full border-2 border-white bg-white/80 px-4 py-2 shadow-sm">
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#ede9fe] text-[#8b5cf6]">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.5 4.5h11L21 9l-9 11L3 9l3.5-4.5Z M3 9h18" />
+                                    </svg>
+                                </span>
+                                {{ $tickerText }}
+                            </span>
+                        @endforeach
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         <div class="rounded-[2rem] border-4 border-white bg-[#f8fbff] p-6 shadow-xl shadow-[#bde0fe]/20 sm:p-8">
             <p class="text-sm font-black uppercase tracking-[0.2em]" style="color: #8b5cf6;">Biaya Membership</p>

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ResellerCommission;
+use App\Models\Transaction;
+use App\Services\ResellerCommissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -11,6 +13,10 @@ class ResellerController extends Controller
 {
     public function commissions(Request $request)
     {
+        $commissionService = app(ResellerCommissionService::class);
+        $commissionService->syncRecentMissing();
+        $commissionStartDate = $commissionService->commissionStartDate();
+
         $search = trim((string) $request->query('search', ''));
         $commissionFilter = (string) $request->query('commission_filter', 'all');
         $selectedMonth = $request->query('month', date('m'));
@@ -32,8 +38,11 @@ class ResellerController extends Controller
         $incomeCommissions = ResellerCommission::query()
             ->with(['user', 'transaction.user', 'transaction.product'])
             ->where('type', 'income')
-            ->whereMonth('created_at', $selectedMonth)
-            ->whereYear('created_at', $selectedYear)
+            ->whereHas('transaction', function ($query) use ($commissionStartDate, $selectedMonth, $selectedYear) {
+                $query->where('created_at', '>=', $commissionStartDate)
+                    ->whereMonth('created_at', $selectedMonth)
+                    ->whereYear('created_at', $selectedYear);
+            })
             ->when($commissionFilter !== 'all', fn ($query) => $query->where('category_slug', $commissionFilter))
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($innerQuery) use ($search) {
@@ -49,15 +58,20 @@ class ResellerController extends Controller
                         });
                 });
             })
-            ->latest()
-            ->limit(80)
-            ->get();
+            ->orderByDesc(Transaction::select('created_at')->whereColumn('transactions.id', 'reseller_commissions.transaction_id')->limit(1))
+            ->orderByDesc('created_at')
+            ->paginate(20)
+            ->withQueryString();
 
         return view('admin.commissions.index', compact('incomeCommissions', 'search', 'commissionFilter', 'selectedMonth', 'selectedYear'));
     }
 
     public function exportCommissions(Request $request)
     {
+        $commissionService = app(ResellerCommissionService::class);
+        $commissionService->syncRecentMissing();
+        $commissionStartDate = $commissionService->commissionStartDate();
+
         $search = trim((string) $request->query('search', ''));
         $commissionFilter = (string) $request->query('commission_filter', 'all');
         $selectedMonth = $request->query('month', date('m'));
@@ -79,8 +93,11 @@ class ResellerController extends Controller
         $commissions = ResellerCommission::query()
             ->with(['user', 'transaction.user', 'transaction.product'])
             ->where('type', 'income')
-            ->whereMonth('created_at', $selectedMonth)
-            ->whereYear('created_at', $selectedYear)
+            ->whereHas('transaction', function ($query) use ($commissionStartDate, $selectedMonth, $selectedYear) {
+                $query->where('created_at', '>=', $commissionStartDate)
+                    ->whereMonth('created_at', $selectedMonth)
+                    ->whereYear('created_at', $selectedYear);
+            })
             ->when($commissionFilter !== 'all', fn ($query) => $query->where('category_slug', $commissionFilter))
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($innerQuery) use ($search) {
@@ -96,7 +113,8 @@ class ResellerController extends Controller
                         });
                 });
             })
-            ->latest()
+            ->orderByDesc(Transaction::select('created_at')->whereColumn('transactions.id', 'reseller_commissions.transaction_id')->limit(1))
+            ->orderByDesc('created_at')
             ->get();
 
         $fileName = 'laporan-komisi-' . now()->format('Ymd-His') . '.csv';
@@ -130,16 +148,36 @@ class ResellerController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
         $status = (string) $request->query('status', 'all');
-        $allowedStatuses = ['all', 'pending', 'approved', 'rejected'];
+        $selectedMonth = $request->query('month', date('m'));
+        $selectedYear = $request->query('year', date('Y'));
+        $allowedStatuses = ['all', 'pending', 'processing', 'success', 'failed'];
 
         if (! in_array($status, $allowedStatuses, true)) {
             $status = 'all';
         }
 
+        if (! preg_match('/^(0[1-9]|1[0-2])$/', (string) $selectedMonth)) {
+            $selectedMonth = date('m');
+        }
+
+        if (! preg_match('/^\d{4}$/', (string) $selectedYear)) {
+            $selectedYear = date('Y');
+        }
+
         $withdrawals = ResellerCommission::query()
             ->with(['user', 'approver'])
             ->where('type', 'withdrawal')
-            ->when($status !== 'all', fn ($query) => $query->where('status', $status))
+            ->whereMonth('created_at', $selectedMonth)
+            ->whereYear('created_at', $selectedYear)
+            ->when($status !== 'all', function ($query) use ($status) {
+                $statusValues = match ($status) {
+                    'success' => ['success', 'approved'],
+                    'failed' => ['failed', 'rejected'],
+                    default => [$status],
+                };
+
+                $query->whereIn('status', $statusValues);
+            })
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($innerQuery) use ($search) {
                     $innerQuery->where('payout_method', 'like', "%{$search}%")
@@ -153,10 +191,10 @@ class ResellerController extends Controller
                 });
             })
             ->latest()
-            ->limit(100)
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('admin.withdrawals.index', compact('withdrawals', 'search', 'status'));
+        return view('admin.withdrawals.index', compact('withdrawals', 'search', 'status', 'selectedMonth', 'selectedYear'));
     }
 
     public function updateWithdrawal(Request $request, ResellerCommission $commission)
@@ -164,7 +202,7 @@ class ResellerController extends Controller
         abort_unless($commission->type === 'withdrawal', 404);
 
         $validated = $request->validate([
-            'status' => ['required', 'in:approved,rejected,pending'],
+            'status' => ['required', 'in:pending,processing,success,failed'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ], [], [
             'status' => 'status penarikan',
@@ -183,8 +221,9 @@ class ResellerController extends Controller
 
             if ($notes === '') {
                 $notes = match ($status) {
-                    'approved' => 'Transfer komisi sudah dikonfirmasi admin.',
-                    'rejected' => 'Penarikan komisi ditolak oleh admin.',
+                    'processing' => 'Penarikan komisi sedang diproses admin.',
+                    'success' => 'Transfer komisi sudah dikonfirmasi admin.',
+                    'failed' => 'Penarikan komisi gagal diproses admin.',
                     default => 'Menunggu konfirmasi admin setelah transfer manual.',
                 };
             }
@@ -192,14 +231,16 @@ class ResellerController extends Controller
             $lockedCommission->forceFill([
                 'status' => $status,
                 'notes' => $notes,
-                'approved_by' => $status === 'pending' ? null : auth()->id(),
-                'approved_at' => $status === 'pending' ? null : now(),
+                'approved_by' => in_array($status, ['success', 'failed'], true) ? auth()->id() : null,
+                'approved_at' => in_array($status, ['success', 'failed'], true) ? now() : null,
             ])->save();
         });
 
         return redirect()->route('admin.withdrawals.index', array_filter([
             'search' => $request->input('search'),
             'status' => $request->input('filter_status', 'all'),
+            'month' => $request->input('month'),
+            'year' => $request->input('year'),
         ], fn ($value) => filled($value) && $value !== 'all'))
             ->with('success', 'Status penarikan berhasil diperbarui.');
     }

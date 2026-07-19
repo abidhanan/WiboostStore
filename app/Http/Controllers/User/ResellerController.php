@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ResellerCommission;
 use App\Models\User;
 use App\Services\ResellerCommissionService;
+use App\Support\WiboostInputRules;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,27 +15,43 @@ class ResellerController extends Controller
     public function index(Request $request, ResellerCommissionService $commissionService)
     {
         $user = $request->user();
-        $isReseller = $user->isReseller();
+        $isReseller = $this->hasResellerDashboard($user);
         $resellerStorageReady = $commissionService->isReady();
+
+        if ($isReseller && $resellerStorageReady) {
+            $commissionService->syncMissingForUser($user);
+        }
+
         $availableCommission = $isReseller && $resellerStorageReady ? $commissionService->availableBalance($user) : 0;
         $minimumWithdrawal = ResellerCommissionService::MINIMUM_WITHDRAWAL;
         $canWithdrawNow = $availableCommission >= $minimumWithdrawal;
+        $commissionStartDate = $commissionService->commissionStartDate();
+        $balanceWindowStart = $resellerStorageReady ? $commissionService->balanceWindowStart($user) : $commissionStartDate;
 
         $totals = [
             'income' => $resellerStorageReady ? (int) ResellerCommission::query()
                 ->where('user_id', $user->id)
                 ->where('type', 'income')
-                ->where('status', 'success')
+                ->where(function ($query) {
+                    $query->whereNull('status')
+                        ->orWhereNotIn('status', ['failed', 'rejected']);
+                })
+                ->whereHas('transaction', fn ($query) => $query
+                    ->where('created_at', '>=', $balanceWindowStart)
+                    ->where('payment_status', 'paid')
+                    ->where('order_status', 'success'))
                 ->sum('amount') : 0,
             'pending_withdrawal' => $resellerStorageReady ? (int) ResellerCommission::query()
                 ->where('user_id', $user->id)
                 ->where('type', 'withdrawal')
-                ->where('status', 'pending')
+                ->where('created_at', '>=', $balanceWindowStart)
+                ->whereIn('status', ['pending', 'processing'])
                 ->sum('amount') : 0,
             'approved_withdrawal' => $resellerStorageReady ? (int) ResellerCommission::query()
                 ->where('user_id', $user->id)
                 ->where('type', 'withdrawal')
-                ->where('status', 'approved')
+                ->where('created_at', '>=', $commissionStartDate)
+                ->whereIn('status', ['success', 'approved'])
                 ->sum('amount') : 0,
         ];
 
@@ -44,23 +61,40 @@ class ResellerController extends Controller
             ->selectRaw('SUM(amount) as total_commission')
             ->where('user_id', $user->id)
             ->where('type', 'income')
-            ->where('status', 'success')
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhereNotIn('status', ['failed', 'rejected']);
+            })
+            ->whereHas('transaction', fn ($query) => $query
+                ->where('created_at', '>=', $balanceWindowStart)
+                ->where('payment_status', 'paid')
+                ->where('order_status', 'success'))
             ->groupBy('product_name', 'category_name')
             ->orderByDesc('total_commission')
             ->limit(20)
             ->get() : collect();
 
         $commissionHistories = $resellerStorageReady ? ResellerCommission::query()
-            ->with('transaction')
+            ->with('transaction.product.category')
             ->where('user_id', $user->id)
-            ->latest()
+            ->where(function ($query) use ($commissionStartDate) {
+                $query->where(function ($incomeQuery) use ($commissionStartDate) {
+                    $incomeQuery->where('type', 'income')
+                        ->whereHas('transaction', fn ($transactionQuery) => $transactionQuery->where('created_at', '>=', $commissionStartDate));
+                })->orWhere(function ($withdrawalQuery) use ($commissionStartDate) {
+                    $withdrawalQuery->where('type', 'withdrawal')
+                        ->where('created_at', '>=', $commissionStartDate);
+                });
+            })
+            ->orderByRaw('COALESCE((select created_at from transactions where transactions.id = reseller_commissions.transaction_id), reseller_commissions.created_at) desc')
             ->limit(30)
             ->get() : collect();
 
         $pendingWithdrawal = $resellerStorageReady ? ResellerCommission::query()
             ->where('user_id', $user->id)
             ->where('type', 'withdrawal')
-            ->where('status', 'pending')
+            ->where('created_at', '>=', $balanceWindowStart)
+            ->whereIn('status', ['pending', 'processing'])
             ->latest()
             ->first() : null;
 
@@ -98,12 +132,14 @@ class ResellerController extends Controller
             ])->save();
         });
 
+        $request->user()->fresh()?->sendResellerJoinedEmail();
+
         return redirect()->route('user.reseller.index')->with('success', 'Selamat bergabung menjadi reseller!');
     }
 
     public function leave(Request $request)
     {
-        if (! $request->user()->isReseller()) {
+        if (! $this->hasResellerDashboard($request->user())) {
             return redirect()->route('user.reseller.index');
         }
 
@@ -120,7 +156,7 @@ class ResellerController extends Controller
 
     public function updatePayout(Request $request)
     {
-        if (! $request->user()->isReseller()) {
+        if (! $this->hasResellerDashboard($request->user())) {
             return redirect()->route('user.reseller.index')->with('error', 'Gabung reseller dulu sebelum mengubah tujuan penarikan.');
         }
 
@@ -139,7 +175,7 @@ class ResellerController extends Controller
     {
         $user = $request->user();
 
-        if (! $user->isReseller()) {
+        if (! $this->hasResellerDashboard($user)) {
             return redirect()->route('user.reseller.index')->with('error', 'Gabung reseller dulu sebelum menarik komisi.');
         }
 
@@ -157,7 +193,7 @@ class ResellerController extends Controller
             $hasPending = ResellerCommission::query()
                 ->where('user_id', $lockedUser->id)
                 ->where('type', 'withdrawal')
-                ->where('status', 'pending')
+                ->whereIn('status', ['pending', 'processing'])
                 ->lockForUpdate()
                 ->exists();
 
@@ -192,12 +228,17 @@ class ResellerController extends Controller
     {
         return $request->validate([
             'reseller_payout_method' => ['required', 'string', 'max:40'],
-            'reseller_payout_account' => ['required', 'string', 'max:120'],
-            'reseller_payout_name' => ['required', 'string', 'max:120'],
-        ], [], [
+            'reseller_payout_account' => WiboostInputRules::numberRules(120),
+            'reseller_payout_name' => WiboostInputRules::nameRules(120),
+        ], WiboostInputRules::validationMessages(), [
             'reseller_payout_method' => 'metode penarikan',
             'reseller_payout_account' => 'nomor e-wallet',
             'reseller_payout_name' => 'nama pemilik e-wallet',
         ]);
+    }
+
+    protected function hasResellerDashboard(User $user): bool
+    {
+        return $user->hasResellerCommissionAccess();
     }
 }

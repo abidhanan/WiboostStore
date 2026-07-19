@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Category;
+use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\Promo;
 use App\Models\Tutorial;
@@ -82,6 +83,7 @@ class DashboardController extends Controller
         $remainingHours = intdiv($remainingTotalSeconds % 86400, 3600);
         $remainingMinutes = intdiv($remainingTotalSeconds % 3600, 60);
         $remainingSeconds = $remainingTotalSeconds % 60;
+        $membershipTickerProducts = $this->membershipTickerProducts();
 
         return view('user.membership', compact(
             'user',
@@ -91,7 +93,8 @@ class DashboardController extends Controller
             'remainingDays',
             'remainingHours',
             'remainingMinutes',
-            'remainingSeconds'
+            'remainingSeconds',
+            'membershipTickerProducts'
         ));
     }
 
@@ -264,6 +267,46 @@ class DashboardController extends Controller
                 ];
             })
             ->sortBy(fn (array $group) => $tutorialMainOrder[strtolower((string) $group['name'])] ?? 99)
+            ->values();
+    }
+
+    protected function membershipTickerProducts()
+    {
+        return Product::query()
+            ->with('category.parent.parent.parent')
+            ->where('is_active', true)
+            ->where('status', 'active')
+            ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes())
+            ->latest('updated_at')
+            ->limit(120)
+            ->get()
+            ->map(function (Product $product) {
+                $rootCategory = $product->category;
+
+                while ($rootCategory?->parent) {
+                    $rootCategory = $rootCategory->parent;
+                }
+
+                return [
+                    'name' => $product->name,
+                    'price' => (int) round($product->membership_selling_price),
+                    'root_slug' => $rootCategory?->slug ?: '',
+                    'root_name' => $rootCategory?->name ?: '',
+                ];
+            })
+            ->filter(fn (array $item) => $item['price'] > 0)
+            ->sort(function (array $first, array $second) {
+                $priority = ($first['root_slug'] === 'aplikasi-premium' ? 0 : 1) <=> ($second['root_slug'] === 'aplikasi-premium' ? 0 : 1);
+
+                if ($priority !== 0) {
+                    return $priority;
+                }
+
+                $categoryOrder = strnatcasecmp($first['root_name'], $second['root_name']);
+
+                return $categoryOrder !== 0 ? $categoryOrder : strnatcasecmp($first['name'], $second['name']);
+            })
+            ->take(32)
             ->values();
     }
 }

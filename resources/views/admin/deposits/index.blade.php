@@ -151,17 +151,44 @@
         50% { transform: translateY(-15px); }
         100% { transform: translateY(0px); }
     }
+    .admin-theme-select-month,
+    .admin-theme-select-year {
+        flex: 1 1 0;
+        width: auto;
+    }
+    @media (min-width: 768px) {
+        .admin-theme-select-month { width: 9rem; flex: 0 0 9rem; }
+        .admin-theme-select-year { width: 7rem; flex: 0 0 7rem; }
+    }
 </style>
 
 <div class="wiboost-font pb-12 relative z-10 w-full min-w-0">
     @php
         $searchValue = request('search');
         $activeDepositFilter = $depositFilter ?? request('deposit_filter', 'all');
+        $selectedMonth = $selectedMonth ?? request('month', date('m'));
+        $selectedYear = $selectedYear ?? request('year', date('Y'));
+        $adminMonthNames = [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember',
+        ];
+        $selectedMonthNumber = (int) $selectedMonth;
         $depositFilters = [
             'all' => ['label' => 'Semua'],
             'paid' => ['label' => 'Berhasil'],
             'failed' => ['label' => 'Gagal'],
             'topup' => ['label' => 'Top Up'],
+            'poin' => ['label' => 'Poin'],
         ];
     @endphp
 
@@ -181,13 +208,16 @@
 
     <!-- Toolbar: Pencarian & Segarkan -->
     <div class="mb-6 sm:mb-8 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/90 backdrop-blur-sm p-4 sm:p-5 shadow-xl shadow-[#bde0fe]/30 relative z-10 w-full min-w-0 transition-transform duration-300 hover:border-[#bde0fe]">
-        <form action="{{ route('admin.deposits.index') }}" method="GET" class="flex flex-col md:flex-row gap-3 w-full">
+        <form action="{{ route('admin.deposits.index') }}" method="GET" class="flex w-full flex-col gap-3">
+            <div class="flex w-full flex-col gap-3 md:flex-row">
             
             <!-- Wrapper Input Cari -->
             <div class="flex-1 flex gap-2 w-full min-w-0">
                 @if($activeDepositFilter !== 'all')
                     <input type="hidden" name="deposit_filter" value="{{ $activeDepositFilter }}">
                 @endif
+                <input type="hidden" name="month" value="{{ $selectedMonth }}">
+                <input type="hidden" name="year" value="{{ $selectedYear }}">
                 <input type="text" name="search" value="{{ $searchValue }}"
                     class="min-w-0 flex-1 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#f4f9ff] py-3 px-4 sm:px-5 font-black text-[#2b3a67] outline-none transition shadow-inner placeholder-[#a3bbfb] focus:border-[#bde0fe] text-xs sm:text-sm truncate"
                     placeholder="Cari Invoice atau Pelanggan...">
@@ -197,17 +227,43 @@
                 </button>
                 
                 @if($searchValue)
-                    <a href="{{ route('admin.deposits.index', array_filter(['deposit_filter' => $activeDepositFilter === 'all' ? null : $activeDepositFilter])) }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[#ff6b6b] shadow-md active:scale-95 transition-transform" title="Reset">
+                    <a href="{{ route('admin.deposits.index', array_filter(['deposit_filter' => $activeDepositFilter === 'all' ? null : $activeDepositFilter, 'month' => $selectedMonth, 'year' => $selectedYear])) }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[#ff6b6b] shadow-md active:scale-95 transition-transform" title="Reset">
                         @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])
                     </a>
                 @endif
             </div>
             
             <!-- Tombol Segarkan -->
-            <a href="{{ route('admin.deposits.index', array_filter(['deposit_filter' => $activeDepositFilter === 'all' ? null : $activeDepositFilter])) }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#8faaf3] px-6 py-3 h-12 text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#6f8ddc] w-full md:w-auto">
+            <a href="{{ route('admin.deposits.index', array_filter(['deposit_filter' => $activeDepositFilter === 'all' ? null : $activeDepositFilter, 'month' => $selectedMonth, 'year' => $selectedYear])) }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#8faaf3] px-6 py-3 h-12 text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#6f8ddc] w-full md:w-auto">
                 @include('partials.wiboost-icon', ['name' => 'refresh', 'class' => 'h-5 w-5'])
                 <span class="whitespace-nowrap">Segarkan</span>
             </a>
+            </div>
+
+            <div class="flex w-full items-center justify-start gap-2 border-t-4 border-dashed border-[#f4f9ff] pt-4 md:justify-end md:border-t-0 md:pt-0">
+                <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
+                    <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                        <span data-admin-theme-select-label>{{ $adminMonthNames[$selectedMonthNumber] ?? '-' }}</span>
+                        <span class="admin-theme-select-arrow">v</span>
+                    </button>
+                    <div class="admin-theme-select-menu">
+                        @for($m = 1; $m <= 12; $m++)
+                            <button type="button" class="admin-theme-select-option {{ (string) $selectedMonth === sprintf('%02d', $m) ? 'is-selected' : '' }}" data-value="{{ sprintf('%02d', $m) }}" data-label="{{ $adminMonthNames[$m] }}">{{ $adminMonthNames[$m] }}</button>
+                        @endfor
+                    </div>
+                </div>
+                <div class="admin-theme-select admin-theme-select-year" data-admin-theme-select data-submit-on-change="true" data-input-name="year">
+                    <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                        <span data-admin-theme-select-label>{{ $selectedYear }}</span>
+                        <span class="admin-theme-select-arrow">v</span>
+                    </button>
+                    <div class="admin-theme-select-menu">
+                        @for($y = date('Y'); $y >= date('Y') - 3; $y--)
+                            <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
+                        @endfor
+                    </div>
+                </div>
+            </div>
             
         </form>
     </div>
@@ -217,14 +273,14 @@
         'activeFilter' => $activeDepositFilter,
         'filterParam' => 'deposit_filter',
         'filterRoute' => 'admin.deposits.index',
-        'filterQuery' => ['search' => $searchValue],
+        'filterQuery' => ['search' => $searchValue, 'month' => $selectedMonth, 'year' => $selectedYear],
     ])
 
     <!-- Tabel Data Deposit -->
     <div class="overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm shadow-2xl shadow-[#bde0fe]/30 relative z-10 min-w-0 w-full">
         <div class="w-full overflow-x-auto table-scroll pb-2">
             <div class="inline-block min-w-full align-middle p-4 sm:p-6">
-                <table class="w-full min-w-[1240px] text-left whitespace-nowrap">
+                <table class="w-full min-w-[1120px] text-left whitespace-nowrap">
                     <thead>
                         <tr>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Invoice</th>
@@ -234,7 +290,6 @@
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Jenis</th>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Nominal</th>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Dibayar</th>
-                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Metode</th>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Status</th>
                         </tr>
                     </thead>
@@ -265,6 +320,8 @@
                             <td class="px-5 py-4 sm:py-5 align-middle text-center">
                                 @if($deposit->isMembershipPayment())
                                     <span style="font-size: 9px;" class="inline-block rounded-full border-2 border-white bg-[#ede9fe] px-3 py-1.5 font-black uppercase tracking-widest text-[#8b5cf6] shadow-sm">Membership</span>
+                                @elseif($deposit->isPointExchange())
+                                    <span style="font-size: 9px;" class="inline-block rounded-full border-2 border-white bg-[#f4f9ff] px-3 py-1.5 font-black uppercase tracking-widest text-[#5a76c8] shadow-sm">Poin</span>
                                 @else
                                     <span style="font-size: 9px;" class="inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-3 py-1.5 font-black uppercase tracking-widest text-[#5a76c8] shadow-sm">Top Up</span>
                                 @endif
@@ -277,21 +334,6 @@
 
                             <td class="px-5 py-4 sm:py-5 align-middle">
                                 <p class="font-black text-[#5a76c8] text-sm sm:text-base drop-shadow-sm">Rp {{ number_format($deposit->paid_amount ?? $deposit->amount ?? 0, 0, ',', '.') }}</p>
-                            </td>
-                            
-                            <!-- Metode Pembayaran -->
-                            <td class="px-5 py-4 sm:py-5 align-middle text-center">
-                                @php
-                                    $methodDisplay = $deposit->display_payment_method;
-                                    if ($methodDisplay === 'BELUM PILIH') {
-                                        $colorClass = 'bg-[#fff5eb] text-amber-500 border-white';
-                                    } else {
-                                        $colorClass = 'bg-[#f4f9ff] text-[#8faaf3] border-white';
-                                    }
-                                @endphp
-                                <span style="font-size: 9px;" class="font-black uppercase tracking-widest px-3 py-1.5 rounded-full border-2 shadow-sm inline-block {{ $colorClass }}">
-                                    {{ $methodDisplay }}
-                                </span>
                             </td>
                             
                             <!-- Status -->
@@ -316,7 +358,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="9" class="px-5 py-16 sm:py-20 text-center">
+                            <td colspan="8" class="px-5 py-16 sm:py-20 text-center">
                                 <div class="mb-4 sm:mb-5 inline-flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-[#f0f5ff] text-[#5a76c8] shadow-inner animate-float">
                                     @include('partials.wiboost-icon', ['name' => 'wallet', 'class' => 'h-10 w-10'])
                                 </div>
@@ -369,7 +411,7 @@
                         </div>
                         <div class="admin-detail-panel">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Jenis Pembayaran</p>
-                            <p class="mt-1 text-lg font-black {{ $deposit->isMembershipPayment() ? 'text-[#8b5cf6]' : 'text-[#5a76c8]' }}">{{ $deposit->isMembershipPayment() ? 'Membership' : 'Top Up Saldo' }}</p>
+                            <p class="mt-1 text-lg font-black {{ $deposit->isMembershipPayment() ? 'text-[#8b5cf6]' : 'text-[#5a76c8]' }}">{{ $deposit->isMembershipPayment() ? 'Membership' : ($deposit->isPointExchange() ? 'Penukaran Poin' : 'Top Up Saldo') }}</p>
                         </div>
                         <div class="admin-detail-panel">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">{{ $deposit->isMembershipPayment() ? 'Biaya Membership' : 'Nominal Masuk Saldo' }}</p>
@@ -378,10 +420,6 @@
                         <div class="admin-detail-panel">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Jumlah Dibayar</p>
                             <p class="mt-1 text-lg font-black text-[#5a76c8]">Rp {{ number_format($deposit->paid_amount ?? $deposit->amount ?? 0, 0, ',', '.') }}</p>
-                        </div>
-                        <div class="admin-detail-panel">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Metode</p>
-                            <p class="mt-1 font-black uppercase text-[#2b3a67]">{{ $deposit->display_payment_method }}</p>
                         </div>
                         <div class="admin-detail-panel">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Referensi QRIS</p>

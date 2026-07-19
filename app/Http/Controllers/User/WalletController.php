@@ -172,15 +172,31 @@ class WalletController extends Controller
 
             $user->forceFill($updates)->save();
 
+            $invoiceNumber = 'POIN-' . strtoupper(Str::random(8));
+
             WalletHistory::create([
                 'user_id' => $user->id,
                 'type' => 'topup',
                 'amount' => $reward['amount'],
                 'description' => 'Klaim penukaran ' . $reward['points'] . ' poin Wiboost',
-                'invoice_number' => 'POIN-' . strtoupper(Str::random(8)),
+                'invoice_number' => $invoiceNumber,
             ]);
 
-            return 'Selamat, ' . $reward['points'] . ' poin berhasil ditukar menjadi saldo Rp ' . number_format($reward['amount'], 0, ',', '.') . '.';
+            Deposit::create([
+                'user_id' => $user->id,
+                'invoice_number' => $invoiceNumber,
+                'amount' => $reward['amount'],
+                'paid_amount' => $reward['amount'],
+                'payment_status' => 'paid',
+                'payment_method' => 'poin',
+                'payment_response' => [
+                    'purpose' => 'point_exchange',
+                    'points' => (int) $reward['points'],
+                    'reward_amount' => (int) $reward['amount'],
+                ],
+            ]);
+
+            return 'Selamat poin berhasil ditukar menjadi saldo!';
         });
 
         $isSuccess = str_starts_with($message, 'Selamat');

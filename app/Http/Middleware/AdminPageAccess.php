@@ -26,12 +26,18 @@ class AdminPageAccess
 
         $roleId = (int) $user->role_id;
 
+        if (in_array('refunds', $areas !== [] ? $areas : ['dashboard'], true)) {
+            abort_unless(in_array($roleId, [User::ROLE_SUPER_ADMIN, User::ROLE_FINANCE], true), 403, 'ANDA TIDAK MEMILIKI IZIN UNTUK MENGAKSES HALAMAN REFUND.');
+
+            return $next($request);
+        }
+
         if ($roleId === User::ROLE_SUPER_ADMIN) {
             return $next($request);
         }
 
         $accessMap = [
-            User::ROLE_FINANCE => ['dashboard', 'commissions', 'users', 'transactions', 'deposits', 'withdrawals'],
+            User::ROLE_FINANCE => ['dashboard', 'commissions', 'users', 'transactions', 'refunds', 'deposits', 'withdrawals'],
             User::ROLE_WAREHOUSE => ['dashboard', 'users', 'categories', 'products', 'tutorials', 'transactions'],
             User::ROLE_MARKETING => ['dashboard', 'users', 'transactions', 'promos', 'displays'],
             User::ROLE_CUSTOMER_SERVICE => ['dashboard', 'commissions', 'users', 'transactions', 'deposits', 'reports'],

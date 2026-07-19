@@ -93,6 +93,13 @@
             transform: translateY(0) scale(1);
         }
 
+        .admin-user-role-select-menu.is-floating-open {
+            display: grid !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            transform: none !important;
+        }
+
         .admin-user-role-select-option {
             width: 100%;
             border: 2px solid transparent;
@@ -122,6 +129,7 @@
                     if (dropdown !== except) {
                         dropdown.classList.remove('is-open');
                         dropdown.querySelector('.admin-user-role-select-button')?.setAttribute('aria-expanded', 'false');
+                        window.wiboostResetFloatingMenu?.(dropdown, '.admin-user-role-select-menu');
                     }
                 });
             };
@@ -136,6 +144,11 @@
                     closeRoleSelects(dropdown);
                     dropdown.classList.toggle('is-open', willOpen);
                     button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                    if (willOpen) {
+                        window.requestAnimationFrame(() => window.wiboostPositionFloatingMenu?.(dropdown, '.admin-user-role-select-menu', 220, 288));
+                    } else {
+                        window.wiboostResetFloatingMenu?.(dropdown, '.admin-user-role-select-menu');
+                    }
                 });
 
                 dropdown.querySelectorAll('[data-admin-user-role-option]').forEach((option) => {
@@ -155,6 +168,7 @@
                         option.classList.add('is-selected');
                         dropdown.classList.remove('is-open');
                         button?.setAttribute('aria-expanded', 'false');
+                        window.wiboostResetFloatingMenu?.(dropdown, '.admin-user-role-select-menu');
                     });
                 });
             });
@@ -170,6 +184,13 @@
                     closeRoleSelects();
                 }
             });
+
+            window.addEventListener('resize', () => {
+                document.querySelectorAll('[data-admin-user-role-select].is-open').forEach((dropdown) => window.wiboostPositionFloatingMenu?.(dropdown, '.admin-user-role-select-menu', 220, 288));
+            });
+            window.addEventListener('scroll', () => {
+                document.querySelectorAll('[data-admin-user-role-select].is-open').forEach((dropdown) => window.wiboostPositionFloatingMenu?.(dropdown, '.admin-user-role-select-menu', 220, 288));
+            }, true);
         });
     </script>
 @endonce

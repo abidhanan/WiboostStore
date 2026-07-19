@@ -24,7 +24,8 @@ class PromoController extends Controller
                 });
             })
             ->latest()
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
         return view('admin.promos.index', compact('promos'));
     }
@@ -58,7 +59,7 @@ class PromoController extends Controller
 
         Promo::create($data);
 
-        return redirect()->route('admin.promos.index')->with('success', 'Banner Promo berhasil ditambahkan.');
+        return $this->redirectToReturnTo($request, 'admin.promos.index')->with('success', 'Banner Promo berhasil ditambahkan.');
     }
 
     public function edit(Promo $promo)
@@ -86,7 +87,7 @@ class PromoController extends Controller
 
         $promo->update($data);
 
-        return redirect()->route('admin.promos.index')->with('success', 'Banner Promo berhasil diperbarui.');
+        return $this->redirectToReturnTo($request, 'admin.promos.index')->with('success', 'Banner Promo berhasil diperbarui.');
     }
 
     public function destroy(Promo $promo)

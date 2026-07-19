@@ -86,7 +86,7 @@
 
         <div>
             <label for="name" class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Nama Lengkap</label>
-            <input x-model="profileName" x-ref="profileName" id="name" name="name" type="text" value="{{ old('name', $user->name) }}" required autocomplete="name"
+            <input x-model="profileName" x-ref="profileName" id="name" name="name" type="text" value="{{ old('name', $user->name) }}" required autocomplete="name" data-wiboost-name-only
                    :readonly="! editingProfile"
                    @click="editingProfile = true"
                    @focus="editingProfile = true"
@@ -122,7 +122,7 @@
 
         <div>
             <label for="whatsapp" class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Nomor WhatsApp</label>
-            <input x-model="profileWhatsapp" x-ref="profileWhatsapp" id="whatsapp" name="whatsapp" type="text" value="{{ old('whatsapp', $user->whatsapp) }}" required
+            <input x-model="profileWhatsapp" x-ref="profileWhatsapp" id="whatsapp" name="whatsapp" type="text" value="{{ old('whatsapp', $user->whatsapp) }}" required inputmode="numeric" pattern="[0-9]*" data-wiboost-number-only
                    :readonly="! editingProfile"
                    @click="editingProfile = true"
                    @focus="editingProfile = true"

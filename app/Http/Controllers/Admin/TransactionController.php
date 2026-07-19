@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\Transaction;
+use App\Models\User;
 use App\Services\OrderFulfillmentService;
 use App\Services\TransactionPaymentSyncService;
 use App\Support\WiboostCatalog;
@@ -31,7 +32,7 @@ class TransactionController extends Controller
         }
 
         // Pastikan memuat relasi product.category agar bisa mengecek slug kategori
-        $query = Transaction::with(['user', 'product.category.parent.parent.parent'])->latest();
+        $query = Transaction::with(['refund', 'user', 'product.category.parent.parent.parent'])->latest();
         $query->where(function ($transactionQuery) {
             $transactionQuery->where('invoice_number', 'like', 'MEM-%')
                 ->orWhere('target_data', 'like', '%Membership Wiboost%')
@@ -160,11 +161,13 @@ class TransactionController extends Controller
 
     public function updateStatus(Request $request, $id, OrderFulfillmentService $orderFulfillmentService)
     {
+        abort_unless(in_array((int) $request->user()?->role_id, [User::ROLE_SUPER_ADMIN, User::ROLE_WAREHOUSE], true), 403, 'Hanya role gudang dan super admin yang bisa mengubah status pesanan.');
+
         $request->validate([
             'order_status' => 'required|in:pending,processing,success,failed'
         ]);
 
-        $transaction = Transaction::with(['product', 'user'])->findOrFail($id);
+        $transaction = Transaction::with(['refund', 'product', 'user'])->findOrFail($id);
 
         if ($request->order_status === 'success') {
             $orderFulfillmentService->markOrderSuccessful($transaction);
@@ -244,7 +247,7 @@ class TransactionController extends Controller
             $year = $request->input('year', date('Y'));
 
             // Laporan pendapatan hanya menghitung transaksi yang benar-benar sukses.
-            $transactions = Transaction::with(['user', 'product'])
+            $transactions = Transaction::with(['refund', 'user', 'product'])
                 ->where('payment_status', 'paid')
                 ->where('order_status', 'success')
                 ->where(function ($transactionQuery) {
@@ -286,7 +289,7 @@ class TransactionController extends Controller
             $month = $request->input('month', date('m'));
             $year = $request->input('year', date('Y'));
 
-            $transactions = Transaction::with(['user', 'product'])
+            $transactions = Transaction::with(['refund', 'user', 'product'])
                 ->where('payment_status', 'paid')
                 ->where('order_status', 'success')
                 ->where(function ($transactionQuery) {

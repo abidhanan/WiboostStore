@@ -121,6 +121,13 @@ class Deposit extends Model
             || str_starts_with((string) $this->invoice_number, 'MEM-');
     }
 
+    public function isPointExchange(): bool
+    {
+        return (string) data_get($this->payment_response, 'purpose') === 'point_exchange'
+            || strtolower((string) $this->payment_method) === 'poin'
+            || str_starts_with((string) $this->invoice_number, 'POIN-');
+    }
+
     public function membershipActivated(): bool
     {
         return filled(data_get($this->payment_response, 'membership_activated_at'));

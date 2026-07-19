@@ -28,7 +28,7 @@
 
 @if ($errors->any())
     <div class="mb-8 flex items-start gap-4 rounded-[2.5rem] border-4 border-white bg-[#ffe5e5] px-6 py-5 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20">
-        <span class="mt-1 text-3xl drop-shadow-sm">⚠️</span>
+        <span class="mt-1 shrink-0 drop-shadow-sm">@include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'h-8 w-8'])</span>
         <div>
             <p class="mb-3 text-lg">Masih ada data yang perlu diperbaiki:</p>
             <ul class="list-disc list-inside text-sm font-bold bg-white/50 p-4 rounded-2xl border border-white">
@@ -103,14 +103,13 @@
                 </div>
 
                 <div>
-                    <label class="mb-3 ml-2 block text-sm font-black text-[#8b5cf6]">Harga Jual Member (Aplikasi Premium)</label>
+                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Harga Jual Member</label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-6 font-black text-[#8b5cf6]">Rp</span>
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-6 font-black text-[#5a76c8]">Rp</span>
                         <input type="number" name="membership_price" min="0" value="{{ old('membership_price', $currentProduct->membership_price ?? '') }}"
-                            class="w-full rounded-[1.5rem] border-4 border-white bg-[#f7f2ff] py-4 pl-14 pr-6 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#ddd6fe] placeholder-[#a78bfa]"
-                            placeholder="Khusus aplikasi premium">
+                            class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] py-4 pl-14 pr-6 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] placeholder-[#a3bbfb]"
+                            placeholder="5000">
                     </div>
-                    <p class="mt-2 ml-2 text-xs font-bold text-[#8b5cf6]">Opsional untuk aplikasi premium. Harga member kategori API otomatis mengikuti markup member: suntik sosmed 35%, top up game 4%, paket data 7%.</p>
                 </div>
 
             </div>
@@ -118,7 +117,7 @@
 
         <section id="provider_section" class="space-y-6 rounded-[2rem] border-4 border-white bg-[#f8fbff] p-6 shadow-md md:p-8">
             <div class="flex items-start gap-4">
-                <div class="text-4xl drop-shadow-sm animate-bounce">🤖</div>
+                <div class="drop-shadow-sm animate-bounce text-[#5a76c8]">@include('partials.wiboost-icon', ['name' => 'zap', 'class' => 'h-10 w-10'])</div>
                 <div>
                     <p class="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Integrasi API</p>
                     <h4 class="text-2xl font-black text-[#2b3a67]">Provider Otomatis</h4>
@@ -154,42 +153,9 @@
             </div>
         </section>
 
-        <section id="target_section" class="space-y-6 rounded-[2rem] border-4 border-white bg-[#fffdf7] p-6 shadow-md md:p-8">
-            <div class="flex items-start gap-4">
-                <div class="text-4xl drop-shadow-sm">🎯</div>
-                <div>
-                    <p class="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-amber-500">Checkout User</p>
-                    <h4 class="text-2xl font-black text-[#2b3a67]">Instruksi Input Target</h4>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div>
-                    <label class="mb-3 ml-2 block text-sm font-black text-amber-600">Label Field</label>
-                    <input type="text" name="target_label" value="{{ old('target_label', $currentProduct->target_label ?? '') }}"
-                        class="w-full rounded-[1.5rem] border-4 border-white bg-white px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-amber-200 placeholder-[#d1d5db]"
-                        placeholder="Cth: User ID">
-                </div>
-
-                <div>
-                    <label class="mb-3 ml-2 block text-sm font-black text-amber-600">Placeholder Field</label>
-                    <input type="text" name="target_placeholder" value="{{ old('target_placeholder', $currentProduct->target_placeholder ?? '') }}"
-                        class="w-full rounded-[1.5rem] border-4 border-white bg-white px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-amber-200 placeholder-[#d1d5db]"
-                        placeholder="Cth: 12345678">
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="mb-3 ml-2 block text-sm font-black text-amber-600">Petunjuk Tambahan</label>
-                    <textarea name="target_hint" rows="3"
-                        class="w-full rounded-[1.5rem] border-4 border-white bg-white px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-amber-200 placeholder-[#d1d5db]"
-                        placeholder="Cth: Pastikan ID benar.">{{ old('target_hint', $currentProduct->target_hint ?? '') }}</textarea>
-                </div>
-            </div>
-        </section>
-
         <section id="inventory_section" class="space-y-6 rounded-[2rem] border-4 border-white bg-[#f6fffb] p-6 shadow-md md:p-8">
             <div class="flex items-start gap-4">
-                <div class="text-4xl drop-shadow-sm">🔔</div>
+                <div class="drop-shadow-sm text-emerald-500">@include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'h-10 w-10'])</div>
                 <div>
                     <p class="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500">Stok</p>
                     <h4 class="text-2xl font-black text-[#2b3a67]">Pengingat Inventory</h4>
@@ -206,7 +172,7 @@
 
         <section id="premium_checkout_section" class="space-y-6 rounded-[2rem] border-4 border-white bg-[#fff7fb] p-6 shadow-md md:p-8">
             <div class="flex items-start gap-4">
-                <div class="text-4xl drop-shadow-sm">🔑</div>
+                <div class="drop-shadow-sm text-pink-500">@include('partials.wiboost-icon', ['name' => 'profile', 'class' => 'h-10 w-10'])</div>
                 <div>
                     <p class="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-pink-500">Aplikasi Premium</p>
                     <h4 class="text-2xl font-black text-[#2b3a67]">Kebutuhan Input Buyer</h4>
@@ -231,10 +197,10 @@
 
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Emoji Produk</label>
+                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Ikon Produk</label>
                     <input type="text" name="emote" value="{{ old('emote', $currentProduct->emote ?? '') }}"
                         class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] text-2xl placeholder-[#a3bbfb]"
-                        placeholder="🎮 atau 📱">
+                        placeholder="Opsional">
                 </div>
 
                 <div>
@@ -278,7 +244,6 @@
         
         const providerSection = document.getElementById('provider_section');
         const providerQuantityGroup = document.getElementById('provider_quantity_group');
-        const targetSection = document.getElementById('target_section');
         const inventorySection = document.getElementById('inventory_section');
         const premiumCheckoutSection = document.getElementById('premium_checkout_section');
 
@@ -287,12 +252,11 @@
             const providerSource = providerSourceSelect.value;
 
             // Reset animations class
-            [providerSection, targetSection, inventorySection, premiumCheckoutSection].forEach(el => {
+            [providerSection, inventorySection, premiumCheckoutSection].forEach(el => {
                 el.classList.remove('animate-pulse');
             });
 
             providerSection.style.display = type === 'api' ? 'block' : 'none';
-            targetSection.style.display = type === 'api' ? 'block' : 'none';
             inventorySection.style.display = type === 'account' ? 'block' : 'none';
             premiumCheckoutSection.style.display = type === 'account' ? 'block' : 'none';
             providerQuantityGroup.style.display = (type === 'api' && providerSource === 'ordersosmed') ? 'block' : 'none';

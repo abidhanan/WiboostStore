@@ -16,15 +16,29 @@ class DepositController extends Controller
      */
     public function index(Request $request)
     {
+        $this->syncPointExchangeDeposits();
+
         $depositFilter = (string) $request->query('deposit_filter', 'all');
-        $allowedDepositFilters = ['all', 'paid', 'failed', 'topup'];
+        $selectedMonth = $request->query('month', date('m'));
+        $selectedYear = $request->query('year', date('Y'));
+        $allowedDepositFilters = ['all', 'paid', 'failed', 'topup', 'poin'];
 
         if (! in_array($depositFilter, $allowedDepositFilters, true)) {
             $depositFilter = 'all';
         }
 
+        if (! preg_match('/^(0[1-9]|1[0-2])$/', (string) $selectedMonth)) {
+            $selectedMonth = date('m');
+        }
+
+        if (! preg_match('/^\d{4}$/', (string) $selectedYear)) {
+            $selectedYear = date('Y');
+        }
+
         $query = Deposit::with('user')
             ->where('invoice_number', 'not like', 'MEM-%')
+            ->whereMonth('created_at', $selectedMonth)
+            ->whereYear('created_at', $selectedYear)
             ->where(function ($statusQuery) {
                 $statusQuery->whereNull('payment_status')
                     ->orWhereNotIn('payment_status', ['unpaid', 'pending']);
@@ -47,12 +61,65 @@ class DepositController extends Controller
         } elseif ($depositFilter === 'failed') {
             $query->whereIn('payment_status', ['failed', 'expired']);
         } elseif ($depositFilter === 'topup') {
-            $query->where('invoice_number', 'not like', 'MEM-%');
+            $query->where('invoice_number', 'not like', 'MEM-%')
+                ->where('invoice_number', 'not like', 'POIN-%')
+                ->where(function ($topupQuery) {
+                    $topupQuery->whereNull('payment_method')
+                        ->orWhere('payment_method', '!=', 'poin');
+                })
+                ->where(function ($topupQuery) {
+                    $topupQuery->whereNull('payment_response->purpose')
+                        ->orWhere('payment_response->purpose', '!=', 'point_exchange');
+                });
+        } elseif ($depositFilter === 'poin') {
+            $query->where(function ($pointQuery) {
+                $pointQuery->where('invoice_number', 'like', 'POIN-%')
+                    ->orWhere('payment_method', 'poin')
+                    ->orWhere('payment_response->purpose', 'point_exchange');
+            });
         }
 
         $deposits = $query->paginate(20)->withQueryString();
 
-        return view('admin.deposits.index', compact('deposits', 'depositFilter'));
+        return view('admin.deposits.index', compact('deposits', 'depositFilter', 'selectedMonth', 'selectedYear'));
+    }
+
+    protected function syncPointExchangeDeposits(): void
+    {
+        WalletHistory::query()
+            ->where('type', 'topup')
+            ->where(function ($query) {
+                $query->where('invoice_number', 'like', 'POIN-%')
+                    ->orWhere('description', 'like', 'Klaim penukaran%poin%');
+            })
+            ->latest('id')
+            ->limit(300)
+            ->get()
+            ->each(function (WalletHistory $history) {
+                $invoiceNumber = filled($history->invoice_number)
+                    ? (string) $history->invoice_number
+                    : 'POIN-HIS' . $history->id;
+
+                $deposit = Deposit::firstOrNew(['invoice_number' => $invoiceNumber]);
+
+                if ($deposit->exists) {
+                    return;
+                }
+
+                $deposit->forceFill([
+                    'user_id' => $history->user_id,
+                    'amount' => $history->amount,
+                    'paid_amount' => $history->amount,
+                    'payment_status' => 'paid',
+                    'payment_method' => 'poin',
+                    'payment_response' => [
+                        'purpose' => 'point_exchange',
+                        'wallet_history_id' => $history->id,
+                    ],
+                    'created_at' => $history->created_at,
+                    'updated_at' => $history->updated_at,
+                ])->save();
+            });
     }
 
     /**

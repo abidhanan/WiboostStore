@@ -14,14 +14,26 @@ class AdminReportController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
         $reportFilter = (string) $request->query('report_filter', 'all');
+        $selectedMonth = $request->query('month', date('m'));
+        $selectedYear = $request->query('year', date('Y'));
         $allowedReportFilters = ['all', 'new', 'read', 'closed'];
 
         if (! in_array($reportFilter, $allowedReportFilters, true)) {
             $reportFilter = 'all';
         }
 
+        if (! preg_match('/^(0[1-9]|1[0-2])$/', (string) $selectedMonth)) {
+            $selectedMonth = date('m');
+        }
+
+        if (! preg_match('/^\d{4}$/', (string) $selectedYear)) {
+            $selectedYear = date('Y');
+        }
+
         $reports = AdminReport::query()
             ->with('user')
+            ->whereMonth('created_at', $selectedMonth)
+            ->whereYear('created_at', $selectedYear)
             ->when($reportFilter !== 'all', fn ($query) => $query->where('status', $reportFilter))
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
@@ -44,6 +56,8 @@ class AdminReportController extends Controller
             'reports' => $reports,
             'search' => $search,
             'reportFilter' => $reportFilter,
+            'selectedMonth' => $selectedMonth,
+            'selectedYear' => $selectedYear,
             'adminCsWhatsapp' => WiboostAdminContact::csWhatsappNumber(),
             'adminOtpWhatsapp' => WiboostAdminContact::otpWhatsappNumber(),
         ]);

@@ -6,13 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminReport;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Refund;
 use App\Models\ResellerCommission;
 use App\Models\SiteSetting;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\WalletHistory;
+use App\Services\ResellerCommissionService;
 use App\Support\WiboostAdminContact;
 use App\Support\WiboostCatalog;
+use App\Support\WiboostInputRules;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -50,6 +53,7 @@ class DashboardController extends Controller
             ->sum('amount');
 
         $totalUsers = User::count();
+        $totalAdmins = User::whereIn('role_id', [1, 4, 6, 7, 8])->count();
         $totalMembers = User::where('membership_expires_at', '>', now())->count();
         $totalResellers = User::where('role_id', 3)
             ->where(function ($query) {
@@ -167,20 +171,41 @@ class DashboardController extends Controller
             ->values();
 
         $commissionSummary = ['count' => 0, 'amount' => 0, 'pending' => 0];
+        $commissionMonth = 0;
         $latestIncomeCommissions = collect();
         $withdrawalSummary = ['count' => 0, 'amount' => 0, 'pending' => 0];
+        $refundMonth = 0;
 
         if (Schema::hasTable('reseller_commissions')) {
+            $commissionService = app(ResellerCommissionService::class);
+            $commissionService->syncRecentMissing();
+            $commissionStartDate = $commissionService->commissionStartDate();
+
             $commissionSummary = [
-                'count' => ResellerCommission::where('type', 'income')->count(),
-                'amount' => (float) ResellerCommission::where('type', 'income')->sum('amount'),
-                'pending' => (float) ResellerCommission::where('type', 'income')->where('status', 'pending')->sum('amount'),
+                'count' => ResellerCommission::where('type', 'income')
+                    ->whereHas('transaction', fn ($query) => $query->where('created_at', '>=', $commissionStartDate))
+                    ->count(),
+                'amount' => (float) ResellerCommission::where('type', 'income')
+                    ->whereHas('transaction', fn ($query) => $query->where('created_at', '>=', $commissionStartDate))
+                    ->sum('amount'),
+                'pending' => (float) ResellerCommission::where('type', 'income')
+                    ->where('status', 'pending')
+                    ->whereHas('transaction', fn ($query) => $query->where('created_at', '>=', $commissionStartDate))
+                    ->sum('amount'),
             ];
+
+            $commissionMonth = (float) ResellerCommission::where('type', 'income')
+                ->where('status', 'success')
+                ->whereMonth('created_at', $currentMonth)
+                ->whereYear('created_at', $currentYear)
+                ->sum('amount');
 
             $latestIncomeCommissions = ResellerCommission::query()
                 ->with(['user', 'transaction.product'])
                 ->where('type', 'income')
-                ->latest()
+                ->whereHas('transaction', fn ($query) => $query->where('created_at', '>=', $commissionStartDate))
+                ->orderByDesc(Transaction::select('created_at')->whereColumn('transactions.id', 'reseller_commissions.transaction_id')->limit(1))
+                ->orderByDesc('created_at')
                 ->take(5)
                 ->get()
                 ->map(function (ResellerCommission $commission) {
@@ -198,8 +223,17 @@ class DashboardController extends Controller
             $withdrawalSummary = [
                 'count' => ResellerCommission::where('type', 'withdrawal')->count(),
                 'amount' => (float) ResellerCommission::where('type', 'withdrawal')->sum('amount'),
-                'pending' => (float) ResellerCommission::where('type', 'withdrawal')->where('status', 'pending')->sum('amount'),
+                'pending' => (float) ResellerCommission::where('type', 'withdrawal')->whereIn('status', ['pending', 'processing'])->sum('amount'),
             ];
+        }
+
+        if (Schema::hasTable('refunds')) {
+            $refundMonth = Refund::query()
+                ->with('transaction')
+                ->whereMonth('created_at', $currentMonth)
+                ->whereYear('created_at', $currentYear)
+                ->get()
+                ->sum(fn (Refund $refund) => (float) ($refund->transaction?->display_total_payable ?? 0));
         }
 
         $adminCsWhatsapp = WiboostAdminContact::csWhatsappNumber();
@@ -209,6 +243,7 @@ class DashboardController extends Controller
             'totalTransactionsMonth',
             'revenueMonth',
             'totalUsers',
+            'totalAdmins',
             'totalBuyers',
             'totalResellers',
             'totalMembers',
@@ -217,6 +252,8 @@ class DashboardController extends Controller
             'lowStockProducts',
             'dashboardCharts',
             'commissionSummary',
+            'commissionMonth',
+            'refundMonth',
             'latestIncomeCommissions',
             'withdrawalSummary',
             'latestReports',
@@ -227,9 +264,9 @@ class DashboardController extends Controller
     public function updateContactNumbers(Request $request)
     {
         $validated = $request->validate([
-            'admin_cs_whatsapp' => ['nullable', 'string', 'max:40'],
-            'admin_otp_whatsapp' => ['nullable', 'string', 'max:40'],
-        ]);
+            'admin_cs_whatsapp' => WiboostInputRules::nullableNumberRules(40),
+            'admin_otp_whatsapp' => WiboostInputRules::nullableNumberRules(40),
+        ], WiboostInputRules::validationMessages());
 
         SiteSetting::setValue('admin_cs_whatsapp', self::normalizeWhatsappInput($validated['admin_cs_whatsapp'] ?? null));
         SiteSetting::setValue('admin_otp_whatsapp', self::normalizeWhatsappInput($validated['admin_otp_whatsapp'] ?? null));

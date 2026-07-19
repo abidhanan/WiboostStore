@@ -213,7 +213,7 @@
     <div class="relative z-10 flex w-full min-w-0 flex-col overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:rounded-[2.5rem]">
         <div class="table-scroll w-full overflow-x-auto pb-2">
             <div class="inline-block min-w-full p-4 align-middle sm:p-6">
-                <table class="w-full min-w-[1240px] whitespace-nowrap text-left">
+                <table class="w-full min-w-[1460px] whitespace-nowrap text-left">
                     <thead>
                         <tr>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Foto</th>
@@ -222,6 +222,8 @@
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nomor Kontak</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Role</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Masa Member</th>
+                            <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Komisi</th>
+                            <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Poin</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Saldo</th>
                             @if($canManageUsers)
                                 <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Aksi</th>
@@ -255,6 +257,20 @@
                                     @endif
                                 </td>
                                 <td class="px-5 py-4 align-middle sm:py-5">
+                                    @if((float) ($user->commission_total ?? 0) > 0)
+                                        <p class="text-sm font-black text-[#4bc6b9] drop-shadow-sm sm:text-base">{{ $formatRupiah($user->commission_total) }}</p>
+                                    @else
+                                        <span class="text-sm font-black text-[#8faaf3]">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-5 py-4 text-center align-middle sm:py-5">
+                                    @if((int) $user->points > 0)
+                                        <p class="text-sm font-black text-[#5a76c8]">{{ number_format((int) $user->points, 0, ',', '.') }}</p>
+                                    @else
+                                        <span class="text-sm font-black text-[#8faaf3]">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-5 py-4 align-middle sm:py-5">
                                     <p class="text-sm font-black text-[#4bc6b9] drop-shadow-sm sm:text-base">{{ $formatRupiah($user->balance) }}</p>
                                 </td>
                                 @if($canManageUsers)
@@ -278,7 +294,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $canManageUsers ? 8 : 7 }}" class="px-5 py-16 text-center">
+                                <td colspan="{{ $canManageUsers ? 10 : 9 }}" class="px-5 py-16 text-center">
                                     <div class="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-[2rem] border-4 border-white bg-[#f0f5ff] shadow-inner sm:mb-5 sm:h-24 sm:w-24 sm:rounded-[2.5rem]">
                                         <span class="text-4xl font-black text-[#5a76c8] sm:text-5xl">?</span>
                                     </div>
@@ -352,13 +368,27 @@
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Tanggal Jadi Reseller</p>
                             <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $formatDate($user->reseller_joined_at) }}</p>
                         </div>
+                        <div class="admin-detail-panel md:col-span-2">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Tujuan Penarikan</p>
+                            @if(filled($user->reseller_payout_method) || filled($user->reseller_payout_account) || filled($user->reseller_payout_name))
+                                <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $user->reseller_payout_method ?: '-' }}</p>
+                                <p class="mt-1 break-all text-sm font-bold text-[#5a76c8]">{{ $user->reseller_payout_account ?: '-' }}</p>
+                                <p class="mt-1 text-xs font-black uppercase tracking-widest text-[#4bc6b9]">{{ $user->reseller_payout_name ?: '-' }}</p>
+                            @else
+                                <p class="mt-1 text-sm font-black text-[#8faaf3]">-</p>
+                            @endif
+                        </div>
                         <div class="admin-detail-panel admin-detail-panel-soft">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#08a878]">Saldo</p>
                             <p class="mt-1 text-2xl font-black text-[#4bc6b9]">{{ $formatRupiah($user->balance) }}</p>
                         </div>
                         <div class="admin-detail-panel admin-detail-panel-soft">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#08a878]">Komisi</p>
+                            <p class="mt-1 text-2xl font-black text-[#4bc6b9]">{{ (float) ($user->commission_total ?? 0) > 0 ? $formatRupiah($user->commission_total) : '-' }}</p>
+                        </div>
+                        <div class="admin-detail-panel admin-detail-panel-soft">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#08a878]">Poin</p>
-                            <p class="mt-1 text-2xl font-black text-[#5a76c8]">{{ number_format((int) $user->points, 0, ',', '.') }}</p>
+                            <p class="mt-1 text-2xl font-black text-[#5a76c8]">{{ (int) $user->points > 0 ? number_format((int) $user->points, 0, ',', '.') : '-' }}</p>
                         </div>
                     </div>
                 </div>
