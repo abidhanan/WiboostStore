@@ -458,10 +458,53 @@
 
     #checkout_product_price {
         color: #ffffff !important;
+        font-size: 1.5rem !important;
+        line-height: 1.12 !important;
+        white-space: nowrap;
     }
 
     #checkout_original_price {
         color: rgba(255, 255, 255, 0.78) !important;
+    }
+
+    #checkout_product_logo_box {
+        aspect-ratio: 1 / 1 !important;
+        flex: 0 0 5rem !important;
+        height: 5rem !important;
+        width: 5rem !important;
+    }
+
+    #checkout_product_logo_image {
+        aspect-ratio: 1 / 1 !important;
+        display: block;
+        flex: none !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        max-width: 100% !important;
+        object-fit: cover !important;
+        object-position: center !important;
+        width: 100% !important;
+    }
+
+    #checkout_product_logo_emote {
+        font-size: 1.875rem !important;
+        line-height: 1 !important;
+    }
+
+    @media (min-width: 640px) {
+        #checkout_product_price {
+            font-size: 2.25rem !important;
+        }
+
+        #checkout_product_logo_box {
+            flex-basis: 6rem !important;
+            height: 6rem !important;
+            width: 6rem !important;
+        }
+
+        #checkout_product_logo_emote {
+            font-size: 2.25rem !important;
+        }
     }
 
 </style>
@@ -824,12 +867,11 @@
 
             <div class="relative mb-8 flex flex-col justify-between gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white bg-gradient-to-br from-[#8faaf3] to-[#5a76c8] p-8 text-white shadow-xl shadow-[#bde0fe]/40 md:flex-row md:items-center">
                 <div class="relative z-10 flex flex-1 items-center gap-5">
-                    <div id="checkout_product_logo_box" class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] bg-[#f4f9ff] text-[#5a76c8] shadow-inner">
-                        <span id="checkout_product_logo_emote" class="text-4xl font-black leading-none drop-shadow-sm">W</span>
+                    <div id="checkout_product_logo_box" class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.35rem] bg-[#f4f9ff] text-[#5a76c8] shadow-inner sm:h-24 sm:w-24 sm:rounded-[1.5rem]">
+                        <span id="checkout_product_logo_emote" class="text-3xl font-black leading-none drop-shadow-sm sm:text-4xl">W</span>
                         <img id="checkout_product_logo_image" src="" alt="" class="hidden wiboost-square-logo-img drop-shadow-sm">
                     </div>
                     <div>
-                        <span class="mb-3 inline-block rounded-full bg-white/20 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-white shadow-inner border border-white/50">Layanan Terpilih</span>
                         <h3 class="text-2xl md:text-3xl font-black drop-shadow-md leading-tight" id="checkout_product_name">Nama Produk</h3>
                         <p id="checkout_product_description" class="mt-3 hidden max-w-2xl text-sm font-bold leading-relaxed text-white/90"></p>
                     </div>
@@ -845,7 +887,7 @@
                     <div class="text-left">
                         <p class="mb-1 text-base font-black uppercase tracking-widest text-[#e0fbfc]">Total Harga</p>
                         <p class="discount-old-price-light hidden text-2xl font-black text-white/75 line-through decoration-white/80 decoration-2" id="checkout_original_price">Rp 0</p>
-                        <p class="text-4xl font-black text-white drop-shadow-md" id="checkout_product_price">Rp 0</p>
+                        <p class="text-2xl font-black text-white drop-shadow-md sm:text-4xl" id="checkout_product_price">Rp 0</p>
                     </div>
                 </div>
             </div>

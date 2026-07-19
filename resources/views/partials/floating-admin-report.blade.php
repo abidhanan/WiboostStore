@@ -18,7 +18,7 @@
         $mascotPath = public_path("images/wiboost-cs-mascot/{$fileName}");
         $mascotImageSources[$expression] = is_file($mascotPath)
             ? 'data:image/png;base64,'.base64_encode(file_get_contents($mascotPath))
-            : asset("images/wiboost-cs-mascot/{$fileName}").'?v=20260719-cs5';
+            : asset("images/wiboost-cs-mascot/{$fileName}").'?v=20260720-cs7';
     }
 
     $mascotSessionMarker = sha1(session()->getId().'|'.(auth()->id() ?? 'guest'));
@@ -153,7 +153,7 @@
                      loading="eager"
                      decoding="async"
                      fetchpriority="high">
-                <img class="wiboost-cs-mascot-image is-active"
+                <img class="wiboost-cs-mascot-image"
                      data-wiboost-expression="idle"
                      src="{{ $mascotImageSources['idle'] }}"
                      alt=""
@@ -180,9 +180,11 @@
             (() => {
                 const storageKey = 'wiboost_mascot_float_position';
                 const sessionStorageKey = 'wiboost_mascot_float_session';
+                const expressionStorageKey = 'wiboost_mascot_float_expression';
                 const currentSessionMarker = @json($mascotSessionMarker);
                 const dragThreshold = 6;
                 const expressionTimers = new WeakMap();
+                const validExpressions = new Set(['hello', 'idle', 'bored', 'drag']);
 
                 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -199,10 +201,43 @@
                     expressionTimers.set(element, timers);
                 };
 
-                const setExpression = (element, expression) => {
+                const storedExpression = () => {
+                    try {
+                        const expression = localStorage.getItem(expressionStorageKey) || '';
+                        return validExpressions.has(expression) ? expression : null;
+                    } catch (error) {
+                        return null;
+                    }
+                };
+
+                const rememberExpression = (expression) => {
+                    if (!validExpressions.has(expression)) {
+                        return;
+                    }
+
+                    try {
+                        localStorage.setItem(expressionStorageKey, expression);
+                    } catch (error) {}
+                };
+
+                const isGreetingLocked = (element) => Number(element.dataset.wiboostGreetingLockedUntil || 0) > Date.now();
+
+                const isFreshMascotSession = () => {
+                    try {
+                        return localStorage.getItem(sessionStorageKey) !== currentSessionMarker;
+                    } catch (error) {
+                        return true;
+                    }
+                };
+
+                const setExpression = (element, expression, remember = true) => {
                     element.querySelectorAll('[data-wiboost-expression]').forEach((image) => {
                         image.classList.toggle('is-active', image.dataset.wiboostExpression === expression);
                     });
+
+                    if (remember) {
+                        rememberExpression(expression);
+                    }
                 };
 
                 const startExpressionLoop = (element) => {
@@ -212,15 +247,42 @@
                     queueExpression(element, () => startExpressionLoop(element), 16500);
                 };
 
-                const playHelloThenLoop = (element, delay = 2300) => {
+                const startHelloSequence = (element, idleDelay = 2300) => {
                     clearExpressionTimers(element);
                     setExpression(element, 'hello');
-                    queueExpression(element, () => startExpressionLoop(element), delay);
+                    queueExpression(element, () => setExpression(element, 'idle'), idleDelay);
+                    queueExpression(element, () => setExpression(element, 'bored'), idleDelay + 9000);
+                    queueExpression(element, () => startExpressionLoop(element), idleDelay + 16500);
+                };
+
+                const playHelloThenLoop = (element, delay = 2300) => {
+                    startHelloSequence(element, delay);
+                };
+
+                const resumeStoredExpression = (element, expression = storedExpression()) => {
+                    clearExpressionTimers(element);
+                    const safeExpression = validExpressions.has(expression) ? expression : 'idle';
+                    setExpression(element, safeExpression);
+
+                    if (safeExpression === 'bored') {
+                        queueExpression(element, () => startExpressionLoop(element), 7000);
+                    } else if (safeExpression === 'hello' || safeExpression === 'drag') {
+                        queueExpression(element, () => setExpression(element, 'idle'), 2300);
+                        queueExpression(element, () => setExpression(element, 'bored'), 11300);
+                        queueExpression(element, () => startExpressionLoop(element), 18800);
+                    } else {
+                        queueExpression(element, () => setExpression(element, 'bored'), 9000);
+                        queueExpression(element, () => startExpressionLoop(element), 16500);
+                    }
                 };
 
                 const playDragFinishedWelcome = (element) => {
-                    element.dataset.wiboostJustDraggedUntil = String(Date.now() + 2600);
-                    playHelloThenLoop(element, 2600);
+                    element.dataset.wiboostJustDraggedUntil = String(Date.now() + 3600);
+                    element.dataset.wiboostGreetingLockedUntil = String(Date.now() + 3600);
+                    startHelloSequence(element, 2600);
+                    const keepHelloSequence = () => startHelloSequence(element, 2600);
+                    window.requestAnimationFrame?.(keepHelloSequence);
+                    window.setTimeout(keepHelloSequence, 80);
                 };
 
                 const viewportBounds = (element) => {
@@ -302,11 +364,15 @@
                     }
 
                     element.dataset.wiboostMascotReady = 'true';
+                    const lastExpression = storedExpression();
+                    const hasStoredExpression = Boolean(lastExpression);
+                    setExpression(element, lastExpression || 'idle', false);
+
                     const shouldGreet = restorePosition(element);
-                    if (shouldGreet) {
+                    if (shouldGreet && !hasStoredExpression) {
                         playHelloThenLoop(element);
                     } else {
-                        startExpressionLoop(element);
+                        resumeStoredExpression(element, lastExpression);
                     }
 
                     let pointerId = null;
@@ -332,6 +398,9 @@
                         if (pointerId === null) {
                             element.classList.remove('is-hovering');
                             resetTilt(element);
+                            if (isGreetingLocked(element)) {
+                                return;
+                            }
                             startExpressionLoop(element);
                         }
                     });
@@ -422,6 +491,9 @@
                         element.classList.remove('is-pressing', 'is-dragging');
                         resetTilt(element);
                         if (Number(element.dataset.wiboostJustDraggedUntil || 0) > Date.now()) {
+                            return;
+                        }
+                        if (isGreetingLocked(element)) {
                             return;
                         }
                         if (element.matches(':hover')) {

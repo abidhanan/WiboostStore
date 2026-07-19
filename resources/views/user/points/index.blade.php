@@ -54,7 +54,8 @@
                     $isActive = $index === $currentRewardIndex;
                     $isLocked = $index > $currentRewardIndex;
                     $progress = $isCompleted ? 100 : ($isActive ? min(100, (int) round(($currentPoints / max(1, (int) $reward['points'])) * 100)) : 0);
-                    $displayPoints = $isLocked ? 0 : min($currentPoints, (int) $reward['points']);
+                    $displayPoints = $isCompleted ? (int) $reward['points'] : ($isLocked ? 0 : min($currentPoints, (int) $reward['points']));
+                    $progressClass = $isCompleted ? '' : 'transition-all duration-500';
                     $canClaim = $isActive && $currentPoints >= (int) $reward['points'];
                     $remaining = max(0, (int) $reward['points'] - $currentPoints);
                 @endphp
@@ -80,7 +81,7 @@
                             @endif
                         </div>
                         <div class="h-4 overflow-hidden rounded-full border-2 border-white bg-[#eef6ff] shadow-inner">
-                            <div class="h-full rounded-full bg-[#5a76c8] shadow-[0_0_18px_rgba(90,118,200,0.35)] transition-all duration-500" style="width: {{ $progress }}%; min-width: {{ $progress > 0 ? '1rem' : '0' }};"></div>
+                            <div class="h-full rounded-full bg-[#5a76c8] shadow-[0_0_18px_rgba(90,118,200,0.35)] {{ $progressClass }}" style="width: {{ $progress }}%; min-width: {{ $progress > 0 ? '1rem' : '0' }};"></div>
                         </div>
                     </div>
 
