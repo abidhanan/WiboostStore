@@ -49,6 +49,16 @@
          .welcome-cta-gap {
              margin-bottom: clamp(4.5rem, 9vw, 7.5rem);
          }
+         .welcome-hero-section {
+             min-height: 100svh;
+             padding-top: clamp(8.25rem, 15vh, 10.75rem);
+             padding-bottom: clamp(3.25rem, 5.5vh, 4.75rem);
+         }
+         @supports not (height: 100svh) {
+             .welcome-hero-section {
+                 min-height: 100vh;
+             }
+         }
          .welcome-hero-title {
              font-size: 2.6rem;
              line-height: 0.98;
@@ -215,6 +225,11 @@
              }
          }
          @media (min-width: 1024px) {
+             .welcome-hero-section {
+                 padding-top: clamp(11rem, 19vh, 14rem);
+                 padding-bottom: clamp(4.5rem, 9vw, 7.5rem);
+             }
+
              .welcome-hero-title {
                  font-size: 8rem;
              }
@@ -418,7 +433,7 @@
     </nav>
 
     <!-- SECTION HERO & DATA REAL-TIME -->
-    <main class="relative flex items-center justify-center pt-40 pb-24 lg:pt-56 lg:pb-32 bg-wiboost-sky overflow-hidden border-b-[6px] border-[#f0f5ff]">
+    <main class="welcome-hero-section relative flex items-center justify-center bg-wiboost-sky overflow-hidden border-b-[6px] border-[#f0f5ff]">
         <div class="welcome-section-inner max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="inline-block bg-white/80 backdrop-blur-sm text-[#5a76c8] font-black text-sm px-5 py-2 rounded-full mb-6 border-2 border-white shadow-sm">
                 Pusat Kebutuhan Digitalmu!

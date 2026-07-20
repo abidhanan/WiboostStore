@@ -38,7 +38,7 @@ class LoginRequest extends FormRequest
     {
         if ($this->has('email')) {
             $this->merge([
-                'email' => Str::lower(trim((string) $this->input('email'))),
+                'email' => $this->normalizeEmail((string) $this->input('email')),
             ]);
         }
     }
@@ -52,26 +52,72 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        $email = Str::lower(trim((string) $this->input('email')));
+        $email = $this->normalizeEmail((string) $this->input('email'));
         $password = (string) $this->input('password');
 
-        if (! Auth::attempt(['email' => $email, 'password' => $password], $this->boolean('remember'))
-            && ! $this->attemptStoredPassword($email, $password)) {
-            RateLimiter::hit($this->throttleKey());
+        foreach ($this->passwordCandidates($password) as $passwordCandidate) {
+            if (Auth::attempt(['email' => $email, 'password' => $passwordCandidate], $this->boolean('remember'))
+                || $this->attemptStoredPassword($email, $passwordCandidate)) {
+                RateLimiter::clear($this->throttleKey());
 
+                return;
+            }
+        }
+
+        $user = $this->findUserByNormalizedEmail($email);
+
+        RateLimiter::hit($this->throttleKey());
+
+        if ($user && filled($user->google_id)) {
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => 'Akun ini terhubung dengan Google. Silakan masuk memakai tombol Google atau reset kata sandi dulu.',
             ]);
         }
 
-        RateLimiter::clear($this->throttleKey());
+        throw ValidationException::withMessages([
+            'email' => 'Email atau kata sandi belum sesuai.',
+        ]);
+    }
+
+    protected function normalizeEmail(string $email): string
+    {
+        $email = preg_replace('/[\p{Z}\s\p{C}]+/u', '', $email) ?? $email;
+
+        return Str::lower(trim($email));
+    }
+
+    protected function passwordCandidates(string $password): array
+    {
+        $edgeTrimmedPassword = preg_replace('/^[\p{Z}\s\p{C}]+|[\p{Z}\s\p{C}]+$/u', '', $password) ?? trim($password);
+        $withoutInvisible = preg_replace('/\p{Cf}+/u', '', $password) ?? $password;
+        $withoutInvisibleTrimmed = preg_replace('/^[\p{Z}\s\p{C}]+|[\p{Z}\s\p{C}]+$/u', '', $withoutInvisible) ?? trim($withoutInvisible);
+
+        return array_values(array_unique([
+            $password,
+            $edgeTrimmedPassword,
+            $withoutInvisible,
+            $withoutInvisibleTrimmed,
+        ]));
+    }
+
+    protected function findUserByNormalizedEmail(string $email): ?User
+    {
+        $user = User::query()
+            ->whereRaw('LOWER(TRIM(email)) = ?', [$email])
+            ->first();
+
+        if ($user) {
+            return $user;
+        }
+
+        return User::query()
+            ->get()
+            ->first(fn (User $candidate) => $this->normalizeEmail((string) $candidate->email) === $email);
     }
 
     protected function attemptStoredPassword(string $email, string $password): bool
     {
-        $user = User::query()
-            ->whereRaw('LOWER(email) = ?', [$email])
-            ->first();
+        $user = $this->findUserByNormalizedEmail($email);
 
         if (! $user) {
             return false;
@@ -123,6 +169,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower(trim((string) $this->input('email'))).'|'.$this->ip());
+        return Str::transliterate($this->normalizeEmail((string) $this->input('email')).'|'.$this->ip());
     }
 }
