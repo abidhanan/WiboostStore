@@ -8,11 +8,11 @@
     $transaction = $refund->transaction;
     $productName = $transaction?->product?->name ?: ($transaction?->isMembershipPayment() ? 'Membership Wiboost 30 Hari' : 'Produk Dihapus');
     $transactionOptions = $transactions->map(function ($item) {
-        $itemProductName = $item->product?->name ?: ($item->isMembershipPayment() ? 'Membership Wiboost 30 Hari' : 'Produk Dihapus');
+        $userName = $item->user?->name ?? 'Guest';
 
         return [
             'value' => (string) $item->id,
-            'label' => $item->invoice_number . ' - ' . ($item->user?->name ?? 'Guest') . ' - ' . $itemProductName . ' - Rp ' . number_format((int) $item->display_total_payable, 0, ',', '.'),
+            'label' => $item->invoice_number . ' - ' . $userName . ' - Rp ' . number_format((int) $item->display_total_payable, 0, ',', '.'),
         ];
     })->values()->all();
 @endphp

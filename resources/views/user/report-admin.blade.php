@@ -27,27 +27,17 @@
 @endif
 
 <style>
-    html {
-        height: auto !important;
-        overflow-x: hidden !important;
-        overflow-y: auto !important;
-    }
-
     body.wiboost-user-report-page {
-        height: auto !important;
-        max-height: none !important;
         overflow-x: hidden !important;
-        overflow-y: auto !important;
-    }
-
-    body.wiboost-user-report-page main {
-        height: auto !important;
-        max-height: none !important;
-        overflow: visible !important;
     }
 
     body.wiboost-user-report-page footer {
         display: block !important;
+        margin-top: 0 !important;
+    }
+
+    body.wiboost-user-report-page main {
+        padding-bottom: 1.5rem !important;
     }
 
     .report-page-shell {
@@ -55,6 +45,7 @@
         height: auto;
         min-height: auto;
         overflow: visible;
+        padding-bottom: 0 !important;
     }
 
     .report-page-header {
@@ -86,17 +77,15 @@
     }
 
     .report-record-section {
-        display: block;
-        min-height: auto;
-        overflow: visible !important;
-    }
-
-    .report-record-section > label {
-        flex: none;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden !important;
     }
 
     .report-record-empty {
-        flex: none;
+        flex: 1 1 auto;
+        min-height: 18rem;
     }
 
     .report-main-column textarea {
@@ -114,11 +103,6 @@
     }
 
     @media (max-width: 1023px) {
-        body.wiboost-user-report-page main {
-            height: auto !important;
-            max-height: none !important;
-        }
-
         .report-form-grid {
             grid-template-columns: minmax(0, 1fr) !important;
         }
@@ -138,22 +122,40 @@
 
     .report-record-list {
         max-height: none;
+        min-height: 0;
         overflow: visible !important;
-        overscroll-behavior: auto;
-        padding-right: 0;
-    }
-
-    .report-record-list::-webkit-scrollbar {
-        display: initial;
     }
 
     [data-report-record-card] {
         align-items: center;
+        background: #ffffff;
+        border-color: #ffffff;
+        box-shadow: 0 10px 20px rgba(189, 224, 254, 0.12);
+        transition: transform .3s ease, border-color .3s ease, background-color .3s ease, box-shadow .3s ease;
+    }
+
+    [data-report-record-card]:hover {
+        border-color: #bde0fe;
+        transform: translateY(-4px);
+    }
+
+    [data-report-record-card].is-selected,
+    [data-report-record-card].is-selected:hover {
+        background: #e9fff0;
+        border-color: #25D366;
+        transform: none;
     }
 
     [data-report-record-dot] {
         align-self: center;
+        background: #ffffff;
+        border-color: #bde0fe;
         margin-top: 0 !important;
+    }
+
+    [data-report-record-card].is-selected [data-report-record-dot] {
+        background: #25D366;
+        border-color: #25D366;
     }
 
     .report-record-invoice,
@@ -167,10 +169,6 @@
     }
 
     @media (max-width: 640px) {
-        .report-record-list {
-            max-height: none;
-        }
-
         [data-report-record-card] {
             border-radius: 1.45rem;
             gap: 0.65rem;
@@ -293,11 +291,11 @@
             <p class="mt-2 text-sm font-bold text-[#8faaf3]">Hubungi admin website untuk melengkapi konfigurasi kontak.</p>
         </section>
     @else
-        <form method="POST" action="{{ route('user.report.admin.store') }}" enctype="multipart/form-data" class="report-form space-y-6" novalidate onsubmit="return lockAdminReportSubmit(this, event)">
+        <form method="POST" action="{{ route('user.report.admin.store') }}" enctype="multipart/form-data" class="report-form space-y-6" novalidate data-requires-record="{{ $needsRecord ? 'true' : 'false' }}" onsubmit="return lockAdminReportSubmit(this, event)">
             @csrf
             <input type="hidden" name="category_key" value="{{ $selectedKey }}">
 
-            <div class="report-form-grid grid gap-6 lg:grid-cols-[1fr_0.85fr]">
+            <div class="report-form-grid grid gap-6">
                 <div class="report-main-column space-y-6">
                     <section class="rounded-[2.5rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/25 md:p-6">
                         <label for="issue" class="mb-3 ml-1 block text-xs font-black uppercase tracking-widest text-[#5a76c8]">Tulis Kendala</label>
@@ -332,26 +330,32 @@
                     </section>
 
                     @if($needsRecord)
-                        <section class="report-record-section rounded-[2.5rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/25 md:p-6">
-                            <label class="mb-3 ml-1 block text-xs font-black uppercase tracking-widest text-[#5a76c8]">
-                                {{ $selectedKey === 'deposit' ? 'Pilih Riwayat Deposit' : ($selectedKey === 'commission' ? 'Pilih Riwayat Komisi' : 'Pilih Riwayat Pesanan') }}
-                            </label>
+                        @php
+                            $recordBoxTitle = $selectedKey === 'deposit' ? 'Pilih Riwayat Deposit' : ($selectedKey === 'commission' ? 'Pilih Riwayat Komisi' : 'Pilih Riwayat Pesanan');
+                        @endphp
+                        <section class="report-record-section rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm p-0 shadow-xl shadow-[#bde0fe]/30">
+                            <div class="flex shrink-0 items-center gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-white px-6 py-5 md:px-8 md:py-6">
+                                <label class="text-xl font-black text-[#2b3a67]">{{ $recordBoxTitle }}</label>
+                            </div>
 
                             @if($records->isEmpty())
-                                <div class="report-record-empty rounded-[2rem] border-4 border-dashed border-[#bde0fe] bg-[#f4f9ff] p-6 text-center">
-                                    <p class="text-sm font-black text-[#5a76c8]">Belum ada data terkait yang bisa dipilih.</p>
-                                    <p class="mt-2 text-xs font-bold text-[#8faaf3]">Pilih jenis kendala lain yang memiliki riwayat pesanan, deposit, atau komisi.</p>
+                                <div class="report-record-empty flex flex-1 items-center justify-center bg-[#f8faff]/50 p-5">
+                                    <div class="w-full rounded-[2rem] border-4 border-dashed border-[#bde0fe] bg-white/60 p-6 text-center">
+                                        <div class="mb-3 flex justify-center text-[#5a76c8] opacity-70">@include('partials.wiboost-icon', ['name' => 'receipt', 'class' => 'h-12 w-12'])</div>
+                                        <p class="text-sm font-black text-[#5a76c8]">Belum ada data terkait yang bisa dipilih.</p>
+                                        <p class="mt-2 text-xs font-bold text-[#8faaf3]">Pilih jenis kendala lain yang memiliki riwayat pesanan, deposit, atau komisi.</p>
+                                    </div>
                                 </div>
                             @else
-                                <div class="report-record-list space-y-3">
+                                <div class="report-record-list space-y-4 bg-[#f8faff]/50 p-6">
                                     @foreach($records as $record)
                                         @php
                                             $recordInputId = 'report-record-' . $loop->index;
                                         @endphp
                                         <label for="{{ $recordInputId }}" class="block cursor-pointer" data-report-record-option onclick="selectReportRecord(this)">
                                             <input id="{{ $recordInputId }}" type="radio" name="record_id" value="{{ $record['id'] }}" class="sr-only" data-report-record-input onchange="selectReportRecord(this.closest('[data-report-record-option]'))" required @checked($oldRecordId === $record['id'])>
-                                            <span data-report-record-card class="flex items-center gap-3 rounded-[1.75rem] border-4 {{ $oldRecordId === $record['id'] ? 'border-[#25D366] bg-[#e9fff0]' : 'border-white bg-[#f8fbff]' }} px-5 py-4 text-left shadow-sm transition">
-                                                <span data-report-record-dot class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 {{ $oldRecordId === $record['id'] ? 'border-[#25D366] bg-[#25D366]' : 'border-[#bde0fe] bg-white' }}">
+                                            <span data-report-record-card class="report-record-card flex items-center gap-3 rounded-[1.5rem] border-2 p-5 text-left {{ $oldRecordId === $record['id'] ? 'is-selected' : '' }}">
+                                                <span data-report-record-dot class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2">
                                                     <span class="h-2 w-2 rounded-full bg-white"></span>
                                                 </span>
                                                 <span class="min-w-0 flex-1">
@@ -457,7 +461,6 @@
         document.querySelectorAll('[data-report-record-option]').forEach((item) => {
             const input = item.querySelector('[data-report-record-input]');
             const card = item.querySelector('[data-report-record-card]');
-            const dot = item.querySelector('[data-report-record-dot]');
             const isActive = item === option;
 
             if (input) {
@@ -465,17 +468,7 @@
             }
 
             if (card) {
-                card.classList.toggle('border-[#25D366]', isActive);
-                card.classList.toggle('bg-[#e9fff0]', isActive);
-                card.classList.toggle('border-white', !isActive);
-                card.classList.toggle('bg-[#f8fbff]', !isActive);
-            }
-
-            if (dot) {
-                dot.classList.toggle('border-[#25D366]', isActive);
-                dot.classList.toggle('bg-[#25D366]', isActive);
-                dot.classList.toggle('border-[#bde0fe]', !isActive);
-                dot.classList.toggle('bg-white', !isActive);
+                card.classList.toggle('is-selected', isActive);
             }
         });
 
@@ -491,12 +484,12 @@
         const issue = form.querySelector('#issue');
         const proof = form.querySelector('#proof');
         const recordInputs = Array.from(form.querySelectorAll('[data-report-record-input]'));
+        const requiresRecord = form.dataset.requiresRecord === 'true';
 
         return Boolean(category?.value?.trim())
             && Boolean(issue?.value?.trim()) && issue.value.trim().length >= 5
             && Boolean(proof?.files?.length)
-            && recordInputs.length > 0
-            && recordInputs.some((input) => input.checked);
+            && (!requiresRecord || (recordInputs.length > 0 && recordInputs.some((input) => input.checked)));
     }
 
     function setReportButtonReady(button, isReady) {

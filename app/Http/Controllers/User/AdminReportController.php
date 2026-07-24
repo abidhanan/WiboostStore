@@ -26,7 +26,9 @@ class AdminReportController extends Controller
             ? $categories->firstWhere('key', $selectedKey)
             : null;
 
-        $records = $selectedCategory ? $this->recordsFor($selectedCategory) : collect();
+        $records = ($selectedCategory && ($selectedCategory['needs_record'] ?? false))
+            ? $this->recordsFor($selectedCategory)
+            : collect();
         $adminNumber = WiboostAdminContact::whatsappNumber();
 
         return view('user.report-admin', [
@@ -44,7 +46,7 @@ class AdminReportController extends Controller
         $validated = $request->validate([
             'category_key' => ['required', 'string', Rule::in($categories->pluck('key')->all())],
             'issue' => 'required|string|min:5|max:2000',
-            'record_id' => 'required|string|max:100',
+            'record_id' => 'nullable|string|max:100',
             'proof' => 'required|file|mimes:jpg,jpeg,png,webp,gif,heic,heif|max:12288',
         ], [
             'category_key.required' => 'Pilih jenis kendala terlebih dahulu.',
@@ -58,11 +60,13 @@ class AdminReportController extends Controller
 
         $selectedCategory = $categories->firstWhere('key', (string) $validated['category_key'])
             ?? $categories->firstWhere('key', 'umum');
-        $records = $this->recordsFor($selectedCategory);
+        $records = ($selectedCategory['needs_record'] ?? false)
+            ? $this->recordsFor($selectedCategory)
+            : collect();
 
         $selectedRecord = $records->firstWhere('id', $validated['record_id'] ?? null);
 
-        if (! $selectedRecord) {
+        if (($selectedCategory['needs_record'] ?? false) && ! $selectedRecord) {
             return back()
                 ->withInput()
                 ->withErrors(['record_id' => 'Data yang dipilih tidak ditemukan. Pilih ulang dari daftar yang tersedia.']);
@@ -158,7 +162,7 @@ class AdminReportController extends Controller
             ['key' => 'deposit', 'label' => 'Deposit', 'record_type' => 'deposit', 'needs_record' => true],
             ['key' => 'transaction', 'label' => 'Transaksi', 'record_type' => 'general', 'needs_record' => true],
             ['key' => 'commission', 'label' => 'Komisi', 'record_type' => 'commission', 'needs_record' => true],
-            ['key' => 'umum', 'label' => 'Umum', 'record_type' => 'general', 'needs_record' => true],
+            ['key' => 'umum', 'label' => 'Umum', 'record_type' => 'general', 'needs_record' => false],
         ];
     }
 

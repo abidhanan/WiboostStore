@@ -206,37 +206,131 @@ class User extends Authenticatable
 
     public function sendMembershipJoinedEmail(): void
     {
-        if (! filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
-            return;
-        }
-
-        try {
-            Mail::raw(
-                "Halo {$this->short_name},\n\nSelamat bergabung menjadi member Wiboost Store!\n\nMembership kamu sudah aktif. Nikmati produk dan layanan dengan harga yang lebih murah serta bebas biaya admin untuk transaksi.\n\nTerima kasih,\nWiboost Store",
-                function ($message) {
-                    $message->to($this->email, $this->name)
-                        ->subject('Selamat Bergabung Menjadi Member Wiboost Store');
-                }
-            );
-        } catch (\Throwable $exception) {
-            report($exception);
-        }
+        $this->sendAccountStatusEmail(
+            subject: 'Selamat Bergabung Menjadi Member Wiboost Store',
+            headline: 'Membership Aktif!',
+            badge: 'Member Wiboost',
+            intro: 'Membership kamu sudah aktif. Nikmati produk dan layanan dengan harga yang jauh lebih murah serta bebas biaya admin untuk transaksi.',
+            accentColor: '#8b5cf6',
+            actionLabel: 'Buka Dashboard Member',
+            actionUrl: route('user.membership.index'),
+            rows: [
+                'Status Akun' => 'Member',
+                'Durasi Membership' => '30 Hari',
+                'Benefit Utama' => 'Harga lebih murah dan bebas biaya admin',
+            ],
+        );
     }
 
     public function sendResellerJoinedEmail(): void
     {
+        $this->sendAccountStatusEmail(
+            subject: 'Selamat Bergabung Menjadi Reseller Wiboost Store',
+            headline: 'Reseller Aktif!',
+            badge: 'Reseller Wiboost',
+            intro: 'Dashboard reseller kamu sudah aktif. Kamu bisa mulai promosikan produk dan mendapatkan komisi dari setiap transaksi sukses.',
+            accentColor: '#f2b544',
+            actionLabel: 'Buka Dashboard Reseller',
+            actionUrl: route('user.reseller.index'),
+            rows: [
+                'Status Akun' => 'Reseller',
+                'Komisi' => 'Masuk otomatis dari transaksi sukses',
+                'Penarikan Minimal' => 'Rp 20.000',
+            ],
+        );
+    }
+
+    protected function sendAccountStatusEmail(
+        string $subject,
+        string $headline,
+        string $badge,
+        string $intro,
+        string $accentColor,
+        string $actionLabel,
+        string $actionUrl,
+        array $rows
+    ): void {
         if (! filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
             return;
         }
 
+        $safe = static fn ($value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+        $logoPath = public_path('images/wiboost-logo-nav.png');
+        $logoUrl = '__WIBOOST_INLINE_LOGO__';
+        $rowHtml = '';
+
+        foreach ($rows as $label => $value) {
+            $rowHtml .= '
+                <tr>
+                    <td style="padding:0 0 10px;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="width:100%;border-collapse:separate;border-spacing:0;border:2px solid #dbeafe;border-radius:18px;background:#ffffff;">
+                            <tr>
+                                <td style="padding:14px 16px;">
+                                    <p style="margin:0 0 5px;font-size:10px;line-height:1.3;font-weight:900;letter-spacing:1.6px;text-transform:uppercase;color:#5a76c8;">'.$safe($label).'</p>
+                                    <p style="margin:0;font-size:16px;line-height:1.45;font-weight:900;color:#2b3a67;word-break:break-word;">'.$safe($value).'</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>';
+        }
+
+        $html = '<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="x-apple-disable-message-reformatting">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <title>'.$safe($subject).'</title>
+</head>
+<body style="margin:0;padding:0;background:#eff6ff;font-family:Arial,Helvetica,sans-serif;color:#2b3a67;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#eff6ff" style="width:100%;border-collapse:collapse;background:#eff6ff;">
+    <tr>
+        <td align="center" style="padding:22px 10px;">
+            <table role="presentation" width="640" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="width:100%;max-width:640px;border-collapse:separate;border-spacing:0;background:#ffffff;border:4px solid #dbeafe;border-radius:30px;overflow:hidden;box-shadow:0 22px 60px rgba(90,118,200,.18);">
+                <tr>
+                    <td align="center" bgcolor="#dbeafe" style="padding:30px 22px;background:#dbeafe;background-image:linear-gradient(135deg,#bfdbfe 0%,#dbeafe 55%,#eff6ff 100%);text-align:center;">
+                        <img src="'.$safe($logoUrl).'" alt="Logo Wiboost Store" width="72" height="72" style="display:block;width:72px;height:72px;margin:0 auto 12px;border:0;border-radius:999px;object-fit:contain;">
+                        <p style="margin:0;font-size:24px;line-height:1.15;font-weight:900;color:#2b3a67;text-align:center;">Wiboost <span style="color:#5a76c8;">Store</span></p>
+                        <p style="display:inline-block;margin:22px auto 0;padding:8px 18px;border-radius:999px;background:#ffffff;color:'.$safe($accentColor).';font-size:11px;line-height:1.3;font-weight:900;letter-spacing:1.8px;text-transform:uppercase;box-shadow:0 8px 20px rgba(90,118,200,.14);">'.$safe($badge).'</p>
+                        <h1 style="margin:18px 0 10px;font-size:30px;line-height:1.12;font-weight:900;color:#2b3a67;text-align:center;">'.$safe($headline).'</h1>
+                        <p style="margin:0 auto;max-width:520px;font-size:15px;line-height:1.65;font-weight:700;color:#5a76c8;text-align:center;">Halo '.$safe($this->short_name).', '.$safe($intro).'</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td bgcolor="#f8fbff" style="padding:22px;background:#f8fbff;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:separate;border-spacing:0;">
+                            '.$rowHtml.'
+                        </table>
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;margin-top:18px;border-collapse:collapse;">
+                            <tr>
+                                <td align="center" style="text-align:center;">
+                                    <a href="'.$safe($actionUrl).'" target="_blank" style="display:inline-block;min-width:210px;border:3px solid #ffffff;border-radius:999px;background:#5a76c8;color:#ffffff;font-size:14px;line-height:1.2;font-weight:900;text-align:center;text-decoration:none;padding:15px 24px;box-shadow:0 14px 28px rgba(90,118,200,.25);">'.$safe($actionLabel).'</a>
+                                </td>
+                            </tr>
+                        </table>
+                        <p style="margin:24px 0 2px;text-align:center;font-size:11px;line-height:1.6;font-weight:700;color:#5a76c8;">Email ini otomatis dikirim oleh sistem Wiboost Store.</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>';
+
         try {
-            Mail::raw(
-                "Halo {$this->short_name},\n\nSelamat bergabung menjadi reseller Wiboost Store!\n\nDashboard reseller kamu sudah aktif. Kamu bisa mulai promosikan produk dan mendapatkan komisi dari transaksi sukses.\n\nTerima kasih,\nWiboost Store",
-                function ($message) {
+            Mail::send([], [], function ($message) use ($subject, $html, $logoPath) {
+                    $inlineLogoUrl = file_exists($logoPath)
+                        ? $message->embed($logoPath)
+                        : secure_url('images/wiboost-logo-nav.png').'?v=20260723-mail';
+
                     $message->to($this->email, $this->name)
-                        ->subject('Selamat Bergabung Menjadi Reseller Wiboost Store');
-                }
-            );
+                        ->subject($subject)
+                        ->html(str_replace('__WIBOOST_INLINE_LOGO__', $inlineLogoUrl, $html));
+            });
         } catch (\Throwable $exception) {
             report($exception);
         }

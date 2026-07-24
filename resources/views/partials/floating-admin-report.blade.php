@@ -18,7 +18,7 @@
         $mascotPath = public_path("images/wiboost-cs-mascot/{$fileName}");
         $mascotImageSources[$expression] = is_file($mascotPath)
             ? 'data:image/png;base64,'.base64_encode(file_get_contents($mascotPath))
-            : asset("images/wiboost-cs-mascot/{$fileName}").'?v=20260720-cs7';
+            : asset("images/wiboost-cs-mascot/{$fileName}").'?v=20260720-cs8';
     }
 
     $mascotSessionMarker = sha1(session()->getId().'|'.(auth()->id() ?? 'guest'));
@@ -181,6 +181,7 @@
                 const storageKey = 'wiboost_mascot_float_position';
                 const sessionStorageKey = 'wiboost_mascot_float_session';
                 const expressionStorageKey = 'wiboost_mascot_float_expression';
+                const forceHelloStorageKey = 'wiboost_mascot_force_hello';
                 const currentSessionMarker = @json($mascotSessionMarker);
                 const dragThreshold = 6;
                 const expressionTimers = new WeakMap();
@@ -207,6 +208,17 @@
                         return validExpressions.has(expression) ? expression : null;
                     } catch (error) {
                         return null;
+                    }
+                };
+
+                const consumeForcedHello = () => {
+                    try {
+                        const shouldForce = sessionStorage.getItem(forceHelloStorageKey) === '1';
+                        sessionStorage.removeItem(forceHelloStorageKey);
+
+                        return shouldForce;
+                    } catch (error) {
+                        return false;
                     }
                 };
 
@@ -247,7 +259,7 @@
                     queueExpression(element, () => startExpressionLoop(element), 16500);
                 };
 
-                const startHelloSequence = (element, idleDelay = 2300) => {
+                const startHelloSequence = (element, idleDelay = 3600) => {
                     clearExpressionTimers(element);
                     setExpression(element, 'hello');
                     queueExpression(element, () => setExpression(element, 'idle'), idleDelay);
@@ -255,7 +267,7 @@
                     queueExpression(element, () => startExpressionLoop(element), idleDelay + 16500);
                 };
 
-                const playHelloThenLoop = (element, delay = 2300) => {
+                const playHelloThenLoop = (element, delay = 3600) => {
                     startHelloSequence(element, delay);
                 };
 
@@ -267,9 +279,9 @@
                     if (safeExpression === 'bored') {
                         queueExpression(element, () => startExpressionLoop(element), 7000);
                     } else if (safeExpression === 'hello' || safeExpression === 'drag') {
-                        queueExpression(element, () => setExpression(element, 'idle'), 2300);
-                        queueExpression(element, () => setExpression(element, 'bored'), 11300);
-                        queueExpression(element, () => startExpressionLoop(element), 18800);
+                        queueExpression(element, () => setExpression(element, 'idle'), 3600);
+                        queueExpression(element, () => setExpression(element, 'bored'), 12600);
+                        queueExpression(element, () => startExpressionLoop(element), 20100);
                     } else {
                         queueExpression(element, () => setExpression(element, 'bored'), 9000);
                         queueExpression(element, () => startExpressionLoop(element), 16500);
@@ -277,10 +289,10 @@
                 };
 
                 const playDragFinishedWelcome = (element) => {
-                    element.dataset.wiboostJustDraggedUntil = String(Date.now() + 3600);
-                    element.dataset.wiboostGreetingLockedUntil = String(Date.now() + 3600);
-                    startHelloSequence(element, 2600);
-                    const keepHelloSequence = () => startHelloSequence(element, 2600);
+                    element.dataset.wiboostJustDraggedUntil = String(Date.now() + 5400);
+                    element.dataset.wiboostGreetingLockedUntil = String(Date.now() + 5400);
+                    startHelloSequence(element, 4200);
+                    const keepHelloSequence = () => startHelloSequence(element, 4200);
                     window.requestAnimationFrame?.(keepHelloSequence);
                     window.setTimeout(keepHelloSequence, 80);
                 };
@@ -369,7 +381,9 @@
                     setExpression(element, lastExpression || 'idle', false);
 
                     const shouldGreet = restorePosition(element);
-                    if (shouldGreet && !hasStoredExpression) {
+                    if (consumeForcedHello()) {
+                        playHelloThenLoop(element, 9000);
+                    } else if (shouldGreet && !hasStoredExpression) {
                         playHelloThenLoop(element);
                     } else {
                         resumeStoredExpression(element, lastExpression);
@@ -538,6 +552,22 @@
                 const setupAllMascots = () => {
                     document.querySelectorAll('[data-wiboost-mascot-float]').forEach(setupMascot);
                 };
+
+                window.wiboostMascotForceHello = (delay = 9000) => {
+                    document.querySelectorAll('[data-wiboost-mascot-float]').forEach((element) => {
+                        if (!element || element.dataset.wiboostMascotReady !== 'true') {
+                            return;
+                        }
+
+                        playHelloThenLoop(element, delay);
+                    });
+                };
+
+                window.dispatchEvent(new CustomEvent('wiboost:mascot-ready'));
+
+                window.addEventListener('wiboost:display-closed', () => {
+                    window.wiboostMascotForceHello?.(9000);
+                });
 
                 setupAllMascots();
 

@@ -37,6 +37,8 @@ class DashboardController extends Controller
         $totalTransactionsMonth = Transaction::whereMonth('created_at', $currentMonth)
             ->whereYear('created_at', $currentYear)
             ->where('order_status', '!=', 'failed')
+            ->whereNull('refunded_at')
+            ->doesntHave('refund')
             ->where(function ($query) {
                 $query->where('payment_method', '!=', 'tripay')
                     ->orWhereNull('payment_method')
@@ -47,6 +49,8 @@ class DashboardController extends Controller
 
         $revenueMonth = Transaction::where('payment_status', 'paid')
             ->where('order_status', '!=', 'failed')
+            ->whereNull('refunded_at')
+            ->doesntHave('refund')
             ->whereMonth('created_at', $currentMonth)
             ->whereYear('created_at', $currentYear)
             ->where($activeProductOrMembership)
@@ -97,6 +101,8 @@ class DashboardController extends Controller
         $paidTransactionsForChart = Transaction::where('created_at', '>=', $chartStart)
             ->where('payment_status', 'paid')
             ->where('order_status', '!=', 'failed')
+            ->whereNull('refunded_at')
+            ->doesntHave('refund')
             ->where($activeProductOrMembership)
             ->get(['created_at', 'amount']);
 
@@ -138,6 +144,8 @@ class DashboardController extends Controller
             ->selectRaw('COALESCE(SUM(amount), 0) as revenue_sum')
             ->where('payment_status', 'paid')
             ->where('order_status', '!=', 'failed')
+            ->whereNull('refunded_at')
+            ->doesntHave('refund')
             ->whereNotNull('product_id')
             ->whereHas('product', fn ($query) => $query->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()))
             ->groupBy('product_id')

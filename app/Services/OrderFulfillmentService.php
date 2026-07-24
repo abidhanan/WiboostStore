@@ -362,7 +362,7 @@ class OrderFulfillmentService
             'target_notes' => $response['message'] ?? $transaction->target_notes,
         ]);
 
-        $nextStatus = $response['order_status'] ?? 'processing';
+        $nextStatus = $this->normalizeProviderOrderStatus($response['order_status'] ?? 'processing');
 
         if ($nextStatus === 'success') {
             $this->markOrderSuccessful($transaction->fresh(['product', 'user']), $response['message'] ?? null);
@@ -384,6 +384,23 @@ class OrderFulfillmentService
         }
 
         return 'processing';
+    }
+
+    protected function normalizeProviderOrderStatus(mixed $status): string
+    {
+        $statusText = Str::lower(trim((string) $status));
+
+        return match (true) {
+            str_contains($statusText, 'partial'),
+            str_contains($statusText, 'error'),
+            str_contains($statusText, 'failed'),
+            str_contains($statusText, 'gagal'),
+            str_contains($statusText, 'cancel') => 'failed',
+            str_contains($statusText, 'success'),
+            str_contains($statusText, 'sukses'),
+            str_contains($statusText, 'complete') => 'success',
+            default => 'processing',
+        };
     }
 
     protected function validateOrderSosmedProviderProduct(Product $product): array
@@ -815,7 +832,13 @@ class OrderFulfillmentService
             return;
         }
 
-        $nextStatus = $response['order_status'] ?? 'processing';
+        $nextStatus = $this->normalizeProviderOrderStatus($response['order_status'] ?? 'processing');
+
+        if ($nextStatus === 'failed') {
+            $this->markAsFailed($transaction, $response['message'] ?? 'Provider menandai pesanan gagal.', $response['raw'] ?? $response);
+
+            return;
+        }
 
         $transaction->update([
             'order_status' => $nextStatus,
@@ -1266,11 +1289,16 @@ class OrderFulfillmentService
             return;
         }
 
-        if ($transaction->payment_status !== 'paid') {
+        if ($previousStatus === $transaction->order_status) {
             return;
         }
 
-        if ($previousStatus === $transaction->order_status) {
+        if ($transaction->order_status === 'failed' || $transaction->payment_status === 'failed') {
+            $transaction->sendFailedStatusEmailIfNeeded();
+            return;
+        }
+
+        if ($transaction->payment_status !== 'paid') {
             return;
         }
 

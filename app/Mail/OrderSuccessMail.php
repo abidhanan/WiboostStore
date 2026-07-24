@@ -22,7 +22,9 @@ class OrderSuccessMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $statusLabel = $this->transaction->order_status === 'failed' ? 'Gagal' : 'Berhasil';
+        $statusLabel = $this->transaction->order_status === 'failed' || $this->transaction->payment_status === 'failed'
+            ? 'Gagal'
+            : 'Berhasil';
 
         return new Envelope(
             subject: 'Pesanan Wiboost ' . $statusLabel . ' - ' . $this->transaction->invoice_number,

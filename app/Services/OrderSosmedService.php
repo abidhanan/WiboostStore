@@ -558,17 +558,17 @@ class OrderSosmedService
     {
         $statusText = strtolower((string) ($this->extractProviderStatusText($body) ?? ''));
         $orderStatus = match (true) {
-            str_contains($statusText, 'complete'),
-            str_contains($statusText, 'completed'),
-            str_contains($statusText, 'success'),
-            str_contains($statusText, 'sukses'),
-            str_contains($statusText, 'partial') => 'success',
+            str_contains($statusText, 'partial'),
             str_contains($statusText, 'cancel'),
             str_contains($statusText, 'canceled'),
             str_contains($statusText, 'cancelled'),
             str_contains($statusText, 'error'),
             str_contains($statusText, 'failed'),
             str_contains($statusText, 'gagal') => 'failed',
+            str_contains($statusText, 'complete'),
+            str_contains($statusText, 'completed'),
+            str_contains($statusText, 'success'),
+            str_contains($statusText, 'sukses') => 'success',
             default => 'processing',
         };
 

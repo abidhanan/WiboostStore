@@ -1097,37 +1097,67 @@
                     return;
                 }
 
-                const returnTo = new URLSearchParams(window.location.search).get('return_to');
-                if (returnTo) {
-                    try {
-                        const returnUrl = new URL(returnTo, window.location.origin);
+                const sameOriginUrl = (value) => {
+                    if (!value || value === '#') {
+                        return null;
+                    }
 
-                        if (returnUrl.origin === window.location.origin) {
-                            event.preventDefault();
-                            if (window.wiboostBackDelayActive) {
-                                return;
-                            }
-                            window.wiboostBackDelayActive = true;
-                            backLink.classList.add('is-backing', 'pointer-events-none');
-                            window.setTimeout(() => {
-                                window.location.href = returnUrl.href;
-                            }, 340);
-                            return;
-                        }
-                    } catch (error) {}
+                    try {
+                        const url = new URL(value, window.location.origin);
+
+                        return url.origin === window.location.origin ? url.href : null;
+                    } catch (error) {
+                        return null;
+                    }
+                };
+
+                const resolveBackTarget = () => {
+                    const returnTo = new URLSearchParams(window.location.search).get('return_to');
+                    const returnTarget = sameOriginUrl(returnTo);
+
+                    if (returnTarget) {
+                        return returnTarget;
+                    }
+
+                    const hrefTarget = sameOriginUrl(backLink.getAttribute('href'));
+
+                    if (hrefTarget) {
+                        return hrefTarget;
+                    }
+
+                    const referrerTarget = sameOriginUrl(document.referrer);
+
+                    if (referrerTarget && referrerTarget !== window.location.href) {
+                        return referrerTarget;
+                    }
+
+                    return null;
+                };
+
+                const backTarget = resolveBackTarget();
+                const useHistoryFallback = !backTarget && window.history.length > 1;
+
+                if (!backTarget && !useHistoryFallback) {
+                    return;
                 }
 
-                if (window.history.length > 1) {
-                    event.preventDefault();
-                    if (window.wiboostBackDelayActive) {
+                event.preventDefault();
+
+                if (window.wiboostBackDelayActive) {
+                    return;
+                }
+
+                window.wiboostBackDelayActive = true;
+                backLink.classList.add('is-backing', 'pointer-events-none');
+
+                window.setTimeout(() => {
+                    if (backTarget) {
+                        window.location.href = backTarget;
                         return;
                     }
-                    window.wiboostBackDelayActive = true;
-                    backLink.classList.add('is-backing', 'pointer-events-none');
-                    window.setTimeout(() => {
-                        window.history.back();
-                    }, 340);
-                }
+
+                    window.history.back();
+                }, 260);
             });
 
             document.addEventListener('click', function (event) {

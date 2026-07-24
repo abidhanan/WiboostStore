@@ -75,9 +75,9 @@ class XoftwarePaymentService
 
     protected function membershipBuyerFeeShare(): float
     {
-        $share = (float) config('xoftware.buyer_fee_share', 0.5);
+        $share = (float) config('xoftware.buyer_fee_share', 0.7);
 
-        return $share > 0 ? min(1.0, $share) : 0.5;
+        return $share > 0 ? min(1.0, $share) : 0.7;
     }
 
     protected function createPayment(
@@ -439,7 +439,7 @@ class XoftwarePaymentService
         $feeConfig = $this->feeConfigForChannel($channelCode);
         $buyerFeeShare = $buyerFeeShareOverride !== null
             ? max(0.0, min(1.0, $buyerFeeShareOverride))
-            : max(0.0, min(1.0, (float) config('xoftware.buyer_fee_share', 0.5)));
+            : max(0.0, min(1.0, (float) config('xoftware.buyer_fee_share', 0.7)));
         $buyerAdminFee = 0;
 
         if ($feeDirection === 'merchant' && $buyerFeeShare > 0) {

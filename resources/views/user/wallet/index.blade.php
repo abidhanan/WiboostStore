@@ -41,8 +41,8 @@
         </div>
     @endif
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-1 space-y-8">
+    <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
+        <div class="lg:col-span-1 space-y-8" data-wallet-left-column>
             
             <div class="bg-gradient-to-br from-[#8faaf3] to-[#5a76c8] rounded-[2.5rem] p-8 shadow-xl shadow-[#5a76c8]/30 text-white relative overflow-hidden border-4 border-white hover:scale-[1.02] transition-transform duration-300">
                 <div class="relative z-10">
@@ -56,7 +56,7 @@
             </div>
 
 
-            <div class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/30">
+            <div class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/30" data-wallet-topup-box>
                 <div class="flex items-center gap-2 mb-6 ml-2">
                     <span class="text-[#5a76c8]">@include('partials.wiboost-icon', ['name' => 'zap', 'class' => 'h-7 w-7'])</span>
                     <h4 class="font-black text-[#2b3a67] text-xl">Isi Saldo Cepat</h4>
@@ -85,20 +85,21 @@
             </div>
         </div>
 
-        <div class="lg:col-span-2">
-            <div class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white h-full flex flex-col overflow-hidden relative">
+        <div class="min-h-0 lg:col-span-2">
+            <div class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white h-full flex flex-col overflow-hidden relative" data-wallet-mutation-box>
                 
-                <div class="px-8 py-6 border-b-4 border-dashed border-[#f4f9ff] flex flex-col md:flex-row md:justify-between items-start md:items-center bg-[#ffffff] gap-3 relative z-10">
+                <div class="px-8 py-6 border-b-4 border-dashed border-[#f4f9ff] flex flex-col md:flex-row md:justify-between items-start md:items-center bg-[#ffffff] gap-3 relative z-10" data-wallet-mutation-header>
                     <h4 class="flex items-center gap-2 font-black text-xl text-[#2b3a67]">
                         Mutasi Saldo
                         <span class="text-[#4bc6b9]">@include('partials.wiboost-icon', ['name' => 'cash', 'class' => 'h-6 w-6'])</span>
                     </h4>
                 </div>
                 
-                <div class="flex-1 p-6 space-y-4 overflow-y-auto max-h-[700px] hide-scroll bg-[#f8faff]/50 relative z-10">
-                    @php
-                        $walletLogs = App\Models\WalletHistory::where('user_id', Auth::id())->latest()->take(20)->get();
-                    @endphp
+                @php
+                    $walletLogs = App\Models\WalletHistory::where('user_id', Auth::id())->latest()->take(20)->get();
+                @endphp
+
+                <div class="min-h-0 flex-1 space-y-4 overflow-y-auto bg-[#f8faff]/50 p-6 hide-scroll relative z-10 {{ $walletLogs->isEmpty() ? 'flex' : '' }}" data-wallet-mutation-scroll>
 
                     @forelse($walletLogs as $log)
                         @php
@@ -166,12 +167,14 @@
                             </div>
                         </div>
                     @empty
-                        <div class="text-center py-24 bg-white/50 rounded-[2rem] border-4 border-dashed border-[#bde0fe]">
+                        <div class="flex min-h-full w-full flex-1 items-center justify-center rounded-[2rem] border-4 border-dashed border-[#bde0fe] bg-white/50 px-6 py-10 text-center">
+                            <div>
                             <div class="mb-4 flex justify-center text-[#5a76c8] animate-float">
                                 @include('partials.wiboost-icon', ['name' => 'wallet', 'class' => 'h-16 w-16'])
                             </div>
                             <h3 class="text-xl font-black text-[#5a76c8] mb-1">Dompet Masih Kosong</h3>
                             <p class="text-[#8faaf3] font-bold text-sm">Belum ada mutasi saldo masuk ataupun keluar.</p>
+                            </div>
                         </div>
                     @endforelse
                 </div>
@@ -184,6 +187,55 @@
     function setNominal(amount) {
         document.getElementById('amount_input').value = amount;
     }
+
+    function syncWalletMutationHeight() {
+        const leftColumn = document.querySelector('[data-wallet-left-column]');
+        const topupBox = document.querySelector('[data-wallet-topup-box]');
+        const mutationBox = document.querySelector('[data-wallet-mutation-box]');
+        const mutationHeader = document.querySelector('[data-wallet-mutation-header]');
+        const mutationScroll = document.querySelector('[data-wallet-mutation-scroll]');
+
+        if (!leftColumn || !mutationBox) {
+            return;
+        }
+
+        const sourceBox = window.innerWidth < 1024 ? topupBox : leftColumn;
+        const height = Math.round(sourceBox?.getBoundingClientRect().height || 0);
+        const fixedHeight = height > 0 ? `${height}px` : '';
+        const headerHeight = Math.round(mutationHeader?.getBoundingClientRect().height || 94);
+
+        if (window.innerWidth < 1024) {
+            mutationBox.style.height = fixedHeight;
+            mutationBox.style.maxHeight = fixedHeight;
+            if (mutationScroll) {
+                mutationScroll.style.maxHeight = height > 0 ? `${Math.max(height - headerHeight, 180)}px` : '';
+            }
+            return;
+        }
+
+        mutationBox.style.height = fixedHeight;
+        mutationBox.style.maxHeight = fixedHeight;
+        if (mutationScroll) {
+            mutationScroll.style.maxHeight = height > 0 ? `${Math.max(height - headerHeight, 240)}px` : '';
+        }
+    }
+
+    const walletHeightObserver = window.ResizeObserver && document.querySelector('[data-wallet-left-column]')
+        ? new ResizeObserver(syncWalletMutationHeight)
+        : null;
+
+    if (walletHeightObserver) {
+        walletHeightObserver.observe(document.querySelector('[data-wallet-left-column]'));
+        const walletTopupBox = document.querySelector('[data-wallet-topup-box]');
+        if (walletTopupBox) {
+            walletHeightObserver.observe(walletTopupBox);
+        }
+    }
+
+    window.addEventListener('load', syncWalletMutationHeight, { once: true });
+    window.addEventListener('resize', syncWalletMutationHeight, { passive: true });
+    requestAnimationFrame(syncWalletMutationHeight);
+    setTimeout(syncWalletMutationHeight, 250);
 
     document.querySelectorAll('form[data-single-submit]').forEach((form) => {
         form.addEventListener('submit', (event) => {

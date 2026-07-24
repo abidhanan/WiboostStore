@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Mail\OrderSuccessMail;
 use App\Services\ResellerCommissionService;
 use App\Support\TripayPaymentAmounts;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class Transaction extends Model
 {
@@ -76,7 +79,44 @@ class Transaction extends Model
             if ($transaction->payment_status === 'paid' && $transaction->order_status === 'success') {
                 app(ResellerCommissionService::class)->awardForTransaction($transaction);
             }
+
+            if (($transaction->wasChanged('order_status') || $transaction->wasChanged('payment_status'))
+                && ($transaction->order_status === 'failed' || $transaction->payment_status === 'failed')) {
+                $transaction->sendFailedStatusEmailIfNeeded();
+            }
         });
+    }
+
+    public function sendFailedStatusEmailIfNeeded(): void
+    {
+        $transaction = $this->fresh(['product', 'user']) ?? $this->loadMissing(['product', 'user']);
+
+        if (! $transaction->user?->email || ! filter_var($transaction->user->email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
+        $responseData = $transaction->response_data ?? [];
+
+        if (filled(data_get($responseData, 'notifications.failed_email_sent_at'))) {
+            return;
+        }
+
+        try {
+            Mail::to($transaction->user->email)->send(new OrderSuccessMail($transaction));
+
+            data_set($responseData, 'notifications.failed_email_sent_at', now()->toDateTimeString());
+
+            $transaction->forceFill([
+                'response_data' => $responseData,
+            ])->saveQuietly();
+        } catch (\Throwable $exception) {
+            Log::warning('Gagal mengirim email pesanan gagal.', [
+                'transaction_id' => $transaction->id,
+                'invoice_number' => $transaction->invoice_number,
+                'email' => $transaction->user->email,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 
     public function getOrderInputFieldsAttribute(): array

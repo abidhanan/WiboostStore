@@ -102,17 +102,10 @@ class LoginRequest extends FormRequest
 
     protected function findUserByNormalizedEmail(string $email): ?User
     {
-        $user = User::query()
-            ->whereRaw('LOWER(TRIM(email)) = ?', [$email])
-            ->first();
-
-        if ($user) {
-            return $user;
-        }
-
         return User::query()
-            ->get()
-            ->first(fn (User $candidate) => $this->normalizeEmail((string) $candidate->email) === $email);
+            ->whereRaw('LOWER(TRIM(email)) = ?', [$email])
+            ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(TRIM(email), ' ', ''), CHAR(9), ''), CHAR(10), ''), CHAR(13), '')) = ?", [$email])
+            ->first();
     }
 
     protected function attemptStoredPassword(string $email, string $password): bool

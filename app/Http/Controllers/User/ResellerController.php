@@ -120,7 +120,7 @@ class ResellerController extends Controller
 
         $validated = $this->validatePayout($request);
 
-        DB::transaction(function () use ($request, $validated) {
+        $joinedUser = DB::transaction(function () use ($request, $validated) {
             $user = User::query()->lockForUpdate()->findOrFail($request->user()->id);
 
             $user->forceFill([
@@ -130,28 +130,40 @@ class ResellerController extends Controller
                 'reseller_payout_name' => $validated['reseller_payout_name'],
                 'reseller_joined_at' => $user->reseller_joined_at ?: now(),
             ])->save();
+
+            return $user->fresh();
         });
 
-        $request->user()->fresh()?->sendResellerJoinedEmail();
+        $joinedUser?->sendResellerJoinedEmail();
 
         return redirect()->route('user.reseller.index')->with('success', 'Selamat bergabung menjadi reseller!');
     }
 
-    public function leave(Request $request)
+    public function leave(Request $request, ResellerCommissionService $commissionService)
     {
         if (! $this->hasResellerDashboard($request->user())) {
             return redirect()->route('user.reseller.index');
         }
 
-        $request->user()->forceFill([
-            'role_id' => 2,
-            'reseller_joined_at' => null,
-            'reseller_payout_method' => null,
-            'reseller_payout_account' => null,
-            'reseller_payout_name' => null,
-        ])->save();
+        DB::transaction(function () use ($request, $commissionService) {
+            $user = User::query()->lockForUpdate()->findOrFail($request->user()->id);
 
-        return redirect()->route('user.dashboard')->with('success', 'Kamu sudah berhenti menjadi reseller.');
+            if ($commissionService->isReady()) {
+                ResellerCommission::query()
+                    ->where('user_id', $user->id)
+                    ->delete();
+            }
+
+            $user->forceFill([
+                'role_id' => User::ROLE_BUYER,
+                'reseller_joined_at' => null,
+                'reseller_payout_method' => null,
+                'reseller_payout_account' => null,
+                'reseller_payout_name' => null,
+            ])->save();
+        });
+
+        return redirect()->route('user.reseller.index')->with('success', 'Kamu sudah berhenti menjadi reseller.');
     }
 
     public function updatePayout(Request $request)

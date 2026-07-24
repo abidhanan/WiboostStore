@@ -27,6 +27,19 @@
     .reseller-faq > summary::-webkit-details-marker {
         display: none;
     }
+
+    .reseller-scroll-panel {
+        flex: 1 1 auto;
+        max-height: 28rem;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: auto;
+        scrollbar-width: none;
+    }
+
+    .reseller-scroll-panel::-webkit-scrollbar {
+        display: none;
+    }
 </style>
 
 <section class="space-y-8">
@@ -160,6 +173,26 @@
             </div>
         </div>
 
+        <div class="rounded-[1.75rem] border-4 border-white bg-gradient-to-br from-[#fff7d6] via-white to-[#fff4c7] p-5 shadow-lg shadow-[#f4b740]/20">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex min-w-0 items-start gap-4">
+                    <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.25rem] border-4 border-white text-white shadow-md" style="background:#f4b740 !important; color:#ffffff !important; box-shadow:0 14px 28px rgba(244, 183, 64, .28);">
+                        @include('partials.wiboost-icon', ['name' => 'reseller', 'class' => 'h-7 w-7'])
+                    </span>
+                    <div class="min-w-0">
+                        <p class="text-xl font-black text-[#2b3a67]">Join Grup Reseller!</p>
+                        <p class="mt-1 text-sm font-bold leading-relaxed text-[#5a76c8]">Yuk gabung grup reseller untuk mendapat info khusus reseller.</p>
+                    </div>
+                </div>
+                <a href="https://chat.whatsapp.com/IVkWJNsYqItLoT4GmtM6pL" target="_blank" rel="noopener noreferrer" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border-4 border-white bg-[#4bc6b9] px-5 py-3 text-sm font-black text-white shadow-lg shadow-[#4bc6b9]/25 transition hover:-translate-y-0.5 active:scale-95">
+                    <span class="flex h-5 w-5 shrink-0 items-center justify-center">
+                        @include('partials.wiboost-icon', ['name' => 'whatsapp', 'class' => 'block h-[18px] w-[18px]'])
+                    </span>
+                    Join Grup
+                </a>
+            </div>
+        </div>
+
         <div class="grid gap-6">
             <div class="rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/25">
                 <h2 class="text-2xl font-black text-[#2b3a67]">Penarikan Komisi</h2>
@@ -230,36 +263,46 @@
         </div>
 
         <div class="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-            <div class="rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/25">
-                <h2 class="text-2xl font-black text-[#2b3a67]">Riwayat Komisi</h2>
-                <div class="mt-5 space-y-3">
-                    @forelse($commissionHistories as $history)
-                        <div class="flex flex-col gap-3 rounded-[1.5rem] bg-[#f8fbff] p-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div class="min-w-0">
-                                @php
-                                    $historyProduct = $history->product_name ?: ($history->transaction?->product?->name ?: null);
-                                @endphp
-                                <p class="text-sm font-black text-[#2b3a67]">{{ $history->display_type }}</p>
-                                <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $history->created_at?->format('d M Y, H:i') }} - {{ $history->display_status }}</p>
-                                @if($history->transaction)
-                                    <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $history->transaction->invoice_number }}</p>
-                                @endif
-                                @if($history->type === 'income')
-                                    <p class="mt-2 text-xs font-bold leading-snug text-[#5a76c8]">{{ $historyProduct ?: '-' }}</p>
-                                @endif
+            <div class="grid gap-6">
+                <div class="flex max-h-[36rem] min-h-[20rem] flex-col overflow-hidden rounded-[2rem] border-4 border-white bg-white p-0 shadow-xl shadow-[#bde0fe]/25">
+                    <div class="border-b-4 border-dashed border-[#f4f9ff] bg-white px-6 py-5">
+                        <h2 class="text-2xl font-black text-[#2b3a67]">Riwayat Komisi</h2>
+                    </div>
+                    <div class="reseller-scroll-panel space-y-4 bg-[#f8faff]/50 p-5 md:p-6 {{ $commissionHistories->count() === 0 ? 'flex' : '' }}">
+                        @forelse($commissionHistories as $history)
+                            <div class="flex flex-col gap-3 rounded-[1.5rem] bg-[#f8fbff] p-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div class="min-w-0">
+                                    @php
+                                        $historyProduct = $history->product_name ?: ($history->transaction?->product?->name ?: null);
+                                    @endphp
+                                    <p class="text-sm font-black text-[#2b3a67]">{{ $history->display_type }}</p>
+                                    <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $history->created_at?->format('d M Y, H:i') }} - {{ $history->display_status }}</p>
+                                    @if($history->transaction)
+                                        <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $history->transaction->invoice_number }}</p>
+                                    @endif
+                                    @if($history->type === 'income')
+                                        <p class="mt-2 text-xs font-bold leading-snug text-[#5a76c8]">{{ $historyProduct ?: '-' }}</p>
+                                    @endif
+                                </div>
+                                <p @class([
+                                    'shrink-0 text-lg font-black',
+                                    'text-[#4bc6b9]' => $history->type === 'income',
+                                    'text-[#ff6b6b]' => $history->type === 'withdrawal',
+                                ])>
+                                    {{ $history->type === 'withdrawal' ? '-' : '+' }} {{ $formatRupiah($history->amount) }}
+                                </p>
                             </div>
-                            <p @class([
-                                'shrink-0 text-lg font-black',
-                                'text-[#4bc6b9]' => $history->type === 'income',
-                                'text-[#ff6b6b]' => $history->type === 'withdrawal',
-                            ])>
-                                {{ $history->type === 'withdrawal' ? '-' : '+' }} {{ $formatRupiah($history->amount) }}
-                            </p>
-                        </div>
-                    @empty
-                        <p class="rounded-[1.5rem] border-4 border-dashed border-[#d7ecff] bg-[#f8fbff] p-8 text-center text-sm font-black text-[#5a76c8]">Riwayat komisi masih kosong.</p>
-                    @endforelse
+                        @empty
+                            <div class="flex min-h-full w-full flex-1 items-center justify-center rounded-[2rem] border-4 border-dashed border-[#bde0fe] bg-white/60 px-6 py-10 text-center">
+                                <div>
+                                    <div class="mb-3 flex justify-center text-[#5a76c8] opacity-70">@include('partials.wiboost-icon', ['name' => 'cash', 'class' => 'h-12 w-12'])</div>
+                                    <p class="text-sm font-black text-[#5a76c8]">Riwayat komisi masih kosong.</p>
+                                </div>
+                            </div>
+                        @endforelse
+                    </div>
                 </div>
+
             </div>
 
             <div class="grid gap-6">

@@ -1072,17 +1072,48 @@
                 return;
             }
 
-            if (window.history.length > 1) {
-                event.preventDefault();
-                if (window.wiboostBackDelayActive) {
+            const sameOriginUrl = (value) => {
+                if (!value || value === '#') {
+                    return null;
+                }
+
+                try {
+                    const url = new URL(value, window.location.origin);
+
+                    return url.origin === window.location.origin ? url.href : null;
+                } catch (error) {
+                    return null;
+                }
+            };
+
+            const returnTo = new URLSearchParams(window.location.search).get('return_to');
+            const referrerTarget = sameOriginUrl(document.referrer);
+            const backTarget = sameOriginUrl(returnTo)
+                || sameOriginUrl(backLink.getAttribute('href'))
+                || (referrerTarget !== window.location.href ? referrerTarget : null);
+            const useHistoryFallback = !backTarget && window.history.length > 1;
+
+            if (!backTarget && !useHistoryFallback) {
+                return;
+            }
+
+            event.preventDefault();
+
+            if (window.wiboostBackDelayActive) {
+                return;
+            }
+
+            window.wiboostBackDelayActive = true;
+            backLink.classList.add('is-backing', 'pointer-events-none');
+
+            window.setTimeout(() => {
+                if (backTarget) {
+                    window.location.href = backTarget;
                     return;
                 }
-                window.wiboostBackDelayActive = true;
-                backLink.classList.add('is-backing', 'pointer-events-none');
-                window.setTimeout(() => {
-                    window.history.back();
-                }, 340);
-            }
+
+                window.history.back();
+            }, 260);
         });
 
         (() => {

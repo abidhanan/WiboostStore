@@ -26,9 +26,9 @@
     .wiboost-back-link.is-backing,
     a[data-wiboost-back].is-backing,
     a[aria-label="Kembali"].is-backing {
-        transform: translateX(-8px) scale(.94) !important;
-        opacity: .76 !important;
-        box-shadow: 0 8px 18px rgba(90, 118, 200, .24) !important;
+        transform: translateX(-3px) scale(.98) !important;
+        opacity: .9 !important;
+        box-shadow: 0 10px 20px rgba(90, 118, 200, .2) !important;
     }
 
     body.wiboost-compact-ui {

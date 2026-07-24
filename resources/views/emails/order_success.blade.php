@@ -6,7 +6,7 @@
     <meta name="x-apple-disable-message-reformatting">
     <meta name="color-scheme" content="light">
     <meta name="supported-color-schemes" content="light">
-    <title>Pesanan Sukses Wiboost Store</title>
+    <title>{{ ($transaction->order_status === 'failed' || $transaction->payment_status === 'failed') ? 'Pesanan Gagal' : 'Pesanan Sukses' }} Wiboost Store</title>
     <style>
         :root {
             color-scheme: light;
@@ -19,7 +19,7 @@
     $logoPath = public_path('images/wiboost-logo-nav.png');
     $logoUrl = file_exists($logoPath)
         ? $message->embed($logoPath)
-        : asset('images/wiboost-logo-nav.png');
+        : secure_url('images/wiboost-logo-nav.png') . '?v=20260723-mail';
     $credential = is_array($transaction->credential_data ?? null) ? $transaction->credential_data : [];
     $fields = is_array($transaction->order_input_fields ?? null) ? $transaction->order_input_fields : [];
     $productName = $transaction->product->name ?? 'Produk Wiboost';

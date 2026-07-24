@@ -56,6 +56,8 @@ class RefundController extends Controller
 
     public function create(Request $request)
     {
+        $search = trim((string) $request->query('search', ''));
+
         $transactions = Transaction::query()
             ->with(['user', 'product.category.parent.parent.parent'])
             ->where('payment_status', 'paid')
@@ -67,18 +69,26 @@ class RefundController extends Controller
             })
             ->whereNull('refunded_at')
             ->doesntHave('refund')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($searchQuery) use ($search) {
+                    $searchQuery->where('invoice_number', 'like', "%{$search}%")
+                        ->orWhere('target_data', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($userQuery) use ($search) {
+                            $userQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%")
+                                ->orWhere('whatsapp', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('product', function ($productQuery) use ($search) {
+                            $productQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('provider_product_id', 'like', "%{$search}%");
+                        });
+                });
+            })
             ->latest()
-            ->limit(250)
-            ->get();
+            ->paginate(20)
+            ->appends($request->query());
 
-        $selectedTransaction = null;
-        if ($request->filled('transaction_id')) {
-            $selectedTransaction = Transaction::query()
-                ->with(['user', 'product.category.parent.parent.parent'])
-                ->find($request->query('transaction_id'));
-        }
-
-        return view('admin.refunds.create', compact('transactions', 'selectedTransaction'));
+        return view('admin.refunds.create', compact('transactions', 'search'));
     }
 
     public function store(Request $request)

@@ -7,12 +7,14 @@ use App\Models\Role;
 use App\Models\User;
 use App\Support\WiboostInputRules;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\InvalidStateException;
 
 class GoogleAuthController extends Controller
 {
@@ -29,17 +31,39 @@ class GoogleAuthController extends Controller
 
     public function callback(Request $request): RedirectResponse
     {
+        if ($request->filled('error')) {
+            return redirect()
+                ->route('login')
+                ->withErrors(['email' => 'Login Google dibatalkan. Silakan coba lagi.']);
+        }
+
+        if (! $request->filled('code')) {
+            return redirect()
+                ->route('login')
+                ->withErrors(['email' => 'Login Google tidak lengkap. Silakan tekan tombol Google lagi.']);
+        }
+
         try {
             $googleUser = Socialite::driver('google')->user();
+        } catch (InvalidStateException $exception) {
+            try {
+                $googleUser = Socialite::driver('google')->stateless()->user();
+            } catch (\Throwable $fallbackException) {
+                report($fallbackException);
+
+                return redirect()
+                    ->route('login')
+                    ->withErrors(['email' => 'Sesi login Google kedaluwarsa. Silakan tekan tombol Google lagi.']);
+            }
         } catch (\Throwable $exception) {
             report($exception);
 
             return redirect()
                 ->route('login')
-                ->withErrors(['email' => 'Login Google gagal. Coba lagi.']);
+                ->withErrors(['email' => 'Login Google gagal. Silakan coba lagi.']);
         }
 
-        $email = Str::lower(trim((string) $googleUser->getEmail()));
+        $email = $this->normalizeEmail((string) $googleUser->getEmail());
 
         if ($email === '') {
             return redirect()
@@ -50,14 +74,39 @@ class GoogleAuthController extends Controller
         $googleId = trim((string) $googleUser->getId());
         $this->ensureBaseRoles();
 
-        $user = $googleId !== ''
-            ? User::query()->where('google_id', $googleId)->first()
-            : null;
+        $user = $this->findGoogleUser($googleId, $email);
+
+        if ($user?->isAdmin()) {
+            return redirect()
+                ->route('login')
+                ->withErrors(['email' => 'Akun admin hanya bisa login melalui halaman login admin.']);
+        }
+
+        $created = false;
 
         if (! $user) {
-            $user = User::query()
-                ->whereRaw('LOWER(email) = ?', [$email])
-                ->first();
+            try {
+                $user = User::create([
+                    'name' => $this->safeName($googleUser->getName(), $email),
+                    'email' => $email,
+                    'google_id' => $googleId !== '' ? $googleId : null,
+                    'google_avatar' => $googleUser->getAvatar(),
+                    'email_verified_at' => now(),
+                    'password' => Hash::make(Str::random(48)),
+                    'role_id' => User::ROLE_BUYER,
+                ]);
+                $created = true;
+            } catch (QueryException $exception) {
+                if (! $this->isDuplicateGoogleAccount($exception)) {
+                    throw $exception;
+                }
+
+                $user = $this->findGoogleUser($googleId, $email);
+
+                if (! $user) {
+                    throw $exception;
+                }
+            }
         }
 
         if ($user?->isAdmin()) {
@@ -66,36 +115,26 @@ class GoogleAuthController extends Controller
                 ->withErrors(['email' => 'Akun admin hanya bisa login melalui halaman login admin.']);
         }
 
-        if (! $user) {
-            $user = User::create([
-                'name' => $this->safeName($googleUser->getName(), $email),
-                'email' => $email,
-                'google_id' => $googleId !== '' ? $googleId : null,
-                'google_avatar' => $googleUser->getAvatar(),
-                'email_verified_at' => now(),
-                'password' => Hash::make(Str::random(48)),
-                'role_id' => User::ROLE_BUYER,
-            ]);
+        $updates = [
+            'google_avatar' => $googleUser->getAvatar() ?: $user->google_avatar,
+        ];
 
+        if ($googleId !== '' && blank($user->google_id)) {
+            $updates['google_id'] = $googleId;
+        }
+
+        if (blank($user->email_verified_at)) {
+            $updates['email_verified_at'] = now();
+        }
+
+        if (! WiboostInputRules::validName($user->name)) {
+            $updates['name'] = $this->safeName($googleUser->getName(), $email);
+        }
+
+        $user->forceFill($updates)->save();
+
+        if ($created) {
             event(new Registered($user));
-        } else {
-            $updates = [
-                'google_avatar' => $googleUser->getAvatar() ?: $user->google_avatar,
-            ];
-
-            if ($googleId !== '' && blank($user->google_id)) {
-                $updates['google_id'] = $googleId;
-            }
-
-            if (blank($user->email_verified_at)) {
-                $updates['email_verified_at'] = now();
-            }
-
-            if (! WiboostInputRules::validName($user->name)) {
-                $updates['name'] = $this->safeName($googleUser->getName(), $email);
-            }
-
-            $user->forceFill($updates)->save();
         }
 
         Auth::login($user);
@@ -105,6 +144,38 @@ class GoogleAuthController extends Controller
         $request->session()->put('wiboost_show_displays_after_login', true);
 
         return redirect()->route('user.dashboard');
+    }
+
+    private function normalizeEmail(string $email): string
+    {
+        $email = preg_replace('/[\p{Z}\s\p{C}]+/u', '', $email) ?? $email;
+
+        return Str::lower(trim($email));
+    }
+
+    private function findGoogleUser(string $googleId, string $email): ?User
+    {
+        if ($googleId !== '') {
+            $user = User::query()->where('google_id', $googleId)->first();
+
+            if ($user) {
+                return $user;
+            }
+        }
+
+        return User::query()
+            ->whereRaw('LOWER(TRIM(email)) = ?', [$email])
+            ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(TRIM(email), ' ', ''), CHAR(9), ''), CHAR(10), ''), CHAR(13), '')) = ?", [$email])
+            ->first();
+    }
+
+    private function isDuplicateGoogleAccount(QueryException $exception): bool
+    {
+        $message = $exception->getMessage();
+
+        return str_contains($message, 'Duplicate entry')
+            || str_contains($message, 'users_email_unique')
+            || str_contains($message, 'users_google_id_unique');
     }
 
     private function safeName(?string $name, string $email): string

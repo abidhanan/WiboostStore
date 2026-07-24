@@ -143,8 +143,15 @@
         width: 4.75rem !important;
     }
     .wiboost-main-category-title {
-        font-size: 0.75rem;
-        line-height: 1.15;
+        display: block;
+        font-size: clamp(0.62rem, 3.05vw, 0.75rem);
+        line-height: 1;
+        max-width: 100%;
+        overflow: visible;
+        overflow-wrap: normal;
+        text-wrap: nowrap;
+        white-space: nowrap;
+        word-break: keep-all;
     }
     @media (max-width: 640px) {
         .promo-banner-shell {
@@ -339,7 +346,7 @@
                         </span>
                     @endif
                 </div>
-                <span class="wiboost-main-category-title max-w-full break-words px-1 font-black text-[#2b3a67]">{{ $category->name }}</span>
+                <span class="wiboost-main-category-title max-w-full px-1 font-black text-[#2b3a67]">{{ $category->name }}</span>
             </a>
         @empty
             <div class="col-span-full text-center py-16 bg-white rounded-[2rem] border-4 border-dashed border-[#bde0fe]">

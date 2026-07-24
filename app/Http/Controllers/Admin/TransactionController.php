@@ -250,6 +250,8 @@ class TransactionController extends Controller
             $transactions = Transaction::with(['refund', 'user', 'product'])
                 ->where('payment_status', 'paid')
                 ->where('order_status', 'success')
+                ->whereNull('refunded_at')
+                ->doesntHave('refund')
                 ->where(function ($transactionQuery) {
                     $transactionQuery->where('invoice_number', 'like', 'MEM-%')
                         ->orWhereHas('product', fn ($productQuery) => $productQuery->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()));
@@ -292,6 +294,8 @@ class TransactionController extends Controller
             $transactions = Transaction::with(['refund', 'user', 'product'])
                 ->where('payment_status', 'paid')
                 ->where('order_status', 'success')
+                ->whereNull('refunded_at')
+                ->doesntHave('refund')
                 ->where(function ($transactionQuery) {
                     $transactionQuery->where('invoice_number', 'like', 'MEM-%')
                         ->orWhereHas('product', fn ($productQuery) => $productQuery->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()));

@@ -100,8 +100,8 @@ class Deposit extends Model
         $isRealtime = in_array($channelCode, ['QRISREALTIME', 'QRIS REALTIME', 'QRIS_REALTIME', 'QRIS-REALTIME', 'QRISRT', 'QRIS_RT'], true);
         $feePercent = max(0.0, (float) config($isRealtime ? 'xoftware.qris_realtime_fee_percent' : 'xoftware.qris_fee_percent', 0.007));
         $feeFixed = max(0, (int) config($isRealtime ? 'xoftware.qris_realtime_fee_fixed' : 'xoftware.qris_fee_fixed', $isRealtime ? 250 : 150));
-        $buyerFeeShare = (float) config('xoftware.buyer_fee_share', 0.5);
-        $buyerFeeShare = $buyerFeeShare > 0 ? min(1.0, $buyerFeeShare) : 0.5;
+        $buyerFeeShare = (float) config('xoftware.buyer_fee_share', 0.7);
+        $buyerFeeShare = $buyerFeeShare > 0 ? min(1.0, $buyerFeeShare) : 0.7;
         $denominator = 1 - ($feePercent * $buyerFeeShare);
 
         if ($baseAmount <= 0) {
