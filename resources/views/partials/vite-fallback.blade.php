@@ -1,7 +1,7 @@
 @php
     $wiboostFallbackCss = null;
     $wiboostManifestPath = public_path('build/manifest.json');
-    $shouldInlineViteFallback = (bool) env('WIBOOST_INLINE_VITE_FALLBACK', true);
+    $shouldInlineViteFallback = filter_var(env('WIBOOST_INLINE_VITE_FALLBACK', true), FILTER_VALIDATE_BOOLEAN);
 
     if ($shouldInlineViteFallback && is_file($wiboostManifestPath)) {
         static $wiboostCachedFallbackCss = null;

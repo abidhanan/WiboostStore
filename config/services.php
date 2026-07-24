@@ -66,6 +66,16 @@ return [
 
     'discord' => [
         'webhook_url' => env('DISCORD_WEBHOOK_URL'),
+        'webhooks' => [
+            'transactions' => env('DISCORD_WEBHOOK_TRANSACTIONS_URL'),
+            'deposits'     => env('DISCORD_WEBHOOK_DEPOSITS_URL'),
+            'refunds'      => env('DISCORD_WEBHOOK_REFUNDS_URL'),
+            'reports'      => env('DISCORD_WEBHOOK_REPORTS_URL'),
+            'stock'        => env('DISCORD_WEBHOOK_STOCK_URL'),
+            'providers'    => env('DISCORD_WEBHOOK_PROVIDERS_URL'),
+            'maintenance'  => env('DISCORD_WEBHOOK_MAINTENANCE_URL'),
+            'system'       => env('DISCORD_WEBHOOK_SYSTEM_URL'),
+        ],
         'username'    => env('DISCORD_BOT_NAME', 'Wiboost Bot'),
         'avatar_url'  => env('DISCORD_BOT_AVATAR_URL'),
     ],

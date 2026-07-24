@@ -129,6 +129,15 @@
                 transform: none !important;
             }
 
+            html.wiboost-lite-ui .wiboost-cs-mascot,
+            html.wiboost-lite-ui .wiboost-cs-mascot-image {
+                animation: none !important;
+            }
+
+            html.wiboost-lite-ui .wiboost-cs-mascot-core {
+                transition: none !important;
+            }
+
             @media (prefers-reduced-motion: reduce) {
                 .wiboost-cs-mascot,
                 .wiboost-cs-mascot-image {
@@ -186,6 +195,8 @@
                 const dragThreshold = 6;
                 const expressionTimers = new WeakMap();
                 const validExpressions = new Set(['hello', 'idle', 'bored', 'drag']);
+                const liteMode = document.documentElement.classList.contains('wiboost-lite-ui');
+                const requestIdle = window.requestIdleCallback || ((callback) => window.setTimeout(callback, 160));
 
                 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -362,6 +373,10 @@
                 };
 
                 const updateTilt = (element, clientX, clientY) => {
+                    if (liteMode) {
+                        return;
+                    }
+
                     const rect = element.getBoundingClientRect();
                     const x = ((clientX - rect.left) / Math.max(1, rect.width)) - .5;
                     const y = ((clientY - rect.top) / Math.max(1, rect.height)) - .5;
@@ -553,6 +568,14 @@
                     document.querySelectorAll('[data-wiboost-mascot-float]').forEach(setupMascot);
                 };
 
+                const warmMascotImages = () => {
+                    document.querySelectorAll('.wiboost-cs-mascot-image').forEach((image) => {
+                        if (typeof image.decode === 'function') {
+                            image.decode().catch(() => {});
+                        }
+                    });
+                };
+
                 window.wiboostMascotForceHello = (delay = 9000) => {
                     document.querySelectorAll('[data-wiboost-mascot-float]').forEach((element) => {
                         if (!element || element.dataset.wiboostMascotReady !== 'true') {
@@ -570,6 +593,7 @@
                 });
 
                 setupAllMascots();
+                requestIdle(warmMascotImages);
 
                 if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', setupAllMascots, { once: true });

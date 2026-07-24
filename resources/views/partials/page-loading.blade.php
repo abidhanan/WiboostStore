@@ -68,8 +68,11 @@
 
             loader.dataset.ready = '1';
             let loaderFrame = null;
+            let loaderTimer = null;
 
-            const showLoader = () => {
+            const activateLoader = () => {
+                loaderTimer = null;
+
                 if (loader.dataset.visible === '1') {
                     return;
                 }
@@ -94,7 +97,20 @@
                 });
             };
 
+            const showLoader = (delay = 180) => {
+                if (loader.dataset.visible === '1' || loaderTimer) {
+                    return;
+                }
+
+                loaderTimer = window.setTimeout(activateLoader, Math.max(0, delay));
+            };
+
             const hideLoader = () => {
+                if (loaderTimer) {
+                    window.clearTimeout(loaderTimer);
+                    loaderTimer = null;
+                }
+
                 if (loaderFrame) {
                     window.cancelAnimationFrame(loaderFrame);
                     loaderFrame = null;
@@ -147,7 +163,7 @@
                     return;
                 }
 
-                showLoader();
+                showLoader(180);
             }, true);
 
             document.addEventListener('submit', (event) => {
@@ -159,7 +175,7 @@
 
                 window.setTimeout(() => {
                     if (!event.defaultPrevented) {
-                        showLoader();
+                        showLoader(180);
                     }
                 }, 0);
             }, true);
@@ -172,10 +188,10 @@
                     hideLoader();
                 }
             });
-            window.addEventListener('beforeunload', showLoader);
+            window.addEventListener('beforeunload', () => showLoader(240));
             window.addEventListener('pagehide', (event) => {
                 if (!event.persisted) {
-                    showLoader();
+                    showLoader(240);
                 }
             });
         };

@@ -1,4 +1,85 @@
+<script data-wiboost-performance-mode>
+    (() => {
+        const connection = navigator.connection || navigator.webkitConnection || navigator.mozConnection;
+        const lowData = Boolean(connection?.saveData) || ['slow-2g', '2g'].includes(String(connection?.effectiveType || '').toLowerCase());
+        const lowMemory = Number(navigator.deviceMemory || 8) <= 3;
+        const lowCpu = Number(navigator.hardwareConcurrency || 8) <= 4;
+        const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+        if (lowData || lowMemory || lowCpu || reducedMotion) {
+            document.documentElement.classList.add('wiboost-lite-ui');
+        }
+    })();
+</script>
 <style data-wiboost-ui-performance>
+    html.wiboost-lite-ui,
+    html.wiboost-lite-ui * {
+        scroll-behavior: auto !important;
+    }
+
+    html.wiboost-lite-ui .shadow-2xl,
+    html.wiboost-lite-ui .shadow-xl,
+    html.wiboost-lite-ui .shadow-lg {
+        box-shadow: 0 8px 20px rgba(141, 174, 238, 0.16) !important;
+    }
+
+    html.wiboost-lite-ui .backdrop-blur,
+    html.wiboost-lite-ui .backdrop-blur-sm,
+    html.wiboost-lite-ui .backdrop-blur-md,
+    html.wiboost-lite-ui .backdrop-blur-xl {
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+
+    html.wiboost-lite-ui .drop-shadow,
+    html.wiboost-lite-ui .drop-shadow-sm,
+    html.wiboost-lite-ui .drop-shadow-md,
+    html.wiboost-lite-ui .drop-shadow-lg,
+    html.wiboost-lite-ui .drop-shadow-xl {
+        filter: none !important;
+    }
+
+    html.wiboost-lite-ui .animate-pulse,
+    html.wiboost-lite-ui .animate-bounce,
+    html.wiboost-lite-ui .animate-spin,
+    html.wiboost-lite-ui .animate-float,
+    html.wiboost-lite-ui .animate-float-delayed {
+        animation: none !important;
+    }
+
+    html.wiboost-lite-ui .transition,
+    html.wiboost-lite-ui .transition-all,
+    html.wiboost-lite-ui .transition-transform,
+    html.wiboost-lite-ui .transition-colors {
+        transition-duration: 120ms !important;
+    }
+
+    .table-scroll,
+    .hide-scroll,
+    [class*="overflow-x-auto"],
+    [class*="overflow-y-auto"] {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    @media (max-width: 767px) {
+        .table-scroll,
+        [class*="overflow-x-auto"],
+        [class*="overflow-y-auto"] {
+            overscroll-behavior: contain;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: .01ms !important;
+            animation-iteration-count: 1 !important;
+            scroll-behavior: auto !important;
+            transition-duration: .01ms !important;
+        }
+    }
+
     a[data-wiboost-back],
     a[aria-label="Kembali"],
     button[aria-label="Kembali"],

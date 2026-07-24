@@ -47,9 +47,6 @@
                     </a>
                 @endif
             </div>
-            <a href="{{ route('admin.refunds.index') }}" class="flex h-12 shrink-0 items-center justify-center rounded-[1.2rem] border-4 border-white bg-[#f4f9ff] px-6 text-sm font-black text-[#5a76c8] shadow-sm transition-transform active:scale-95 sm:h-14 sm:rounded-[1.5rem]">
-                Batal
-            </a>
         </form>
     </div>
 
@@ -111,8 +108,8 @@
                                         @if(request('return_to'))
                                             <input type="hidden" name="return_to" value="{{ request('return_to') }}">
                                         @endif
-                                        <button type="submit" class="flex h-11 w-11 items-center justify-center rounded-[1.1rem] border-4 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/25 transition-transform hover:bg-[#4760a9] active:scale-95" title="Tambah refund">
-                                            @include('partials.wiboost-icon', ['name' => 'plus', 'class' => 'h-5 w-5'])
+                                        <button type="submit" class="inline-flex h-10 w-10 items-center justify-center rounded-[1rem] border-2 border-white bg-white text-[#5a76c8] shadow-md shadow-[#5a76c8]/20 transition-transform hover:scale-110 hover:bg-[#eef4ff] active:scale-95" title="Tambah refund">
+                                            @include('partials.wiboost-icon', ['name' => 'plus', 'class' => 'h-4 w-4'])
                                         </button>
                                     </form>
                                 </td>

@@ -11,12 +11,20 @@ use Throwable;
 
 class DiscordWebhookService
 {
-    public function isEnabled(): bool
+    public function isEnabled(?string $channel = null): bool
     {
-        return filled(config('services.discord.webhook_url'));
+        if ($channel !== null) {
+            return filled($this->webhookUrl($channel));
+        }
+
+        if (filled(config('services.discord.webhook_url'))) {
+            return true;
+        }
+
+        return collect(config('services.discord.webhooks', []))->contains(fn ($url) => filled($url));
     }
 
-    public function sendOrderAlert(Transaction $transaction, string $title, ?string $description = null, int $color = 5922504): void
+    public function sendOrderAlert(Transaction $transaction, string $title, ?string $description = null, int $color = 5922504, string $channel = 'transactions'): void
     {
         $transaction->loadMissing('user', 'product');
 
@@ -47,10 +55,10 @@ class DiscordWebhookService
             ];
         }
 
-        $this->sendEmbed($title, $description, $fields, $color);
+        $this->sendEmbed($title, $description, $fields, $color, $channel);
     }
 
-    public function sendDepositAlert(Deposit $deposit, string $title, ?string $description = null, int $color = 4968121): void
+    public function sendDepositAlert(Deposit $deposit, string $title, ?string $description = null, int $color = 4968121, string $channel = 'deposits'): void
     {
         $deposit->loadMissing('user');
 
@@ -61,7 +69,7 @@ class DiscordWebhookService
             ['name' => 'User', 'value' => (string) ($deposit->user->name ?? 'Guest'), 'inline' => true],
             ['name' => 'Nominal', 'value' => $this->formatRupiah($totalPayable), 'inline' => true],
             ['name' => 'Metode', 'value' => strtoupper((string) ($deposit->display_payment_method ?? $deposit->payment_method ?? '-')), 'inline' => true],
-        ], $color);
+        ], $color, $channel);
     }
 
     public function sendLowStockAlert(Product $product, int $availableStock): void
@@ -70,22 +78,24 @@ class DiscordWebhookService
             ['name' => 'Produk', 'value' => (string) $product->name, 'inline' => true],
             ['name' => 'Sisa Stok', 'value' => (string) $availableStock, 'inline' => true],
             ['name' => 'Batas Reminder', 'value' => (string) ($product->stock_reminder ?? 0), 'inline' => true],
-        ], 16433050);
+        ], 16433050, 'stock');
     }
 
-    public function sendSystemAlert(string $title, ?string $description = null, array $fields = [], int $color = 16433050): void
+    public function sendSystemAlert(string $title, ?string $description = null, array $fields = [], int $color = 16433050, string $channel = 'maintenance'): void
     {
-        $this->sendEmbed($title, $description, $fields, $color);
+        $this->sendEmbed($title, $description, $fields, $color, $channel);
     }
 
-    protected function sendEmbed(string $title, ?string $description, array $fields, int $color): void
+    protected function sendEmbed(string $title, ?string $description, array $fields, int $color, string $channel): void
     {
-        if (! $this->isEnabled()) {
+        $webhookUrl = $this->webhookUrl($channel);
+
+        if (! filled($webhookUrl)) {
             return;
         }
 
         try {
-            Http::timeout(10)->post((string) config('services.discord.webhook_url'), [
+            Http::timeout(10)->post($webhookUrl, [
                 'username' => config('services.discord.username', 'Wiboost Bot'),
                 'avatar_url' => config('services.discord.avatar_url'),
                 'embeds' => [[
@@ -96,8 +106,22 @@ class DiscordWebhookService
                 ]],
             ])->throw();
         } catch (Throwable $e) {
-            Log::warning('Discord webhook send failed: ' . $e->getMessage());
+            Log::warning("Discord webhook send failed [{$channel}]: " . $e->getMessage());
         }
+    }
+
+    protected function webhookUrl(string $channel): ?string
+    {
+        $webhooks = config('services.discord.webhooks', []);
+        $channelUrl = $webhooks[$channel] ?? null;
+
+        if (filled($channelUrl)) {
+            return $channelUrl;
+        }
+
+        $fallbackUrl = config('services.discord.webhook_url');
+
+        return filled($fallbackUrl) ? $fallbackUrl : null;
     }
 
     protected function resolveTransactionTotalPayable(Transaction $transaction): int

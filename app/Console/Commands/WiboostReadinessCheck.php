@@ -12,6 +12,9 @@ class WiboostReadinessCheck extends Command
 
     public function handle(): int
     {
+        $discordEnabled = filled(config('services.discord.webhook_url'))
+            || collect(config('services.discord.webhooks', []))->contains(fn ($url) => filled($url));
+
         $checks = collect([
             $this->check('Domain publik final', $this->hasFinalPublicUrl(), 'Isi APP_URL dan WIBOOST_PUBLIC_URL dengan domain/hosting final, bukan localhost atau 127.0.0.1.'),
             $this->check('Mode production', config('app.env') === 'production' && config('app.debug') === false, 'Set APP_ENV=production dan APP_DEBUG=false saat live.'),
@@ -19,7 +22,7 @@ class WiboostReadinessCheck extends Command
             $this->check('Email SMTP', config('mail.default') !== 'log' && filled(config('mail.from.address')) && filled(config('mail.mailers.smtp.host')), 'Gunakan SMTP aktif agar reset password dan email sukses transaksi terkirim.'),
             $this->check('Digiflazz API', filled(config('services.digiflazz.username')) && filled(config('services.digiflazz.key')), 'Isi DIGIFLAZZ_USERNAME dan DIGIFLAZZ_KEY.'),
             $this->check('OrderSosmed API', filled(config('services.ordersosmed.api_url')) && filled(config('services.ordersosmed.api_id')) && filled(config('services.ordersosmed.api_key')), 'Isi ORDERSOSMED_API_URL, ORDERSOSMED_API_ID, ORDERSOSMED_API_KEY, dan secret key jika provider mewajibkan.'),
-            $this->check('Discord alert', filled(config('services.discord.webhook_url')), 'Isi DISCORD_WEBHOOK_URL agar error/refund/stok bisa masuk Discord.'),
+            $this->check('Discord alert', $discordEnabled, 'Isi DISCORD_WEBHOOK_URL sebagai fallback atau isi webhook khusus seperti DISCORD_WEBHOOK_TRANSACTIONS_URL, DISCORD_WEBHOOK_DEPOSITS_URL, DISCORD_WEBHOOK_REPORTS_URL, dan DISCORD_WEBHOOK_MAINTENANCE_URL.'),
             $this->check('Queue configured', config('queue.default') !== 'sync', 'Untuk production gunakan QUEUE_CONNECTION=database/redis dan jalankan php artisan queue:work.'),
             $this->check('Scheduler command', true, 'Pasang cron server: * * * * * php /path/project/artisan schedule:run >> /dev/null 2>&1'),
             $this->check('Secret rotation', true, 'Regenerate semua secret yang pernah dibagikan sebelum live: Xoftware, Digiflazz, OrderSosmed, Gmail app password, Discord webhook.'),

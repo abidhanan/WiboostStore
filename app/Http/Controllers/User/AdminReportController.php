@@ -7,6 +7,7 @@ use App\Models\AdminReport;
 use App\Models\Deposit;
 use App\Models\ResellerCommission;
 use App\Models\Transaction;
+use App\Services\DiscordWebhookService;
 use App\Support\WiboostAdminContact;
 use App\Support\WiboostOrderDetailData;
 use Illuminate\Http\Request;
@@ -39,7 +40,7 @@ class AdminReportController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, DiscordWebhookService $discordWebhookService)
     {
         $categories = collect($this->categories());
 
@@ -98,7 +99,7 @@ class AdminReportController extends Controller
         $message = $this->buildWhatsappMessage($selectedCategory, $issue, $selectedRecord, $proofUrl);
 
         try {
-            AdminReport::create([
+            $report = AdminReport::create([
                 'user_id' => auth()->id(),
                 'report_hash' => $reportHash,
                 'category_key' => $selectedCategory['key'],
@@ -135,6 +136,8 @@ class AdminReportController extends Controller
 
             return $this->redirectToWhatsapp($whatsappUrl);
         }
+
+        $this->sendReportDiscordAlert($discordWebhookService, $report, $selectedRecord);
 
         $whatsappUrl = WiboostAdminContact::whatsappUrl($message);
 
@@ -449,6 +452,43 @@ class AdminReportController extends Controller
         return redirect()
             ->away($whatsappUrl)
             ->withCookie(Cookie::make('wiboost_after_admin_report', 'dashboard', 10, '/', null, false, false, false, 'Lax'));
+    }
+
+    protected function sendReportDiscordAlert(DiscordWebhookService $discordWebhookService, AdminReport $report, ?array $record): void
+    {
+        $user = auth()->user();
+
+        $fields = [
+            ['name' => 'Kategori', 'value' => (string) $report->category_label, 'inline' => true],
+            ['name' => 'User', 'value' => (string) ($user?->name ?? 'Guest'), 'inline' => true],
+            ['name' => 'Email', 'value' => (string) ($user?->email ?? '-'), 'inline' => true],
+        ];
+
+        if (filled($report->related_invoice)) {
+            $fields[] = ['name' => 'Invoice Terkait', 'value' => (string) $report->related_invoice, 'inline' => true];
+        }
+
+        if (filled($report->related_title)) {
+            $fields[] = ['name' => 'Data Terkait', 'value' => (string) $report->related_title, 'inline' => true];
+        }
+
+        if (filled($record['amount'] ?? null)) {
+            $fields[] = ['name' => 'Nominal', 'value' => (string) $record['amount'], 'inline' => true];
+        }
+
+        $fields[] = [
+            'name' => 'Kendala',
+            'value' => mb_strimwidth((string) $report->issue, 0, 1000, '...'),
+            'inline' => false,
+        ];
+
+        $discordWebhookService->sendSystemAlert(
+            'Laporan kendala baru',
+            'User baru saja mengirim laporan dari halaman bantuan.',
+            $fields,
+            16433050,
+            'reports'
+        );
     }
 
     protected function appendInputBuyerLines(array &$lines, ?string $target): void

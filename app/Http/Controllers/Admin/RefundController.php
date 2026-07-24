@@ -7,6 +7,7 @@ use App\Models\Refund;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\WalletHistory;
+use App\Services\DiscordWebhookService;
 use App\Support\WiboostCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -91,7 +92,7 @@ class RefundController extends Controller
         return view('admin.refunds.create', compact('transactions', 'search'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, DiscordWebhookService $discordWebhookService)
     {
         $validated = $request->validate([
             'transaction_id' => ['required', 'exists:transactions,id', 'unique:refunds,transaction_id'],
@@ -99,7 +100,7 @@ class RefundController extends Controller
             'transaction_id' => 'transaksi',
         ]);
 
-        DB::transaction(function () use ($request, $validated) {
+        $refund = DB::transaction(function () use ($request, $validated) {
             $transaction = Transaction::query()
                 ->with('user')
                 ->lockForUpdate()
@@ -111,8 +112,16 @@ class RefundController extends Controller
                 ]);
             }
 
-            $this->applyManualRefund(new Refund(), $transaction, $request->user()?->id);
+            $refund = new Refund();
+
+            $this->applyManualRefund($refund, $transaction, $request->user()?->id);
+
+            return $refund->fresh(['transaction.user', 'transaction.product']);
         });
+
+        if ($refund) {
+            $this->sendRefundDiscordAlert($discordWebhookService, $refund);
+        }
 
         return $this->redirectToReturnTo($request, 'admin.refunds.index')
             ->with('success', 'Refund berhasil ditambahkan.');
@@ -293,6 +302,28 @@ class RefundController extends Controller
     protected function refundAmount(Transaction $transaction): int
     {
         return max(0, (int) $transaction->display_total_payable);
+    }
+
+    protected function sendRefundDiscordAlert(DiscordWebhookService $discordWebhookService, Refund $refund): void
+    {
+        $transaction = $refund->transaction;
+
+        if (! $transaction) {
+            return;
+        }
+
+        $discordWebhookService->sendSystemAlert(
+            'Refund manual ditambahkan',
+            'Saldo user sudah dikembalikan dari halaman refund admin.',
+            [
+                ['name' => 'Invoice', 'value' => (string) $transaction->invoice_number, 'inline' => true],
+                ['name' => 'User', 'value' => (string) ($transaction->user->name ?? 'Guest'), 'inline' => true],
+                ['name' => 'Produk', 'value' => (string) ($transaction->product->name ?? '-'), 'inline' => true],
+                ['name' => 'Nominal Refund', 'value' => 'Rp ' . number_format($this->refundAmount($transaction), 0, ',', '.'), 'inline' => true],
+            ],
+            16433050,
+            'refunds'
+        );
     }
 
     protected function refundInvoiceNumber(Transaction $transaction): string
