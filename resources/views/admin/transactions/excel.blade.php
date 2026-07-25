@@ -82,7 +82,7 @@
                 <td>{{ $trx->created_at?->format('d/m/Y H:i') }}</td>
                 <td>{{ $trx->invoice_number }}</td>
                 <td>{{ $trx->user->name ?? 'Guest' }}</td>
-                <td>{{ $trx->product->name ?? 'Produk Dihapus' }}</td>
+                <td>{{ $trx->display_product_name }}</td>
                 <td class="money">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</td>
             </tr>
         @empty

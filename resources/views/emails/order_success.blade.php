@@ -22,7 +22,7 @@
         : secure_url('images/wiboost-logo-nav.png') . '?v=20260723-mail';
     $credential = is_array($transaction->credential_data ?? null) ? $transaction->credential_data : [];
     $fields = is_array($transaction->order_input_fields ?? null) ? $transaction->order_input_fields : [];
-    $productName = $transaction->product->name ?? 'Produk Wiboost';
+    $productName = $transaction->display_product_name ?: 'Produk Wiboost';
     $detailUrl = route('user.history', ['auto_open' => $transaction->id]);
     $isFailed = $transaction->order_status === 'failed' || $transaction->payment_status === 'failed';
     $headline = $isFailed ? 'Pesanan Gagal' : 'Pesanan Sukses!';

@@ -124,6 +124,7 @@ class DashboardController extends Controller
                 'user_id' => $user->id,
                 'invoice_number' => 'MEM-' . strtoupper(Str::random(10)),
                 'product_id' => null,
+                'product_name_snapshot' => 'Membership Wiboost 30 Hari',
                 'amount' => $amount,
                 'target_data' => 'Membership Wiboost 30 Hari',
                 'order_input_data' => [
@@ -272,14 +273,39 @@ class DashboardController extends Controller
 
     protected function membershipTickerProducts()
     {
-        return Product::query()
+        $premiumRoot = Category::query()
+            ->where('slug', 'aplikasi-premium')
+            ->with('childrenRecursive')
+            ->first();
+
+        $categoryIds = collect();
+        $collectCategoryIds = function (Category $category) use (&$collectCategoryIds, &$categoryIds) {
+            $categoryIds->push((int) $category->id);
+
+            $category->childrenRecursive->each(function (Category $child) use (&$collectCategoryIds) {
+                $collectCategoryIds($child);
+            });
+        };
+
+        if ($premiumRoot) {
+            $collectCategoryIds($premiumRoot);
+        }
+
+        $baseQuery = Product::query()
             ->with('category.parent.parent.parent')
             ->where('is_active', true)
             ->where('status', 'active')
-            ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes())
-            ->latest('updated_at')
-            ->limit(120)
-            ->get()
+            ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes());
+
+        $products = $categoryIds->isNotEmpty()
+            ? (clone $baseQuery)->whereIn('category_id', $categoryIds->unique()->values())->orderBy('name')->get()
+            : collect();
+
+        if ($products->isEmpty()) {
+            $products = $baseQuery->orderBy('name')->get();
+        }
+
+        return $products
             ->map(function (Product $product) {
                 $rootCategory = $product->category;
 
@@ -291,22 +317,15 @@ class DashboardController extends Controller
                     'name' => $product->name,
                     'price' => (int) round($product->membership_selling_price),
                     'root_slug' => $rootCategory?->slug ?: '',
-                    'root_name' => $rootCategory?->name ?: '',
+                    'category_name' => $product->category?->breadcrumb_name ?: $product->category?->name ?: '',
                 ];
             })
-            ->filter(fn (array $item) => $item['price'] > 0)
+            ->filter(fn (array $item) => $item['price'] > 0 && $item['root_slug'] === 'aplikasi-premium')
             ->sort(function (array $first, array $second) {
-                $priority = ($first['root_slug'] === 'aplikasi-premium' ? 0 : 1) <=> ($second['root_slug'] === 'aplikasi-premium' ? 0 : 1);
-
-                if ($priority !== 0) {
-                    return $priority;
-                }
-
-                $categoryOrder = strnatcasecmp($first['root_name'], $second['root_name']);
+                $categoryOrder = strnatcasecmp($first['category_name'], $second['category_name']);
 
                 return $categoryOrder !== 0 ? $categoryOrder : strnatcasecmp($first['name'], $second['name']);
             })
-            ->take(32)
             ->values();
     }
 }

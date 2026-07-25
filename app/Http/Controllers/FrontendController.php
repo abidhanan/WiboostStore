@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use App\Models\Category;
 use App\Models\Product;
 use App\Support\WiboostCatalog;
+use Illuminate\Support\Facades\Cache;
 
 class FrontendController extends Controller
 {
@@ -22,27 +23,29 @@ class FrontendController extends Controller
                 : redirect()->route('user.dashboard');
         }
 
-        $catalogSlugs = WiboostCatalog::coreCategorySlugs();
-        $categoryOrderSql = WiboostCatalog::categoryOrderSql();
+        return response(Cache::remember('wiboost:welcome-html:v1', now()->addMinute(), function () {
+            $catalogSlugs = WiboostCatalog::coreCategorySlugs();
+            $categoryOrderSql = WiboostCatalog::categoryOrderSql();
 
-        // 1. Mengambil data untuk statistik metrik real-time
-        $totalUsers = User::whereIn('role_id', [2, 3, 5])->count();
-        $totalTransactions = Transaction::where('payment_status', 'paid')->count();
-        $activeProducts = Product::where('is_active', true)
-            ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes())
-            ->count();
-        
-        // 2. Mengambil semua kategori beserta jumlah produk yang ada di dalamnya
-        $categories = Category::whereIn('slug', $catalogSlugs)
-            ->withCount(['products' => function ($query) {
-                $query->where('is_active', true)
-                    ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes());
-            }])
-            ->orderByRaw($categoryOrderSql)
-            ->get();
+            // 1. Mengambil data untuk statistik metrik real-time
+            $totalUsers = User::count();
+            $totalTransactions = Transaction::where('payment_status', 'paid')->count();
+            $activeProducts = Product::where('is_active', true)
+                ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes())
+                ->count();
 
-        // 3. Melempar semua data ke file tampilan 'welcome.blade.php'
-        return view('welcome', compact('totalUsers', 'totalTransactions', 'activeProducts', 'categories'));
+            // 2. Mengambil semua kategori beserta jumlah produk yang ada di dalamnya
+            $categories = Category::whereIn('slug', $catalogSlugs)
+                ->withCount(['products' => function ($query) {
+                    $query->where('is_active', true)
+                        ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes());
+                }])
+                ->orderByRaw($categoryOrderSql)
+                ->get();
+
+            // 3. Melempar semua data ke file tampilan 'welcome.blade.php'
+            return view('welcome', compact('totalUsers', 'totalTransactions', 'activeProducts', 'categories'))->render();
+        }))->header('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     }
 
     public function legal(string $page)

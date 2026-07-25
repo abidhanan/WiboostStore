@@ -214,7 +214,7 @@ class AdminReportController extends Controller
                         ?: ($isWithdrawal ? 'WD-' . str_pad((string) $commission->id, 5, '0', STR_PAD_LEFT) : 'KOM-' . str_pad((string) $commission->id, 5, '0', STR_PAD_LEFT));
                     $productName = $isWithdrawal
                         ? 'Penarikan Komisi'
-                        : ($commission->product_name ?: ($commission->transaction?->product?->name ?: 'Komisi Transaksi'));
+                        : ($commission->product_name ?: ($commission->transaction?->display_product_name ?: 'Komisi Transaksi'));
 
                     return [
                         'id' => 'commission-' . $commission->id,

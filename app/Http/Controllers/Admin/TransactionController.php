@@ -119,6 +119,7 @@ class TransactionController extends Controller
                         [
                             'user_id' => $deposit->user_id,
                             'product_id' => null,
+                            'product_name_snapshot' => 'Membership Wiboost 30 Hari',
                             'amount' => (float) $deposit->amount,
                             'paid_amount' => $paymentStatus === 'paid'
                                 ? ($paidAmount > 0 ? $paidAmount : $deposit->tripay_total_payable)
@@ -347,7 +348,7 @@ class TransactionController extends Controller
                 ['B', $trx->created_at?->format('d/m/Y H:i') ?? '-', 'text', 0],
                 ['C', $trx->invoice_number ?? '-', 'text', 0],
                 ['D', $trx->user->name ?? 'Guest', 'text', 0],
-                ['E', $trx->product->name ?? 'Produk Dihapus', 'text', 0],
+                ['E', $trx->display_product_name, 'text', 0],
                 ['F', (float) ($trx->display_total_payable ?? 0), 'number', 3],
             ]];
             $rowNumber++;

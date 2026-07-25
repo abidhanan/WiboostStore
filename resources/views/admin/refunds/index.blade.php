@@ -201,7 +201,7 @@
                         @forelse($refunds as $refund)
                             @php
                                 $trx = $refund->transaction;
-                                $productName = $trx?->product?->name ?: ($trx?->isMembershipPayment() ? 'Membership Wiboost 30 Hari' : 'Produk Dihapus');
+                                $productName = $trx?->display_product_name ?? 'Produk Wiboost';
                                 $categoryName = collect([
                                     $trx?->product?->category?->parent?->parent?->parent?->name,
                                     $trx?->product?->category?->parent?->parent?->name,
@@ -258,7 +258,7 @@
         @foreach($refunds as $refund)
             @php
                 $trx = $refund->transaction;
-                $productName = $trx?->product?->name ?: ($trx?->isMembershipPayment() ? 'Membership Wiboost 30 Hari' : 'Produk Dihapus');
+                $productName = $trx?->display_product_name ?? 'Produk Wiboost';
                 $categoryName = collect([
                     $trx?->product?->category?->parent?->parent?->parent?->name,
                     $trx?->product?->category?->parent?->parent?->name,

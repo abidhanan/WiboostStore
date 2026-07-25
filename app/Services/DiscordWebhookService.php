@@ -32,7 +32,7 @@ class DiscordWebhookService
 
         $fields = [
             ['name' => 'Invoice', 'value' => (string) $transaction->invoice_number, 'inline' => true],
-            ['name' => 'Produk', 'value' => (string) ($transaction->product->name ?? '-'), 'inline' => true],
+            ['name' => 'Produk', 'value' => (string) ($transaction->display_product_name ?? '-'), 'inline' => true],
             ['name' => 'User', 'value' => (string) ($transaction->user->name ?? 'Guest'), 'inline' => true],
             ['name' => 'Nominal', 'value' => $this->formatRupiah($totalPayable), 'inline' => true],
             ['name' => 'Status', 'value' => strtoupper((string) $transaction->order_status), 'inline' => true],

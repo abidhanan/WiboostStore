@@ -104,12 +104,26 @@ class OrderController extends Controller
             'payment_method' => 'metode pembayaran',
         ];
 
+        if (blank($user?->whatsapp)) {
+            $rules['checkout_whatsapp'] = WiboostInputRules::numberRules(20);
+            $attributes['checkout_whatsapp'] = 'nomor WhatsApp';
+        }
+
         foreach ($checkoutFields as $field) {
             $rules[$field['name']] = $field['rules'] ?? ['required', 'string', 'min:3', 'max:255'];
             $attributes[$field['name']] = strtolower($field['label']);
         }
 
-        $validated = $request->validate($rules, [], $attributes);
+        $validated = $request->validate($rules, WiboostInputRules::validationMessages(), $attributes);
+
+        if (blank($user?->whatsapp) && filled($validated['checkout_whatsapp'] ?? null)) {
+            $user->forceFill([
+                'whatsapp' => trim((string) $validated['checkout_whatsapp']),
+            ])->save();
+            $user->refresh();
+        }
+
+        unset($validated['checkout_whatsapp']);
         $targetData = (string) ($product->summarizeOrderInput($validated) ?? '');
         $builtOrderInputData = $product->buildOrderInputData($validated);
         $orderInputData = is_array($builtOrderInputData) ? $builtOrderInputData : [];
@@ -160,6 +174,7 @@ class OrderController extends Controller
                         'invoice_number' => 'WIB-' . strtoupper(Str::random(12)),
                         'user_id' => $freshUser->id,
                         'product_id' => $product->id,
+                        'product_name_snapshot' => $product->name,
                         'amount' => $checkoutAmount,
                         'target_data' => $targetData,
                         'order_input_data' => $orderInputData,
@@ -223,6 +238,7 @@ class OrderController extends Controller
                 'invoice_number' => 'WIB-' . strtoupper(Str::random(12)),
                 'user_id' => $user->id,
                 'product_id' => $product->id,
+                'product_name_snapshot' => $product->name,
                 'amount' => $checkoutAmount,
                 'target_data' => $targetData,
                 'order_input_data' => $orderInputData,

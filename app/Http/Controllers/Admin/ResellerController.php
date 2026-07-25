@@ -130,7 +130,7 @@ class ResellerController extends Controller
                     $transaction?->invoice_number ?? '-',
                     $commission->user?->name ?? '-',
                     $commission->user?->email ?? '-',
-                    $commission->product_name ?: ($transaction?->product?->name ?? '-'),
+                    $commission->product_name ?: ($transaction?->display_product_name ?? '-'),
                     $commission->category_name ?: '-',
                     (float) ($transaction?->display_total_payable ?? $transaction?->amount ?? $commission->base_amount),
                     (float) $commission->amount,

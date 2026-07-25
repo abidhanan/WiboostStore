@@ -44,7 +44,7 @@
                     <td style="color: #4a5f96; font-size: 11px;">{{ $trx->created_at->format('d/m/Y H:i') }}</td>
                     <td style="font-weight: bold; color: #5a76c8;">{{ $trx->invoice_number }}</td>
                     <td style="font-weight: bold;">{{ $trx->user->name ?? 'Guest' }}</td>
-                    <td style="color: #4a5f96;">{{ $trx->product->name ?? 'Produk Dihapus' }}</td>
+                    <td style="color: #4a5f96;">{{ $trx->display_product_name }}</td>
                     <td class="text-right nowrap" style="font-weight: bold; color: #10b981;">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</td>
                 </tr>
             @empty

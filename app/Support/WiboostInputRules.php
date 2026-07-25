@@ -41,6 +41,7 @@ class WiboostInputRules
             'name.regex' => 'Nama hanya boleh berisi huruf dan spasi.',
             'reseller_payout_name.regex' => 'Nama pemilik e-wallet hanya boleh berisi huruf dan spasi.',
             'whatsapp.regex' => 'Nomor kontak hanya boleh berisi angka.',
+            'checkout_whatsapp.regex' => 'Nomor WhatsApp hanya boleh berisi angka.',
             'reseller_payout_account.regex' => 'Nomor e-wallet hanya boleh berisi angka.',
             'admin_cs_whatsapp.regex' => 'Nomor Admin CS hanya boleh berisi angka.',
             'admin_otp_whatsapp.regex' => 'Nomor Admin OTP hanya boleh berisi angka.',

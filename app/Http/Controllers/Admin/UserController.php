@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+    private const ROLE_SELECTION_RULE = 'required|in:1,2,3,4,6,7,8,member';
+
     public function index(Request $request)
     {
         $search = trim((string) $request->query('search', ''));
@@ -124,7 +126,7 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'whatsapp' => WiboostInputRules::numberRules(20),
             'password' => 'required|string|min:8',
-            'role_id' => 'required|in:1,2,3,4,6,7,8',
+            'role_id' => self::ROLE_SELECTION_RULE,
         ], WiboostInputRules::validationMessages(), [
             'name' => 'nama lengkap',
             'email' => 'email',
@@ -133,14 +135,22 @@ class UserController extends Controller
             'role_id' => 'role akses',
         ]);
 
-        User::create([
+        $roleSelection = (string) $request->role_id;
+        $userData = [
             'name' => $request->name,
             'email' => $request->email,
             'whatsapp' => $request->whatsapp,
             'password' => Hash::make($request->password),
-            'role_id' => $request->role_id,
+            'role_id' => $roleSelection === 'member' ? User::ROLE_BUYER : (int) $roleSelection,
             'balance' => 0,
-        ]);
+        ];
+
+        if ($roleSelection === 'member') {
+            $userData['membership_started_at'] = now();
+            $userData['membership_expires_at'] = now()->addMonth();
+        }
+
+        User::create($userData);
 
         return $this->redirectToReturnTo($request, 'admin.users.index')->with('success', 'Pengguna baru berhasil ditambahkan.');
     }
@@ -153,11 +163,26 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'role_id' => 'required|in:1,2,3,4,6,7,8',
+            'role_id' => self::ROLE_SELECTION_RULE,
         ]);
 
-        $user->role_id = $request->role_id;
-        $user->save();
+        $roleSelection = (string) $request->role_id;
+
+        if ($roleSelection === 'member') {
+            $user->forceFill([
+                'role_id' => in_array((int) $user->role_id, [User::ROLE_RESELLER, User::ROLE_LEGACY_BUYER], true)
+                    ? (int) $user->role_id
+                    : User::ROLE_BUYER,
+                'membership_started_at' => $user->membership_started_at ?: now(),
+                'membership_expires_at' => now()->addMonth(),
+            ])->save();
+        } else {
+            $user->forceFill([
+                'role_id' => (int) $roleSelection,
+                'membership_started_at' => null,
+                'membership_expires_at' => null,
+            ])->save();
+        }
 
         return $this->redirectToReturnTo($request, 'admin.users.index')->with('success', 'Role akses pengguna berhasil diperbarui.');
     }

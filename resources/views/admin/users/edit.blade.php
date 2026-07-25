@@ -93,16 +93,7 @@
             <div class="md:col-span-2 mt-4 p-8 bg-[#fffcf0] rounded-[2rem] border-4 border-white shadow-md relative z-30 overflow-visible">
                 <div class="relative z-10">
                     <label class="block text-lg font-black text-amber-600 mb-4 ml-2">Ubah Role Akses</label>
-                    @include('admin.users.partials.role-select', ['selectedRole' => old('role_id', (string) $user->role_id)])
-                    <p class="hidden text-xs font-bold text-amber-600 mt-4 ml-2 bg-amber-100/50 px-3 py-1.5 rounded-lg border border-amber-200">
-                        <b>Peringatan:</b> Mengubah menjadi Admin akan memberikan akses penuh ke dashboard pengelolaan.
-                    </p>
-                    <p class="text-xs font-bold text-amber-600 mt-4 ml-2 bg-amber-100/50 inline-block px-3 py-1.5 rounded-lg border border-amber-200">
-                        <b>Peringatan:</b> Super Admin punya akses penuh. Role staf hanya dapat membuka halaman sesuai jatahnya.
-                    </p>
-                    <p class="text-xs font-bold text-[#8b5cf6] mt-3 ml-2 bg-[#f5f3ff] inline-block px-3 py-1.5 rounded-lg border border-[#ddd6fe]">
-                        Membership aktif tetap tampil sebagai Member sampai masa aktif habis.
-                    </p>
+                    @include('admin.users.partials.role-select', ['selectedRole' => old('role_id', $user->isMember() ? 'member' : (string) $user->role_id)])
                 </div>
             </div>
         </div>

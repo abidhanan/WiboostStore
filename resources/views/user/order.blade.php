@@ -576,6 +576,7 @@
         $shouldShowCompactServiceDescription = false;
         $compactProductGridClass = 'grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-4';
         $checkoutNonce = (string) \Illuminate\Support\Str::uuid();
+        $requiresCheckoutWhatsapp = ! $isGuestCatalog && blank(auth()->user()?->whatsapp);
 
         $socialServiceDetailUrlTemplate = $showSuntikSosmedForm
             ? route('user.order.ordersosmed-service', ['product' => '__PRODUCT_ID__'])
@@ -680,6 +681,15 @@
                     <label class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Target/Link/Username <span class="text-[#ff6b6b]">*</span></label>
                     <input type="text" name="target_data" value="{{ old('target_data') }}" required class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 font-black text-[#2b3a67] outline-none shadow-inner transition focus:border-[#bde0fe]">
                 </div>
+
+                @if($requiresCheckoutWhatsapp)
+                    <div class="mb-6 rounded-[2rem] border-4 border-white bg-[#f8faff] p-5 shadow-inner">
+                        <h4 class="mb-4 ml-2 text-xl font-black text-[#2b3a67]">Data Buyer</h4>
+                        <label class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Nomor WhatsApp</label>
+                        <input type="tel" name="checkout_whatsapp" value="{{ old('checkout_whatsapp') }}" required inputmode="numeric" pattern="[0-9]*" maxlength="20" data-wiboost-number-only autocomplete="tel" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 font-black text-[#2b3a67] placeholder-[#a3bbfb] outline-none shadow-inner transition focus:border-[#bde0fe]" placeholder="Contoh: 085312345678">
+                        <p class="mt-2 ml-2 text-xs font-bold text-[#8faaf3]">Cukup isi sekali. Nomor ini akan tersimpan untuk transaksi berikutnya.</p>
+                    </div>
+                @endif
 
                 <div class="mb-6">
                     <label class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Waktu Rata-Rata</label>
@@ -908,6 +918,17 @@
                     <p class="text-sm font-bold leading-relaxed text-[#4bc6b9]">Tidak perlu isi form untuk layanan ini, kamu tidak perlu mengisi data tambahan. Detail akun akan diproses otomatis oleh sistem secara instan.</p>
                 </div>
             </div>
+
+            @if($requiresCheckoutWhatsapp)
+                <div class="relative mb-8 rounded-[2.5rem] border-4 border-white bg-white/95 p-6 shadow-xl shadow-[#bde0fe]/30 sm:p-8">
+                    <div class="checkout-step-heading mb-6">
+                        <h4 class="min-w-0 text-2xl font-black text-[#2b3a67]">Data Buyer</h4>
+                    </div>
+                    <label class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Nomor WhatsApp</label>
+                    <input type="tel" name="checkout_whatsapp" value="{{ old('checkout_whatsapp') }}" required inputmode="numeric" pattern="[0-9]*" maxlength="20" data-wiboost-number-only autocomplete="tel" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 font-black text-[#2b3a67] placeholder-[#a3bbfb] outline-none shadow-inner transition focus:border-[#bde0fe]" placeholder="Contoh: 085312345678">
+                    <p class="mt-2 ml-2 text-xs font-bold text-[#8faaf3]">Cukup isi sekali. Nomor ini akan tersimpan untuk transaksi berikutnya.</p>
+                </div>
+            @endif
 
             <div class="relative mb-8 rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 shadow-xl shadow-[#bde0fe]/30 sm:p-8">
                 <div class="checkout-step-heading mb-6">

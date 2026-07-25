@@ -39,12 +39,23 @@
         max-height: calc(100vh - 1.5rem);
         max-height: calc(100dvh - 1.5rem);
         min-height: 0;
+        min-width: 0;
         opacity: 0;
         transform: none !important;
         transition: opacity 120ms ease-out !important;
     }
+    .history-modal-card *,
+    .history-order-card * {
+        min-width: 0;
+    }
+    .history-modal-card p,
+    .history-modal-card span,
+    .history-modal-card a {
+        overflow-wrap: anywhere;
+    }
     .history-modal-body {
         min-height: 0;
+        overflow-x: hidden;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
     }
@@ -66,6 +77,21 @@
 
         .history-order-card:hover {
             transform: none !important;
+        }
+
+        .history-modal-card {
+            border-radius: 1.45rem;
+            padding: 0.85rem;
+        }
+    }
+
+    @media (max-width: 420px) {
+        .history-modal-card .grid.grid-cols-2 {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        .history-modal-card [class*="tracking-widest"] {
+            letter-spacing: 0.08em !important;
         }
     }
 
@@ -243,7 +269,7 @@
                 ];
                 $hasCredentialAccess = collect($credentialAccessLabels)->keys()->contains(fn ($key) => ! empty($credentials[$key]));
                 $hasCredentialInfo = ! empty($credentials['notes']) || ! empty($credentials['requires_login_proof']);
-                $historyProductName = $trx->product->name ?? ($trx->isMembershipPayment() ? 'Membership Wiboost 30 Hari' : 'Produk Dihapus');
+                $historyProductName = $trx->display_product_name;
             @endphp
 
             <div onclick="openModal('modal-{{ $trx->id }}')" class="history-order-card bg-white/95 backdrop-blur-sm rounded-[2.5rem] p-6 md:p-8 shadow-xl shadow-[#bde0fe]/30 border-4 border-white flex flex-col md:flex-row justify-between items-start md:items-center hover:border-[#bde0fe] md:hover:-translate-y-2 transition-all duration-300 group cursor-pointer relative overflow-hidden">

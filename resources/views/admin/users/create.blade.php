@@ -54,11 +54,6 @@
             </div>
         </div>
         
-        <div class="mb-8 p-4 bg-[#e6fff7] rounded-2xl border-2 border-emerald-100 shadow-sm flex gap-3 items-center">
-            @include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'h-5 w-5 shrink-0'])
-            <p class="text-xs font-bold text-emerald-600">Info: Saldo pengguna baru akan otomatis diatur menjadi <b>Rp 0</b>.</p>
-        </div>
-
         <button type="submit" class="w-full bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black text-xl py-5 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex items-center justify-center gap-2">
             Simpan Pengguna Baru
         </button>

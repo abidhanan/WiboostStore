@@ -14,7 +14,7 @@ class TripayService
     {
         $user ??= $transaction->user;
         $amount = $this->moneyToInt($transaction->amount);
-        $productName = (string) ($transaction->product->name ?? 'Pesanan Wiboost');
+        $productName = (string) ($transaction->display_product_name ?? 'Pesanan Wiboost');
 
         return $this->createClosedPayment(
             merchantRef: $transaction->invoice_number,

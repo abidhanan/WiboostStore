@@ -32,8 +32,17 @@
     }
 
     .membership-price-track {
-        animation: membershipPriceTicker 78s linear infinite;
+        animation: membershipPriceTicker 90s linear infinite;
         width: max-content;
+    }
+
+    .membership-lead {
+        display: block;
+        max-width: 44rem;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        font-size: clamp(0.82rem, 3.8vw, 1rem);
+        line-height: 1.35;
     }
 
     .membership-price-ticker:hover .membership-price-track {
@@ -72,12 +81,12 @@
     @endif
 
     @if($isMember)
-        <header class="relative mb-8 flex flex-col items-start gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white p-8 shadow-xl md:p-10" style="background: linear-gradient(135deg, #ddd6fe 0%, #ede9fe 48%, #fff7ff 100%); box-shadow: 0 18px 35px rgba(139, 92, 246, 0.24);">
+        <header class="membership-dashboard-header relative mb-8 flex flex-col items-start gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white p-8 shadow-xl md:p-10" style="background: linear-gradient(135deg, #ddd6fe 0%, #ede9fe 48%, #fff7ff 100%); box-shadow: 0 18px 35px rgba(139, 92, 246, 0.24);">
             <div class="relative z-10 min-w-0">
                 <div class="mb-3 inline-block rounded-full border-2 border-white bg-white px-4 py-1 text-xs font-black shadow-sm" style="color: #8b5cf6;">
                     Dashboard Member
                 </div>
-                <h1 class="wiboost-dashboard-greeting mb-2 whitespace-nowrap font-black text-[#2b3a67] drop-shadow-sm" style="font-size: clamp(1.45rem, 7vw, 3rem); line-height: 1.08;" data-fit-single-line>
+                <h1 class="wiboost-dashboard-greeting font-black text-[#2b3a67] mb-2 drop-shadow-sm" data-fit-single-line>
                     Halo, {{ $memberName }}!
                     <span class="inline-flex align-middle" style="color:#8b5cf6; transform: translateY(-0.06em);">
                         <svg class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">
@@ -85,7 +94,7 @@
                         </svg>
                     </span>
                 </h1>
-                <p class="wiboost-dashboard-subtitle max-w-3xl font-extrabold" style="color: #8b5cf6; font-size: clamp(0.82rem, 3.8vw, 1rem); line-height: 1.35;">Selamat menikmati produk dan layanan dengan harga yang lebih murah.</p>
+                <p class="membership-lead font-extrabold" style="color: #8b5cf6;">Selamat menikmati produk dan layanan dengan harga yang lebih murah.</p>
             </div>
         </header>
 
@@ -119,7 +128,7 @@
         <header class="relative mb-8 flex flex-col items-start gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white p-8 shadow-xl md:p-10" style="background: linear-gradient(135deg, #ddd6fe 0%, #ede9fe 48%, #fff7ff 100%); box-shadow: 0 18px 35px rgba(139, 92, 246, 0.24);">
             <span class="mb-3 inline-block rounded-full border-2 border-white bg-white px-4 py-1 text-xs font-black shadow-sm" style="color: #8b5cf6;">Member</span>
             <div class="relative z-10 min-w-0">
-                <h1 class="wiboost-dashboard-greeting mb-2 font-black leading-tight text-[#2b3a67] drop-shadow-sm" style="font-size: clamp(1.45rem, 7vw, 3rem); line-height: 1.08;">
+                <h1 class="wiboost-dashboard-greeting mb-2 font-black leading-tight text-[#2b3a67] drop-shadow-sm" data-fit-single-line>
                     Yuk Jadi Member!
                     <span class="inline-flex align-middle" style="color:#8b5cf6; transform: translateY(-0.06em);">
                         <svg class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">
@@ -127,7 +136,7 @@
                         </svg>
                     </span>
                 </h1>
-                <p class="wiboost-dashboard-subtitle max-w-3xl text-sm font-extrabold leading-relaxed sm:text-base" style="color: #8b5cf6;">
+                <p class="membership-lead font-extrabold" style="color: #8b5cf6;">
                     Nikmati keuntungan potongan harga produk dan layanan yang jauh lebih murah.
                 </p>
             </div>

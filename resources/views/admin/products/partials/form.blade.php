@@ -229,7 +229,7 @@
             <button type="submit" class="flex-1 rounded-full border-4 border-white bg-[#5a76c8] py-5 text-xl font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform hover:bg-[#4760a9] active:scale-95 flex justify-center items-center gap-2">
                 {{ $submitLabel }}
             </button>
-            <a href="{{ route('admin.products.index') }}" class="rounded-full border-4 border-white bg-[#f8faff] px-10 py-5 text-center text-lg font-black text-[#8faaf3] transition-transform hover:bg-[#f0f5ff] active:scale-95 shadow-md">
+            <a href="{{ request('return_to') ?: route('admin.products.index') }}" class="rounded-full border-4 border-white bg-[#f8faff] px-10 py-5 text-center text-lg font-black text-[#8faaf3] transition-transform hover:bg-[#f0f5ff] active:scale-95 shadow-md">
                 Batal
             </a>
         </div>

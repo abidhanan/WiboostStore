@@ -1243,7 +1243,7 @@ class OrderFulfillmentService
                 'user_id' => $user->id,
                 'type' => 'refund',
                 'amount' => $refundAmount,
-                'description' => 'Refund otomatis untuk pesanan gagal: ' . ($lockedTransaction->product->name ?? 'Produk'),
+                'description' => 'Refund otomatis untuk pesanan gagal: ' . ($lockedTransaction->display_product_name ?? 'Produk'),
                 'invoice_number' => $lockedTransaction->invoice_number,
             ]);
 

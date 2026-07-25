@@ -49,13 +49,13 @@
                 <div class="mb-3 inline-block rounded-full border-2 border-white bg-white px-4 py-1 text-xs font-black shadow-sm" style="color:#d99b16 !important;">
                     Dashboard Reseller
                 </div>
-                <h1 class="wiboost-dashboard-greeting mb-2 whitespace-nowrap font-black text-[#2b3a67] drop-shadow-sm" style="font-size: clamp(1.45rem, 7vw, 3rem); line-height: 1.08;" data-fit-single-line>
+                <h1 class="wiboost-dashboard-greeting font-black text-[#2b3a67] mb-2 drop-shadow-sm" data-fit-single-line>
                     Halo, {{ $resellerUserName }}!
                     <span class="inline-flex align-[-0.18em]" style="color:#d99b16;">
                         @include('partials.wiboost-icon', ['name' => 'sparkles', 'class' => 'h-8 w-8'])
                     </span>
                 </h1>
-                <p class="wiboost-dashboard-subtitle whitespace-nowrap font-extrabold" style="color:#d99b16 !important; font-size: clamp(0.82rem, 3.8vw, 1rem); line-height: 1.25;" data-fit-single-line>Lakukan transaksi dan dapatkan komisi!</p>
+                <p class="wiboost-dashboard-subtitle font-extrabold" style="color:#d99b16 !important;" data-fit-single-line>Lakukan transaksi dan dapatkan komisi!</p>
             </div>
         </header>
     @else
@@ -89,7 +89,7 @@
     @endif
 
     @unless($isReseller)
-        <div class="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <div class="grid gap-6">
             <div class="grid gap-6">
                 <div class="rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/25 sm:p-8">
                     <h2 class="text-2xl font-black text-[#2b3a67]">Syarat & Ketentuan</h2>
@@ -262,7 +262,7 @@
             </div>
         </div>
 
-        <div class="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <div class="grid gap-6">
             <div class="grid gap-6">
                 <div class="flex max-h-[36rem] min-h-[20rem] flex-col overflow-hidden rounded-[2rem] border-4 border-white bg-white p-0 shadow-xl shadow-[#bde0fe]/25">
                     <div class="border-b-4 border-dashed border-[#f4f9ff] bg-white px-6 py-5">
@@ -273,7 +273,7 @@
                             <div class="flex flex-col gap-3 rounded-[1.5rem] bg-[#f8fbff] p-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div class="min-w-0">
                                     @php
-                                        $historyProduct = $history->product_name ?: ($history->transaction?->product?->name ?: null);
+                                        $historyProduct = $history->product_name ?: ($history->transaction?->display_product_name ?: null);
                                     @endphp
                                     <p class="text-sm font-black text-[#2b3a67]">{{ $history->display_type }}</p>
                                     <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $history->created_at?->format('d M Y, H:i') }} - {{ $history->display_status }}</p>

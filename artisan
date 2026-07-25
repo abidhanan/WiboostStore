@@ -13,6 +13,13 @@ require __DIR__.'/vendor/autoload.php';
 /** @var Application $app */
 $app = require_once __DIR__.'/bootstrap/app.php';
 
+if (in_array('--compact', $_SERVER['argv'] ?? [], true)) {
+    $_SERVER['argv'] = array_values(array_filter(
+        $_SERVER['argv'],
+        fn ($argument) => $argument !== '--compact'
+    ));
+}
+
 $status = $app->handleCommand(new ArgvInput);
 
 exit($status);

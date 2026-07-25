@@ -1,6 +1,14 @@
 @php
     $badge = $badge ?? 'Admin';
     $description = $description ?? null;
+    $returnTo = trim((string) request('return_to', ''));
+    $backUrl = $returnTo !== '' && \Illuminate\Support\Str::startsWith($returnTo, [
+            url('/admin'),
+            request()->getSchemeAndHttpHost() . '/admin',
+            '/admin',
+        ])
+        ? $returnTo
+        : $backUrl;
 @endphp
 
 <section class="relative z-10 mb-10 overflow-visible rounded-[2.5rem] border-4 border-white bg-white/95 p-5 text-left shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:p-6 md:p-8">

@@ -4,9 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Top Up #{{ $deposit->invoice_number }} - Wiboost</title>
+    @include('partials.vite-preload')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.vite-fallback')
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    @include('partials.font-nunito')
     <style>
         html,
         body {

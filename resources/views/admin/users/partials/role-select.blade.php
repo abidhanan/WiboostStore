@@ -199,6 +199,7 @@
     $roleOptions = [
         '2' => 'Buyer',
         '3' => 'Reseller',
+        'member' => 'Member',
         '1' => 'Super Admin',
         '4' => 'Keuangan',
         '6' => 'Gudang',

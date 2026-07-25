@@ -69,7 +69,7 @@
                     <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
                         @forelse($transactions as $trx)
                             @php
-                                $productName = $trx->product?->name ?: ($trx->isMembershipPayment() ? 'Membership Wiboost 30 Hari' : 'Produk Dihapus');
+                                $productName = $trx->display_product_name;
                                 $methodDisplay = $trx->display_payment_method;
                                 $methodClass = match ($methodDisplay) {
                                     'SALDO' => 'bg-[#e0fbfc] text-[#5a76c8]',

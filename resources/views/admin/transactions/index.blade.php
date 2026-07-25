@@ -518,7 +518,7 @@
                     <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
                         @forelse($transactions ?? [] as $trx)
                         @php
-                            $adminProductName = $trx->product?->name ?: ($trx->isMembershipPayment() ? 'Membership Wiboost 30 Hari' : 'Produk Dihapus');
+                            $adminProductName = $trx->display_product_name;
                             $adminTargetSummary = $trx->isMembershipPayment()
                                 ? null
                                 : ($trx->order_input_summary
@@ -662,7 +662,7 @@
 
         @foreach($transactions ?? [] as $trx)
             @php
-                $detailProductName = $trx->product?->name ?: ($trx->isMembershipPayment() ? 'Membership Wiboost 30 Hari' : 'Produk Dihapus');
+                $detailProductName = $trx->display_product_name;
                 $detailTargetSummary = $trx->isMembershipPayment()
                     ? null
                     : ($trx->order_input_summary

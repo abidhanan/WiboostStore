@@ -222,7 +222,7 @@ class DashboardController extends Controller
                     return [
                         'invoice' => $commission->transaction?->invoice_number ?: '-',
                         'time' => optional($commissionTime)->diffForHumans() ?: '-',
-                        'product' => $commission->product_name ?: ($commission->transaction?->product?->name ?: '-'),
+                        'product' => $commission->product_name ?: ($commission->transaction?->display_product_name ?: '-'),
                         'reseller' => $commission->user?->name ?: '-',
                         'amount' => (float) ($commission->amount ?? 0),
                     ];

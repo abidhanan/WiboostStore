@@ -9,6 +9,16 @@
     .bg-wiboost-sky { background: linear-gradient(180deg, #bde0fe 0%, #e0fbfc 100%); }
     .hide-scroll::-webkit-scrollbar { display: none; }
     .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    .wallet-scroll-panel {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior-y: auto;
+        -webkit-overflow-scrolling: touch;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .wallet-scroll-panel::-webkit-scrollbar { display: none; }
     
     .animate-float { animation: float 6s ease-in-out infinite; }
     .animate-float-delayed { animation: float 6s ease-in-out 3s infinite; }
@@ -99,7 +109,7 @@
                     $walletLogs = App\Models\WalletHistory::where('user_id', Auth::id())->latest()->take(20)->get();
                 @endphp
 
-                <div class="min-h-0 flex-1 space-y-4 overflow-y-auto bg-[#f8faff]/50 p-6 hide-scroll relative z-10 {{ $walletLogs->isEmpty() ? 'flex' : '' }}" data-wallet-mutation-scroll>
+                <div class="wallet-scroll-panel space-y-4 bg-[#f8faff]/50 p-6 relative z-10 {{ $walletLogs->isEmpty() ? 'flex' : '' }}" data-wallet-mutation-scroll>
 
                     @forelse($walletLogs as $log)
                         @php
@@ -219,6 +229,27 @@
             mutationScroll.style.maxHeight = height > 0 ? `${Math.max(height - headerHeight, 240)}px` : '';
         }
     }
+
+    function prepareWalletScrollChaining(scrollArea) {
+        if (!scrollArea || scrollArea.dataset.scrollChainingReady === '1') {
+            return;
+        }
+
+        scrollArea.dataset.scrollChainingReady = '1';
+        scrollArea.addEventListener('wheel', (event) => {
+            const atTop = scrollArea.scrollTop <= 0;
+            const atBottom = Math.ceil(scrollArea.scrollTop + scrollArea.clientHeight) >= scrollArea.scrollHeight;
+
+            if ((event.deltaY < 0 && atTop) || (event.deltaY > 0 && atBottom)) {
+                scrollArea.style.overflowY = 'hidden';
+                requestAnimationFrame(() => {
+                    scrollArea.style.overflowY = 'auto';
+                });
+            }
+        }, { passive: true });
+    }
+
+    prepareWalletScrollChaining(document.querySelector('[data-wallet-mutation-scroll]'));
 
     const walletHeightObserver = window.ResizeObserver && document.querySelector('[data-wallet-left-column]')
         ? new ResizeObserver(syncWalletMutationHeight)

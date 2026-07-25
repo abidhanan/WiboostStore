@@ -119,7 +119,7 @@ class WiboostMaintenanceReport extends Command
         if ($stalePendingTransactions->isNotEmpty()) {
             $fields[] = [
                 'name' => 'Pending berbayar yang tertahan',
-                'value' => $stalePendingTransactions->map(fn ($transaction) => "{$transaction->invoice_number} - " . ($transaction->product->name ?? 'Produk'))->implode("\n"),
+                'value' => $stalePendingTransactions->map(fn ($transaction) => "{$transaction->invoice_number} - " . ($transaction->display_product_name ?? 'Produk'))->implode("\n"),
                 'inline' => false,
             ];
         }
@@ -127,7 +127,7 @@ class WiboostMaintenanceReport extends Command
         if ($staleProcessingTransactions->isNotEmpty()) {
             $fields[] = [
                 'name' => 'Processing lama',
-                'value' => $staleProcessingTransactions->map(fn ($transaction) => "{$transaction->invoice_number} - " . ($transaction->product->name ?? 'Produk'))->implode("\n"),
+                'value' => $staleProcessingTransactions->map(fn ($transaction) => "{$transaction->invoice_number} - " . ($transaction->display_product_name ?? 'Produk'))->implode("\n"),
                 'inline' => false,
             ];
         }

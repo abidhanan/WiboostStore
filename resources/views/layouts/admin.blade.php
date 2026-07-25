@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') - Wiboost Store</title>
     @include('partials.site-icons')
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" as="image" href="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" fetchpriority="high">
+    @include('partials.font-nunito')
+    @include('partials.vite-preload')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.vite-fallback')
     @include('partials.ui-performance-tuning')
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+        html { min-height: 100%; overflow-x: hidden; }
         body { font-family: 'Nunito', sans-serif; overflow-x: hidden; }
         :root {
             --wiboost-admin-topbar-height: 6.25rem;
@@ -249,6 +249,31 @@
         }
 
         @media (max-width: 1023px) {
+            html {
+                height: auto !important;
+                min-height: 100% !important;
+                overflow-y: auto !important;
+            }
+
+            body.wiboost-admin-shell {
+                display: block !important;
+                height: auto !important;
+                min-height: 100dvh !important;
+                max-height: none !important;
+                overflow-x: hidden !important;
+                overflow-y: auto !important;
+                overscroll-behavior-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                touch-action: pan-y !important;
+            }
+
+            body.wiboost-admin-shell:not(.admin-detail-open) {
+                height: auto !important;
+                min-height: 100dvh !important;
+                overflow-y: auto !important;
+                touch-action: pan-y !important;
+            }
+
             body.wiboost-admin-shell .wiboost-admin-navbar-card {
                 min-height: 4.75rem;
                 padding-left: 0.75rem !important;
@@ -256,7 +281,23 @@
             }
 
             body.wiboost-admin-shell .wiboost-admin-content {
+                display: block !important;
+                height: auto !important;
+                min-height: calc(100dvh - 6rem) !important;
+                max-height: none !important;
+                overflow: visible !important;
                 padding-top: 6rem !important;
+                padding-bottom: max(2rem, env(safe-area-inset-bottom)) !important;
+            }
+
+            body.wiboost-admin-shell main {
+                display: block !important;
+                height: auto !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                overflow: visible !important;
+                contain: none !important;
+                touch-action: pan-y !important;
             }
 
             body.wiboost-admin-shell .wiboost-admin-mobile-menu-panel {
@@ -277,7 +318,7 @@
             body.wiboost-admin-shell .wiboost-admin-mobile-sidebar-nav {
                 min-height: 0 !important;
                 overflow-y: auto !important;
-                overscroll-behavior: contain !important;
+                overscroll-behavior: auto !important;
                 padding-bottom: 0.25rem !important;
             }
 
@@ -461,7 +502,7 @@
 
             body.wiboost-admin-shell main {
                 overflow: visible !important;
-                contain: layout paint;
+                contain: none !important;
             }
 
             body.wiboost-admin-shell.admin-detail-open main {
@@ -859,120 +900,6 @@
         </div>
     </div>
 
-    @if(false)
-    <!-- Sidebar Desktop -->
-    <aside class="sticky top-0 hidden h-screen w-80 shrink-0 p-5 xl:block z-40">
-        <div class="flex h-full flex-col rounded-[2.5rem] border-4 border-white bg-white/80 shadow-2xl shadow-[#bde0fe]/30 backdrop-blur-xl">
-            <div class="shrink-0 border-b-4 border-dashed border-[#f4f9ff] px-6 py-6">
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 group">
-                    <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" onerror="this.onerror=null;this.src='{{ asset('images/wiboost-logo.png') }}?v=20260426-full';" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm group-hover:scale-110 transition-transform">
-                    <div class="min-w-0 flex-1">
-                        <p class="text-xl font-black leading-tight text-[#2b3a67] break-words">Wiboost <span class="text-[#5a76c8]">Store</span></p>
-                    </div>
-                </a>
-            </div>
-            <nav x-ref="adminSidebarNav" @scroll.debounce.150ms="saveSidebarScroll()" class="flex-1 space-y-2 overflow-y-auto overscroll-contain px-5 py-6 hide-scroll">
-                @foreach($adminNav as $item)
-                    <?php $isActiveAdminNav = $adminNavMatches($item); ?>
-                    <a href="{{ route($item['route']) }}" @click="saveSidebarScroll()" class="flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-black transition-all duration-300 {{ $isActiveAdminNav ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 scale-[1.02]' : 'border-2 border-transparent text-[#5a76c8] hover:border-white hover:bg-[#f4f9ff] hover:scale-[1.02]' }}">
-                        <span class="text-lg">{{ $item['icon'] }}</span>
-                        <span>{{ $item['label'] }}</span>
-                    </a>
-                @endforeach
-            </nav>
-            <div class="shrink-0 border-t-4 border-dashed border-[#f4f9ff] p-5">
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="flex w-full items-center justify-center rounded-full border-4 border-white bg-[#ffe5e5] px-6 py-3.5 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 transition-all hover:bg-[#ffcccc] active:scale-95 gap-2">
-                        Keluar Akun
-                    </button>
-                </form>
-            </div>
-        </div>
-    </aside>
-
-    <!-- Main Content Area -->
-    <div class="flex min-h-screen min-w-0 flex-1 flex-col p-4 sm:p-6 xl:p-8 z-10">
-        
-        <!-- Header -->
-        <div class="sticky top-4 z-40 mb-6 sm:mb-8 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/90 px-4 sm:px-6 py-4 shadow-xl shadow-[#bde0fe]/20 backdrop-blur-xl flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div class="flex items-center gap-3 sm:gap-4 w-full lg:w-auto">
-                <!-- Hamburger Button Mobile -->
-                <button type="button" @click="sidebarOpen = true" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform active:scale-95 xl:hidden">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                </button>
-                
-                <div class="min-w-0 flex-1 overflow-visible">
-                    <h1 class="text-xl sm:text-2xl md:text-3xl font-black leading-tight text-[#2b3a67] drop-shadow-sm whitespace-normal break-words">{{ $adminNavbarTitle }}</h1>
-                    @if($adminNavbarSubtitle)
-                        <p class="mt-1 block w-full max-w-full truncate whitespace-nowrap text-[10px] sm:text-xs font-bold leading-snug text-[#8faaf3]">
-                            {{ $adminNavbarSubtitle }}
-                        </p>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Header Actions -->
-            @hasSection('admin_header_actions')
-                <div class="flex w-full shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap lg:w-auto lg:items-center lg:justify-end">
-                    @yield('admin_header_actions')
-                </div>
-            @endif
-        </div>
-
-        <main class="flex-1 rounded-[2.5rem] min-w-0 w-full overflow-hidden">
-            @yield('content')
-        </main>
-    </div>
-
-    <!-- Sidebar Mobile Drawer -->
-    <div x-cloak x-show="sidebarOpen" class="fixed inset-0 z-[70] xl:hidden" aria-modal="true" role="dialog">
-        <!-- Backdrop bisa diklik untuk menutup sidebar tanpa tombol close -->
-        <div x-show="sidebarOpen" x-transition.opacity class="absolute inset-0 bg-[#2b3a67]/60 backdrop-blur-md" @click="sidebarOpen = false"></div>
-        
-        <!-- Sidebar Container (Tanpa scroll di parent) -->
-        <aside x-show="sidebarOpen"
-                x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="-translate-x-full"
-                x-transition:enter-end="translate-x-0"
-                x-transition:leave="transition ease-in duration-200"
-                x-transition:leave-start="translate-x-0"
-                x-transition:leave-end="-translate-x-full"
-                class="absolute inset-y-4 left-4 max-h-[calc(100vh-2rem)] w-[min(20rem,calc(100vw-2.5rem))] rounded-[2.5rem] border-4 border-white bg-white p-5 shadow-2xl flex flex-col">
-            
-            <!-- Header Mobile Sidebar (Fixed/Tidak ikut scroll) -->
-            <div class="shrink-0 mb-6 flex items-center gap-3 border-b-4 border-dashed border-[#f4f9ff] pb-6">
-                <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" onerror="this.onerror=null;this.src='{{ asset('images/wiboost-logo.png') }}?v=20260426-full';" alt="Logo Wiboost Store" width="192" height="192" loading="eager" decoding="async" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm">
-                <div class="min-w-0 flex-1">
-                    <p class="text-xl font-black leading-tight text-[#2b3a67] break-words">Wiboost <span class="text-[#5a76c8]">Store</span></p>
-                </div>
-            </div>
-            
-            <!-- Nav Menu Mobile Sidebar (Scrollable & Hide Scrollbar) -->
-            <nav class="flex-1 space-y-2 overflow-y-auto overscroll-contain hide-scroll pr-1">
-                @foreach($adminNav as $item)
-                    <?php $isActiveAdminNav = $adminNavMatches($item); ?>
-                    <a href="{{ route($item['route']) }}" class="flex items-center gap-3 rounded-full px-5 py-3 text-sm font-black transition-all {{ $isActiveAdminNav ? 'bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 border-2 border-white' : 'bg-[#f4f9ff] text-[#2b3a67] border-2 border-transparent hover:border-white' }}">
-                        <span class="text-lg">{{ $item['icon'] }}</span>
-                        <span>{{ $item['label'] }}</span>
-                    </a>
-                @endforeach
-            </nav>
-            
-            <!-- Footer Mobile Sidebar (Fixed/Tidak ikut scroll) -->
-            <div class="shrink-0 mt-6 pt-6 border-t-4 border-dashed border-[#f4f9ff]">
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="flex w-full items-center justify-center rounded-full border-4 border-white bg-[#ffe5e5] px-6 py-3.5 text-sm font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20 active:scale-95 transition-transform gap-2">
-                        Keluar Akun
-                    </button>
-                </form>
-            </div>
-        </aside>
-    </div>
-
-    @endif
-
     <script>
         window.wiboostResetFloatingMenu = window.wiboostResetFloatingMenu || function (dropdown, menuSelector = '.admin-theme-select-menu') {
             const menu = dropdown.querySelector(menuSelector) || dropdown._wiboostSharedFloatingMenu;
@@ -1047,6 +974,22 @@
         };
 
         document.addEventListener('DOMContentLoaded', function () {
+            const releaseStaleAdminScrollLock = () => {
+                const hasOpenDetail = document.body.classList.contains('admin-detail-open');
+
+                if (hasOpenDetail) {
+                    return;
+                }
+
+                document.body.classList.remove('overflow-hidden');
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+            };
+
+            releaseStaleAdminScrollLock();
+            window.addEventListener('pageshow', releaseStaleAdminScrollLock);
+            window.addEventListener('resize', releaseStaleAdminScrollLock);
+
             const sidebarTargets = [
                 ['wiboost-admin-sidebar-nav', 'wiboost-admin-sidebar-scroll'],
                 ['wiboost-admin-mobile-sidebar-nav', 'wiboost-admin-mobile-sidebar-scroll'],
@@ -1095,72 +1038,12 @@
             document.addEventListener('click', function (event) {
                 const backLink = event.target.closest('a[data-wiboost-back], a[aria-label="Kembali"]');
 
-                if (!backLink) {
+                if (!backLink || event.defaultPrevented) {
                     return;
                 }
 
-                const sameOriginUrl = (value) => {
-                    if (!value || value === '#') {
-                        return null;
-                    }
-
-                    try {
-                        const url = new URL(value, window.location.origin);
-
-                        return url.origin === window.location.origin ? url.href : null;
-                    } catch (error) {
-                        return null;
-                    }
-                };
-
-                const resolveBackTarget = () => {
-                    const returnTo = new URLSearchParams(window.location.search).get('return_to');
-                    const returnTarget = sameOriginUrl(returnTo);
-
-                    if (returnTarget) {
-                        return returnTarget;
-                    }
-
-                    const hrefTarget = sameOriginUrl(backLink.getAttribute('href'));
-
-                    if (hrefTarget) {
-                        return hrefTarget;
-                    }
-
-                    const referrerTarget = sameOriginUrl(document.referrer);
-
-                    if (referrerTarget && referrerTarget !== window.location.href) {
-                        return referrerTarget;
-                    }
-
-                    return null;
-                };
-
-                const backTarget = resolveBackTarget();
-                const useHistoryFallback = !backTarget && window.history.length > 1;
-
-                if (!backTarget && !useHistoryFallback) {
-                    return;
-                }
-
-                event.preventDefault();
-
-                if (window.wiboostBackDelayActive) {
-                    return;
-                }
-
-                window.wiboostBackDelayActive = true;
-                backLink.classList.add('is-backing', 'pointer-events-none');
-
-                window.setTimeout(() => {
-                    if (backTarget) {
-                        window.location.href = backTarget;
-                        return;
-                    }
-
-                    window.history.back();
-                }, 260);
-            });
+                backLink.classList.add('is-backing');
+            }, true);
 
             document.addEventListener('click', function (event) {
                 const link = event.target.closest('a[href]');
@@ -1176,7 +1059,9 @@
                         return;
                     }
 
-                    const isEditorLink = url.pathname.endsWith('/create') || /\/edit$/.test(url.pathname);
+                    const isEditorLink = url.pathname.endsWith('/create')
+                        || /\/edit$/.test(url.pathname)
+                        || /^\/admin\/products\/[^/]+\/credentials$/.test(url.pathname);
 
                     if (!isEditorLink || url.searchParams.has('return_to')) {
                         return;

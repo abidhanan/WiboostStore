@@ -16,6 +16,7 @@ class Transaction extends Model
         'invoice_number', 
         'user_id', 
         'product_id', 
+        'product_name_snapshot',
         'amount', 
         'paid_amount',
         'target_data', 
@@ -272,6 +273,29 @@ class Transaction extends Model
     {
         return (string) data_get($this->response_data, 'purpose') === 'membership'
             || str_starts_with((string) $this->invoice_number, 'MEM-');
+    }
+
+    public function getDisplayProductNameAttribute(): string
+    {
+        $snapshot = trim((string) $this->product_name_snapshot);
+
+        if ($snapshot !== '') {
+            return $snapshot;
+        }
+
+        if ($this->relationLoaded('product') && $this->product?->name) {
+            return (string) $this->product->name;
+        }
+
+        if ($this->product?->name) {
+            return (string) $this->product->name;
+        }
+
+        if ($this->isMembershipPayment()) {
+            return 'Membership Wiboost 30 Hari';
+        }
+
+        return 'Produk Wiboost';
     }
 
     public function membershipActivated(): bool

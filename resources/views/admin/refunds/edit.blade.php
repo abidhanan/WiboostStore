@@ -6,7 +6,7 @@
 @section('content')
 @php
     $transaction = $refund->transaction;
-    $productName = $transaction?->product?->name ?: ($transaction?->isMembershipPayment() ? 'Membership Wiboost 30 Hari' : 'Produk Dihapus');
+    $productName = $transaction?->display_product_name ?? 'Produk Wiboost';
     $transactionOptions = $transactions->map(function ($item) {
         $userName = $item->user?->name ?? 'Guest';
 

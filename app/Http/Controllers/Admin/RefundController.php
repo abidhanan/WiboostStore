@@ -318,7 +318,7 @@ class RefundController extends Controller
             [
                 ['name' => 'Invoice', 'value' => (string) $transaction->invoice_number, 'inline' => true],
                 ['name' => 'User', 'value' => (string) ($transaction->user->name ?? 'Guest'), 'inline' => true],
-                ['name' => 'Produk', 'value' => (string) ($transaction->product->name ?? '-'), 'inline' => true],
+                ['name' => 'Produk', 'value' => (string) ($transaction->display_product_name ?? '-'), 'inline' => true],
                 ['name' => 'Nominal Refund', 'value' => 'Rp ' . number_format($this->refundAmount($transaction), 0, ',', '.'), 'inline' => true],
             ],
             16433050,

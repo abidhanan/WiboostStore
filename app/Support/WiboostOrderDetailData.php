@@ -17,7 +17,7 @@ class WiboostOrderDetailData
             'invoice' => $transaction->invoice_number ?: '-',
             'category' => $transaction->isMembershipPayment() ? 'Membership' : ($rootCategory?->name ?: '-'),
             'category_key' => $transaction->isMembershipPayment() ? 'membership' : Str::slug((string) ($rootCategory?->slug ?: $rootCategory?->name)),
-            'product' => $product?->name ?: ($transaction->isMembershipPayment() ? 'Membership Wiboost 30 Hari' : 'Produk Dihapus'),
+            'product' => $transaction->display_product_name,
             'total' => 'Rp ' . number_format((int) $transaction->display_total_payable, 0, ',', '.'),
             'payment' => strtoupper((string) $transaction->display_payment_method),
             'status' => strtoupper(self::statusLabel($transaction)),

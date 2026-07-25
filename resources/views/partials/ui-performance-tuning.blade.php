@@ -65,7 +65,7 @@
         .table-scroll,
         [class*="overflow-x-auto"],
         [class*="overflow-y-auto"] {
-            overscroll-behavior: contain;
+            overscroll-behavior: auto;
         }
     }
 
