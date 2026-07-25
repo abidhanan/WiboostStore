@@ -14,6 +14,10 @@ $maxWidth = [
 ][$maxWidth];
 @endphp
 
+{{-- Di-teleport ke <body> supaya tidak terperangkap containing-block/stacking-context ancestor
+     (mis. card ber-backdrop-blur / main z-10). Background + blur langsung di container, kartu satu-satunya
+     anak -> overlay selalu jadi foreground penuh, tombol modal tidak pernah "di background". --}}
+<template x-teleport="body">
 <div
     x-data="{
         show: @js($show),
@@ -43,26 +47,20 @@ $maxWidth = [
     x-on:keydown.tab.prevent="$event.shiftKey || nextFocusable().focus()"
     x-on:keydown.shift.tab.prevent="prevFocusable().focus()"
     x-show="show"
-    class="fixed inset-0 overflow-y-auto px-4 py-6 sm:px-0 z-[100]"
-    style="display: {{ $show ? 'block' : 'none' }}; font-family: 'Nunito', sans-serif;"
+    x-on:click.self="show = false"
+    x-transition:enter="ease-out duration-200"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="ease-in duration-150"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    class="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto p-4 sm:p-6"
+    style="display: none; background: rgba(43, 58, 103, .6); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); font-family: 'Nunito', sans-serif;"
 >
     <div
         x-show="show"
-        class="fixed inset-0 transform transition-all"
-        x-on:click="show = false"
-        x-transition:enter="ease-out duration-300"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="ease-in duration-200"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-    >
-        <div class="absolute inset-0 bg-[#2b3a67]/60 backdrop-blur-sm"></div>
-    </div>
-
-    <div
-        x-show="show"
-        class="mb-6 bg-white/95 backdrop-blur-md rounded-[2.5rem] border-4 border-white shadow-2xl transform transition-all sm:w-full {{ $maxWidth }} sm:mx-auto"
+        x-on:click.stop
+        class="relative my-auto w-full {{ $maxWidth }} bg-white/95 rounded-[2.5rem] border-4 border-white shadow-2xl transform transition-all"
         x-transition:enter="transition-all ease-out duration-300"
         x-transition:enter-start="opacity-0 translate-y-8 sm:translate-y-0 sm:scale-90"
         x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
@@ -73,3 +71,4 @@ $maxWidth = [
         {{ $slot }}
     </div>
 </div>
+</template>

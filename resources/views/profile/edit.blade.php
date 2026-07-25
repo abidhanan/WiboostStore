@@ -91,7 +91,10 @@
             @include('profile.partials.update-password-form')
         </div>
 
-        <div class="bg-[#fff0f0]/95 backdrop-blur-sm rounded-[2.5rem] p-8 md:p-10 shadow-xl shadow-[#ffe5e5]/50 border-4 border-white transition-transform duration-300 hover:border-[#ffcccc]">
+        {{-- Tanpa backdrop-blur/transform di card ini: backdrop-filter membuat containing-block untuk
+             position:fixed sehingga overlay modal hapus akun (di dalamnya) terjebak. Modal juga sudah
+             di-teleport ke <body>, ini pengaman tambahan. --}}
+        <div class="bg-[#fff0f0]/95 rounded-[2.5rem] p-8 md:p-10 shadow-xl shadow-[#ffe5e5]/50 border-4 border-white hover:border-[#ffcccc]">
             @include('profile.partials.delete-user-form')
         </div>
     </div>

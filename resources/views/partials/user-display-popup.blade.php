@@ -62,8 +62,9 @@
 
         #wiboost-display-card {
             position: relative !important;
-            width: min(92vw, 384px) !important;
-            max-height: 86vh !important;
+            /* -56px menyisakan ruang untuk tombol close yang menonjol -22px di kanan, agar tidak keluar layar di HP apa pun */
+            width: min(calc(100vw - 56px), 384px) !important;
+            max-height: 84vh !important;
             aspect-ratio: 4 / 5 !important;
             overflow: visible !important;
             border: 4px solid #fff !important;
@@ -186,7 +187,7 @@
     </style>
 
     <div id="wiboost-display-overlay" aria-modal="true" role="dialog" style="position: fixed; inset: 0; z-index: 2147483647; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(23, 33, 62, .74); pointer-events: auto;">
-        <div id="wiboost-display-card" style="position: relative; width: min(92vw, 384px); max-height: 86vh; aspect-ratio: 4 / 5; overflow: visible; border: 4px solid #fff; border-radius: 32px; color: #fff; box-shadow: 0 28px 80px rgba(23, 33, 62, .45); background: {{ $firstDisplayBackground }};">
+        <div id="wiboost-display-card" style="position: relative; width: min(calc(100vw - 56px), 384px); max-height: 84vh; aspect-ratio: 4 / 5; overflow: visible; border: 4px solid #fff; border-radius: 32px; color: #fff; box-shadow: 0 28px 80px rgba(23, 33, 62, .45); background: {{ $firstDisplayBackground }};">
             <button id="wiboost-display-close" type="button" aria-label="Tutup display" onclick="if (window.wiboostDisplayNext) { return window.wiboostDisplayNext(event); } this.closest('#wiboost-display-overlay')?.remove(); document.body.style.overflow=''; return false;" style="position: absolute; top: -22px; right: -22px; z-index: 50; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; border-radius: 999px; background: #fff; color: #ff4d4d; box-shadow: 0 12px 28px rgba(255, 77, 77, .28); cursor: pointer;">
                 <svg style="width: 20px; height: 20px; display: block;" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6 6 18" />

@@ -40,6 +40,16 @@
     .reseller-scroll-panel::-webkit-scrollbar {
         display: none;
     }
+
+    /* Deskripsi header reseller: membungkus & ukuran sama seperti deskripsi header member (tidak terpotong). */
+    .reseller-lead {
+        display: block;
+        max-width: 44rem;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        font-size: clamp(0.82rem, 3.8vw, 1rem);
+        line-height: 1.35;
+    }
 </style>
 
 <section class="space-y-8">
@@ -55,7 +65,7 @@
                         @include('partials.wiboost-icon', ['name' => 'sparkles', 'class' => 'h-8 w-8'])
                     </span>
                 </h1>
-                <p class="wiboost-dashboard-subtitle font-extrabold" style="color:#d99b16 !important;" data-fit-single-line>Lakukan transaksi dan dapatkan komisi!</p>
+                <p class="reseller-lead font-extrabold" style="color:#d99b16 !important;">Lakukan transaksi dan dapatkan komisi!</p>
             </div>
         </header>
     @else
@@ -70,7 +80,7 @@
                         </svg>
                     </span>
                 </h1>
-                <p class="wiboost-dashboard-subtitle max-w-3xl text-sm font-extrabold leading-relaxed sm:text-base" style="color:#d99b16 !important;">
+                <p class="reseller-lead font-extrabold" style="color:#d99b16 !important;">
                     Promosikan produk dan layanan lalu dapatkan komisi setiap transaksi sukses.
                 </p>
             </div>
