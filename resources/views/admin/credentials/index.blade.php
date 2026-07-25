@@ -204,7 +204,7 @@
                                     </div>
                                 </div>
                                 <p class="text-[9px] font-black text-[#8faaf3] mt-3 uppercase tracking-widest">
-                                    Ditambahkan oleh {{ $cred->createdBy->name ?? 'Admin' }} â€¢ {{ $cred->created_at?->timezone(config('app.timezone', 'Asia/Jakarta'))->locale('id')->translatedFormat('d F Y, H:i') }}
+                                    Ditambahkan oleh {{ $cred->createdBy->name ?? 'Admin' }} &bull; {{ $cred->created_at?->timezone(config('app.timezone', 'Asia/Jakarta'))->locale('id')->translatedFormat('d F Y, H:i') }}
                                 </p>
                             </td>
                             

@@ -909,16 +909,6 @@
                 <div id="checkout_fields_wrapper" class="space-y-6"></div>
             </div>
 
-            <div id="no_target_msg" class="relative mb-8 hidden items-center gap-5 rounded-[2.5rem] border-4 border-white bg-[#e6fff7] p-8 shadow-xl shadow-emerald-100/50">
-                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border-2 border-white bg-emerald-100 text-emerald-500 shadow-sm sm:h-10 sm:w-10">
-                    <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" stroke-width="3.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
-                </div>
-                <div>
-                    <h4 class="text-xl font-black text-emerald-500 mb-1">Tidak Perlu Isi Form</h4>
-                    <p class="text-sm font-bold leading-relaxed text-[#4bc6b9]">Tidak perlu isi form untuk layanan ini, kamu tidak perlu mengisi data tambahan. Detail akun akan diproses otomatis oleh sistem secara instan.</p>
-                </div>
-            </div>
-
             @if($requiresCheckoutWhatsapp)
                 <div class="relative mb-8 rounded-[2.5rem] border-4 border-white bg-white/95 p-6 shadow-xl shadow-[#bde0fe]/30 sm:p-8">
                     <div class="checkout-step-heading mb-6">
@@ -1587,13 +1577,13 @@
         if (fields.length === 0) {
             checkoutFieldsSection.classList.add('hidden');
             checkoutFieldsWrapper.innerHTML = '';
-            noTargetMsg.classList.remove('hidden');
-            noTargetMsg.classList.add('flex');
+            noTargetMsg?.classList.remove('hidden');
+            noTargetMsg?.classList.add('flex');
         } else {
             renderCheckoutFields(fields, restoreValues);
             checkoutFieldsSection.classList.remove('hidden');
-            noTargetMsg.classList.add('hidden');
-            noTargetMsg.classList.remove('flex');
+            noTargetMsg?.classList.add('hidden');
+            noTargetMsg?.classList.remove('flex');
         }
 
         pageProductList.classList.add('hidden');

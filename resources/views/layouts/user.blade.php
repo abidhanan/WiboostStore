@@ -3,6 +3,25 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>
+        /* Paksa layout mobile jika perangkat sentuh malah dirender selebar desktop
+           (mis. browser HP nyala mode "Situs desktop" setelah OAuth Google). Jalan
+           sedini mungkin di <head> agar tidak berkedip. */
+        (function () {
+            try {
+                var mq = window.matchMedia('(pointer: coarse) and (hover: none)');
+                var apply = function () {
+                    var wide = window.innerWidth >= 1024;
+                    document.documentElement.classList.toggle('wiboost-force-mobile', mq.matches && wide);
+                };
+                apply();
+                window.addEventListener('resize', apply, { passive: true });
+                window.addEventListener('orientationchange', apply);
+                window.addEventListener('pageshow', apply);
+                if (mq.addEventListener) { mq.addEventListener('change', apply); }
+            } catch (e) {}
+        })();
+    </script>
     <title>@yield('title') - Wiboost Store</title>
     @include('partials.site-icons')
     <link rel="preload" as="image" href="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" fetchpriority="high">
@@ -12,6 +31,26 @@
     @include('partials.vite-fallback')
     @include('partials.ui-performance-tuning')
     <style>
+        /* Kritis: sidebar desktop tidak boleh muncul di mobile, walau CSS build telat/gagal load
+           (mencegah "tampilan desktop" di HP setelah login Google). */
+        @media (max-width: 1023px) {
+            .wiboost-user-sidebar { display: none !important; }
+        }
+
+        /* Perangkat sentuh yang dipaksa render selebar desktop -> kembalikan ke layout mobile. */
+        html.wiboost-force-mobile .wiboost-user-sidebar { display: none !important; }
+        html.wiboost-force-mobile .wiboost-navbar-sidebar-toggle { display: none !important; }
+        html.wiboost-force-mobile .wiboost-user-navbar-brand { display: flex !important; }
+        html.wiboost-force-mobile .wiboost-user-navbar { left: 0 !important; right: 0 !important; }
+        html.wiboost-force-mobile body.wiboost-user-shell main,
+        html.wiboost-force-mobile body.wiboost-user-shell footer {
+            margin-left: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        html.wiboost-force-mobile body.wiboost-user-shell main { padding-top: 7rem !important; }
+        html.wiboost-force-mobile body.wiboost-user-shell footer > div { max-width: 100% !important; }
+
         html,
         body {
             width: 100%;
