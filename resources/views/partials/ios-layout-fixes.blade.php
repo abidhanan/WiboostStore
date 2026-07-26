@@ -162,7 +162,7 @@
         }
 
         .welcome-hero-title {
-            font-size: clamp(2rem, 14vw, 4.4rem) !important;
+            font-size: clamp(1.8rem, 10vw, 2.8rem) !important;
             white-space: nowrap !important;
         }
 

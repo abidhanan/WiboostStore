@@ -61,7 +61,7 @@
              }
          }
          .welcome-hero-title {
-             font-size: 2.6rem;
+             font-size: clamp(1.8rem, 10vw, 2.8rem);
              line-height: 0.98;
              letter-spacing: 0;
              white-space: nowrap;
@@ -435,7 +435,7 @@
 
     <!-- SECTION HERO & DATA REAL-TIME -->
     <main class="welcome-hero-section relative flex items-center justify-center bg-wiboost-sky overflow-hidden border-b-[6px] border-[#f0f5ff]">
-        <div class="welcome-section-inner max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="welcome-section-inner max-w-7xl px-6 sm:px-8 lg:px-8 relative z-10">
             <div class="inline-block bg-white/80 backdrop-blur-sm text-[#5a76c8] font-black text-sm px-5 py-2 rounded-full mb-6 border-2 border-white shadow-sm">
                 Pusat Kebutuhan Digitalmu!
             </div>
