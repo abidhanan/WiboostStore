@@ -11,6 +11,8 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.vite-fallback')
     @include('partials.ui-performance-tuning')
+    @include('partials.microsoft-clarity')
+    @include('partials.google-analytics')
     @include('partials.font-nunito')
     <style>
          html {

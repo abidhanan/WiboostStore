@@ -30,6 +30,8 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.vite-fallback')
     @include('partials.ui-performance-tuning')
+    @include('partials.microsoft-clarity')
+    @include('partials.google-analytics')
     <style>
         /* Kritis: sidebar desktop tidak boleh muncul di mobile, walau CSS build telat/gagal load
            (mencegah "tampilan desktop" di HP setelah login Google). */
