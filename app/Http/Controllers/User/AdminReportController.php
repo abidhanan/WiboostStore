@@ -60,7 +60,7 @@ class AdminReportController extends Controller
         ]);
 
         $selectedCategory = $categories->firstWhere('key', (string) $validated['category_key'])
-            ?? $categories->firstWhere('key', 'umum');
+            ?? $categories->first();
         $records = ($selectedCategory['needs_record'] ?? false)
             ? $this->recordsFor($selectedCategory)
             : collect();
@@ -165,7 +165,6 @@ class AdminReportController extends Controller
             ['key' => 'deposit', 'label' => 'Deposit', 'record_type' => 'deposit', 'needs_record' => true],
             ['key' => 'transaction', 'label' => 'Transaksi', 'record_type' => 'general', 'needs_record' => true],
             ['key' => 'commission', 'label' => 'Komisi', 'record_type' => 'commission', 'needs_record' => true],
-            ['key' => 'umum', 'label' => 'Umum', 'record_type' => 'general', 'needs_record' => false],
         ];
     }
 

@@ -16,6 +16,11 @@ class ResellerCommissionService
 
     public const COMMISSION_START_DATE = '2026-07-01 00:00:00';
 
+    // Aturan "komisi mulai dihitung dari hari daftar" HANYA berlaku untuk reseller yang
+    // mendaftar sejak tanggal ini (hari ini) ke depan. Reseller yang sudah daftar sebelum
+    // tanggal ini tetap memakai COMMISSION_START_DATE -> total komisi mereka tidak berubah.
+    public const NEW_RESELLER_RULE_START_DATE = '2026-08-05 00:00:00';
+
     public const CATEGORY_RATES = [
         'suntik-sosmed' => 0.10,
         'top-up-game' => 0.02,
@@ -35,7 +40,7 @@ class ResellerCommissionService
             return null;
         }
 
-        if (! $transaction->created_at || $transaction->created_at->lt($this->commissionStartDate())) {
+        if (! $transaction->created_at) {
             return null;
         }
 
@@ -48,6 +53,11 @@ class ResellerCommissionService
         $product = $transaction->product;
 
         if (! $this->isCommissionEligible($user) || ! $product) {
+            return null;
+        }
+
+        // Komisi hanya dihitung sejak hari user terdaftar sebagai reseller (atau sejak program dimulai, mana yang lebih baru).
+        if ($transaction->created_at->lt($this->commissionStartDateForUser($user))) {
             return null;
         }
 
@@ -140,7 +150,7 @@ class ResellerCommissionService
 
     public function balanceWindowStart(User $user): Carbon
     {
-        $commissionStartDate = $this->commissionStartDate();
+        $commissionStartDate = $this->commissionStartDateForUser($user);
 
         if (! $this->isReady()) {
             return $commissionStartDate;
@@ -178,7 +188,7 @@ class ResellerCommissionService
         Transaction::query()
             ->with(['user', 'product.category.parent.parent.parent'])
             ->where('user_id', $user->id)
-            ->where('created_at', '>=', $this->commissionStartDate())
+            ->where('created_at', '>=', $this->commissionStartDateForUser($user))
             ->where('payment_status', 'paid')
             ->where('order_status', 'success')
             ->latest('id')
@@ -213,6 +223,31 @@ class ResellerCommissionService
     public function commissionStartDate(): Carbon
     {
         return Carbon::parse(self::COMMISSION_START_DATE, config('app.timezone'))->startOfDay();
+    }
+
+    /**
+     * Tanggal mulai komisi untuk 1 user.
+     * - Reseller yang mendaftar SEJAK NEW_RESELLER_RULE_START_DATE (hari ini) ke depan:
+     *   dihitung dari hari dia mendaftar (awal hari reseller_joined_at).
+     * - Reseller lama (daftar sebelum tanggal itu) atau tanpa reseller_joined_at:
+     *   tetap memakai COMMISSION_START_DATE -> total komisi mereka TIDAK berubah.
+     */
+    public function commissionStartDateForUser(?User $user): Carbon
+    {
+        $globalStart = $this->commissionStartDate();
+        $joinedAt = $user?->reseller_joined_at;
+
+        if ($joinedAt) {
+            $newRuleStart = Carbon::parse(self::NEW_RESELLER_RULE_START_DATE, config('app.timezone'))->startOfDay();
+
+            if ($joinedAt->greaterThanOrEqualTo($newRuleStart)) {
+                $joinedStart = $joinedAt->copy()->startOfDay();
+
+                return $joinedStart->greaterThan($globalStart) ? $joinedStart : $globalStart;
+            }
+        }
+
+        return $globalStart;
     }
 
     protected function isCommissionEligible(?User $user): bool
