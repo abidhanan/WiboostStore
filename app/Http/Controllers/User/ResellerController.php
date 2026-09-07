@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\ResellerCommission;
 use App\Models\User;
+use App\Services\DiscordWebhookService;
 use App\Services\ResellerCommissionService;
 use App\Support\WiboostInputRules;
 use Illuminate\Http\Request;
@@ -183,7 +184,7 @@ class ResellerController extends Controller
         return redirect()->route('user.reseller.index')->with('success', 'Tujuan penarikan berhasil diperbarui.');
     }
 
-    public function withdraw(Request $request, ResellerCommissionService $commissionService)
+    public function withdraw(Request $request, ResellerCommissionService $commissionService, DiscordWebhookService $discordWebhookService)
     {
         $user = $request->user();
 
@@ -199,7 +200,7 @@ class ResellerController extends Controller
             return back()->with('error', 'Lengkapi data e-wallet terlebih dahulu.');
         }
 
-        return DB::transaction(function () use ($user, $commissionService) {
+        $withdrawal = DB::transaction(function () use ($user, $commissionService) {
             $lockedUser = User::query()->lockForUpdate()->findOrFail($user->id);
 
             $hasPending = ResellerCommission::query()
@@ -219,7 +220,7 @@ class ResellerController extends Controller
                 return back()->with('error', 'Minimal komisi yang bisa ditarik adalah Rp 20.000.');
             }
 
-            ResellerCommission::query()->create([
+            return ResellerCommission::query()->create([
                 'user_id' => $lockedUser->id,
                 'type' => 'withdrawal',
                 'amount' => $available,
@@ -230,10 +231,22 @@ class ResellerController extends Controller
                     'payout_name' => $lockedUser->reseller_payout_name,
                 ],
                 'notes' => 'Menunggu konfirmasi admin maksimal 24 jam.',
-            ]);
-
-            return redirect()->route('user.reseller.index')->with('success', 'Permintaan penarikan komisi berhasil dikirim ke admin.');
+            ])->fresh('user');
         });
+
+        if (! $withdrawal instanceof ResellerCommission) {
+            return $withdrawal;
+        }
+
+        $discordWebhookService->sendWithdrawalAlertOnce(
+            $withdrawal,
+            'created',
+            'Pengajuan penarikan komisi masuk',
+            'Reseller mengajukan penarikan komisi dan menunggu proses admin.',
+            16433050
+        );
+
+        return redirect()->route('user.reseller.index')->with('success', 'Permintaan penarikan komisi berhasil dikirim ke admin.');
     }
 
     protected function validatePayout(Request $request): array

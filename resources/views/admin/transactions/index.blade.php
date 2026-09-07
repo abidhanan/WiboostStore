@@ -526,7 +526,7 @@
                             $adminTargetText = $trx->isMembershipPayment()
                                 ? '-'
                                 : ($trx->order_input_text ?: $adminTargetSummary);
-                            $canManualUpdate = in_array((int) (auth()->user()?->role_id), [\App\Models\User::ROLE_SUPER_ADMIN, \App\Models\User::ROLE_WAREHOUSE], true)
+                            $canManualUpdate = in_array((int) (auth()->user()?->role_id), \App\Models\User::ADMIN_ROLE_IDS, true)
                                 && $trx->payment_status === 'paid'
                                 && ($trx->product?->process_type === 'account')
                                 && (bool) ($trx->product?->requires_buyer_email);
@@ -686,7 +686,7 @@
                 $detailLoginProofUrl = $trx->login_proof_path
                     ? url(\Illuminate\Support\Facades\Storage::url($trx->login_proof_path))
                     : null;
-                $detailCanManualUpdate = in_array((int) (auth()->user()?->role_id), [\App\Models\User::ROLE_SUPER_ADMIN, \App\Models\User::ROLE_WAREHOUSE], true)
+                $detailCanManualUpdate = in_array((int) (auth()->user()?->role_id), \App\Models\User::ADMIN_ROLE_IDS, true)
                     && $trx->payment_status === 'paid'
                     && ($trx->product?->process_type === 'account')
                     && (bool) ($trx->product?->requires_buyer_email);

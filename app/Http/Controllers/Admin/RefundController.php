@@ -96,11 +96,15 @@ class RefundController extends Controller
     {
         $validated = $request->validate([
             'transaction_id' => ['required', 'exists:transactions,id', 'unique:refunds,transaction_id'],
+            'refund_percent' => ['nullable', 'integer', 'in:25,50,75,100'],
         ], [], [
             'transaction_id' => 'transaksi',
+            'refund_percent' => 'persentase refund',
         ]);
 
-        $refund = DB::transaction(function () use ($request, $validated) {
+        $refundPercent = (int) ($validated['refund_percent'] ?? 100);
+
+        $refund = DB::transaction(function () use ($request, $validated, $refundPercent) {
             $transaction = Transaction::query()
                 ->with('user')
                 ->lockForUpdate()
@@ -114,7 +118,7 @@ class RefundController extends Controller
 
             $refund = new Refund();
 
-            $this->applyManualRefund($refund, $transaction, $request->user()?->id);
+            $this->applyManualRefund($refund, $transaction, $request->user()?->id, $refundPercent);
 
             return $refund->fresh(['transaction.user', 'transaction.product']);
         });
@@ -163,6 +167,9 @@ class RefundController extends Controller
                 return;
             }
 
+            // Pertahankan persentase refund yang sudah ditetapkan saat penggantian transaksi.
+            $existingPercent = (int) ($this->refundMetadata($lockedRefund)['manual_refund_percent'] ?? 100);
+
             $this->reverseManualRefund($lockedRefund);
 
             $transaction = Transaction::query()
@@ -176,7 +183,7 @@ class RefundController extends Controller
                 ]);
             }
 
-            $this->applyManualRefund($lockedRefund, $transaction, $request->user()?->id);
+            $this->applyManualRefund($lockedRefund, $transaction, $request->user()?->id, $existingPercent);
         });
 
         return $this->redirectToReturnTo($request, 'admin.refunds.index')
@@ -213,11 +220,13 @@ class RefundController extends Controller
             });
     }
 
-    protected function applyManualRefund(Refund $refund, Transaction $transaction, ?int $adminId): void
+    protected function applyManualRefund(Refund $refund, Transaction $transaction, ?int $adminId, int $percent = 100): void
     {
-        $amount = $this->refundAmount($transaction);
+        $percent = in_array($percent, [25, 50, 75, 100], true) ? $percent : 100;
+        $amount = $this->refundAmount($transaction, $percent);
         $metadata = [
             'manual_refund_amount' => $amount,
+            'manual_refund_percent' => $percent,
             'had_refunded_at' => $transaction->refunded_at !== null,
             'previous_order_status' => $transaction->order_status,
         ];
@@ -299,9 +308,11 @@ class RefundController extends Controller
         }
     }
 
-    protected function refundAmount(Transaction $transaction): int
+    protected function refundAmount(Transaction $transaction, int $percent = 100): int
     {
-        return max(0, (int) $transaction->display_total_payable);
+        $percent = in_array($percent, [25, 50, 75, 100], true) ? $percent : 100;
+
+        return max(0, (int) round(((float) $transaction->display_total_payable) * $percent / 100));
     }
 
     protected function sendRefundDiscordAlert(DiscordWebhookService $discordWebhookService, Refund $refund): void
@@ -312,6 +323,10 @@ class RefundController extends Controller
             return;
         }
 
+        $metadata = $this->refundMetadata($refund);
+        $refundedAmount = (int) ($metadata['manual_refund_amount'] ?? $this->refundAmount($transaction));
+        $refundedPercent = (int) ($metadata['manual_refund_percent'] ?? 100);
+
         $discordWebhookService->sendSystemAlert(
             'Refund manual ditambahkan',
             'Saldo user sudah dikembalikan dari halaman refund admin.',
@@ -319,7 +334,7 @@ class RefundController extends Controller
                 ['name' => 'Invoice', 'value' => (string) $transaction->invoice_number, 'inline' => true],
                 ['name' => 'User', 'value' => (string) ($transaction->user->name ?? 'Guest'), 'inline' => true],
                 ['name' => 'Produk', 'value' => (string) ($transaction->display_product_name ?? '-'), 'inline' => true],
-                ['name' => 'Nominal Refund', 'value' => 'Rp ' . number_format($this->refundAmount($transaction), 0, ',', '.'), 'inline' => true],
+                ['name' => 'Nominal Refund', 'value' => 'Rp ' . number_format($refundedAmount, 0, ',', '.') . ' (' . $refundedPercent . '%)', 'inline' => true],
             ],
             16433050,
             'refunds'

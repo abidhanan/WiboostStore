@@ -112,6 +112,17 @@
                     </div>
                 </div>
 
+                <div>
+                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Diskon (%)</label>
+                    <div class="relative">
+                        <input type="number" name="discount_percent" min="0" max="100" step="1" inputmode="numeric" value="{{ old('discount_percent', $currentProduct->discount_percent ?? 0) }}"
+                            class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] py-4 pl-6 pr-12 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] placeholder-[#a3bbfb]"
+                            placeholder="0">
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-6 font-black text-[#5a76c8]">%</span>
+                    </div>
+                    <p class="mt-2 ml-2 text-[10px] font-bold text-[#8faaf3]">Kosongkan / 0 = tanpa diskon. Diskon berlaku otomatis ke harga jual & harga member.</p>
+                </div>
+
             </div>
         </section>
 

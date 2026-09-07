@@ -1,0 +1,1 @@
+# Wiboost Store does not publish an ads.txt inventory file.

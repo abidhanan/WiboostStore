@@ -66,25 +66,25 @@
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%235a76c8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m18 15-6-6-6 6'/%3E%3C/svg%3E");
         }
 
-        body.wiboost-admin-shell main a[title*="Edit"],
-        body.wiboost-admin-shell main button[title*="Edit"] {
+        body.wiboost-admin-shell main a[title*="Edit"]:not(.wiboost-form-action-button),
+        body.wiboost-admin-shell main button[title*="Edit"]:not(.wiboost-form-action-button) {
             color: #d99b16 !important;
             box-shadow: 0 10px 22px rgba(217, 155, 22, .16) !important;
         }
 
-        body.wiboost-admin-shell main a[title*="Edit"]:hover,
-        body.wiboost-admin-shell main button[title*="Edit"]:hover {
+        body.wiboost-admin-shell main a[title*="Edit"]:not(.wiboost-form-action-button):hover,
+        body.wiboost-admin-shell main button[title*="Edit"]:not(.wiboost-form-action-button):hover {
             background: #fff5eb !important;
         }
 
-        body.wiboost-admin-shell main a[title*="Hapus"],
-        body.wiboost-admin-shell main button[title*="Hapus"] {
+        body.wiboost-admin-shell main a[title*="Hapus"]:not(.wiboost-form-action-button),
+        body.wiboost-admin-shell main button[title*="Hapus"]:not(.wiboost-form-action-button) {
             color: #ff4d4d !important;
             box-shadow: 0 10px 22px rgba(255, 107, 107, .18) !important;
         }
 
-        body.wiboost-admin-shell main a[title*="Hapus"]:hover,
-        body.wiboost-admin-shell main button[title*="Hapus"]:hover {
+        body.wiboost-admin-shell main a[title*="Hapus"]:not(.wiboost-form-action-button):hover,
+        body.wiboost-admin-shell main button[title*="Hapus"]:not(.wiboost-form-action-button):hover {
             background: #ffe5e5 !important;
         }
 
@@ -633,22 +633,7 @@
         ];
         $adminProfileBorderColor = $adminProfileBorderColors[$currentAdminRoleId] ?? '#22c55e';
         $adminCanAccessArea = function (string $area) use ($currentAdminRoleId): bool {
-            if ($area === 'refunds') {
-                return in_array($currentAdminRoleId, [1, 4], true);
-            }
-
-            if ($currentAdminRoleId === 1) {
-                return true;
-            }
-
-            $adminAccessMap = [
-                4 => ['dashboard', 'commissions', 'users', 'transactions', 'refunds', 'deposits', 'withdrawals'],
-                6 => ['dashboard', 'users', 'categories', 'products', 'tutorials', 'transactions'],
-                7 => ['dashboard', 'users', 'transactions', 'promos', 'displays'],
-                8 => ['dashboard', 'commissions', 'users', 'transactions', 'deposits', 'reports'],
-            ];
-
-            return in_array($area, $adminAccessMap[$currentAdminRoleId] ?? [], true);
+            return in_array($currentAdminRoleId, \App\Models\User::ADMIN_ROLE_IDS, true);
         };
 
         $adminNavMatches = function (array $item): bool {
@@ -672,7 +657,9 @@
             ['access' => 'withdrawals', 'route' => 'admin.withdrawals.index', 'pattern' => 'admin.withdrawals.*', 'label' => 'Penarikan', 'title' => 'Manajemen Penarikan', 'description' => 'Konfirmasi penarikan reseller setelah transfer.', 'icon' => 'withdrawal'],
             ['access' => 'promos', 'route' => 'admin.promos.index', 'pattern' => 'admin.promos.*', 'label' => 'Banner', 'title' => 'Manajemen Banner', 'description' => 'Kelola banner dan pengumuman user.', 'icon' => 'banner'],
             ['access' => 'displays', 'route' => 'admin.displays.index', 'pattern' => 'admin.displays.*', 'label' => 'Display', 'title' => 'Manajemen Display', 'description' => 'Kelola display popup user.', 'icon' => 'display'],
+            ['access' => 'forms', 'route' => 'admin.forms.index', 'pattern' => 'admin.forms.*', 'label' => 'Formulir', 'title' => 'Manajemen Formulir', 'description' => 'Kelola form publik dan benefit aplikasi premium.', 'icon' => 'forms'],
             ['access' => 'tutorials', 'route' => 'admin.tutorials.index', 'pattern' => 'admin.tutorials.*', 'label' => 'Tutorial', 'title' => 'Manajemen Tutorial', 'description' => 'Kelola panduan dan tutorial pelanggan.', 'icon' => 'tutorial'],
+            ['access' => 'logs', 'route' => 'admin.logs.index', 'pattern' => 'admin.logs.*', 'label' => 'Log Aktivitas', 'title' => 'Log Aktivitas', 'description' => 'Aktivitas & lokasi (IP) seluruh pengunjung situs.', 'icon' => 'log'],
         ];
 
         $adminNav = array_values(array_filter($adminNav, fn (array $item) => $adminCanAccessArea($item['access'])));
@@ -689,11 +676,13 @@
             'product' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3.5 20 8v8.5L12 21l-8-4.5V8l8-4.5Z M4 8l8 4.5L20 8 M12 12.5V21" />',
             'banner' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6.5h16v11H4v-11Zm3 7 2.2-2.2 2 2 3.3-3.3L18 13.5" />',
             'display' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.5h15v10h-15v-10Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M8 19h8M10 16.5 9.5 19M14 16.5l.5 2.5" />',
+            'forms' => '<path stroke-linecap="round" stroke-linejoin="round" d="M6 3.5h9l3 3v14H6v-17Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 3.5v3h3M9 9.5h6M9 13h6M9 16.5h4" />',
             'tutorial' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 5.5A2.5 2.5 0 0 1 7 3h11.5v16H7a2.5 2.5 0 0 0-2.5 2.5v-16Zm0 0v16M8.25 7.25h6.5M8.25 10.75h5M8.25 14.25h4" />',
             'transaction' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5h16v11H4v-11Zm0 3.5h16M8 15h4" />',
             'refund' => '<path stroke-linecap="round" stroke-linejoin="round" d="M7.2 7.1A7.2 7.2 0 0 1 18.5 9.2" /><path stroke-linecap="round" stroke-linejoin="round" d="M18.5 5.6v3.6h-3.6" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.8 16.9A7.2 7.2 0 0 1 5.5 14.8" /><path stroke-linecap="round" stroke-linejoin="round" d="M5.5 18.4v-3.6h3.6" />',
             'deposit' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-10a2 2 0 0 1 2-2Zm0 0 12-3v3M17 13.5h.01" />',
             'report' => '<path stroke-linecap="round" stroke-linejoin="round" d="M5 4.5h14v15H5v-15Zm3.5 4h7M8.5 12h7M8.5 15.5h4" />',
+            'log' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 4.5h6a2 2 0 0 1 2 2V19a1.5 1.5 0 0 1-1.5 1.5H8.5A1.5 1.5 0 0 1 7 19V6.5a2 2 0 0 1 2-2Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9.5 8.5h5M9.5 12h5M9.5 15.5h3" />',
             'profile' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0" />',
             'logout' => '<path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1" />',
         ];
@@ -720,7 +709,7 @@
         <div class="flex h-full flex-col rounded-none border-r-4 border-white bg-white/90 shadow-2xl shadow-[#bde0fe]/30 backdrop-blur-xl">
             <div class="shrink-0 border-b-4 border-dashed border-[#f4f9ff] px-6 py-5">
                 <a href="{{ route('admin.dashboard') }}" class="group flex items-center gap-3">
-                    <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" onerror="this.onerror=null;this.src='{{ asset('images/wiboost-logo.png') }}?v=20260426-full';" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm transition-transform group-hover:scale-110">
+                    <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm transition-transform group-hover:scale-110">
                     <div class="wiboost-sidebar-brand-text min-w-0">
                         <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></p>
                     </div>
@@ -868,7 +857,7 @@
             
             <div class="wiboost-admin-mobile-sidebar-stack min-h-0 flex-1">
                 <div class="flex shrink-0 items-center gap-3 border-b-4 border-dashed border-[#d7ecff] pb-4">
-                    <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" onerror="this.onerror=null;this.src='{{ asset('images/wiboost-logo.png') }}?v=20260426-full';" alt="Logo Wiboost Store" width="192" height="192" loading="eager" decoding="async" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm">
+                    <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" loading="eager" decoding="async" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm">
                     <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></p>
                 </div>
                 
@@ -1287,5 +1276,7 @@
     </script>
     @include('partials.wiboost-input-guards')
     @include('partials.page-loading')
+    @include('partials.hut-ri-decoration')
+    @include('partials.tv-safe')
 </body>
 </html>

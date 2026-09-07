@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\User;
 use App\Models\WalletHistory;
+use App\Services\DiscordWebhookService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -125,7 +126,7 @@ class DepositController extends Controller
     /**
      * Update status deposit (Berguna untuk Approve transfer manual)
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, DiscordWebhookService $discordWebhookService, $id)
     {
         $request->validate([
             'payment_status' => 'required|in:paid,failed,unpaid'
@@ -172,11 +173,31 @@ class DepositController extends Controller
                 return 'Deposit disetujui! Saldo Rp ' . number_format($lockedDeposit->amount, 0, ',', '.') . ' telah ditambahkan ke akun ' . $user->name;
             });
 
+            $freshDeposit = $deposit->fresh('user') ?: $deposit;
+            $discordWebhookService->sendDepositAlertOnce(
+                $freshDeposit,
+                'manual_paid',
+                $freshDeposit->isMembershipPayment() ? 'Membership ditandai lunas admin' : 'Deposit ditandai lunas admin',
+                $message,
+                4968121
+            );
+
             return back()->with('success', $message);
         }
 
         // Jika admin membatalkan (mengubah jadi failed)
         $deposit->update(['payment_status' => $request->payment_status]);
+
+        if ($request->payment_status === 'failed') {
+            $discordWebhookService->sendDepositAlertOnce(
+                $deposit->fresh('user') ?: $deposit,
+                'manual_failed',
+                'Deposit ditandai gagal admin',
+                'Admin mengubah status deposit menjadi gagal.',
+                16738680
+            );
+        }
+
         return back()->with('success', 'Status deposit berhasil diubah.');
     }
 }

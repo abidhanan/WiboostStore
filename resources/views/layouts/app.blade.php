@@ -49,5 +49,7 @@
             </main>
         </div>
         @include('partials.page-loading')
+        @include('partials.hut-ri-decoration')
+        @include('partials.tv-safe')
     </body>
 </html>

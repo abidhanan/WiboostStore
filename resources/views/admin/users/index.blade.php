@@ -6,7 +6,7 @@
 @php
     $activeRoleFilter = $roleFilter ?? request('role_filter', 'all');
     $searchValue = $search ?? request('search');
-    $canManageUsers = (int) (auth()->user()?->role_id ?? 0) === \App\Models\User::ROLE_SUPER_ADMIN;
+    $canManageUsers = auth()->user()?->isAdmin() ?? false;
     $formatRupiah = fn ($value) => 'Rp ' . number_format((float) $value, 0, ',', '.');
     $formatDate = fn ($value) => $value ? $value->timezone(config('app.timezone'))->format('d/m/Y H:i') : '-';
     $roleFilters = [

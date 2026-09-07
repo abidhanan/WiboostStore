@@ -2,6 +2,16 @@
 
 use Illuminate\Support\Str;
 
+$sessionDomain = env('SESSION_DOMAIN');
+
+if ($sessionDomain === null || $sessionDomain === '') {
+    $sessionHost = parse_url((string) env('APP_URL', ''), PHP_URL_HOST);
+
+    $sessionDomain = is_string($sessionHost) && in_array(strtolower($sessionHost), ['wiboostore.com', 'www.wiboostore.com'], true)
+        ? '.wiboostore.com'
+        : null;
+}
+
 return [
 
     /*
@@ -156,7 +166,7 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN'),
+    'domain' => $sessionDomain,
 
     /*
     |--------------------------------------------------------------------------
@@ -169,7 +179,7 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    'secure' => env('SESSION_SECURE_COOKIE', parse_url((string) env('APP_URL', ''), PHP_URL_SCHEME) === 'https'),
 
     /*
     |--------------------------------------------------------------------------

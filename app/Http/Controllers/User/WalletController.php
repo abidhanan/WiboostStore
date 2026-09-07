@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\User;
 use App\Models\WalletHistory;
+use App\Services\DiscordWebhookService;
 use App\Services\TripayDepositSyncService;
 use App\Services\XoftwarePaymentService;
 use Exception;
@@ -48,7 +49,7 @@ class WalletController extends Controller
         return view('user.points.index', compact('rewards', 'currentRewardIndex', 'currentPoints'));
     }
 
-    public function store(Request $request, XoftwarePaymentService $paymentService)
+    public function store(Request $request, XoftwarePaymentService $paymentService, DiscordWebhookService $discordWebhookService)
     {
         $request->validate([
             'amount' => 'required|numeric|min:10000',
@@ -81,7 +82,7 @@ class WalletController extends Controller
                 'payment_method' => 'tripay',
             ]);
 
-            $paymentUrl = $this->resolveDepositPaymentUrl($deposit->fresh('user'), $paymentService);
+            $paymentUrl = $this->resolveDepositPaymentUrl($deposit->fresh('user'), $paymentService, $discordWebhookService);
 
             return redirect()->away((string) $paymentUrl);
         } catch (Exception $e) {
@@ -89,7 +90,7 @@ class WalletController extends Controller
         }
     }
 
-    public function pay($invoice_number, XoftwarePaymentService $paymentService)
+    public function pay($invoice_number, XoftwarePaymentService $paymentService, DiscordWebhookService $discordWebhookService)
     {
         $deposit = Deposit::where('invoice_number', $invoice_number)
             ->where('user_id', Auth::id())
@@ -100,7 +101,7 @@ class WalletController extends Controller
         }
 
         try {
-            $paymentUrl = $this->resolveDepositPaymentUrl($deposit->fresh('user'), $paymentService);
+            $paymentUrl = $this->resolveDepositPaymentUrl($deposit->fresh('user'), $paymentService, $discordWebhookService);
 
             return redirect()->away((string) $paymentUrl);
         } catch (Exception $e) {
@@ -108,7 +109,7 @@ class WalletController extends Controller
         }
     }
 
-    public function cancelTripayDeposit(Deposit $deposit)
+    public function cancelTripayDeposit(Deposit $deposit, DiscordWebhookService $discordWebhookService)
     {
         abort_if((int) $deposit->user_id !== (int) Auth::id(), 403);
 
@@ -116,6 +117,14 @@ class WalletController extends Controller
             $deposit->update([
                 'payment_status' => 'failed',
             ]);
+
+            $discordWebhookService->sendDepositAlertOnce(
+                $deposit->fresh('user') ?: $deposit,
+                'user_cancelled',
+                $deposit->isMembershipPayment() ? 'Tagihan membership dibatalkan user' : 'Tagihan deposit dibatalkan user',
+                'User membatalkan tagihan QRIS dari halaman dompet.',
+                16738680
+            );
 
             return redirect()
                 ->route('user.wallet.index');
@@ -261,7 +270,7 @@ class WalletController extends Controller
             ->first();
     }
 
-    protected function resolveDepositPaymentUrl(Deposit $deposit, XoftwarePaymentService $paymentService): string
+    protected function resolveDepositPaymentUrl(Deposit $deposit, XoftwarePaymentService $paymentService, DiscordWebhookService $discordWebhookService): string
     {
         if (filled($deposit->payment_url)) {
             return (string) $deposit->payment_url;
@@ -279,6 +288,14 @@ class WalletController extends Controller
                 ]),
             ]);
 
+            $discordWebhookService->sendDepositAlertOnce(
+                $deposit->fresh('user') ?: $deposit,
+                'payment_create_failed',
+                $deposit->isMembershipPayment() ? 'Tagihan membership gagal dibuat' : 'Tagihan deposit gagal dibuat',
+                mb_strimwidth($exception->getMessage(), 0, 900, '...'),
+                16738680
+            );
+
             throw $exception;
         }
 
@@ -291,6 +308,15 @@ class WalletController extends Controller
                 'tripay_reference' => $payment['reference'] ?? null,
             ]),
         ]);
+
+        $freshDeposit = $deposit->fresh('user') ?: $deposit;
+        $discordWebhookService->sendDepositAlertOnce(
+            $freshDeposit,
+            'created',
+            $freshDeposit->isMembershipPayment() ? 'Tagihan membership dibuat' : 'Tagihan deposit dibuat',
+            'User berhasil diarahkan ke halaman pembayaran QRIS.',
+            5922504
+        );
 
         return $payment['checkout_url'];
     }

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Deposit;
 use App\Models\Product;
+use App\Models\ResellerCommission;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -72,6 +73,73 @@ class DiscordWebhookService
         ], $color, $channel);
     }
 
+    public function sendDepositAlertOnce(Deposit $deposit, string $key, string $title, ?string $description = null, int $color = 4968121, string $channel = 'deposits'): void
+    {
+        $key = trim($key) !== '' ? trim($key) : 'default';
+
+        if (! $this->isEnabled($channel)) {
+            return;
+        }
+
+        $response = $deposit->payment_response ?? [];
+
+        if (filled(data_get($response, 'discord_alerts.' . $key))) {
+            return;
+        }
+
+        data_set($response, 'discord_alerts.' . $key, now()->toDateTimeString());
+
+        $deposit->forceFill(['payment_response' => $response])->saveQuietly();
+
+        $this->sendDepositAlert($deposit->fresh('user') ?: $deposit, $title, $description, $color, $channel);
+    }
+
+    public function sendProviderAlert(Transaction $transaction, string $title, ?string $description = null, int $color = 5922504): void
+    {
+        $this->sendOrderAlert($transaction, $title, $description, $color, 'transactions');
+    }
+
+    public function sendManualTransactionAlert(Transaction $transaction, string $title, ?string $description = null, int $color = 16433050): void
+    {
+        $this->sendOrderAlert($transaction, $title, $description, $color, 'manual_transactions');
+    }
+
+    public function sendWithdrawalAlert(ResellerCommission $withdrawal, string $title, ?string $description = null, int $color = 16433050): void
+    {
+        $withdrawal->loadMissing('user');
+
+        $this->sendEmbed($title, $description, [
+            ['name' => 'ID Penarikan', 'value' => 'WD-' . str_pad((string) $withdrawal->id, 5, '0', STR_PAD_LEFT), 'inline' => true],
+            ['name' => 'User', 'value' => (string) ($withdrawal->user->name ?? 'Guest'), 'inline' => true],
+            ['name' => 'Nominal', 'value' => $this->formatRupiah($withdrawal->amount), 'inline' => true],
+            ['name' => 'Status', 'value' => strtoupper((string) ($withdrawal->status ?? 'pending')), 'inline' => true],
+            ['name' => 'Metode', 'value' => strtoupper((string) ($withdrawal->payout_method ?: '-')), 'inline' => true],
+            ['name' => 'Nomor Tujuan', 'value' => (string) ($withdrawal->payout_account ?: '-'), 'inline' => true],
+            ['name' => 'Nama Pemilik', 'value' => (string) (data_get($withdrawal->metadata, 'payout_name') ?: $withdrawal->user?->reseller_payout_name ?: '-'), 'inline' => false],
+        ], $color, 'withdrawals');
+    }
+
+    public function sendWithdrawalAlertOnce(ResellerCommission $withdrawal, string $key, string $title, ?string $description = null, int $color = 16433050): void
+    {
+        $key = trim($key) !== '' ? trim($key) : 'withdrawal_event';
+
+        if (! $this->isEnabled('withdrawals')) {
+            return;
+        }
+
+        $metadata = $withdrawal->metadata ?? [];
+
+        if (filled(data_get($metadata, 'discord_alerts.' . $key))) {
+            return;
+        }
+
+        data_set($metadata, 'discord_alerts.' . $key, now()->toDateTimeString());
+
+        $withdrawal->forceFill(['metadata' => $metadata])->saveQuietly();
+
+        $this->sendWithdrawalAlert($withdrawal->fresh('user') ?: $withdrawal, $title, $description, $color);
+    }
+
     public function sendLowStockAlert(Product $product, int $availableStock): void
     {
         $this->sendEmbed('Stok produk menipis', 'Segera lakukan restock agar pesanan tidak tertahan.', [
@@ -81,7 +149,7 @@ class DiscordWebhookService
         ], 16433050, 'stock');
     }
 
-    public function sendSystemAlert(string $title, ?string $description = null, array $fields = [], int $color = 16433050, string $channel = 'maintenance'): void
+    public function sendSystemAlert(string $title, ?string $description = null, array $fields = [], int $color = 16433050, string $channel = 'system'): void
     {
         $this->sendEmbed($title, $description, $fields, $color, $channel);
     }
@@ -117,6 +185,10 @@ class DiscordWebhookService
 
         if (filled($channelUrl)) {
             return $channelUrl;
+        }
+
+        if (collect($webhooks)->contains(fn ($url) => filled($url))) {
+            return null;
         }
 
         $fallbackUrl = config('services.discord.webhook_url');

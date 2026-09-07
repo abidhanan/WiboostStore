@@ -31,6 +31,12 @@ class GoogleAuthController extends Controller
 
     public function callback(Request $request): RedirectResponse
     {
+        // Kalau user sudah login (mis. halaman callback dibuka ulang / kode ditukar 2x),
+        // jangan menukar kode lagi -> mencegah error "invalid_grant".
+        if (Auth::check() && ! (Auth::user()?->isAdmin() ?? false)) {
+            return redirect()->route('user.dashboard');
+        }
+
         if ($request->filled('error')) {
             return redirect()
                 ->route('login')
@@ -49,18 +55,18 @@ class GoogleAuthController extends Controller
             try {
                 $googleUser = Socialite::driver('google')->stateless()->user();
             } catch (\Throwable $fallbackException) {
-                report($fallbackException);
+                $this->reportIfNotBenign($fallbackException);
 
                 return redirect()
                     ->route('login')
                     ->withErrors(['email' => 'Sesi login Google kedaluwarsa. Silakan tekan tombol Google lagi.']);
             }
         } catch (\Throwable $exception) {
-            report($exception);
+            $this->reportIfNotBenign($exception);
 
             return redirect()
                 ->route('login')
-                ->withErrors(['email' => 'Login Google gagal. Silakan coba lagi.']);
+                ->withErrors(['email' => 'Sesi login Google kedaluwarsa. Silakan tekan tombol Google lagi.']);
         }
 
         $email = $this->normalizeEmail((string) $googleUser->getEmail());
@@ -144,6 +150,18 @@ class GoogleAuthController extends Controller
         $request->session()->put('wiboost_show_displays_after_login', true);
 
         return redirect()->route('user.dashboard');
+    }
+
+    protected function reportIfNotBenign(\Throwable $exception): void
+    {
+        // "invalid_grant" = kode otorisasi kedaluwarsa/sudah dipakai, dan state tidak valid = sesi kedaluwarsa.
+        // Keduanya alur normal (user tekan ulang / callback dibuka lagi), bukan bug -> tidak perlu dilaporkan.
+        $benign = $exception instanceof InvalidStateException
+            || str_contains(strtolower($exception->getMessage()), 'invalid_grant');
+
+        if (! $benign) {
+            report($exception);
+        }
     }
 
     private function normalizeEmail(string $email): string

@@ -65,6 +65,7 @@ class Product extends Model
         'description',
         'price',
         'membership_price',
+        'discount_percent',
         'provider_product_id', // Penting untuk menyimpan SKU Digiflazz
         'provider_source',
         'provider_quantity',
@@ -85,6 +86,7 @@ class Product extends Model
         'provider_quantity' => 'integer',
         'price' => 'decimal:2',
         'membership_price' => 'decimal:2',
+        'discount_percent' => 'integer',
     ];
 
     // Relasi ke Kategori
@@ -627,16 +629,37 @@ class Product extends Model
 
     public function getActiveDiscountRateAttribute(): float
     {
-        return static::currentDiscountRate();
+        // Diskon per-produk (0-100%) atau diskon global (mis. Jumat), ambil yang terbesar.
+        $productRate = max(0, min(100, (int) ($this->discount_percent ?? 0))) / 100;
+
+        return max($productRate, static::currentDiscountRate());
     }
 
     public function getActiveDiscountLabelAttribute(): ?string
     {
-        return static::currentDiscountLabel();
+        $rate = $this->active_discount_rate;
+
+        return $rate > 0
+            ? 'Diskon ' . rtrim(rtrim(number_format($rate * 100, 2, ',', '.'), '0'), ',') . '%'
+            : null;
+    }
+
+    public static function isAgustusanPromoActive(): bool
+    {
+        // Promo HUT RI ke-81: 17-20 Agustus 2026 (WIB).
+        return now()->between(
+            \Illuminate\Support\Carbon::create(2026, 8, 17, 0, 0, 0, config('app.timezone')),
+            \Illuminate\Support\Carbon::create(2026, 8, 20, 23, 59, 59, config('app.timezone'))
+        );
     }
 
     public static function currentDiscountRate(): float
     {
+        // Promo HUT RI ke-81: diskon 19% untuk SEMUA produk di semua kategori.
+        if (static::isAgustusanPromoActive()) {
+            return 0.19;
+        }
+
         return now()->isFriday() ? static::FRIDAY_BLESSING_DISCOUNT_RATE : 0.0;
     }
 

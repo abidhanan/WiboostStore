@@ -5,7 +5,6 @@
 @section('content')
 {{-- Wiboost patch: history-pagination-window-eof-fix-20260614-1030 --}}
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
     .wiboost-font { font-family: 'Nunito', sans-serif; }
 
     .modal-active { opacity: 1 !important; pointer-events: auto !important; }

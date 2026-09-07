@@ -110,6 +110,8 @@ class PaymentCallbackController extends Controller
                             'callback_synced_at' => now()->toDateTimeString(),
                         ]),
                     ]);
+
+                    return ['found' => true, 'paid' => false, 'failed' => true, 'deposit_id' => $deposit->id];
                 }
 
                 return ['found' => true, 'paid' => false];
@@ -120,11 +122,9 @@ class PaymentCallbackController extends Controller
             }
 
             if ($result['paid'] ?? false) {
-                $discordWebhookService->sendDepositAlert(
-                    Deposit::with('user')->find($result['deposit_id']),
-                    Deposit::find($result['deposit_id'])?->isMembershipPayment() ? 'Membership berhasil dibayar' : 'Deposit berhasil dibayar',
-                    Deposit::find($result['deposit_id'])?->isMembershipPayment() ? 'Membership user sudah otomatis aktif.' : 'Saldo user sudah otomatis ditambahkan.'
-                );
+                $this->sendDepositPaymentDiscordAlert($discordWebhookService, (int) $result['deposit_id'], 'paid');
+            } elseif ($result['failed'] ?? false) {
+                $this->sendDepositPaymentDiscordAlert($discordWebhookService, (int) $result['deposit_id'], 'failed');
             }
 
             return response()->json(['success' => true]);
@@ -311,6 +311,8 @@ class PaymentCallbackController extends Controller
                             'callback_synced_at' => now()->toDateTimeString(),
                         ]),
                     ]);
+
+                    return ['found' => true, 'paid' => false, 'failed' => true, 'deposit_id' => $deposit->id];
                 }
 
                 return ['found' => true, 'paid' => false];
@@ -321,11 +323,9 @@ class PaymentCallbackController extends Controller
             }
 
             if ($result['paid'] ?? false) {
-                $discordWebhookService->sendDepositAlert(
-                    Deposit::with('user')->find($result['deposit_id']),
-                    Deposit::find($result['deposit_id'])?->isMembershipPayment() ? 'Membership berhasil dibayar' : 'Deposit berhasil dibayar',
-                    Deposit::find($result['deposit_id'])?->isMembershipPayment() ? 'Membership user sudah otomatis aktif.' : 'Saldo user sudah otomatis ditambahkan.'
-                );
+                $this->sendDepositPaymentDiscordAlert($discordWebhookService, (int) $result['deposit_id'], 'paid');
+            } elseif ($result['failed'] ?? false) {
+                $this->sendDepositPaymentDiscordAlert($discordWebhookService, (int) $result['deposit_id'], 'failed');
             }
 
             return response()->json(['success' => true]);
@@ -473,7 +473,16 @@ class PaymentCallbackController extends Controller
                 }
 
                 if (in_array($transactionStatus, ['deny', 'expire', 'cancel'], true) && in_array($deposit->payment_status, ['unpaid', 'pending'], true)) {
-                    $deposit->delete();
+                    $deposit->update([
+                        'payment_status' => 'failed',
+                        'payment_response' => array_merge($deposit->payment_response ?? [], [
+                            'payment_gateway' => 'midtrans',
+                            'midtrans_callback' => (array) $notification,
+                            'callback_synced_at' => now()->toDateTimeString(),
+                        ]),
+                    ]);
+
+                    return ['found' => true, 'paid' => false, 'failed' => true, 'deposit_id' => $deposit->id];
                 }
 
                 return ['found' => true, 'paid' => false];
@@ -484,11 +493,9 @@ class PaymentCallbackController extends Controller
             }
 
             if ($result['paid'] ?? false) {
-                $discordWebhookService->sendDepositAlert(
-                    Deposit::with('user')->find($result['deposit_id']),
-                    Deposit::find($result['deposit_id'])?->isMembershipPayment() ? 'Membership berhasil dibayar' : 'Deposit berhasil dibayar',
-                    Deposit::find($result['deposit_id'])?->isMembershipPayment() ? 'Membership user sudah otomatis aktif.' : 'Saldo user sudah otomatis ditambahkan.'
-                );
+                $this->sendDepositPaymentDiscordAlert($discordWebhookService, (int) $result['deposit_id'], 'paid');
+            } elseif ($result['failed'] ?? false) {
+                $this->sendDepositPaymentDiscordAlert($discordWebhookService, (int) $result['deposit_id'], 'failed');
             }
 
             return response()->json(['message' => 'Deposit handled successfully']);
@@ -537,5 +544,29 @@ class PaymentCallbackController extends Controller
     {
         return str_starts_with($merchantRef, 'WIB-')
             || str_starts_with($merchantRef, 'MEM-');
+    }
+
+    protected function sendDepositPaymentDiscordAlert(DiscordWebhookService $discordWebhookService, int $depositId, string $status): void
+    {
+        $deposit = Deposit::with('user')->find($depositId);
+
+        if (! $deposit) {
+            return;
+        }
+
+        $isPaid = $status === 'paid';
+        $isMembership = $deposit->isMembershipPayment();
+
+        $discordWebhookService->sendDepositAlertOnce(
+            $deposit,
+            $isPaid ? 'paid' : 'failed',
+            $isMembership
+                ? ($isPaid ? 'Membership berhasil dibayar' : 'Membership gagal dibayar')
+                : ($isPaid ? 'Deposit berhasil dibayar' : 'Deposit gagal dibayar'),
+            $isMembership
+                ? ($isPaid ? 'Membership user sudah otomatis aktif.' : 'Pembayaran membership gagal atau kedaluwarsa.')
+                : ($isPaid ? 'Saldo user sudah otomatis ditambahkan.' : 'Pembayaran deposit gagal atau kedaluwarsa.'),
+            $isPaid ? 4968121 : 16738680
+        );
     }
 }

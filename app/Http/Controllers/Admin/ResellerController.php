@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ResellerCommission;
 use App\Models\Transaction;
+use App\Services\DiscordWebhookService;
 use App\Services\ResellerCommissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -197,7 +198,7 @@ class ResellerController extends Controller
         return view('admin.withdrawals.index', compact('withdrawals', 'search', 'status', 'selectedMonth', 'selectedYear'));
     }
 
-    public function updateWithdrawal(Request $request, ResellerCommission $commission)
+    public function updateWithdrawal(Request $request, ResellerCommission $commission, DiscordWebhookService $discordWebhookService)
     {
         abort_unless($commission->type === 'withdrawal', 404);
 
@@ -209,7 +210,7 @@ class ResellerController extends Controller
             'notes' => 'catatan admin',
         ]);
 
-        DB::transaction(function () use ($commission, $validated) {
+        $updatedWithdrawal = DB::transaction(function () use ($commission, $validated) {
             $lockedCommission = ResellerCommission::query()
                 ->whereKey($commission->id)
                 ->where('type', 'withdrawal')
@@ -234,7 +235,29 @@ class ResellerController extends Controller
                 'approved_by' => in_array($status, ['success', 'failed'], true) ? auth()->id() : null,
                 'approved_at' => in_array($status, ['success', 'failed'], true) ? now() : null,
             ])->save();
+
+            return $lockedCommission->fresh(['user', 'approver']);
         });
+
+        if ($updatedWithdrawal instanceof ResellerCommission) {
+            $status = (string) $updatedWithdrawal->status;
+            $discordWebhookService->sendWithdrawalAlertOnce(
+                $updatedWithdrawal,
+                'status_' . $status,
+                match ($status) {
+                    'processing' => 'Penarikan komisi sedang diproses',
+                    'success' => 'Penarikan komisi berhasil',
+                    'failed' => 'Penarikan komisi gagal',
+                    default => 'Penarikan komisi menunggu',
+                },
+                $updatedWithdrawal->notes ?: 'Status penarikan komisi diperbarui admin.',
+                match ($status) {
+                    'success' => 4968121,
+                    'failed' => 16738680,
+                    default => 16433050,
+                }
+            );
+        }
 
         return redirect()->route('admin.withdrawals.index', array_filter([
             'search' => $request->input('search'),

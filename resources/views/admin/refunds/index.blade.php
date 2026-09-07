@@ -185,7 +185,7 @@
     <div class="overflow-visible rounded-[2rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem]">
         <div class="w-full overflow-x-auto table-scroll pb-2">
             <div class="inline-block min-w-full align-middle p-4 sm:p-6">
-                <table class="w-full text-left" style="min-width:1210px;table-layout:fixed;">
+                <table class="w-full text-left" style="min-width:1470px;table-layout:fixed;">
                     <thead>
                         <tr>
                             <th style="width:190px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3]">Invoice</th>
@@ -193,7 +193,9 @@
                             <th style="width:190px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3]">Nama</th>
                             <th style="width:240px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3]">Email</th>
                             <th style="width:360px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3]">Layanan</th>
-                            <th style="width:130px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3]">Harga</th>
+                            <th style="width:150px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3]">Harga</th>
+                            <th style="width:150px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3]">Nominal Refund</th>
+                            <th style="width:110px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center font-black uppercase tracking-widest text-[#8faaf3]">Refund</th>
                             <th style="width:160px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center font-black uppercase tracking-widest text-[#8faaf3]">Aksi</th>
                         </tr>
                     </thead>
@@ -202,6 +204,9 @@
                             @php
                                 $trx = $refund->transaction;
                                 $productName = $trx?->display_product_name ?? 'Produk Wiboost';
+                                $refundAmount = (int) $refund->manual_refund_amount;
+                                $refundPercent = (int) $refund->manual_refund_percent;
+                                $transactionTotal = (int) ($trx?->display_total_payable ?? 0);
                                 $categoryName = collect([
                                     $trx?->product?->category?->parent?->parent?->parent?->name,
                                     $trx?->product?->category?->parent?->parent?->name,
@@ -226,7 +231,15 @@
                                     <p class="text-[11px] font-black leading-tight text-[#2b3a67] sm:text-xs" style="display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;text-overflow:clip;white-space:normal;word-break:normal;overflow-wrap:anywhere;" title="{{ $productName }}">{{ $productName }}</p>
                                 </td>
                                 <td class="px-5 py-5 align-middle">
-                                    <p class="whitespace-nowrap text-xs font-black text-[#4bc6b9] sm:text-sm">Rp {{ number_format((int) ($trx?->display_total_payable ?? 0), 0, ',', '.') }}</p>
+                                    <p class="whitespace-nowrap text-xs font-black text-[#2b3a67] sm:text-sm">Rp {{ number_format($transactionTotal, 0, ',', '.') }}</p>
+                                </td>
+                                <td class="px-5 py-5 align-middle">
+                                    <p class="whitespace-nowrap text-xs font-black text-[#4bc6b9] sm:text-sm">Rp {{ number_format($refundAmount, 0, ',', '.') }}</p>
+                                </td>
+                                <td class="px-5 py-5 text-center align-middle">
+                                    <span class="inline-flex h-9 min-w-16 items-center justify-center rounded-full border-2 border-white bg-[#f4f9ff] px-4 text-xs font-black text-[#5a76c8] shadow-sm">
+                                        {{ $refundPercent }}%
+                                    </span>
                                 </td>
                                 <td class="px-5 py-5 text-center align-middle">
                                     <div class="flex items-center justify-center gap-2">
@@ -242,7 +255,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-5 py-20 text-center">
+                                <td colspan="9" class="px-5 py-20 text-center">
                                     <div class="mb-5 inline-flex h-24 w-24 items-center justify-center rounded-[2.5rem] border-4 border-white bg-[#f0f5ff] text-[#5a76c8] shadow-inner">
                                         @include('partials.wiboost-icon', ['name' => 'receipt', 'class' => 'h-10 w-10'])
                                     </div>
@@ -259,6 +272,9 @@
             @php
                 $trx = $refund->transaction;
                 $productName = $trx?->display_product_name ?? 'Produk Wiboost';
+                $refundAmount = (int) $refund->manual_refund_amount;
+                $refundPercent = (int) $refund->manual_refund_percent;
+                $transactionTotal = (int) ($trx?->display_total_payable ?? 0);
                 $categoryName = collect([
                     $trx?->product?->category?->parent?->parent?->parent?->name,
                     $trx?->product?->category?->parent?->parent?->name,
@@ -379,8 +395,16 @@
                                 <p class="mt-1 break-all text-xs font-bold text-[#8faaf3]">{{ $trx?->user?->email ?? '-' }}</p>
                             </div>
                             <div class="admin-detail-panel">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Harga</p>
+                                <p class="mt-1 font-black text-[#2b3a67]">Rp {{ number_format($transactionTotal, 0, ',', '.') }}</p>
+                            </div>
+                            <div class="admin-detail-panel">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nominal Refund</p>
-                                <p class="mt-1 font-black text-[#4bc6b9]">Rp {{ number_format((int) ($trx?->display_total_payable ?? 0), 0, ',', '.') }}</p>
+                                <p class="mt-1 font-black text-[#4bc6b9]">Rp {{ number_format($refundAmount, 0, ',', '.') }}</p>
+                            </div>
+                            <div class="admin-detail-panel">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Persentase Refund</p>
+                                <p class="mt-1 font-black text-[#5a76c8]">{{ $refundPercent }}%</p>
                             </div>
                             <div class="admin-detail-panel md:col-span-2">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Layanan</p>

@@ -14,7 +14,6 @@
     $categoryUsesTargetEmoji = \App\Support\WiboostEmoji::shouldUseForSubcategory($category);
 @endphp
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
     .wiboost-font { font-family: 'Nunito', sans-serif; }
     
     .animate-float { animation: float 6s ease-in-out infinite; }

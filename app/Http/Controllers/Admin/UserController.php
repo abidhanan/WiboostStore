@@ -24,20 +24,9 @@ class UserController extends Controller
             $roleFilter = 'all';
         }
 
-        $commissionStartDate = app(ResellerCommissionService::class)->commissionStartDate();
+        $commissionService = app(ResellerCommissionService::class);
 
         $users = User::query()
-            ->withSum(['resellerCommissions as commission_total' => function ($query) use ($commissionStartDate) {
-                $query->where('type', 'income')
-                    ->where(function ($statusQuery) {
-                        $statusQuery->whereNull('status')
-                            ->orWhereNotIn('status', ['failed', 'rejected']);
-                    })
-                    ->whereHas('transaction', fn ($transactionQuery) => $transactionQuery
-                        ->where('created_at', '>=', $commissionStartDate)
-                        ->where('payment_status', 'paid')
-                        ->where('order_status', 'success'));
-            }], 'amount')
             ->when($roleFilter === 'super_admin', fn ($query) => $query->where('role_id', User::ROLE_SUPER_ADMIN))
             ->when($roleFilter === 'keuangan', fn ($query) => $query->where('role_id', User::ROLE_FINANCE))
             ->when($roleFilter === 'gudang', fn ($query) => $query->where('role_id', User::ROLE_WAREHOUSE))
@@ -95,6 +84,16 @@ class UserController extends Controller
             ->latest()
             ->paginate(20)
             ->appends($request->query());
+
+        // Sinkronkan "Total Komisi" di admin dengan saldo komisi terkini reseller
+        // (income dikurangi penarikan) -> angkanya ikut turun setelah penarikan.
+        $users->getCollection()->transform(function (User $user) use ($commissionService) {
+            $user->commission_total = $user->hasResellerCommissionAccess()
+                ? $commissionService->availableBalance($user)
+                : 0;
+
+            return $user;
+        });
 
         return view('admin.users.index', compact('users', 'search', 'roleFilter'));
     }

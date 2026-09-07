@@ -162,7 +162,7 @@ class TransactionController extends Controller
 
     public function updateStatus(Request $request, $id, OrderFulfillmentService $orderFulfillmentService)
     {
-        abort_unless(in_array((int) $request->user()?->role_id, [User::ROLE_SUPER_ADMIN, User::ROLE_WAREHOUSE], true), 403, 'Hanya role gudang dan super admin yang bisa mengubah status pesanan.');
+        abort_unless(in_array((int) $request->user()?->role_id, User::ADMIN_ROLE_IDS, true), 403, 'Hanya role admin yang bisa mengubah status pesanan.');
 
         $request->validate([
             'order_status' => 'required|in:pending,processing,success,failed'

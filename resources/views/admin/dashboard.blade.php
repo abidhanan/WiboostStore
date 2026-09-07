@@ -88,6 +88,23 @@
         $showDashboardCommissions = $dashboardCanAccess('commissions');
         $showDashboardWithdrawals = $dashboardCanAccess('withdrawals');
         $showDashboardRefunds = $dashboardCanAccess('refunds');
+        $selectedMonth = $selectedMonth ?? request('month', date('m'));
+        $selectedYear = $selectedYear ?? request('year', date('Y'));
+        $adminMonthNames = [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember',
+        ];
+        $selectedMonthNumber = (int) $selectedMonth;
         $dashboardChartCards = collect([
             ['enabled' => $showDashboardTransactions, 'key' => 'transactions', 'title' => 'Transaksi', 'max' => $transactionMax, 'stroke' => '#5a76c8', 'bg' => 'bg-[#f8fbff]', 'text' => 'text-[#8faaf3]', 'suffix' => ' transaksi'],
             ['enabled' => $showDashboardRevenue, 'key' => 'revenue', 'title' => 'Pendapatan', 'max' => $revenueMax, 'stroke' => '#4bc6b9', 'bg' => 'bg-[#f6fffb]', 'text' => 'text-emerald-500', 'suffix' => ''],
@@ -117,9 +134,62 @@
             border-radius: .3rem;
             box-shadow: inset 0 0 0 3px #f0f5ff;
         }
+        .wiboost-admin-dashboard .admin-theme-select-month,
+        .wiboost-admin-dashboard .admin-theme-select-year {
+            flex: 1 1 0;
+            width: auto;
+        }
+        @media (min-width: 768px) {
+            .wiboost-admin-dashboard .admin-theme-select-month {
+                width: 9rem;
+                flex: 0 0 9rem;
+            }
+            .wiboost-admin-dashboard .admin-theme-select-year {
+                width: 7rem;
+                flex: 0 0 7rem;
+            }
+        }
     </style>
 
     <div class="wiboost-admin-dashboard space-y-6 sm:space-y-8 pb-12 relative z-10 w-full min-w-0">
+        <div class="relative z-30 rounded-[2rem] border-4 border-white bg-white/90 p-4 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:rounded-[2.5rem] sm:p-5">
+            <form action="{{ route('admin.dashboard') }}" method="GET" class="flex w-full flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div class="flex w-full items-center gap-2 md:w-auto">
+                    <input type="hidden" name="month" value="{{ $selectedMonth }}">
+                    <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
+                        <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                            <span data-admin-theme-select-label>{{ $adminMonthNames[$selectedMonthNumber] ?? '-' }}</span>
+                            <span class="admin-theme-select-arrow">v</span>
+                        </button>
+                        <div class="admin-theme-select-menu">
+                            @for($m = 1; $m <= 12; $m++)
+                                <button type="button" class="admin-theme-select-option {{ (string) $selectedMonth === sprintf('%02d', $m) ? 'is-selected' : '' }}" data-value="{{ sprintf('%02d', $m) }}" data-label="{{ $adminMonthNames[$m] }}">{{ $adminMonthNames[$m] }}</button>
+                            @endfor
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="year" value="{{ $selectedYear }}">
+                    <div class="admin-theme-select admin-theme-select-year" data-admin-theme-select data-submit-on-change="true" data-input-name="year">
+                        <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                            <span data-admin-theme-select-label>{{ $selectedYear }}</span>
+                            <span class="admin-theme-select-arrow">v</span>
+                        </button>
+                        <div class="admin-theme-select-menu">
+                            @for($y = date('Y'); $y >= date('Y') - 3; $y--)
+                                <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
+                            @endfor
+                        </div>
+                    </div>
+                </div>
+
+                @if($showDashboardTransactions)
+                    <a href="{{ route('admin.transactions.export_excel', ['month' => $selectedMonth, 'year' => $selectedYear]) }}" target="_blank" class="flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-[1rem] border-4 border-white bg-[#4bc6b9] px-6 text-sm font-black text-white shadow-md shadow-[#4bc6b9]/25 transition-transform hover:bg-[#3ba398] active:scale-95 md:w-auto sm:rounded-[1.2rem]">
+                        @include('partials.wiboost-icon', ['name' => 'chart', 'class' => 'h-5 w-5'])
+                        <span class="whitespace-nowrap">Cetak Laporan</span>
+                    </a>
+                @endif
+            </form>
+        </div>
         
         <!-- Monthly Summary -->
         @if($showDashboardTransactions || $showDashboardRevenue || $showDashboardUsers || $showDashboardResellers || $showDashboardCommissions || $showDashboardRefunds)

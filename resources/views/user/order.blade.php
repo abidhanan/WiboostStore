@@ -4,7 +4,6 @@
 
 @section('content')
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
     .wiboost-font { font-family: 'Nunito', sans-serif; }
     .fade-in { animation: fadeIn 0.35s ease-in-out forwards; }
 

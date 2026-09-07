@@ -1,0 +1,3 @@
+Contact: https://wiboostore.com/legal/contact
+Preferred-Languages: id,en
+Canonical: https://wiboostore.com/.well-known/security.txt

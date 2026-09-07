@@ -13,14 +13,14 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('guest')->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['guest', 'cache.headers:no_store;no_cache;must_revalidate;max_age=0'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('login', [AdminAuthenticatedSessionController::class, 'create'])
         ->name('login');
 
     Route::post('login', [AdminAuthenticatedSessionController::class, 'store']);
 });
 
-Route::middleware('guest')->group(function () {
+Route::middleware(['guest', 'cache.headers:no_store;no_cache;must_revalidate;max_age=0'])->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
 

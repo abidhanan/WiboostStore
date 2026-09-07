@@ -148,17 +148,27 @@ class WiboostMaintenanceReport extends Command
             ];
         }
 
-        if ($discordWebhookService->isEnabled()) {
+        if ($discordWebhookService->isEnabled('transactions')) {
+            $providerFields = collect($providerDiagnostics)
+                ->map(fn (array $diagnostic, string $name) => [
+                    'name' => $name,
+                    'value' => strtoupper($diagnostic['status']) . ' - ' . $diagnostic['message'],
+                    'inline' => false,
+                ])
+                ->values()
+                ->all();
+
             $discordWebhookService->sendSystemAlert(
-                'Laporan maintenance Wiboost',
-                'Ringkasan operasional otomatis untuk membantu monitoring stok, antrean order, dan kesiapan integrasi.',
-                $fields,
-                $issueCount > 0 ? 16433050 : 4968121
+                'Status provider Wiboost',
+                'Ringkasan koneksi, saldo, dan kesiapan provider terbaru.',
+                $providerFields,
+                collect($providerDiagnostics)->contains(fn (array $diagnostic) => $diagnostic['status'] === 'issue') ? 16433050 : 4968121,
+                'transactions'
             );
 
-            $this->info("Maintenance report dikirim dengan {$issueCount} temuan.");
+            $this->info("Provider report dikirim ke transactions dengan {$issueCount} temuan.");
         } else {
-            $this->warn("Discord webhook belum diatur. Laporan dihitung lokal dengan {$issueCount} temuan, tetapi tidak dikirim.");
+            $this->warn("Discord webhook transactions belum diatur. Laporan dihitung lokal dengan {$issueCount} temuan, tetapi tidak dikirim.");
         }
 
         return self::SUCCESS;

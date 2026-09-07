@@ -22,12 +22,23 @@ use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         Carbon::setLocale('id');
 
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
+        $selectedMonth = (string) $request->query('month', date('m'));
+        $selectedYear = (string) $request->query('year', date('Y'));
+
+        if (! preg_match('/^(0[1-9]|1[0-2])$/', $selectedMonth)) {
+            $selectedMonth = date('m');
+        }
+
+        if (! preg_match('/^\d{4}$/', $selectedYear)) {
+            $selectedYear = date('Y');
+        }
+
+        $currentMonth = (int) $selectedMonth;
+        $currentYear = (int) $selectedYear;
 
         $activeProductOrMembership = function ($query) {
             $query->where('invoice_number', 'like', 'MEM-%')
@@ -79,6 +90,8 @@ class DashboardController extends Controller
                     ->orWhereNotIn('payment_status', ['unpaid', 'pending']);
             })
             ->where($activeProductOrMembership)
+            ->whereMonth('created_at', $currentMonth)
+            ->whereYear('created_at', $currentYear)
             ->latest()
             ->take(5)
             ->get();
@@ -86,6 +99,8 @@ class DashboardController extends Controller
         $globalWalletLogs = collect();
         if (class_exists(WalletHistory::class)) {
             $globalWalletLogs = WalletHistory::with('user')
+                ->whereMonth('created_at', $currentMonth)
+                ->whereYear('created_at', $currentYear)
                 ->latest()
                 ->take(5)
                 ->get();
@@ -97,7 +112,11 @@ class DashboardController extends Controller
                 return $product->stock_reminder > 0 && $product->available_stock <= $product->stock_reminder;
             });
 
-        $chartStart = Carbon::now()->subDays(6)->startOfDay();
+        $selectedPeriod = Carbon::createFromDate($currentYear, $currentMonth, 1);
+        $chartEnd = $selectedPeriod->isSameMonth(now())
+            ? Carbon::now()
+            : $selectedPeriod->copy()->endOfMonth();
+        $chartStart = $chartEnd->copy()->subDays(6)->startOfDay();
         $paidTransactionsForChart = Transaction::where('created_at', '>=', $chartStart)
             ->where('payment_status', 'paid')
             ->where('order_status', '!=', 'failed')
@@ -110,8 +129,8 @@ class DashboardController extends Controller
             ->where('created_at', '>=', $chartStart)
             ->get(['created_at']);
 
-        $dashboardCharts = collect(range(6, 0))->map(function (int $daysAgo) use ($paidTransactionsForChart, $newUsersForChart) {
-            $date = Carbon::now()->subDays($daysAgo);
+        $dashboardCharts = collect(range(6, 0))->map(function (int $daysAgo) use ($paidTransactionsForChart, $newUsersForChart, $chartEnd) {
+            $date = $chartEnd->copy()->subDays($daysAgo);
             $dateKey = $date->toDateString();
 
             $dailyTransactions = $paidTransactionsForChart->filter(
@@ -236,12 +255,13 @@ class DashboardController extends Controller
         }
 
         if (Schema::hasTable('refunds')) {
-            $refundMonth = Refund::query()
+            $refundsThisMonth = Refund::query()
                 ->with('transaction')
                 ->whereMonth('created_at', $currentMonth)
                 ->whereYear('created_at', $currentYear)
-                ->get()
-                ->sum(fn (Refund $refund) => (float) ($refund->transaction?->display_total_payable ?? 0));
+                ->get();
+
+            $refundMonth = $refundsThisMonth->sum(fn (Refund $refund) => (float) $refund->manual_refund_amount);
         }
 
         $adminCsWhatsapp = WiboostAdminContact::csWhatsappNumber();
@@ -262,6 +282,8 @@ class DashboardController extends Controller
             'commissionSummary',
             'commissionMonth',
             'refundMonth',
+            'selectedMonth',
+            'selectedYear',
             'latestIncomeCommissions',
             'withdrawalSummary',
             'latestReports',

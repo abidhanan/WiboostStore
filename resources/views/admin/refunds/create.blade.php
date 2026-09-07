@@ -53,7 +53,7 @@
     <div class="overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem]">
         <div class="w-full overflow-x-auto table-scroll pb-2">
             <div class="inline-block min-w-full align-middle p-4 sm:p-6">
-                <table class="w-full text-left" style="min-width: 1380px; table-layout: fixed;">
+                <table class="w-full text-left" style="min-width: 1470px; table-layout: fixed;">
                     <thead>
                         <tr>
                             <th style="width: 190px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Invoice</th>
@@ -63,7 +63,7 @@
                             <th style="width: 360px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Layanan</th>
                             <th style="width: 130px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Harga</th>
                             <th style="width: 120px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Metode</th>
-                            <th style="width: 100px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Aksi</th>
+                            <th style="width: 190px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
@@ -102,13 +102,58 @@
                                     </span>
                                 </td>
                                 <td class="px-5 py-5 text-center align-middle">
-                                    <form action="{{ route('admin.refunds.store') }}" method="POST" class="inline-flex" onsubmit="return confirm('Tambah refund untuk transaksi {{ $trx->invoice_number }}?')">
+                                    <form action="{{ route('admin.refunds.store') }}" method="POST"
+                                          x-data="{ open: false, percent: '100', opts: ['25','50','75','100'], coords: { top: 0, left: 0, width: 0 },
+                                                    place() { const r = $refs.trigger.getBoundingClientRect(); this.coords = { top: r.bottom + 6, left: r.left, width: r.width }; },
+                                                    toggle() { this.open = ! this.open; if (this.open) this.$nextTick(() => this.place()); },
+                                                    pick(v) { this.percent = v; this.open = false; } }"
+                                          @click.outside="open = false"
+                                          @keydown.escape.window="open = false"
+                                          @scroll.window="open = false"
+                                          class="inline-flex items-center justify-center gap-2"
+                                          onsubmit="return confirm('Tambah refund ' + this.refund_percent.value + '% untuk transaksi {{ $trx->invoice_number }}?')">
                                         @csrf
                                         <input type="hidden" name="transaction_id" value="{{ $trx->id }}">
                                         @if(request('return_to'))
                                             <input type="hidden" name="return_to" value="{{ request('return_to') }}">
                                         @endif
-                                        <button type="submit" class="inline-flex h-10 w-10 items-center justify-center rounded-[1rem] border-2 border-white bg-white text-[#5a76c8] shadow-md shadow-[#5a76c8]/20 transition-transform hover:scale-110 hover:bg-[#eef4ff] active:scale-95" title="Tambah refund">
+                                        <input type="hidden" name="refund_percent" :value="percent">
+
+                                        <div class="relative">
+                                            <button type="button" x-ref="trigger" @click="toggle()" title="Persentase refund"
+                                                    class="flex h-10 min-w-[5.6rem] items-center justify-between gap-2 rounded-full border-2 border-white bg-[#f4f9ff] px-4 text-xs font-black text-[#5a76c8] shadow-inner outline-none transition hover:bg-[#eef4ff] focus:border-[#bde0fe]">
+                                                <span x-text="percent + '%'">100%</span>
+                                                <svg class="h-4 w-4 shrink-0 transition-transform duration-300" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6" />
+                                                </svg>
+                                            </button>
+
+                                            <template x-teleport="body">
+                                                <div x-show="open" x-cloak
+                                                     x-transition:enter="transition ease-out duration-150"
+                                                     x-transition:enter-start="opacity-0 -translate-y-1 scale-95"
+                                                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                                     x-transition:leave="transition ease-in duration-100"
+                                                     x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                                                     x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
+                                                     :style="`position: fixed; top: ${coords.top}px; left: ${coords.left}px; min-width: max(${coords.width}px, 9rem); z-index: 9999;`"
+                                                     class="rounded-[1.5rem] border-4 border-white bg-white p-2 shadow-2xl shadow-[#bde0fe]/50"
+                                                     style="font-family: 'Nunito', sans-serif;">
+                                                    <div class="flex flex-col gap-1">
+                                                        <template x-for="opt in opts" :key="opt">
+                                                            <button type="button" @click="pick(opt)"
+                                                                    class="flex w-full items-center justify-between gap-3 rounded-full px-4 py-2.5 text-xs font-black transition"
+                                                                    :class="percent === opt ? 'bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/30' : 'text-[#5a76c8] hover:bg-[#f4f9ff]'">
+                                                                <span x-text="opt + '%'"></span>
+                                                                <svg x-show="percent === opt" class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                            </button>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        <button type="submit" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white bg-white text-[#5a76c8] shadow-md shadow-[#5a76c8]/20 transition-transform hover:scale-110 hover:bg-[#eef4ff] active:scale-95" title="Tambah refund">
                                             @include('partials.wiboost-icon', ['name' => 'plus', 'class' => 'h-4 w-4'])
                                         </button>
                                     </form>

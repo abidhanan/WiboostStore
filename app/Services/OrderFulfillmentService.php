@@ -219,10 +219,10 @@ class OrderFulfillmentService
 
         $this->rewardUserIfNeeded($transaction, $previousStatus, 'success');
         $this->sendSuccessEmail($transaction, $previousStatus);
-        $this->discordWebhookService->sendOrderAlert(
+        $this->discordWebhookService->sendManualTransactionAlert(
             $transaction,
-            'Pesanan manual diselesaikan',
-            'Admin telah menandai pesanan manual sebagai selesai.',
+            'Pesanan ditandai sukses',
+            'Pesanan telah selesai diproses dan email sukses dikirim ke pelanggan.',
             4968121
         );
     }
@@ -302,13 +302,30 @@ class OrderFulfillmentService
         $this->sendSuccessEmail($transaction, $previousStatus);
 
         if ($result['should_send_discord']) {
-            $this->discordWebhookService->sendOrderAlert(
-                $transaction,
-                'Pesanan ditandai sukses',
-                'Pesanan telah selesai diproses dan email sukses dikirim ke pelanggan.',
-                4968121
-            );
+            if ($this->shouldUseManualDiscordChannel($transaction)) {
+                $this->discordWebhookService->sendManualTransactionAlert(
+                    $transaction,
+                    'Pesanan ditandai sukses',
+                    'Pesanan telah selesai diproses dan email sukses dikirim ke pelanggan.',
+                    4968121
+                );
+            } else {
+                $this->discordWebhookService->sendOrderAlert(
+                    $transaction,
+                    'Pesanan ditandai sukses',
+                    'Pesanan telah selesai diproses dan email sukses dikirim ke pelanggan.',
+                    4968121
+                );
+            }
         }
+    }
+
+    protected function shouldUseManualDiscordChannel(Transaction $transaction): bool
+    {
+        $transaction->loadMissing('product.category.parent.parent.parent');
+
+        return $transaction->product?->process_type === 'manual'
+            || $this->shouldQueuePremiumBuyerInputOrder($transaction);
     }
 
     protected function shouldAssignCredentialOnManualSuccess(Transaction $transaction): bool
@@ -341,11 +358,27 @@ class OrderFulfillmentService
             $providerOrderId = $transaction->provider_order_id;
 
             if (! $providerOrderId) {
+                $this->sendProviderAlertOnce(
+                    $transaction,
+                    'provider_missing_order_id',
+                    'ID provider belum tersedia',
+                    'Pesanan API sudah dibayar, tetapi belum memiliki ID order provider untuk dicek.',
+                    16433050
+                );
+
                 return 'missing_provider_order_id';
             }
 
             $response = $this->orderSosmedService->checkOrderStatus($providerOrderId);
         } else {
+            $this->sendProviderAlertOnce(
+                $transaction,
+                'provider_unsupported_source',
+                'Provider tidak didukung',
+                'Produk API memakai provider yang belum dikenali sistem.',
+                16433050
+            );
+
             return 'unsupported_provider';
         }
 
@@ -365,12 +398,28 @@ class OrderFulfillmentService
         $nextStatus = $this->normalizeProviderOrderStatus($response['order_status'] ?? 'processing');
 
         if ($nextStatus === 'success') {
+            $this->sendProviderAlertOnce(
+                $transaction,
+                'provider_success',
+                'Provider menandai pesanan sukses',
+                $response['message'] ?? 'Provider mengirim status sukses.',
+                4968121
+            );
+
             $this->markOrderSuccessful($transaction->fresh(['product', 'user']), $response['message'] ?? null);
 
             return 'success';
         }
 
         if ($nextStatus === 'failed') {
+            $this->sendProviderAlertOnce(
+                $transaction,
+                'provider_failed',
+                'Provider menandai pesanan gagal',
+                $response['message'] ?? 'Provider mengirim status gagal.',
+                16738680
+            );
+
             $this->markAsFailed($transaction->fresh(['product', 'user']), $response['message'] ?? 'Provider menandai pesanan gagal.', $response['raw'] ?? $response);
 
             return 'failed';
@@ -381,6 +430,14 @@ class OrderFulfillmentService
                 'order_status' => 'processing',
                 'target_notes' => $response['message'] ?? $transaction->target_notes,
             ]);
+
+            $this->sendProviderAlertOnce(
+                $transaction,
+                'provider_processing',
+                'Provider masih memproses pesanan',
+                $response['message'] ?? 'Provider mengirim status proses.',
+                5922504
+            );
         }
 
         return 'processing';
@@ -401,6 +458,32 @@ class OrderFulfillmentService
             str_contains($statusText, 'complete') => 'success',
             default => 'processing',
         };
+    }
+
+    protected function sendProviderAlertOnce(Transaction $transaction, string $key, string $title, ?string $description = null, int $color = 5922504): void
+    {
+        $key = trim($key) !== '' ? trim($key) : 'provider_event';
+
+        if (! $this->discordWebhookService->isEnabled('transactions')) {
+            return;
+        }
+
+        $freshTransaction = $transaction->fresh(['product', 'user']) ?: $transaction;
+        $responseData = $freshTransaction->response_data ?? [];
+
+        if (filled(data_get($responseData, 'discord_alerts.' . $key))) {
+            return;
+        }
+
+        data_set($responseData, 'discord_alerts.' . $key, now()->toDateTimeString());
+        $freshTransaction->forceFill(['response_data' => $responseData])->saveQuietly();
+
+        $this->discordWebhookService->sendProviderAlert(
+            $freshTransaction->fresh(['product', 'user']) ?: $freshTransaction,
+            $title,
+            $description,
+            $color
+        );
     }
 
     protected function validateOrderSosmedProviderProduct(Product $product): array
@@ -752,6 +835,14 @@ class OrderFulfillmentService
         $providerSource = $product->provider_source ?: $product->provider_id;
 
         if (! filled($providerSource) || ! filled($product->provider_product_id)) {
+            $this->sendProviderAlertOnce(
+                $transaction,
+                'provider_config_missing',
+                'Konfigurasi provider belum lengkap',
+                'Produk API belum memiliki provider atau ID layanan provider.',
+                16433050
+            );
+
             $this->markAsFailed($transaction, 'Produk API belum memiliki konfigurasi provider yang lengkap.');
 
             return;
@@ -765,6 +856,14 @@ class OrderFulfillmentService
                 $validation = $this->validateOrderSosmedProviderProduct($product);
 
                 if (! ($validation['success'] ?? false)) {
+                    $this->sendProviderAlertOnce(
+                        $transaction,
+                        'provider_validation_failed',
+                        'Validasi layanan provider gagal',
+                        $validation['message'] ?? 'Validasi layanan OrderSosmed gagal.',
+                        16738680
+                    );
+
                     if (($validation['disable_product'] ?? false) === true) {
                         $this->disableOrderSosmedProduct(
                             $product,
@@ -810,6 +909,14 @@ class OrderFulfillmentService
                 ['provider_error' => $exception->getMessage()]
             );
 
+            $this->sendProviderAlertOnce(
+                $transaction,
+                'provider_submit_exception',
+                'Provider gagal menerima pesanan',
+                mb_strimwidth($exception->getMessage(), 0, 900, '...'),
+                16738680
+            );
+
             return;
         }
 
@@ -827,6 +934,14 @@ class OrderFulfillmentService
         ]);
 
         if (! ($response['success'] ?? false)) {
+            $this->sendProviderAlertOnce(
+                $transaction,
+                'provider_rejected',
+                'Provider menolak pesanan',
+                $response['message'] ?? 'Provider menolak pesanan.',
+                16738680
+            );
+
             $this->markAsFailed($transaction, $response['message'] ?? 'Provider menolak pesanan.', $response['raw'] ?? $response);
 
             return;
@@ -835,6 +950,14 @@ class OrderFulfillmentService
         $nextStatus = $this->normalizeProviderOrderStatus($response['order_status'] ?? 'processing');
 
         if ($nextStatus === 'failed') {
+            $this->sendProviderAlertOnce(
+                $transaction,
+                'provider_failed',
+                'Provider menandai pesanan gagal',
+                $response['message'] ?? 'Provider menandai pesanan gagal.',
+                16738680
+            );
+
             $this->markAsFailed($transaction, $response['message'] ?? 'Provider menandai pesanan gagal.', $response['raw'] ?? $response);
 
             return;
@@ -849,8 +972,9 @@ class OrderFulfillmentService
         if ($nextStatus === 'success') {
             $this->sendSuccessEmail($transaction, $previousStatus);
         }
-        $this->discordWebhookService->sendOrderAlert(
+        $this->sendProviderAlertOnce(
             $transaction,
+            $nextStatus === 'success' ? 'provider_success' : 'provider_submitted',
             $nextStatus === 'success' ? 'Pesanan otomatis berhasil diproses' : 'Pesanan otomatis masuk ke provider',
             $response['message'] ?? 'Provider telah menerima pesanan dari website.',
             $nextStatus === 'success' ? 4968121 : 5922504
@@ -978,7 +1102,7 @@ class OrderFulfillmentService
         $transaction = $transaction->fresh(['product.category', 'user']) ?: $transaction;
 
         if ($previousStatus !== 'processing') {
-            $this->discordWebhookService->sendOrderAlert(
+            $this->discordWebhookService->sendManualTransactionAlert(
                 $transaction,
                 'Pesanan aplikasi premium butuh tindak lanjut',
                 'Data buyer sudah diterima. Silakan proses pesanan premium ini dari panel admin.',
@@ -1165,7 +1289,7 @@ class OrderFulfillmentService
         ]);
 
         $this->rewardUserIfNeeded($transaction, $previousStatus, 'processing');
-        $this->discordWebhookService->sendOrderAlert(
+        $this->discordWebhookService->sendManualTransactionAlert(
             $transaction,
             'Pesanan manual butuh tindak lanjut',
             'Silakan cek panel manual order untuk menyelesaikan pesanan ini.',
@@ -1190,12 +1314,21 @@ class OrderFulfillmentService
             $this->sendSuccessEmail($freshTransaction, $previousStatus);
         }
 
-        $this->discordWebhookService->sendOrderAlert(
-            $transaction,
-            'Pesanan gagal diproses',
-            $message,
-            16738680
-        );
+        if ($transaction->product?->process_type === 'manual') {
+            $this->discordWebhookService->sendManualTransactionAlert(
+                $transaction,
+                'Pesanan manual gagal diproses',
+                $message,
+                16738680
+            );
+        } else {
+            $this->discordWebhookService->sendOrderAlert(
+                $transaction,
+                'Pesanan gagal diproses',
+                $message,
+                16738680
+            );
+        }
 
         if (in_array($previousStatus, ['processing', 'success'], true)) {
             // Tidak mengurangi poin agar histori loyalty user tetap stabil.

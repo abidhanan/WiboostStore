@@ -87,6 +87,9 @@
     @case('wallet')
         <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-10a2 2 0 0 1 2-2Zm0 0 12-3v3M17 13.5h.01"/></svg>
         @break
+    @case('calendar')
+        <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 3.5v4M16 3.5v4M4 10h16M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"/></svg>
+        @break
     @case('qris')
         <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 14h2.5v2.5H14zM18.5 14H20v6h-4M14 20h.01M20 20h.01"/></svg>
         @break

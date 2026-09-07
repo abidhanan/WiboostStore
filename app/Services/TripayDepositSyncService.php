@@ -10,8 +10,10 @@ use Illuminate\Support\Facades\DB;
 
 class TripayDepositSyncService
 {
-    public function __construct(private readonly XoftwarePaymentService $paymentService)
-    {
+    public function __construct(
+        private readonly XoftwarePaymentService $paymentService,
+        private readonly DiscordWebhookService $discordWebhookService
+    ) {
     }
 
     public function syncForUser(int $userId, int $limit = 100): void
@@ -66,6 +68,15 @@ class TripayDepositSyncService
                     'synced_at' => now()->toDateTimeString(),
                 ]),
             ]);
+
+            $freshDeposit = $pendingDeposit->fresh('user') ?: $pendingDeposit;
+            $this->discordWebhookService->sendDepositAlertOnce(
+                $freshDeposit,
+                'failed',
+                $freshDeposit->isMembershipPayment() ? 'Membership gagal dibayar' : 'Deposit gagal dibayar',
+                'Pembayaran QRIS deposit dibatalkan, gagal, atau kedaluwarsa.',
+                16738680
+            );
         }
 
         if (! in_array($status, ['SUCCESS', 'PAID', 'SUCCEEDED', 'SETTLEMENT', 'CAPTURE', 'FAILED', 'EXPIRED', 'REFUND', 'CANCELED', 'CANCELLED'], true)
@@ -83,13 +94,13 @@ class TripayDepositSyncService
 
     protected function markDepositAsPaid(Deposit $pendingDeposit, array $data, array $detail): void
     {
-        DB::transaction(function () use ($pendingDeposit, $data, $detail) {
+        $paidDeposit = DB::transaction(function () use ($pendingDeposit, $data, $detail) {
             $deposit = Deposit::whereKey($pendingDeposit->id)
                 ->lockForUpdate()
                 ->first();
 
             if (! $deposit || ! in_array($deposit->payment_status, [null, 'unpaid', 'pending'], true)) {
-                return;
+                return null;
             }
 
             $topupAmount = (float) $deposit->amount;
@@ -150,7 +161,19 @@ class TripayDepositSyncService
                     }
                 }
             }
+
+            return $deposit->fresh('user');
         });
+
+        if ($paidDeposit instanceof Deposit) {
+            $this->discordWebhookService->sendDepositAlertOnce(
+                $paidDeposit,
+                'paid',
+                $paidDeposit->isMembershipPayment() ? 'Membership berhasil dibayar' : 'Deposit berhasil dibayar',
+                $paidDeposit->isMembershipPayment() ? 'Membership user sudah otomatis aktif.' : 'Saldo user sudah otomatis ditambahkan.',
+                4968121
+            );
+        }
     }
 
     protected function resolveTripayReference(Deposit $deposit): ?string

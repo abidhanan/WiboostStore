@@ -6,10 +6,12 @@ use App\Http\Controllers\Admin\CredentialController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DepositController as AdminDepositController;
 use App\Http\Controllers\Admin\DisplayController;
+use App\Http\Controllers\Admin\FormController as AdminFormController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 use App\Http\Controllers\Admin\ResellerController as AdminResellerController;
+use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
 use App\Http\Controllers\Admin\TutorialController;
@@ -17,6 +19,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\FrontendController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicFormController;
 use App\Http\Controllers\User\AdminReportController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\User\OrderController;
@@ -24,6 +27,7 @@ use App\Http\Controllers\User\QrisPaymentController;
 use App\Http\Controllers\User\ResellerController;
 use App\Http\Controllers\User\TransactionHistoryController;
 use App\Http\Controllers\User\WalletController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 
@@ -65,6 +69,28 @@ Route::get('/apple-touch-icon-precomposed.png', function () {
     ]);
 });
 
+Route::get('/apple-touch-icon-{dimensions}.png', function (string $dimensions) {
+    $path = public_path('images/wiboost-icon-512.png');
+
+    abort_unless(is_file($path), 404);
+
+    return Response::file($path, [
+        'Content-Type' => 'image/png',
+        'Cache-Control' => 'public, max-age=31536000, immutable',
+    ]);
+})->where('dimensions', '[0-9]+x[0-9]+');
+
+Route::get('/apple-touch-icon-{dimensions}-precomposed.png', function (string $dimensions) {
+    $path = public_path('images/wiboost-icon-512.png');
+
+    abort_unless(is_file($path), 404);
+
+    return Response::file($path, [
+        'Content-Type' => 'image/png',
+        'Cache-Control' => 'public, max-age=31536000, immutable',
+    ]);
+})->where('dimensions', '[0-9]+x[0-9]+');
+
 Route::get('/images/wiboost-icon-{size}.png', function (string $size) {
     abort_unless(in_array($size, ['16', '32', '48', '64', '180', '192', '512'], true), 404);
 
@@ -78,11 +104,258 @@ Route::get('/images/wiboost-icon-{size}.png', function (string $size) {
     ]);
 })->whereNumber('size');
 
+Route::get('/images/wiboost-logo-nav.png', function () {
+    $path = public_path('images/wiboost-logo-nav.png');
+
+    abort_unless(is_file($path), 404);
+
+    return Response::file($path, [
+        'Content-Type' => 'image/png',
+        'Cache-Control' => 'public, max-age=31536000, immutable',
+    ]);
+});
+
+Route::get('/this.onerror=null;this.src={fallback}', function () {
+    return redirect(asset('images/wiboost-logo-nav.png') . '?v=20260613-nav2', 301);
+})->where('fallback', '.*')
+    ->withoutMiddleware([
+        \App\Http\Middleware\LogActivity::class,
+        \Illuminate\Session\Middleware\StartSession::class,
+        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        ValidateCsrfToken::class,
+    ])
+    ->name('legacy.logo-onerror');
+
+Route::get('/assets/storage/{path}', function (string $path) {
+    $path = trim(str_replace('\\', '/', $path), '/');
+
+    if ($path === '' || str_contains($path, '..')) {
+        return response('Not found', 404, [
+            'Content-Type' => 'text/plain; charset=UTF-8',
+            'Cache-Control' => 'public, max-age=300, must-revalidate',
+        ]);
+    }
+
+    $filename = basename($path);
+    $candidates = [
+        public_path('storage/' . $path),
+        storage_path('app/public/' . $path),
+    ];
+
+    if (str_starts_with($path, 'images/')) {
+        foreach (['products', 'categories', 'promos', 'tutorials', 'profile-photos'] as $directory) {
+            $candidates[] = public_path("storage/{$directory}/{$filename}");
+            $candidates[] = storage_path("app/public/{$directory}/{$filename}");
+        }
+    }
+
+    foreach ($candidates as $candidate) {
+        if (is_file($candidate)) {
+            return Response::file($candidate, [
+                'Cache-Control' => 'public, max-age=2592000, must-revalidate',
+            ]);
+        }
+    }
+
+    $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+    if (in_array($extension, ['avif', 'gif', 'jpg', 'jpeg', 'png', 'svg', 'webp'], true)) {
+        return response()->noContent(204, [
+            'Cache-Control' => 'public, max-age=300, must-revalidate',
+        ]);
+    }
+
+    return response('Not found', 404, [
+        'Content-Type' => 'text/plain; charset=UTF-8',
+        'Cache-Control' => 'public, max-age=300, must-revalidate',
+    ]);
+})->where('path', '.*')
+    ->withoutMiddleware([
+        \App\Http\Middleware\LogActivity::class,
+        \Illuminate\Session\Middleware\StartSession::class,
+        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        ValidateCsrfToken::class,
+    ])
+    ->name('legacy.assets.storage');
+
+Route::get('/robots.txt', function () {
+    $path = public_path('robots.txt');
+
+    abort_unless(is_file($path), 404);
+
+    return Response::file($path, [
+        'Content-Type' => 'text/plain; charset=UTF-8',
+        'Cache-Control' => 'public, max-age=3600, must-revalidate',
+    ]);
+});
+
+Route::get('/sitemap.xml', function () {
+    $path = public_path('sitemap.xml');
+
+    abort_unless(is_file($path), 404);
+
+    return Response::file($path, [
+        'Content-Type' => 'application/xml; charset=UTF-8',
+        'Cache-Control' => 'public, max-age=3600, must-revalidate',
+    ]);
+});
+
+Route::get('/llms.txt', function () {
+    $path = public_path('llms.txt');
+
+    abort_unless(is_file($path), 404);
+
+    return Response::file($path, [
+        'Content-Type' => 'text/plain; charset=UTF-8',
+        'Cache-Control' => 'public, max-age=3600, must-revalidate',
+    ]);
+});
+
+Route::get('/.well-known/assetlinks.json', function () {
+    $path = public_path('.well-known/assetlinks.json');
+
+    if (is_file($path)) {
+        return Response::file($path, [
+            'Content-Type' => 'application/json; charset=UTF-8',
+            'Cache-Control' => 'public, max-age=3600, must-revalidate',
+        ]);
+    }
+
+    return response('[]', 200, [
+        'Content-Type' => 'application/json; charset=UTF-8',
+        'Cache-Control' => 'public, max-age=3600, must-revalidate',
+    ]);
+})->withoutMiddleware([
+    \App\Http\Middleware\LogActivity::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    ValidateCsrfToken::class,
+])->name('well-known.assetlinks');
+
+Route::get('/.well-known/apple-app-site-association', function () {
+    $path = public_path('.well-known/apple-app-site-association');
+
+    if (is_file($path)) {
+        return Response::file($path, [
+            'Content-Type' => 'application/json; charset=UTF-8',
+            'Cache-Control' => 'public, max-age=3600, must-revalidate',
+        ]);
+    }
+
+    return response()->json([
+        'applinks' => ['apps' => [], 'details' => []],
+        'webcredentials' => ['apps' => []],
+        'appclips' => ['apps' => []],
+    ], 200, [
+        'Cache-Control' => 'public, max-age=3600, must-revalidate',
+    ]);
+})->withoutMiddleware([
+    \App\Http\Middleware\LogActivity::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    ValidateCsrfToken::class,
+])->name('well-known.apple-app-site-association');
+
+Route::get('/.well-known/openid-configuration', fn () => response()->json([
+    'error' => 'not_configured',
+    'message' => 'Wiboost Store is not an OpenID Connect issuer.',
+], 404, [
+    'Cache-Control' => 'public, max-age=3600, must-revalidate',
+]))->withoutMiddleware([
+    \App\Http\Middleware\LogActivity::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    ValidateCsrfToken::class,
+])->name('well-known.openid-configuration');
+
+Route::get('/.well-known/security.txt', function () {
+    $path = public_path('.well-known/security.txt');
+
+    if (is_file($path)) {
+        return Response::file($path, [
+            'Content-Type' => 'text/plain; charset=UTF-8',
+            'Cache-Control' => 'public, max-age=3600, must-revalidate',
+        ]);
+    }
+
+    return response("Contact: https://wiboostore.com/legal/contact\nPreferred-Languages: id,en\nCanonical: https://wiboostore.com/.well-known/security.txt\n", 200, [
+        'Content-Type' => 'text/plain; charset=UTF-8',
+        'Cache-Control' => 'public, max-age=3600, must-revalidate',
+    ]);
+})->withoutMiddleware([
+    \App\Http\Middleware\LogActivity::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    ValidateCsrfToken::class,
+])->name('well-known.security');
+
+Route::get('/ads.txt', function () {
+    $path = public_path('ads.txt');
+
+    if (is_file($path)) {
+        return Response::file($path, [
+            'Content-Type' => 'text/plain; charset=UTF-8',
+            'Cache-Control' => 'public, max-age=3600, must-revalidate',
+        ]);
+    }
+
+    return response("# Wiboost Store does not publish an ads.txt inventory file.\n", 200, [
+        'Content-Type' => 'text/plain; charset=UTF-8',
+        'Cache-Control' => 'public, max-age=3600, must-revalidate',
+    ]);
+})->withoutMiddleware([
+    \App\Http\Middleware\LogActivity::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    ValidateCsrfToken::class,
+])->name('ads');
+
+Route::match(['GET', 'HEAD', 'POST'], '/{probe}', fn () => response('Not found', 404, [
+    'Content-Type' => 'text/plain; charset=UTF-8',
+    'Cache-Control' => 'public, max-age=300, must-revalidate',
+]))->where('probe', 'wp|old|blog|backup|wordpress|new')
+    ->withoutMiddleware([
+        \App\Http\Middleware\LogActivity::class,
+        \Illuminate\Session\Middleware\StartSession::class,
+        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        ValidateCsrfToken::class,
+    ])
+    ->name('scanner.probe.ignore');
+
 Route::get('/', [FrontendController::class, 'index'])->name('home');
+Route::post('/', fn () => redirect()->route('home', [], 303))
+    ->withoutMiddleware([ValidateCsrfToken::class])
+    ->name('home.post');
+
+Route::get('/admin', function () {
+    $user = auth()->user();
+
+    if ($user?->isAdmin()) {
+        return redirect()->route('admin.dashboard');
+    }
+
+    if ($user) {
+        return redirect()->route('user.dashboard');
+    }
+
+    return redirect()->route('admin.login');
+})->name('admin.entry');
+
 Route::get('/order/{slug}', [OrderController::class, 'showGuestCategory'])->name('guest.order.category');
 Route::get('/legal/{page}', [FrontendController::class, 'legal'])
     ->whereIn('page', ['terms', 'privacy-policy', 'refund-policy', 'contact'])
     ->name('legal.show');
+Route::get('/formulir/{form:slug}', [PublicFormController::class, 'show'])->name('public.forms.show');
+Route::post('/formulir/{form:slug}', [PublicFormController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('public.forms.store');
+Route::get('/formulir/{form:slug}/selesai/{submission:public_token}', [PublicFormController::class, 'thanks'])
+    ->name('public.forms.thanks');
+
+Route::get('/client/top-money', fn () => response()->noContent())
+    ->name('legacy.top-money.ping');
+Route::post('/client/top-money', [PaymentCallbackController::class, 'handleXoftwareCallback'])
+    ->name('legacy.top-money.callback');
 
 /*
 |--------------------------------------------------------------------------
@@ -177,6 +450,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Promos, Stocks, & TUTORIAL
     Route::resource('promos', PromoController::class)->middleware('admin.access:promos');
     Route::resource('displays', DisplayController::class)->except(['show'])->middleware('admin.access:displays');
+    Route::resource('forms', AdminFormController::class)->middleware('admin.access:forms');
     Route::resource('stocks', StockController::class)->middleware('admin.access:products');
     Route::resource('tutorials', TutorialController::class)->middleware('admin.access:tutorials');
 
@@ -199,6 +473,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/deposits/{id}', [AdminDepositController::class, 'update'])->name('deposits.update')->middleware('admin.access:deposits');
     Route::get('/reports', [AdminAdminReportController::class, 'index'])->name('reports.index')->middleware('admin.access:reports');
     Route::patch('/reports/{report}', [AdminAdminReportController::class, 'update'])->name('reports.update')->middleware('admin.access:reports');
+
+    // Log Aktivitas (khusus Super Admin)
+    Route::get('/logs', [AdminActivityLogController::class, 'index'])->name('logs.index')->middleware('admin.access:logs');
 
 });
 

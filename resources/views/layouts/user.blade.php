@@ -769,7 +769,7 @@
         <div class="flex h-full flex-col rounded-none border-r-4 border-white bg-white/90 shadow-2xl shadow-[#bde0fe]/30 backdrop-blur-xl">
             <div class="shrink-0 border-b-4 border-dashed border-[#f4f9ff] px-6 py-5">
                 <a href="{{ route('user.dashboard') }}" class="group flex items-center gap-3">
-                    <img src="{{ $brandLogoUrl }}" onerror="this.onerror=null;this.src='{{ asset('images/wiboost-logo.png') }}?v=20260426-full';" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm transition-transform group-hover:scale-110">
+                    <img src="{{ $brandLogoUrl }}" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm transition-transform group-hover:scale-110">
                     <div class="wiboost-sidebar-brand-text min-w-0">
                         <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></p>
                     </div>
@@ -899,7 +899,7 @@
             
             <div class="wiboost-mobile-sidebar-stack flex min-h-0 flex-1 flex-col">
                 <div class="wiboost-mobile-sidebar-header flex shrink-0 items-center gap-3 border-b-4 border-dashed border-[#f4f9ff] pb-4">
-                    <img src="{{ $brandLogoUrl }}" onerror="this.onerror=null;this.src='{{ asset('images/wiboost-logo.png') }}?v=20260426-full';" alt="Logo Wiboost Store" width="192" height="192" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm">
+                    <img src="{{ $brandLogoUrl }}" alt="Logo Wiboost Store" width="192" height="192" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm">
                     <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></p>
                 </div>
                 
@@ -1109,7 +1109,7 @@
                 
                 <div class="min-w-0 text-center md:text-left">
                     <div class="flex items-center justify-center gap-2 mb-3 md:justify-start">
-                        <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" onerror="this.onerror=null;this.src='{{ asset('images/wiboost-logo.png') }}?v=20260426-full';" alt="Logo Wiboost Store" width="192" height="192" loading="lazy" decoding="async" class="h-10 w-10 shrink-0 object-contain drop-shadow-sm md:h-12 md:w-12">
+                        <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" loading="lazy" decoding="async" class="h-10 w-10 shrink-0 object-contain drop-shadow-sm md:h-12 md:w-12">
                         <span class="whitespace-nowrap font-black text-lg text-[#2b3a67] sm:text-xl md:text-2xl">Wiboost <span class="text-[#5a76c8]">Store</span></span>
                     </div>
                     <p class="mx-auto max-w-xs text-[10px] font-bold text-[#8faaf3] sm:text-xs md:mx-0 md:min-w-max md:max-w-none md:whitespace-nowrap md:text-sm">Pusat Layanan dan Produk Digital dalam Satu Platform.</p>
@@ -1297,5 +1297,7 @@
             redirectAfterAdminReport();
         })();
     </script>
+    @include('partials.hut-ri-decoration')
+    @include('partials.tv-safe')
 </body>
 </html>
