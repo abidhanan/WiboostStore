@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\OrderSosmedService;
+use App\Support\ProductCategoryMapping;
 use App\Support\WiboostCatalog;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -124,7 +125,9 @@ class SyncOrderSosmedServices extends Command
 
                 $providerQuantity = $this->resolveProviderQuantity($service);
                 $basePrice = $this->resolveBasePrice($service, $providerQuantity);
-                $categoryId = $this->resolveCategoryId($service, $defaultCategoryId, $allowedProviderCategoryIds, $targetCategoryId, $matchLocalCategories);
+                $mappedCategory = ProductCategoryMapping::categoryFor('ordersosmed', $providerProductId, $name);
+                $categoryId = $mappedCategory?->id
+                    ?: $this->resolveCategoryId($service, $defaultCategoryId, $allowedProviderCategoryIds, $targetCategoryId, $matchLocalCategories);
 
                 if (! $categoryId) {
                     if ($matchLocalCategories) {
@@ -143,6 +146,7 @@ class SyncOrderSosmedServices extends Command
                 $product = $this->findExistingProduct($providerProductId, $name);
                 $shouldPreserveExistingCategory = $product->exists
                     && filled($product->category_id)
+                    && ! $mappedCategory
                     && ! $matchLocalCategories
                     && $targetCategoryId === null
                     && $allowedProviderCategoryIds === [];
@@ -333,13 +337,9 @@ class SyncOrderSosmedServices extends Command
             return $this->resolveCategoryIdFromProviderCategory($service);
         }
 
-        $subcategorySlug = WiboostCatalog::resolveOrdersosmedSubcategorySlug(
-            (string) ($service['name'] ?? $service['service_name'] ?? ''),
-            $this->resolveProviderCategoryName($service),
-            (string) ($service['description'] ?? $service['note'] ?? ''),
-        );
+        $localCategoryId = $this->resolveCategoryIdFromLocalMatch($service);
 
-        return Category::query()->where('slug', $subcategorySlug)->value('id')
+        return $localCategoryId
             ?? Category::query()->where('slug', 'suntik-sosmed')->value('id')
             ?? $defaultCategoryId;
     }
@@ -616,6 +616,10 @@ class SyncOrderSosmedServices extends Command
             'instagram' => $this->containsAnyKeyword($text, [' instagram ', ' instagram com ', ' ig ']),
             'tiktok' => $this->containsAnyKeyword($text, [' tiktok ', ' tik tok ']),
             'youtube' => $this->containsAnyKeyword($text, [' youtube ', ' youtub ', ' yt ']),
+            'telegram' => $this->containsAnyKeyword($text, [' telegram ', ' tele ', ' tg ']),
+            'facebook' => $this->containsAnyKeyword($text, [' facebook ', ' fb ']),
+            'twitter-x' => $this->containsAnyKeyword($text, [' twitter ', ' tweet ', ' x twitter ', ' x com ']),
+            'website-traffic' => $this->containsAnyKeyword($text, [' website ', ' traffic ', ' visit ', ' seo ']),
         ];
 
         return collect($matches)
@@ -628,14 +632,6 @@ class SyncOrderSosmedServices extends Command
     protected function containsNonTargetSosmedPlatform(string $text): bool
     {
         return $this->containsAnyKeyword($text, [
-            ' telegram ',
-            ' tele ',
-            ' facebook ',
-            ' fb ',
-            ' twitter ',
-            ' tweet ',
-            ' retweet ',
-            ' x twitter ',
             ' spotify ',
             ' whatsapp ',
             ' discord ',
@@ -690,9 +686,13 @@ class SyncOrderSosmedServices extends Command
             'followers' => $this->containsAnyKeyword($text, [' follower ', ' followers ']),
             'like' => $this->containsAnyKeyword($text, [' like ', ' likes ', ' heart ', ' hearts ']),
             'views' => $this->containsAnyKeyword($text, [' view ', ' views ', ' viewer ', ' viewers ', ' reach ', ' impression ', ' impressions ', ' play ', ' plays ']),
+            'comments' => $this->containsAnyKeyword($text, [' comment ', ' comments ', ' komentar ', ' komen ']),
             'repost' => $this->containsAnyKeyword($text, [' repost ', ' reposts ']),
             'save' => $this->containsAnyKeyword($text, [' save ', ' saves ', ' saved ', ' bookmark ', ' favorites ', ' favourite ', ' favorite ']),
             'share' => $this->containsAnyKeyword($text, [' share ', ' shares ', ' shared ']),
+            'members' => $this->containsAnyKeyword($text, [' member ', ' members ', ' join ', ' joins ']),
+            'rating-review' => $this->containsAnyKeyword($text, [' rating ', ' review ', ' reviews ', ' ulasan ']),
+            'traffic' => $this->containsAnyKeyword($text, [' traffic ', ' visit ', ' visitor ', ' visitors ', ' website ', ' seo ']),
         ];
 
         $positiveMetrics = collect($matches)
@@ -804,6 +804,8 @@ class SyncOrderSosmedServices extends Command
 
                 return [
                     'id' => $category->id,
+                    'slug' => (string) $category->slug,
+                    'image' => (string) $category->image,
                     'own' => $this->normalizeMatchText($category->name . ' ' . $category->slug),
                     'parent' => $parent ? $this->normalizeMatchText($parent->name . ' ' . $parent->slug) : '',
                     'breadcrumb' => $this->normalizeMatchText($category->breadcrumb_name . ' ' . $category->slug),
@@ -812,6 +814,10 @@ class SyncOrderSosmedServices extends Command
             })
             ->filter(function (array $candidate) {
                 $text = $candidate['breadcrumb'];
+
+                if (in_array($candidate['slug'], WiboostCatalog::ordersosmedAutoCategorySlugs(), true) || str_starts_with($candidate['image'], 'categories/generated/')) {
+                    return false;
+                }
 
                 if ($this->containsAnyKeyword($text, [' top up ', ' game ', ' kuota ', ' pulsa ', ' aplikasi premium ', ' nomor luar ', ' buzzer ', ' digiflazz '])) {
                     return false;
@@ -831,13 +837,21 @@ class SyncOrderSosmedServices extends Command
             'instagram' => [' instagram '],
             'tiktok' => [' tiktok ', ' tik tok '],
             'youtube' => [' youtube '],
+            'telegram' => [' telegram ', ' tele ', ' tg '],
+            'facebook' => [' facebook ', ' fb '],
+            'twitter-x' => [' twitter ', ' tweet ', ' x twitter ', ' x com '],
+            'website-traffic' => [' website ', ' traffic ', ' visit ', ' seo '],
             'followers' => [' followers ', ' follower '],
             'like' => [' like ', ' likes '],
             'views', 'view' => [' views ', ' view ', ' viewer ', ' viewers '],
+            'comments' => [' comments ', ' comment ', ' komentar ', ' komen '],
             'repost' => [' repost ', ' reposts '],
             'save' => [' save ', ' saves ', ' saved '],
             'share' => [' share ', ' shares ', ' shared '],
+            'members' => [' members ', ' member ', ' join ', ' joins '],
             'subscribers' => [' subscribers ', ' subscriber ', ' subs '],
+            'rating-review' => [' rating ', ' review ', ' ulasan '],
+            'traffic' => [' traffic ', ' visit ', ' visitor ', ' website ', ' seo '],
             'lainnya' => [' lainnya ', ' lain ', ' other ', ' others '],
             'indonesia' => [' indonesia ', ' indo ', ' lokal ', ' local '],
             'global' => [' global ', ' worldwide ', ' luar negeri ', ' international '],

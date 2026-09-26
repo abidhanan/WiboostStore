@@ -1,6 +1,6 @@
 <section class="space-y-6">
     <header class="mb-6 text-left">
-        <h3 class="text-xl md:text-2xl font-black text-[#ff6b6b]">Hapus Akun</h3>
+        <h2 class="text-xl md:text-2xl font-black text-[#ff6b6b]">Hapus Akun</h2>
         <p class="text-sm font-bold text-[#ff9999] mt-2">Semua data riwayat pesanan dan sisa saldo <span class="font-black underline">tidak dapat dikembalikan</span>.</p>
     </header>
 

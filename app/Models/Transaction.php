@@ -30,6 +30,10 @@ class Transaction extends Model
         'credential_data', // Untuk menyimpan data akun premium yang dikirim otomatis.
         'login_proof_path',
         'login_proof_uploaded_at',
+        'credential_started_at',
+        'credential_expires_at',
+        'logout_proof_path',
+        'logout_proof_uploaded_at',
         'points_awarded_at',
         'refunded_at',
     ];
@@ -41,6 +45,9 @@ class Transaction extends Model
         'response_data' => 'array',
         'credential_data' => 'array',
         'login_proof_uploaded_at' => 'datetime',
+        'credential_started_at' => 'datetime',
+        'credential_expires_at' => 'datetime',
+        'logout_proof_uploaded_at' => 'datetime',
         'points_awarded_at' => 'datetime',
         'refunded_at' => 'datetime',
     ];
@@ -393,6 +400,30 @@ class Transaction extends Model
             'failed' => 'Gagal',
             default => 'Menunggu',
         };
+    }
+
+    public function requiresLogoutProof(): bool
+    {
+        $credentials = is_array($this->credential_data)
+            ? $this->credential_data
+            : (json_decode((string) $this->credential_data, true) ?: []);
+
+        return (bool) data_get($credentials, 'requires_logout_proof');
+    }
+
+    public function getCredentialExpiredAttribute(): bool
+    {
+        return $this->credential_expires_at !== null
+            && $this->credential_expires_at->isPast();
+    }
+
+    public function getLogoutProofStatusLabelAttribute(): string
+    {
+        if ($this->logout_proof_path) {
+            return 'Sudah Upload';
+        }
+
+        return 'Belum Logout';
     }
 
     public function getProviderOrderIdAttribute(): ?string

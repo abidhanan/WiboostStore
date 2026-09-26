@@ -20,42 +20,104 @@ return new class extends Migration
         }
 
         if (Schema::hasTable('products')) {
-            DB::statement("
-                UPDATE transactions
-                LEFT JOIN products ON products.id = transactions.product_id
-                SET transactions.product_name_snapshot = products.name
-                WHERE transactions.product_name_snapshot IS NULL
-                    AND products.name IS NOT NULL
-            ");
+            DB::table('transactions')
+                ->select(['id', 'product_id'])
+                ->whereNull('product_name_snapshot')
+                ->whereNotNull('product_id')
+                ->orderBy('id')
+                ->chunkById(200, function ($transactions) {
+                    $productNames = DB::table('products')
+                        ->whereIn('id', $transactions->pluck('product_id')->filter()->unique()->values())
+                        ->pluck('name', 'id');
+
+                    foreach ($transactions as $transaction) {
+                        $productName = trim((string) ($productNames[$transaction->product_id] ?? ''));
+
+                        if ($productName === '') {
+                            continue;
+                        }
+
+                        DB::table('transactions')
+                            ->where('id', $transaction->id)
+                            ->whereNull('product_name_snapshot')
+                            ->update(['product_name_snapshot' => $productName]);
+                    }
+                });
         }
 
         if (Schema::hasTable('reseller_commissions')) {
-            DB::statement("
-                UPDATE transactions
-                INNER JOIN reseller_commissions ON reseller_commissions.transaction_id = transactions.id
-                SET transactions.product_name_snapshot = reseller_commissions.product_name
-                WHERE transactions.product_name_snapshot IS NULL
-                    AND reseller_commissions.product_name IS NOT NULL
-                    AND reseller_commissions.product_name <> ''
-            ");
+            DB::table('transactions')
+                ->select('id')
+                ->whereNull('product_name_snapshot')
+                ->orderBy('id')
+                ->chunkById(200, function ($transactions) {
+                    $commissionProductNames = DB::table('reseller_commissions')
+                        ->select(['transaction_id', 'product_name'])
+                        ->whereIn('transaction_id', $transactions->pluck('id'))
+                        ->whereNotNull('product_name')
+                        ->where('product_name', '<>', '')
+                        ->orderBy('id')
+                        ->get()
+                        ->unique('transaction_id')
+                        ->pluck('product_name', 'transaction_id');
+
+                    foreach ($transactions as $transaction) {
+                        $productName = trim((string) ($commissionProductNames[$transaction->id] ?? ''));
+
+                        if ($productName === '') {
+                            continue;
+                        }
+
+                        DB::table('transactions')
+                            ->where('id', $transaction->id)
+                            ->whereNull('product_name_snapshot')
+                            ->update(['product_name_snapshot' => $productName]);
+                    }
+                });
         }
 
         if (Schema::hasTable('wallet_histories')) {
-            DB::statement("
-                UPDATE transactions
-                INNER JOIN wallet_histories ON wallet_histories.invoice_number = transactions.invoice_number
-                SET transactions.product_name_snapshot = TRIM(REPLACE(wallet_histories.description, 'Pembelian Produk:', ''))
-                WHERE transactions.product_name_snapshot IS NULL
-                    AND wallet_histories.description LIKE 'Pembelian Produk:%'
-            ");
+            DB::table('transactions')
+                ->select(['id', 'invoice_number'])
+                ->whereNull('product_name_snapshot')
+                ->whereNotNull('invoice_number')
+                ->orderBy('id')
+                ->chunkById(200, function ($transactions) {
+                    $walletDescriptions = DB::table('wallet_histories')
+                        ->select(['invoice_number', 'description'])
+                        ->whereIn('invoice_number', $transactions->pluck('invoice_number')->filter()->unique()->values())
+                        ->where('description', 'like', 'Pembelian Produk:%')
+                        ->orderBy('id')
+                        ->get()
+                        ->unique('invoice_number')
+                        ->mapWithKeys(function ($history) {
+                            return [
+                                $history->invoice_number => trim(str_replace('Pembelian Produk:', '', (string) $history->description)),
+                            ];
+                        });
+
+                    foreach ($transactions as $transaction) {
+                        $productName = trim((string) ($walletDescriptions[$transaction->invoice_number] ?? ''));
+
+                        if ($productName === '') {
+                            continue;
+                        }
+
+                        DB::table('transactions')
+                            ->where('id', $transaction->id)
+                            ->whereNull('product_name_snapshot')
+                            ->update(['product_name_snapshot' => $productName]);
+                    }
+                });
         }
 
-        DB::statement("
-            UPDATE transactions
-            SET product_name_snapshot = 'Membership Wiboost 30 Hari'
-            WHERE product_name_snapshot IS NULL
-                AND (invoice_number LIKE 'MEM-%' OR response_data LIKE '%membership%')
-        ");
+        DB::table('transactions')
+            ->whereNull('product_name_snapshot')
+            ->where(function ($query) {
+                $query->where('invoice_number', 'like', 'MEM-%')
+                    ->orWhere('response_data', 'like', '%membership%');
+            })
+            ->update(['product_name_snapshot' => 'Membership Wiboost 30 Hari']);
     }
 
     public function down(): void

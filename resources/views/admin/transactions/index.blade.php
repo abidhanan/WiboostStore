@@ -10,56 +10,75 @@
     .table-scroll::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
     .admin-detail-modal {
         display: none;
-        background: rgba(43, 58, 103, .58) !important;
-        -webkit-backdrop-filter: blur(8px);
-        backdrop-filter: blur(8px);
+        background: transparent !important;
         overflow: hidden;
         overscroll-behavior: contain;
-        top: 0 !important;
+        top: var(--admin-detail-modal-top, 0px) !important;
         right: 0 !important;
         bottom: 0 !important;
         left: 0 !important;
-        align-items: flex-start;
+        height: var(--admin-detail-modal-height, 100dvh) !important;
+        align-items: center;
         justify-content: center;
-        padding: 7rem .85rem 1rem;
+        padding: 1rem .85rem;
+        transition: opacity .2s ease;
+    }
+    .admin-detail-modal::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 0 var(--admin-detail-sidebar-offset, 0px);
+        background: rgba(43, 58, 103, .58);
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+        pointer-events: none;
+        transition: left .28s ease;
+        will-change: left;
     }
     @media (min-width: 640px) {
         .admin-detail-modal {
-            padding: 7.25rem 1.5rem 1.25rem;
+            padding: 1.25rem 1.5rem;
         }
     }
     @media (min-width: 1280px) {
         .admin-detail-modal {
-            left: 0 !important;
-            padding-top: 7.5rem;
-            padding-left: 26rem;
+            padding-top: 1.5rem;
+            padding-left: 2rem;
             padding-right: 2rem;
+            padding-bottom: 1.5rem;
         }
     }
     .admin-detail-modal.modal-active { display: flex; opacity: 1 !important; pointer-events: auto !important; }
-    .admin-detail-modal.modal-active .admin-detail-card { transform: scale(1) !important; }
+    .admin-detail-modal.modal-active .admin-detail-card {
+        transform: translateX(var(--admin-detail-card-shift, 0px)) scale(1) !important;
+    }
     .admin-detail-card {
         border-radius: 1.75rem !important;
         background: #ffffff;
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        width: min(100%, 52rem);
-        max-height: calc(100dvh - 9rem) !important;
+        position: relative;
+        z-index: 1;
+        width: min(100%, 58rem);
+        max-height: calc(var(--admin-detail-modal-height, 100dvh) - 2rem) !important;
         overflow-wrap: anywhere;
         word-break: break-word;
+        transform: translateX(var(--admin-detail-card-shift, 0px)) scale(.95) !important;
+        transition: transform .28s ease !important;
+        will-change: transform;
     }
     @media (min-width: 640px) {
         .admin-detail-card {
-            max-height: calc(100dvh - 9.5rem) !important;
+            max-height: calc(var(--admin-detail-modal-height, 100dvh) - 2.5rem) !important;
         }
     }
     @media (max-width: 639px) {
         .admin-detail-modal {
-            padding-top: 8rem;
+            align-items: center;
+            padding: .85rem !important;
         }
         .admin-detail-card {
-            max-height: calc(100dvh - 9.5rem) !important;
+            max-height: calc(var(--admin-detail-modal-height, 100dvh) - 1.7rem) !important;
         }
     }
     .admin-detail-card * { min-width: 0; }
@@ -75,14 +94,14 @@
         border-bottom: 3px dashed #f4f9ff;
         background: transparent;
         box-shadow: none;
-        padding: 0 0 .85rem 0;
+        padding: .15rem .15rem .9rem;
     }
     .admin-detail-panel {
         border-radius: 1.2rem;
         border: 1px solid #eaf2ff;
         background: #f8faff;
         box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
-        padding: .85rem 1rem;
+        padding: 1rem 1.1rem;
         overflow: hidden;
     }
     .admin-detail-panel-soft {
@@ -119,8 +138,7 @@
         flex: 1 1 auto;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        padding-right: .9rem;
-        padding-bottom: .25rem;
+        padding: .1rem .85rem .35rem .15rem;
         scrollbar-color: #bde0fe transparent;
         scrollbar-width: thin;
         scrollbar-gutter: stable both-edges;
@@ -142,15 +160,39 @@
         background: #8faaf3;
     }
     .admin-detail-close {
-        box-shadow: 0 10px 22px rgba(255, 107, 107, .14), inset 0 1px 0 rgba(255,255,255,.85);
+        border-radius: 999px !important;
+        background: #ffffff !important;
+        color: #ff4d4d !important;
+        box-shadow: 0 14px 28px rgba(255, 107, 107, .2), inset 0 1px 0 rgba(255,255,255,.9);
+        opacity: 1 !important;
+        transition: transform .16s ease, background .16s ease, color .16s ease;
+    }
+    .admin-detail-close:hover {
+        background: #ffe5e5 !important;
+        transform: scale(1.04);
+    }
+    .admin-detail-close svg {
+        width: 1.15rem !important;
+        height: 1.15rem !important;
+        stroke-width: 3.2 !important;
     }
 
     .table-scroll {
         contain: none;
         overscroll-behavior-x: contain;
     }
-    body.admin-detail-open .admin-transactions-table-shell {
-        z-index: 10000;
+    body.admin-detail-open .admin-transactions-table-shell { z-index: 10; }
+
+    @media (min-width: 1024px) {
+        body.wiboost-admin-shell .admin-detail-modal {
+            --admin-detail-sidebar-offset: 18rem;
+            --admin-detail-card-shift: 9rem;
+        }
+
+        body.wiboost-admin-shell.wiboost-admin-sidebar-collapsed .admin-detail-modal {
+            --admin-detail-sidebar-offset: 5.5rem;
+            --admin-detail-card-shift: 2.75rem;
+        }
     }
 
     .admin-theme-select {
@@ -303,22 +345,26 @@
 
     @media (max-width: 767px) {
         .admin-detail-modal {
-            top: 0 !important;
+            top: var(--admin-detail-modal-top, 0px) !important;
             right: 0 !important;
             bottom: 0 !important;
             left: 0 !important;
-            height: auto !important;
-            align-items: flex-start !important;
+            height: var(--admin-detail-modal-height, 100dvh) !important;
+            align-items: center !important;
             justify-content: center !important;
-            padding: 8.5rem .9rem 1rem !important;
-            background: rgba(43, 58, 103, .64) !important;
-            -webkit-backdrop-filter: blur(8px) !important;
-            backdrop-filter: blur(8px) !important;
+            padding: .9rem !important;
+            background: transparent !important;
+            min-height: var(--admin-detail-modal-height, 100dvh) !important;
+        }
+
+        .admin-detail-modal::before {
+            left: 0 !important;
+            background: rgba(43, 58, 103, .64);
         }
 
         .admin-detail-card {
             width: min(100%, 36rem) !important;
-            max-height: calc(100dvh - 9.5rem) !important;
+            max-height: calc(var(--admin-detail-modal-height, 100dvh) - 1.8rem) !important;
         }
 
         .admin-detail-body {
@@ -411,14 +457,14 @@
                     </button>
                     
                     @if($searchValue)
-                        <a href="{{ route('admin.transactions.index', array_filter(['transaction_filter' => $activeTransactionFilter === 'all' ? null : $activeTransactionFilter, 'month' => $selectedMonth ?? date('m'), 'year' => $selectedYear ?? date('Y')])) }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[0px] text-[#ff6b6b] shadow-md active:scale-95 transition-transform" title="Reset">
+                        <a href="{{ route('admin.transactions.index', array_filter(['transaction_filter' => $activeTransactionFilter === 'all' ? null : $activeTransactionFilter, 'month' => $selectedMonth ?? now()->format('m'), 'year' => $selectedYear ?? now()->format('Y')])) }}" class="shrink-0 flex items-center justify-center rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] w-12 h-12 text-[0px] text-[#ff6b6b] shadow-md active:scale-95 transition-transform" title="Reset">
                             @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])
                         </a>
                     @endif
                 </div>
                 
                 <!-- Tombol Segarkan (Samping Search di Desktop) -->
-                <a href="{{ route('admin.transactions.index', array_filter(['refresh_api' => 1, 'search' => $searchValue, 'transaction_filter' => $activeTransactionFilter === 'all' ? null : $activeTransactionFilter, 'month' => $selectedMonth ?? date('m'), 'year' => $selectedYear ?? date('Y')])) }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#8faaf3] px-6 py-3 h-12 text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#6f8ddc] w-full md:w-auto">
+                <a href="{{ route('admin.transactions.index', array_filter(['refresh_api' => 1, 'search' => $searchValue, 'transaction_filter' => $activeTransactionFilter === 'all' ? null : $activeTransactionFilter, 'month' => $selectedMonth ?? now()->format('m'), 'year' => $selectedYear ?? now()->format('Y')])) }}" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#8faaf3] px-6 py-3 h-12 text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#6f8ddc] w-full md:w-auto">
                     @include('partials.wiboost-icon', ['name' => 'refresh', 'class' => 'h-5 w-5'])
                     <span class="whitespace-nowrap">Segarkan</span>
                 </a>
@@ -444,9 +490,9 @@
                             11 => 'November',
                             12 => 'Desember',
                         ];
-                        $selectedMonthNumber = (int) ($selectedMonth ?? date('m'));
+                        $selectedMonthNumber = (int) ($selectedMonth ?? now()->format('m'));
                     @endphp
-                    <input type="hidden" name="month" value="{{ $selectedMonth ?? date('m') }}">
+                    <input type="hidden" name="month" value="{{ $selectedMonth ?? now()->format('m') }}">
                     <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
                         <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
                             <span data-admin-theme-select-label>{{ $adminMonthNames[$selectedMonthNumber] ?? '-' }}</span>
@@ -454,28 +500,28 @@
                         </button>
                         <div class="admin-theme-select-menu">
                         @for($m=1; $m<=12; $m++)
-                            <button type="button" class="admin-theme-select-option {{ ($selectedMonth ?? date('m')) == sprintf('%02d', $m) ? 'is-selected' : '' }}" data-value="{{ sprintf('%02d', $m) }}" data-label="{{ $adminMonthNames[$m] }}">
+                            <button type="button" class="admin-theme-select-option {{ ($selectedMonth ?? now()->format('m')) == sprintf('%02d', $m) ? 'is-selected' : '' }}" data-value="{{ sprintf('%02d', $m) }}" data-label="{{ $adminMonthNames[$m] }}">
                                 {{ $adminMonthNames[$m] }}
                             </button>
                         @endfor
                         </div>
                     </div>
-                    <input type="hidden" name="year" value="{{ $selectedYear ?? date('Y') }}">
+                    <input type="hidden" name="year" value="{{ $selectedYear ?? now()->format('Y') }}">
                     <div class="admin-theme-select admin-theme-select-year" data-admin-theme-select data-submit-on-change="true" data-input-name="year">
                         <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
-                            <span data-admin-theme-select-label>{{ $selectedYear ?? date('Y') }}</span>
+                            <span data-admin-theme-select-label>{{ $selectedYear ?? now()->format('Y') }}</span>
                             <span class="admin-theme-select-arrow">⌄</span>
                         </button>
                         <div class="admin-theme-select-menu">
-                        @for($y=date('Y'); $y>=date('Y')-3; $y--)
-                            <button type="button" class="admin-theme-select-option {{ ($selectedYear ?? date('Y')) == $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
+                        @for($y=now()->year; $y>=now()->year-3; $y--)
+                            <button type="button" class="admin-theme-select-option {{ ($selectedYear ?? now()->format('Y')) == $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
                         @endfor
                         </div>
                     </div>
                 </div>
 
                 <!-- Tombol Cetak Laporan -->
-                <a href="{{ route('admin.transactions.export_excel', ['month' => $selectedMonth ?? date('m'), 'year' => $selectedYear ?? date('Y')]) }}" target="_blank" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#4bc6b9] px-6 py-2 h-auto min-h-[2.8rem] sm:min-h-[3rem] text-xs sm:text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#3ba398] w-full md:w-auto">
+                <a href="{{ route('admin.transactions.export_excel', array_filter(['search' => $searchValue, 'transaction_filter' => $activeTransactionFilter === 'all' ? null : $activeTransactionFilter, 'month' => $selectedMonth ?? now()->format('m'), 'year' => $selectedYear ?? now()->format('Y')])) }}" target="_blank" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#4bc6b9] px-6 py-2 h-auto min-h-[2.8rem] sm:min-h-[3rem] text-xs sm:text-sm font-black text-white shadow-md transition-transform active:scale-95 hover:bg-[#3ba398] w-full md:w-auto">
                     @include('partials.wiboost-icon', ['name' => 'chart', 'class' => 'h-5 w-5'])
                     <span class="whitespace-nowrap">Cetak Laporan</span>
                 </a>
@@ -491,8 +537,8 @@
         'filterRoute' => 'admin.transactions.index',
         'filterQuery' => [
             'search' => $searchValue,
-            'month' => $selectedMonth ?? date('m'),
-            'year' => $selectedYear ?? date('Y'),
+            'month' => $selectedMonth ?? now()->format('m'),
+            'year' => $selectedYear ?? now()->format('Y'),
         ],
     ])
 
@@ -500,18 +546,18 @@
     <div class="admin-transactions-table-shell overflow-visible rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 relative z-10 min-w-0 w-full">
         <div class="w-full overflow-x-auto table-scroll pb-2">
             <div class="inline-block min-w-full align-middle p-4 sm:p-6">
-                <table class="w-full text-left" style="min-width:1900px;table-layout:fixed;">
+                <table class="w-full text-left" style="min-width:1930px;table-layout:fixed;">
                     <thead>
                         <tr>
                             <th style="font-size: 10px; width: 190px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Invoice</th>
                             <th style="font-size: 10px; width: 150px;" class="px-6 py-4 pr-8 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Waktu</th>
-                            <th style="font-size: 10px; width: 190px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Nama</th>
+                            <th style="font-size: 10px; width: 260px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Nama</th>
                             <th style="font-size: 10px; width: 240px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Email</th>
-                            <th style="font-size: 10px; width: 360px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Layanan</th>
+                            <th style="font-size: 10px; width: 360px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Produk</th>
                             <th style="font-size: 10px; width: 130px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga</th>
                             <th style="font-size: 10px; width: 320px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Target</th>
                             <th style="font-size: 10px; width: 120px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Metode</th>
-                            <th style="font-size: 10px; width: 120px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Bukti Login</th>
+                            <th style="font-size: 10px; width: 120px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Bukti Masuk</th>
                             <th style="font-size: 10px; width: 180px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Status</th>
                         </tr>
                     </thead>
@@ -553,17 +599,17 @@
                                 <p class="whitespace-nowrap text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ isset($trx->created_at) ? $trx->created_at->format('d M Y, H:i') : '-' }}</p>
                             </td>
                             
-                            <!-- Nama User -->
-                            <td class="px-5 py-4 sm:py-5 align-top">
-                                <p class="admin-clamp-2 text-xs font-black leading-snug text-[#2b3a67] sm:text-sm">{{ $trx->user->name ?? 'Guest' }}</p>
+                            <!-- Nama Pengguna -->
+                            <td class="whitespace-nowrap overflow-hidden px-5 py-4 sm:py-5 align-top" style="width:260px;max-width:260px;">
+                                <p class="block max-w-full text-xs font-black text-[#2b3a67] sm:text-sm" style="display:block;max-width:100%;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;word-break:normal!important;overflow-wrap:normal!important;line-height:1rem;" title="{{ $trx->user->name ?? 'Guest' }}">{{ $trx->user->name ?? 'Guest' }}</p>
                             </td>
 
-                            <!-- Email User -->
+                            <!-- Email Pengguna -->
                             <td class="px-5 py-4 sm:py-5 align-top">
                                 <p class="whitespace-nowrap text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $trx->user->email ?? '-' }}</p>
                             </td>
                             
-                            <!-- Layanan -->
+                            <!-- Produk -->
                             <td class="px-5 py-4 align-top sm:py-5" style="width:360px;max-width:360px;">
                                 <p class="text-[11px] font-black leading-tight text-[#2b3a67] sm:text-xs" style="display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;text-overflow:clip;white-space:normal;word-break:normal;overflow-wrap:anywhere;" title="{{ $adminProductName }}">{{ $adminProductName }}</p>
                             </td>
@@ -601,7 +647,7 @@
                                 </span>
                             </td>
 
-                            <!-- Bukti Login -->
+                            <!-- Bukti Masuk -->
                             <td class="px-5 py-4 sm:py-5 align-top text-center">
                                 @if($adminLoginProofUrl)
                                     <a href="{{ $adminLoginProofUrl }}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size: 9px;" class="inline-flex items-center justify-center whitespace-nowrap rounded-full border-2 border-white bg-[#e0fbfc] px-3 py-1.5 font-black uppercase tracking-widest text-[#5a76c8] shadow-sm transition hover:bg-[#d4f7f4]">
@@ -759,9 +805,9 @@
 
                 if ($detailIsFilledValue($detailLoginProofUrl)) {
                     $detailRelatedSections[] = [
-                        'title' => 'Bukti Login',
+                        'title' => 'Bukti Masuk',
                         'lines' => [[
-                            'label' => 'Link Bukti Login',
+                            'label' => 'Tautan Bukti Masuk',
                             'value' => trim((string) $detailLoginProofUrl),
                         ]],
                     ];
@@ -774,7 +820,7 @@
                 $detailAppendLine($detailOrderLines, 'Total Bayar', $detailOrderData['total'] ?? null);
                 $detailAppendLine($detailOrderLines, 'Metode', $detailOrderData['payment'] ?? $trx->display_payment_method);
                 $detailAppendLine($detailOrderLines, 'Status Pesanan', $detailOrderData['status'] ?? $trx->display_status);
-                $detailAppendLine($detailOrderLines, 'ID Provider', $detailOrderData['provider_id'] ?? $trx->provider_order_id);
+                $detailAppendLine($detailOrderLines, 'ID Penyedia', $detailOrderData['provider_id'] ?? $trx->provider_order_id);
                 $detailAppendLine($detailOrderLines, 'Waktu', $detailOrderData['time'] ?? optional($trx->created_at)->format('d M Y, H:i'));
 
                 if ($detailOrderLines !== []) {
@@ -784,11 +830,13 @@
                 $detailAccountLines = [];
                 foreach ([
                     'email' => 'Email',
-                    'password' => 'Password',
+                    'username' => 'Nama Pengguna',
+                    'password' => 'Kata Sandi',
                     'profile' => 'Profil',
                     'pin' => 'PIN',
-                    'link' => 'Link Akses',
-                    'tutorial_link' => 'Link Tutorial',
+                    'link' => 'Tautan Akses',
+                    'tutorial_link' => 'Tautan Tutorial',
+                    'notes' => 'Catatan',
                 ] as $credentialKey => $credentialLabel) {
                     $detailAppendLine($detailAccountLines, $credentialLabel, $detailCredentials[$credentialKey] ?? null);
                 }
@@ -805,23 +853,26 @@
             @endphp
             <div id="admin-trx-detail-{{ $trx->id }}" class="admin-detail-modal fixed inset-0 z-[9999] flex items-center justify-center opacity-0 pointer-events-none transition-all duration-200">
                 <div class="absolute inset-0" onclick="closeAdminDetailModal('admin-trx-detail-{{ $trx->id }}')"></div>
-                <div class="admin-detail-card relative flex w-full max-w-3xl max-h-[calc(100dvh-8.25rem)] flex-col rounded-[1.75rem] border-4 border-white bg-white p-4 shadow-2xl shadow-[#2b3a67]/20 transform scale-95 transition-transform duration-200 sm:p-5">
+                <div class="admin-detail-card relative flex w-full flex-col rounded-[1.75rem] border-4 border-white bg-white p-4 shadow-2xl shadow-[#2b3a67]/20 transform scale-95 transition-transform duration-200 sm:p-5">
                     <div class="admin-detail-header mb-3.5 flex items-start justify-between gap-3 p-3.5">
                         <div>
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Detail Transaksi</p>
-                            <h3 class="mt-1 break-all text-xl font-black text-[#2b3a67]">{{ $trx->invoice_number }}</h3>
+                            <h2 class="mt-1 break-words text-xl font-black text-[#2b3a67]">{{ $trx->invoice_number }}</h2>
                             <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ optional($trx->created_at)->format('d M Y, H:i') }}</p>
                         </div>
-                        <button type="button" onclick="closeAdminDetailModal('admin-trx-detail-{{ $trx->id }}')" class="admin-detail-close flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#ffe5e5] text-[#ff6b6b]">
+                        <button type="button" onclick="closeAdminDetailModal('admin-trx-detail-{{ $trx->id }}')" class="admin-detail-close flex h-11 w-11 shrink-0 items-center justify-center border-2 border-white">
                             @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-4 w-4'])
                         </button>
                     </div>
 
                     <div class="admin-detail-body">
-                    <div class="grid gap-3.5 md:grid-cols-2">
+                    <div class="grid gap-4 md:grid-cols-2">
                         <div class="admin-detail-panel">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Pelanggan</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nama Pelanggan</p>
                             <p class="mt-1 font-black text-[#2b3a67]">{{ $trx->user->name ?? 'Guest' }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Email</p>
                             <p class="mt-1 text-xs font-bold text-[#8faaf3] break-all">{{ $trx->user->email ?? '-' }}</p>
                         </div>
                         <div class="admin-detail-panel">
@@ -829,7 +880,7 @@
                             <p class="mt-1 font-black text-[#4bc6b9]">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</p>
                         </div>
                         <div class="admin-detail-panel md:col-span-2">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Layanan</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Produk</p>
                             <p class="mt-1 font-black text-[#2b3a67]">{{ $detailProductName }}</p>
                         </div>
                         <div class="admin-detail-panel md:col-span-2">
@@ -853,11 +904,11 @@
                             <p class="mt-1 font-black uppercase text-[#5a76c8]">{{ $trx->display_status }}</p>
                         </div>
                         <div class="admin-detail-panel">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">ID Provider</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">ID Penyedia</p>
                             <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $trx->provider_order_id ?? '-' }}</p>
                         </div>
                         <div class="admin-detail-panel md:col-span-2">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Bukti Login</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Bukti Masuk</p>
                             @if($detailLoginProofUrl)
                                 <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                     <a href="{{ $detailLoginProofUrl }}" target="_blank" rel="noopener" class="w-fit rounded-full border-2 border-white bg-[#5a76c8] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-sm">
@@ -865,7 +916,7 @@
                                     </a>
                                 </div>
                                 <div class="mt-3 overflow-hidden rounded-[1.2rem] border-4 border-white bg-white shadow-inner">
-                                    <img src="{{ $detailLoginProofUrl }}" alt="Bukti login {{ $trx->invoice_number }}" class="max-h-72 w-full object-contain">
+                                    <img src="{{ $detailLoginProofUrl }}" alt="Bukti masuk {{ $trx->invoice_number }}" class="max-h-72 w-full object-contain">
                                 </div>
                                 <p class="mt-2 break-all text-xs font-bold text-[#8faaf3]">{{ $detailLoginProofUrl }}</p>
                             @else
@@ -875,7 +926,7 @@
                         @if($trx->target_notes)
                             <div class="admin-detail-panel admin-detail-panel-soft md:col-span-2">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-amber-500">Catatan</p>
-                                <p class="mt-1 text-sm font-bold text-[#2b3a67]">{{ $trx->target_notes }}</p>
+                                <p class="mt-1 whitespace-pre-line break-words text-sm font-bold leading-relaxed text-[#2b3a67]">{{ $trx->target_notes }}</p>
                             </div>
                         @endif
                         <div class="admin-detail-panel admin-detail-panel-soft md:col-span-2">
@@ -885,13 +936,13 @@
                                     @foreach($detailRelatedSections as $section)
                                         <div class="rounded-[1rem] border-2 border-white bg-white/70 p-3 shadow-sm">
                                             <p class="text-[10px] font-black uppercase tracking-widest text-[#5a76c8]">{{ $section['title'] }}</p>
-                                            <div class="mt-3 grid gap-3 md:grid-cols-2">
+                                            <div class="admin-detail-subgrid mt-3">
                                                 @foreach($section['lines'] as $line)
                                                     @php
                                                         $lineValue = (string) ($line['value'] ?? '');
                                                         $lineIsUrl = preg_match('/^https?:\/\//i', $lineValue);
                                                     @endphp
-                                                    <div>
+                                                    <div class="admin-detail-subfield">
                                                         <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">{{ $line['label'] }}</p>
                                                         @if($lineIsUrl)
                                                             <a href="{{ $lineValue }}" target="_blank" rel="noopener" class="mt-1 block break-all text-sm font-bold text-[#5a76c8] underline decoration-[#bde0fe] underline-offset-4">
@@ -939,26 +990,48 @@
         
         <!-- Paginasi -->
         @if(isset($transactions) && method_exists($transactions, 'links') && $transactions->hasPages())
-            <div class="border-t-4 border-dashed border-[#f4f9ff] bg-[#f8faff] p-5 sm:p-8 w-full min-w-0">
+            <div class="p-5 sm:p-8 w-full min-w-0">
                 {{ $transactions->links() }}
             </div>
         @endif
     </div>
 </div>
 <script>
+    function syncAdminDetailModalFrame(modal) {
+        if (!modal) return;
+
+        const viewportHeight = window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight || 0;
+        const navbar = document.querySelector('.wiboost-admin-navbar');
+        const navbarRect = navbar?.getBoundingClientRect();
+        const top = Math.max(0, Math.ceil(navbarRect?.bottom || 0));
+        const height = Math.max(240, Math.floor(viewportHeight - top));
+
+        modal.style.setProperty('--admin-detail-modal-top', `${top}px`);
+        modal.style.setProperty('--admin-detail-modal-height', `${height}px`);
+    }
+
     function openAdminDetailModal(id) {
         const modal = document.getElementById(id);
         if (!modal) return;
+        if (modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+        syncAdminDetailModalFrame(modal);
         modal.classList.add('modal-active');
-        document.body.classList.add('overflow-hidden', 'admin-detail-open');
+        document.body.classList.add('admin-detail-open');
+        requestAnimationFrame(() => syncAdminDetailModalFrame(modal));
     }
 
     function closeAdminDetailModal(id) {
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.remove('modal-active');
-        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
+        document.body.classList.remove('admin-detail-open');
     }
+
+    window.addEventListener('resize', () => {
+        document.querySelectorAll('.admin-detail-modal.modal-active').forEach(syncAdminDetailModalFrame);
+    }, { passive: true });
 
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') return;
@@ -969,7 +1042,7 @@
             dropdown.classList.remove('is-open');
             window.wiboostResetFloatingMenu?.(dropdown);
         });
-        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
+        document.body.classList.remove('admin-detail-open');
     });
 
     (() => {

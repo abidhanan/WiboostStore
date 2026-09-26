@@ -49,7 +49,7 @@ class WiboostOrderDetailData
         return match ($transaction->order_status) {
             'success' => 'Sukses',
             'processing' => 'Proses',
-            default => 'Pending',
+            default => 'Menunggu',
         };
     }
 

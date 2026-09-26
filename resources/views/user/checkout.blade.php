@@ -4,6 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Pembayaran #{{ $transaction->invoice_number }} - Wiboost</title>
+    @include('partials.seo-meta', [
+        'title' => 'Pembayaran #'.$transaction->invoice_number.' - Wiboost Store',
+        'description' => 'Halaman pembayaran transaksi Wiboost Store.',
+        'robots' => 'noindex,nofollow,noarchive,nosnippet',
+    ])
+    @include('partials.site-icons')
     @include('partials.vite-preload')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.vite-fallback')
@@ -154,7 +160,7 @@
                 <div class="inline-block px-4 py-1 bg-white/20 backdrop-blur-sm text-white font-black rounded-full mb-2 text-[10px] border-2 border-white/50 shadow-inner uppercase tracking-widest">
                     Checkout
                 </div>
-                <h2 class="font-black text-2xl sm:text-3xl tracking-tight drop-shadow-sm">Checkout <span class="text-[#e0fbfc]">QRIS</span></h2>
+                <h1 class="font-black text-2xl sm:text-3xl tracking-tight drop-shadow-sm">Checkout <span class="text-[#e0fbfc]">QRIS</span></h1>
                 <p class="text-white/90 text-xs sm:text-sm mt-1.5 font-bold drop-shadow-sm">Scan QRIS lalu selesaikan pembayaran agar pesanan diproses otomatis.</p>
             </div>
         </div>
@@ -176,7 +182,7 @@
             </div>
 
             <div class="flex items-center justify-between gap-3 mb-3 pb-3 sm:mb-4 sm:pb-4 border-b-4 border-dashed border-[#f4f9ff]">
-                <span class="text-[#8faaf3] text-[10px] font-black uppercase tracking-widest">Layanan</span>
+                <span class="text-[#8faaf3] text-[10px] font-black uppercase tracking-widest">Produk</span>
                 <span class="font-black text-[#2b3a67] text-right max-w-[64%] leading-tight bg-[#f8faff] px-3 py-1.5 rounded-xl border border-white text-xs sm:text-sm line-clamp-2">{{ $transaction->product->name }}</span>
             </div>
 

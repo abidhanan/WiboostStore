@@ -8,20 +8,17 @@
         ? ($wiboostFallbackMode ? 'true' : 'false')
         : strtolower(trim((string) $wiboostFallbackMode));
 
-    $wiboostRequestPath = trim(request()->path(), '/');
     $wiboostNeedsAuthFallback = request()->routeIs('login', 'register', 'admin.login', 'password.*', 'verification.*')
         || request()->is('login', 'register', 'forgot-password', 'reset-password*', 'admin/login');
     $wiboostNeedsImmediateFallback = request()->is('user*')
         || request()->is('admin*')
         || request()->is('profile*')
         || $wiboostNeedsAuthFallback;
-    $wiboostNeedsPublicSafetyFallback = $wiboostRequestPath === '' || request()->is('legal*');
-
     $wiboostFallbackBehavior = match ($wiboostFallbackMode) {
         '1', 'true', 'yes', 'on', 'immediate' => 'immediate',
         'safety', 'safe', 'lazy' => 'safety',
         '0', 'false', 'no', 'off' => null,
-        default => $wiboostNeedsImmediateFallback ? 'immediate' : ($wiboostNeedsPublicSafetyFallback ? 'safety' : null),
+        default => $wiboostNeedsImmediateFallback ? 'immediate' : null,
     };
 
     if ($wiboostFallbackBehavior && is_file($wiboostManifestPath)) {

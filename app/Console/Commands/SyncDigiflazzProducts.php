@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Services\DigiflazzService;
 use App\Support\DigiflazzProductLogo;
+use App\Support\ProductCategoryMapping;
 use App\Support\WiboostCatalog;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -14,7 +15,9 @@ use Illuminate\Support\Str;
 class SyncDigiflazzProducts extends Command
 {
     protected $signature = 'sync:digiflazz
-        {--match-local-categories : Import hanya produk Digiflazz yang cocok dengan kategori lokal Top Up Game dan Kuota Murah}';
+        {--match-local-categories : Import hanya produk Digiflazz yang cocok dengan kategori lokal Top Up Game dan Kuota Murah}
+        {--update-existing-only : Perbarui hanya SKU yang sudah ada tanpa mengubah mapping kategori}
+        {--execute : Simpan perubahan pada mode update-existing-only (tanpa opsi ini hanya pratinjau)}';
 
     protected $description = 'Sync produk dari Digiflazz ke database Wiboost dengan mapping kategori otomatis';
 
@@ -22,6 +25,18 @@ class SyncDigiflazzProducts extends Command
 
     public function handle(DigiflazzService $digiService): int
     {
+        if ($this->option('execute') && ! $this->option('update-existing-only')) {
+            $this->error('--execute hanya dapat digunakan bersama --update-existing-only.');
+
+            return self::FAILURE;
+        }
+
+        if ($this->option('update-existing-only') && $this->option('match-local-categories')) {
+            $this->error('Gunakan --update-existing-only tanpa --match-local-categories.');
+
+            return self::FAILURE;
+        }
+
         $this->info('--- MEMULAI PROSES SINKRONISASI ---');
         $this->info('Mengambil data dari Digiflazz...');
         $matchLocalCategories = (bool) $this->option('match-local-categories');
@@ -50,6 +65,10 @@ class SyncDigiflazzProducts extends Command
 
         $total = $products->count();
 
+        if ($this->option('update-existing-only')) {
+            return $this->updateExistingProducts($products->all(), (bool) $this->option('execute'));
+        }
+
         if ($matchLocalCategories) {
             $this->info('Mode cocok kategori lokal aktif: hanya produk Top Up Game dan Kuota Murah yang sesuai kategori lokal akan disimpan.');
             Product::query()
@@ -73,14 +92,24 @@ class SyncDigiflazzProducts extends Command
 
         foreach ($products as $item) {
             try {
-                $topCategorySlug = $matchLocalCategories
+                $mappedCategory = ProductCategoryMapping::categoryFor(
+                    'digiflazz',
+                    (string) ($item['buyer_sku_code'] ?? ''),
+                    (string) ($item['product_name'] ?? '')
+                );
+                if ($mappedCategory && ! $this->storedMappingMatchesDigiflazzItem($item, $mappedCategory)) {
+                    $mappedCategory = null;
+                }
+
+                $mappedTopCategorySlug = $mappedCategory ? ProductCategoryMapping::rootSlug($mappedCategory) : null;
+                $topCategorySlug = $mappedTopCategorySlug ?: ($matchLocalCategories
                     ? $this->resolveStrictTopCategorySlug($item)
                     : WiboostCatalog::resolveDigiflazzTopCategorySlug(
                         (string) ($item['product_name'] ?? ''),
                         (string) ($item['brand'] ?? ''),
                         (string) ($item['category'] ?? ''),
                         (string) ($item['desc'] ?? ''),
-                    );
+                    ));
 
                 if ($topCategorySlug === null) {
                     $skipped++;
@@ -90,9 +119,9 @@ class SyncDigiflazzProducts extends Command
 
                 $hargaModal = $this->parseProviderNumber($item['price'] ?? 0);
 
-                $categoryId = $matchLocalCategories
+                $categoryId = $mappedCategory?->id ?: ($matchLocalCategories
                     ? $this->resolveStrictLocalCategoryId($item, $topCategorySlug)
-                    : $this->resolveDefaultCategoryId($item, $topCategorySlug, $defaultCategoryId);
+                    : $this->resolveDefaultCategoryId($item, $topCategorySlug, $defaultCategoryId));
 
                 if (! $categoryId) {
                     $skipped++;
@@ -170,6 +199,80 @@ class SyncDigiflazzProducts extends Command
         return $failed > 0 ? self::FAILURE : self::SUCCESS;
     }
 
+    protected function updateExistingProducts(array $providerItems, bool $execute): int
+    {
+        $bySku = [];
+
+        foreach ($providerItems as $item) {
+            $bySku[trim((string) $item['buyer_sku_code'])] = $item;
+        }
+
+        $checked = 0;
+        $changed = 0;
+        $unchanged = 0;
+        $missing = 0;
+        $invalidPrice = 0;
+
+        Product::query()
+            ->where('provider_source', 'digiflazz')
+            ->orderBy('id')
+            ->chunkById(500, function ($products) use ($bySku, $execute, &$checked, &$changed, &$unchanged, &$missing, &$invalidPrice) {
+                foreach ($products as $product) {
+                    $checked++;
+                    $item = $bySku[trim((string) $product->provider_product_id)] ?? null;
+
+                    if ($item === null) {
+                        $missing++;
+                        continue;
+                    }
+
+                    $price = $this->parseProviderNumber($item['price'] ?? 0);
+
+                    if ($price <= 0) {
+                        $invalidPrice++;
+                        continue;
+                    }
+
+                    $name = trim((string) ($item['product_name'] ?? ''));
+                    $description = trim((string) ($item['desc'] ?? ''));
+                    $isActive = array_key_exists('buyer_product_status', $item)
+                        && array_key_exists('seller_product_status', $item)
+                        ? (bool) $item['buyer_product_status'] && (bool) $item['seller_product_status']
+                        : (bool) $product->is_active;
+
+                    $product->fill([
+                        'name' => $name !== '' ? $name : $product->name,
+                        'description' => $description !== '' ? $description : $product->description,
+                        'price' => $price,
+                        'is_active' => $isActive,
+                        'status' => $isActive ? 'active' : 'inactive',
+                    ]);
+
+                    if (! $product->isDirty()) {
+                        $unchanged++;
+                        continue;
+                    }
+
+                    $changed++;
+
+                    if ($execute) {
+                        $product->saveQuietly();
+                    }
+                }
+            });
+
+        $this->newLine();
+        $this->info($execute ? 'Pembaruan produk Digiflazz selesai.' : 'Pratinjau saja; database belum diubah.');
+        $this->line("SKU lokal dicek: {$checked}; berubah: {$changed}; tetap: {$unchanged}; tidak ada di provider: {$missing}; harga tidak valid: {$invalidPrice}.");
+        $this->line('Kategori, subkategori, logo, slug, dan SKU lokal tidak diubah. Produk baru dari provider tidak diimpor.');
+
+        if (! $execute) {
+            $this->line('Jalankan lagi dengan --execute untuk menyimpan perubahan.');
+        }
+
+        return self::SUCCESS;
+    }
+
     protected function parseProviderNumber(mixed $value): float
     {
         if (is_int($value) || is_float($value)) {
@@ -209,16 +312,26 @@ class SyncDigiflazzProducts extends Command
 
     protected function resolveDefaultCategoryId(array $item, string $topCategorySlug, int $defaultCategoryId): int
     {
+        if (in_array($topCategorySlug, ['top-up-game', 'kuota-murah', 'paket-data'], true)) {
+            $strictCategoryId = $this->resolveStrictLocalCategoryId($item, $topCategorySlug === 'paket-data' ? 'kuota-murah' : $topCategorySlug);
+
+            if ($strictCategoryId) {
+                return $strictCategoryId;
+            }
+        }
+
         $subcategorySlug = WiboostCatalog::resolveDigiflazzSubcategorySlug(
             $topCategorySlug,
             (string) ($item['product_name'] ?? ''),
             (string) ($item['brand'] ?? ''),
             (string) ($item['desc'] ?? ''),
         );
+        $subcategoryId = $subcategorySlug
+            ? $this->manualDigiflazzCategoryIdBySlug($subcategorySlug, $topCategorySlug)
+            : null;
 
-        return $subcategorySlug
-            ? (Category::query()->where('slug', $subcategorySlug)->value('id')
-                ?? $this->categoryIdBySlug($topCategorySlug, $defaultCategoryId))
+        return $subcategoryId
+            ? $subcategoryId
             : $this->categoryIdBySlug($topCategorySlug, $defaultCategoryId);
     }
 
@@ -301,6 +414,8 @@ class SyncDigiflazzProducts extends Command
             : [];
         $bestCandidate = null;
         $bestScore = 0;
+        $fallbackCandidate = null;
+        $fallbackScore = 0;
 
         foreach ($this->strictDigiflazzCategoryCandidates($topCategorySlug) as $candidate) {
             if (! $this->containsAnyKeyword($candidate['breadcrumb'], $groupAliases)) {
@@ -308,6 +423,21 @@ class SyncDigiflazzProducts extends Command
             }
 
             if ($variantKey !== null && ! $this->containsAnyKeyword($candidate['breadcrumb'], $variantAliases)) {
+                $score = (int) $candidate['depth'];
+
+                if ($this->containsAnyKeyword($candidate['own'], $groupAliases)) {
+                    $score += 160;
+                }
+
+                if ($this->containsAnyKeyword($candidate['parent'], $groupAliases)) {
+                    $score += 80;
+                }
+
+                if ($score > $fallbackScore) {
+                    $fallbackScore = $score;
+                    $fallbackCandidate = $candidate;
+                }
+
                 continue;
             }
 
@@ -335,7 +465,56 @@ class SyncDigiflazzProducts extends Command
             }
         }
 
-        return $bestCandidate ? (int) $bestCandidate['id'] : null;
+        return $bestCandidate
+            ? (int) $bestCandidate['id']
+            : ($fallbackCandidate ? (int) $fallbackCandidate['id'] : null);
+    }
+
+    protected function storedMappingMatchesDigiflazzItem(array $item, Category $mappedCategory): bool
+    {
+        $topCategorySlug = ProductCategoryMapping::rootSlug($mappedCategory);
+
+        if (! in_array($topCategorySlug, ['top-up-game', 'kuota-murah', 'paket-data'], true)) {
+            return true;
+        }
+
+        $route = $this->classifyStrictDigiflazzRoute(
+            $item,
+            $topCategorySlug === 'paket-data' ? 'kuota-murah' : $topCategorySlug
+        );
+
+        if ($route === null) {
+            return true;
+        }
+
+        $categoryText = $this->normalizeDigiflazzText($mappedCategory->breadcrumb_name . ' ' . $mappedCategory->slug);
+        $groupAliases = $this->strictDigiflazzGroupAliases($route['top'])[$route['group']] ?? [];
+
+        if ($groupAliases !== [] && ! $this->containsAnyKeyword($categoryText, $groupAliases)) {
+            return false;
+        }
+
+        $variant = $route['variant'] ?? null;
+
+        if ($route['top'] === 'top-up-game' && ($route['group'] ?? null) === 'mobile-legends' && $variant === 'umum') {
+            foreach (['indonesia', 'malaysia', 'membership', 'global', 'kombinasi'] as $nonUmumVariant) {
+                $nonUmumAliases = $this->strictDigiflazzVariantAliases('top-up-game')[$nonUmumVariant] ?? [];
+
+                if ($nonUmumAliases !== [] && $this->containsAnyKeyword($categoryText, $nonUmumAliases)) {
+                    return false;
+                }
+            }
+        }
+
+        if ($variant !== null && $variant !== 'umum') {
+            $variantAliases = $this->strictDigiflazzVariantAliases($route['top'])[$variant] ?? [];
+
+            if ($variantAliases !== [] && ! $this->containsAnyKeyword($categoryText, $variantAliases)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     protected function strictDigiflazzCategoryCandidates(string $topCategorySlug): array
@@ -363,6 +542,9 @@ class SyncDigiflazzProducts extends Command
 
                 return [
                     'id' => $category->id,
+                    'slug' => (string) $category->slug,
+                    'image' => (string) $category->image,
+                    'emote' => (string) $category->emote,
                     'own' => $this->normalizeDigiflazzText($category->name . ' ' . $category->slug),
                     'parent' => $parent ? $this->normalizeDigiflazzText($parent->name . ' ' . $parent->slug) : '',
                     'breadcrumb' => $this->normalizeDigiflazzText($category->breadcrumb_name . ' ' . $category->slug),
@@ -372,10 +554,58 @@ class SyncDigiflazzProducts extends Command
             })
             ->filter(fn (array $candidate) => (int) $candidate['depth'] > 0)
             ->filter(fn (array $candidate) => $this->containsAnyKeyword($candidate['root'], $rootAliases))
+            ->reject(fn (array $candidate) => $topCategorySlug === 'top-up-game' && $this->isGeneratedGameCategoryCandidate($candidate))
+            ->reject(fn (array $candidate) => in_array($topCategorySlug, ['kuota-murah', 'paket-data'], true) && $this->isGeneratedQuotaCategoryCandidate($candidate))
             ->values()
             ->all();
 
         return $this->strictDigiflazzCategoryCandidates[$topCategorySlug];
+    }
+
+    protected function manualDigiflazzCategoryIdBySlug(string $slug, string $topCategorySlug): ?int
+    {
+        return Category::query()
+            ->where('slug', $slug)
+            ->get()
+            ->first(fn (Category $category) => ! $this->isGeneratedCategoryForTop($category, $topCategorySlug))
+            ?->id;
+    }
+
+    protected function isGeneratedCategoryForTop(Category $category, string $topCategorySlug): bool
+    {
+        $candidate = [
+            'slug' => (string) $category->slug,
+            'image' => (string) $category->image,
+            'emote' => (string) $category->emote,
+        ];
+
+        if ($topCategorySlug === 'top-up-game') {
+            return $this->isGeneratedGameCategoryCandidate($candidate);
+        }
+
+        if (in_array($topCategorySlug, ['kuota-murah', 'paket-data'], true)) {
+            return $this->isGeneratedQuotaCategoryCandidate($candidate);
+        }
+
+        return false;
+    }
+
+    protected function isGeneratedGameCategoryCandidate(array $candidate): bool
+    {
+        $slug = $candidate['slug'] ?? '';
+
+        return (in_array($slug, WiboostCatalog::digiflazzGameAutoCategorySlugs(), true) || str_starts_with($slug, 'game-'))
+            && (str_starts_with($candidate['image'] ?? '', 'categories/generated/')
+                || (blank($candidate['image'] ?? null) && blank($candidate['emote'] ?? null)));
+    }
+
+    protected function isGeneratedQuotaCategoryCandidate(array $candidate): bool
+    {
+        $slug = $candidate['slug'] ?? '';
+
+        return (in_array($slug, WiboostCatalog::digiflazzQuotaAutoCategorySlugs(), true) || str_starts_with($slug, 'kuota-'))
+            && (str_starts_with($candidate['image'] ?? '', 'categories/generated/')
+                || (blank($candidate['image'] ?? null) && blank($candidate['emote'] ?? null)));
     }
 
     protected function strictDigiflazzRootAliases(string $topCategorySlug): array
@@ -391,23 +621,23 @@ class SyncDigiflazzProducts extends Command
     {
         if ($topCategorySlug === 'kuota-murah') {
             return [
-                'axis' => [' axis ', ' aigo '],
-                'by-u' => [' by u ', ' byu '],
+                'axis' => [' axis ', ' aigo ', ' bronet ', ' owsem '],
+                'by-u' => [' by u ', ' byu ', ' by.u ', ' by u internet ', ' by u paket ', ' byu internet ', ' byu paket '],
                 'telkomsel' => [' telkomsel ', ' tsel ', ' kartu as ', ' simpati ', ' loop '],
-                'tri' => [' tri ', ' three '],
-                'indosat' => [' indosat ', ' im3 ', ' mentari '],
-                'smartfren' => [' smartfren '],
-                'xl' => [' xl ', ' xtra ', ' xl axiata '],
-                'lainnya' => [' lainnya ', ' lain ', ' other ', ' others '],
+                'tri' => [' tri ', ' three ', ' aon ', ' always on ', ' alwayson ', ' h3ro '],
+                'indosat' => [' indosat ', ' im3 ', ' mentari ', ' yellow ', ' freedom '],
+                'smartfren' => [' smartfren ', ' smart ', ' sf '],
+                'xl' => [' xl ', ' xtra ', ' xl axiata ', ' hotrod '],
+                'lainnya' => [' lainnya ', ' lain ', ' other ', ' others ', ' operator lain ', ' paket lain '],
             ];
         }
 
         return [
             'free-fire-max' => [' free fire max ', ' freefire max ', ' ff max '],
-            'mobile-legends' => [' mobile legends ', ' mobile legend ', ' mobilelegend ', ' mlbb ', ' ml '],
+            'mobile-legends' => [' mobile legends bang bang ', ' mobile legends bangbang ', ' mobile legends ', ' mobile legend ', ' mobilelegend ', ' mlbb ', ' ml '],
             'free-fire' => [' free fire ', ' freefire ', ' ff '],
             'pubg-mobile' => [' pubg ', ' pubg mobile ', ' uc pubg ', ' uc mobile '],
-            'valorant' => [' valorant ', ' valorant points ', ' vp ', ' valorant point '],
+            'valorant' => [' valorant ', ' valorant points ', ' valorant point ', ' vp valorant ', ' valorant vp ', ' valo ', ' vp '],
             'arena-of-valor' => [' arena of valor ', ' aov '],
             'genshin-impact' => [
                 ' genshin ',
@@ -422,27 +652,30 @@ class SyncDigiflazzProducts extends Command
             'fc-mobile' => [' fc mobile ', ' fifa mobile ', ' fifa points ', ' eafc mobile ', ' ea fc mobile ', ' fc points ', ' fc point '],
             'honor-of-kings' => [' honor of kings ', ' hok '],
             'lol-wild-rift' => [
+                ' league of legends wild rift ',
+                ' league of legend wild rift ',
+                ' lol wild rift ',
+                ' lol wr ',
+                ' lolwr ',
                 ' wild rift ',
                 ' wildrift ',
                 ' wild core ',
                 ' wild cores ',
-                ' lol wild rift ',
-                ' league of legends wild rift ',
-                ' league of legend wild rift ',
-                ' lol wr ',
-                ' wr ',
+                ' wild cores wild rift ',
+                ' wild rift wild cores ',
+                ' wr wild core ',
+                ' wr wild cores ',
+                ' wild pass ',
+                ' wildrift pass ',
             ],
             'lol-pc' => [
                 ' lol pc ',
                 ' lolpc ',
                 ' league of legends pc ',
                 ' league of legend pc ',
-                ' league of legends ',
-                ' league of legend ',
                 ' riot points ',
                 ' riot point ',
                 ' riot cash ',
-                ' lol ',
                 ' rp ',
             ],
             'lainnya' => [' lainnya ', ' lain ', ' other ', ' others '],
@@ -463,7 +696,7 @@ class SyncDigiflazzProducts extends Command
                 'freedom-harian' => [' freedom harian ', ' harian '],
                 'freedom-combo' => [' freedom combo ', ' combo '],
                 'yellow' => [' yellow '],
-                'unlimited' => [' unlimited '],
+                'unlimited' => [' unlimited ', ' unlimited nonstop ', ' nonstop ', ' unlimited max ', ' unlimited harian ', ' unlimited booster '],
                 'volume' => [' volume '],
                 'omg' => [' omg '],
                 'flash' => [' flash '],
@@ -579,7 +812,13 @@ class SyncDigiflazzProducts extends Command
             'free-fire', 'free-fire-max' => $this->containsAnyKeyword($allText, $this->strictDigiflazzVariantAliases('top-up-game')['membership'])
                 ? 'membership'
                 : 'umum',
-            'genshin-impact', 'mobile-legends' => match (true) {
+            'mobile-legends' => match (true) {
+                $this->isStrictMobileLegendsMalaysiaDiamond($primaryText, $allText) => 'malaysia',
+                $this->isStrictMobileLegendsIndonesiaDiamond($primaryText, $allText) => 'indonesia',
+                $this->isStrictMobileLegendsMembership($primaryText, $allText) || ! $this->isStrictMobileLegendsPlainDiamond($primaryText, $allText) => 'membership',
+                default => 'umum',
+            },
+            'genshin-impact' => match (true) {
                 $this->containsAnyKeyword($allText, $this->strictDigiflazzVariantAliases('top-up-game')['membership']) => 'membership',
                 $this->containsAnyKeyword($primaryText, $this->strictDigiflazzVariantAliases('top-up-game')['malaysia']) => 'malaysia',
                 $this->containsAnyKeyword($primaryText, $this->strictDigiflazzVariantAliases('top-up-game')['indonesia']) => 'indonesia',
@@ -590,14 +829,77 @@ class SyncDigiflazzProducts extends Command
                 $this->containsAnyKeyword($primaryText, $this->strictDigiflazzVariantAliases('top-up-game')['kombinasi']) => 'kombinasi',
                 default => 'umum',
             },
-            'lol-pc', 'lol-wild-rift', 'valorant' => $this->containsAnyKeyword($primaryText, $this->strictDigiflazzVariantAliases('top-up-game')['malaysia'])
-                ? 'malaysia'
-                : 'umum',
+            'lol-pc', 'lol-wild-rift', 'valorant' => match (true) {
+                $this->containsAnyKeyword($primaryText, $this->strictDigiflazzVariantAliases('top-up-game')['malaysia']) => 'malaysia',
+                $this->containsAnyKeyword($allText, $this->strictDigiflazzVariantAliases('top-up-game')['membership']) => 'membership',
+                $this->containsAnyKeyword($primaryText, $this->strictDigiflazzVariantAliases('top-up-game')['indonesia']) => 'indonesia',
+                $this->containsAnyKeyword($primaryText, $this->strictDigiflazzVariantAliases('top-up-game')['global']) => 'global',
+                default => 'umum',
+            },
             'pubg-mobile' => $this->containsAnyKeyword($primaryText, $this->strictDigiflazzVariantAliases('top-up-game')['global'])
                 ? 'global'
                 : 'umum',
             default => 'umum',
         };
+    }
+
+    protected function isStrictMobileLegendsIndonesiaDiamond(string $primaryText, string $allText): bool
+    {
+        $text = trim($primaryText . ' ' . $allText);
+
+        if ($this->containsAnyKeyword($text, $this->strictDigiflazzVariantAliases('top-up-game')['malaysia'])) {
+            return false;
+        }
+
+        if (! $this->containsAnyKeyword($text, $this->strictDigiflazzVariantAliases('top-up-game')['indonesia'])) {
+            return false;
+        }
+
+        return $this->isStrictMobileLegendsPlainDiamond($primaryText, $allText);
+    }
+
+    protected function isStrictMobileLegendsMalaysiaDiamond(string $primaryText, string $allText): bool
+    {
+        $text = trim($primaryText . ' ' . $allText);
+
+        if (! $this->containsAnyKeyword($text, $this->strictDigiflazzVariantAliases('top-up-game')['malaysia'])) {
+            return false;
+        }
+
+        return $this->isStrictMobileLegendsPlainDiamond($primaryText, $allText);
+    }
+
+    protected function isStrictMobileLegendsPlainDiamond(string $primaryText, string $allText): bool
+    {
+        $text = trim($primaryText . ' ' . $allText);
+
+        if (! $this->containsAnyKeyword($text, [' diamond ', ' diamonds ', ' dm '])) {
+            return false;
+        }
+
+        return ! $this->isStrictMobileLegendsMembership($primaryText, $allText);
+    }
+
+    protected function isStrictMobileLegendsMembership(string $primaryText, string $allText): bool
+    {
+        $text = trim($primaryText . ' ' . $allText);
+
+        return $this->containsAnyKeyword($text, [
+            ' weekly diamond pass ',
+            ' diamond pass ',
+            ' pass ',
+            ' membership ',
+            ' member ',
+            ' starlight ',
+            ' twilight ',
+            ' twilight pass ',
+            ' weekly ',
+            ' monthly ',
+            ' mingguan ',
+            ' bulanan ',
+            ' coupon pass ',
+            ' magic wheel ',
+        ]);
     }
 
     protected function itemSearchText(array $item): string

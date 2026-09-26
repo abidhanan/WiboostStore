@@ -20,7 +20,7 @@
         ['value' => 'account', 'label' => 'Akun Premium'],
     ];
     $providerOptions = [
-        ['value' => '', 'label' => '-- Pilih Provider --'],
+        ['value' => '', 'label' => '-- Pilih Penyedia --'],
         ['value' => 'ordersosmed', 'label' => 'OrderSosmed'],
         ['value' => 'digiflazz', 'label' => 'Digiflazz'],
     ];
@@ -51,7 +51,7 @@
         <section class="space-y-6">
             <div>
                 <p class="mb-1 text-xs font-black uppercase tracking-[0.3em] text-[#8faaf3]">Info Utama</p>
-                <h4 class="text-2xl md:text-3xl font-black text-[#2b3a67] tracking-tight">Identitas Produk</h4>
+                <h2 class="text-2xl md:text-3xl font-black text-[#2b3a67] tracking-tight">Identitas Produk</h2>
             </div>
 
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -131,32 +131,32 @@
                 <div class="drop-shadow-sm animate-bounce text-[#5a76c8]">@include('partials.wiboost-icon', ['name' => 'zap', 'class' => 'h-10 w-10'])</div>
                 <div>
                     <p class="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Integrasi API</p>
-                    <h4 class="text-2xl font-black text-[#2b3a67]">Provider Otomatis</h4>
+                    <h2 class="text-2xl font-black text-[#2b3a67]">Penyedia Otomatis</h2>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Sumber Provider</label>
+                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Sumber Penyedia</label>
                     @include('admin.products.partials.theme-select', [
                         'name' => 'provider_source',
                         'id' => 'provider_source',
                         'selectedValue' => (string) $currentProvider,
                         'options' => $providerOptions,
-                        'placeholder' => '-- Pilih Provider --',
+                        'placeholder' => '-- Pilih Penyedia --',
                         'background' => '#ffffff',
                     ])
                 </div>
 
                 <div>
-                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Kode Layanan Provider</label>
+                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Kode Layanan Penyedia</label>
                     <input type="text" name="provider_product_id" value="{{ old('provider_product_id', $currentProduct->provider_product_id ?? '') }}"
                         class="w-full rounded-[1.5rem] border-4 border-white bg-white px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] placeholder-[#a3bbfb]"
                         placeholder="SKU / ID layanan">
                 </div>
 
                 <div id="provider_quantity_group" class="md:col-span-2">
-                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Quantity Provider (Khusus Sosmed)</label>
+                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Jumlah Penyedia (Khusus Sosmed)</label>
                     <input type="number" name="provider_quantity" min="1" value="{{ old('provider_quantity', $currentProduct->provider_quantity ?? 1) }}"
                         class="w-full rounded-[1.5rem] border-4 border-white bg-white px-6 py-4 font-black text-[#2b3a67] outline-none transition shadow-inner focus:border-[#bde0fe] placeholder-[#a3bbfb]"
                         placeholder="1000">
@@ -169,7 +169,7 @@
                 <div class="drop-shadow-sm text-emerald-500">@include('partials.wiboost-icon', ['name' => 'alert', 'class' => 'h-10 w-10'])</div>
                 <div>
                     <p class="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500">Stok</p>
-                    <h4 class="text-2xl font-black text-[#2b3a67]">Pengingat Inventory</h4>
+                    <h2 class="text-2xl font-black text-[#2b3a67]">Pengingat Inventory</h2>
                 </div>
             </div>
 
@@ -186,7 +186,7 @@
                 <div class="drop-shadow-sm text-pink-500">@include('partials.wiboost-icon', ['name' => 'profile', 'class' => 'h-10 w-10'])</div>
                 <div>
                     <p class="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-pink-500">Aplikasi Premium</p>
-                    <h4 class="text-2xl font-black text-[#2b3a67]">Kebutuhan Input Buyer</h4>
+                    <h2 class="text-2xl font-black text-[#2b3a67]">Kebutuhan Input Buyer</h2>
                 </div>
             </div>
 
@@ -203,7 +203,7 @@
         <section class="space-y-6 rounded-[2rem] border-4 border-[#f0f5ff] bg-white p-6 shadow-sm md:p-8">
             <div>
                 <p class="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Visual</p>
-                <h4 class="text-2xl font-black text-[#2b3a67]">Branding & Ikon Produk</h4>
+                <h2 class="text-2xl font-black text-[#2b3a67]">Branding & Ikon Produk</h2>
             </div>
 
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">

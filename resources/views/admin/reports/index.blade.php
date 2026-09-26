@@ -139,8 +139,8 @@
     @php
         $searchValue = $search ?? request('search');
         $activeReportFilter = $reportFilter ?? request('report_filter', 'all');
-        $selectedMonth = $selectedMonth ?? request('month', date('m'));
-        $selectedYear = $selectedYear ?? request('year', date('Y'));
+        $selectedMonth = $selectedMonth ?? request('month', now()->format('m'));
+        $selectedYear = $selectedYear ?? request('year', now()->format('Y'));
         $adminMonthNames = [
             1 => 'Januari',
             2 => 'Februari',
@@ -198,29 +198,35 @@
             </a>
             </div>
 
-            <div class="flex w-full items-center justify-start gap-2 border-t-4 border-dashed border-[#f4f9ff] pt-4 md:justify-end md:border-t-0 md:pt-0">
-                <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
-                    <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
-                        <span data-admin-theme-select-label>{{ $adminMonthNames[$selectedMonthNumber] ?? '-' }}</span>
-                        <span class="admin-theme-select-arrow">v</span>
-                    </button>
-                    <div class="admin-theme-select-menu">
-                        @for($m = 1; $m <= 12; $m++)
-                            <button type="button" class="admin-theme-select-option {{ (string) $selectedMonth === sprintf('%02d', $m) ? 'is-selected' : '' }}" data-value="{{ sprintf('%02d', $m) }}" data-label="{{ $adminMonthNames[$m] }}">{{ $adminMonthNames[$m] }}</button>
-                        @endfor
+            <div class="mt-1 flex w-full flex-col items-center justify-start gap-3 border-t-4 border-dashed border-[#f4f9ff] pt-4 md:flex-row md:justify-end">
+                <div class="flex w-full items-center gap-2 md:w-auto">
+                    <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
+                        <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                            <span data-admin-theme-select-label>{{ $adminMonthNames[$selectedMonthNumber] ?? '-' }}</span>
+                            <span class="admin-theme-select-arrow">v</span>
+                        </button>
+                        <div class="admin-theme-select-menu">
+                            @for($m = 1; $m <= 12; $m++)
+                                <button type="button" class="admin-theme-select-option {{ (string) $selectedMonth === sprintf('%02d', $m) ? 'is-selected' : '' }}" data-value="{{ sprintf('%02d', $m) }}" data-label="{{ $adminMonthNames[$m] }}">{{ $adminMonthNames[$m] }}</button>
+                            @endfor
+                        </div>
+                    </div>
+                    <div class="admin-theme-select admin-theme-select-year" data-admin-theme-select data-submit-on-change="true" data-input-name="year">
+                        <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                            <span data-admin-theme-select-label>{{ $selectedYear }}</span>
+                            <span class="admin-theme-select-arrow">v</span>
+                        </button>
+                        <div class="admin-theme-select-menu">
+                            @for($y = now()->year; $y >= now()->year - 3; $y--)
+                                <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
+                            @endfor
+                        </div>
                     </div>
                 </div>
-                <div class="admin-theme-select admin-theme-select-year" data-admin-theme-select data-submit-on-change="true" data-input-name="year">
-                    <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
-                        <span data-admin-theme-select-label>{{ $selectedYear }}</span>
-                        <span class="admin-theme-select-arrow">v</span>
-                    </button>
-                    <div class="admin-theme-select-menu">
-                        @for($y = date('Y'); $y >= date('Y') - 3; $y--)
-                            <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
-                        @endfor
-                    </div>
-                </div>
+                <a href="{{ route('admin.reports.export_excel', array_filter(['search' => $searchValue, 'report_filter' => $activeReportFilter === 'all' ? null : $activeReportFilter, 'month' => $selectedMonth, 'year' => $selectedYear])) }}" target="_blank" class="flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-[1rem] border-4 border-white bg-[#4bc6b9] px-6 py-3 text-sm font-black text-white shadow-md shadow-[#4bc6b9]/25 transition-transform hover:bg-[#3ba398] active:scale-95 md:w-auto sm:rounded-[1.2rem]">
+                    @include('partials.wiboost-icon', ['name' => 'chart', 'class' => 'h-5 w-5'])
+                    <span class="whitespace-nowrap">Cetak Laporan</span>
+                </a>
             </div>
         </form>
     </div>
@@ -229,7 +235,7 @@
         <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-6 sm:py-6 md:flex-row md:items-center md:justify-between">
             <div>
                 <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3] mb-1">Kontak Admin</p>
-                <h3 class="text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Nomor WhatsApp Aktif</h3>
+                <h2 class="text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Nomor WhatsApp Aktif</h2>
             </div>
             <div class="grid grid-cols-2 gap-2 text-[9px] font-black uppercase tracking-widest text-[#5a76c8] sm:text-[10px]">
                 <span class="min-w-0 rounded-full border-2 border-white bg-[#f4f9ff] px-3 py-2 text-center shadow-sm sm:px-4">CS: {{ filled($adminCsWhatsapp ?? null) ? '+' . $adminCsWhatsapp : '-' }}</span>
@@ -273,17 +279,17 @@
     <div class="relative z-10 w-full min-w-0 overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:rounded-[2.5rem]">
         <div class="table-scroll w-full overflow-x-auto pb-2">
             <div class="inline-block min-w-full p-4 align-middle sm:p-6">
-                <table class="w-full min-w-[1260px] whitespace-nowrap text-left">
+                <table class="w-full min-w-[1320px] whitespace-nowrap text-left">
                     <thead>
                         <tr>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Invoice</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Waktu</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nama</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Email</th>
+                            <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nomor Kontak</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Jenis</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Kendala</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Bukti</th>
-                            <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Status</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Aksi</th>
                         </tr>
                     </thead>
@@ -297,18 +303,21 @@
                             @endphp
                             <tr onclick="openAdminReportDetail('admin-report-detail-{{ $report->id }}')" class="group cursor-pointer transition-colors hover:bg-[#f8faff]">
                                 <td class="min-w-[180px] px-5 py-5 align-middle">
-                                    <p class="inline-flex whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8]">
+                                    <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">
                                         {{ $report->related_invoice ?: 'LAP-' . str_pad((string) $report->id, 5, '0', STR_PAD_LEFT) }}
                                     </p>
                                 </td>
                                 <td class="px-5 py-5 align-middle">
-                                    <p class="whitespace-nowrap text-sm font-black text-[#2b3a67]">{{ $report->created_at?->format('d M Y, H:i') }}</p>
+                                    <p class="whitespace-nowrap text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $report->created_at?->format('d M Y, H:i') }}</p>
                                 </td>
                                 <td class="min-w-[180px] whitespace-nowrap px-5 py-5 align-middle">
                                     <p class="whitespace-nowrap text-sm font-black leading-snug text-[#2b3a67]">{{ $report->user?->name ?: '-' }}</p>
                                 </td>
                                 <td class="min-w-[240px] whitespace-nowrap px-5 py-5 align-middle">
                                     <p class="whitespace-nowrap text-[10px] font-bold text-[#8faaf3]">{{ $report->user?->email ?: '-' }}</p>
+                                </td>
+                                <td class="min-w-[190px] whitespace-nowrap px-5 py-5 align-middle">
+                                    <p class="whitespace-nowrap text-xs font-bold text-[#5a76c8]">{{ $report->user?->whatsapp ?: '-' }}</p>
                                 </td>
                                 <td class="px-5 py-5 align-middle">
                                     <span class="inline-flex rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
@@ -326,11 +335,6 @@
                                     @else
                                         <span class="text-sm font-black text-[#a3bbfb]">-</span>
                                     @endif
-                                </td>
-                                <td class="min-w-[150px] px-5 py-5 text-center align-middle">
-                                    <span class="{{ $statusClass }} inline-flex w-full justify-center rounded-full border-2 border-white px-4 py-1.5 text-[9px] font-black uppercase tracking-widest shadow-sm">
-                                        {{ $statusText }}
-                                    </span>
                                 </td>
                                 <td class="px-5 py-5 text-center align-middle">
                                     <form method="POST" action="{{ route('admin.reports.update', $report) }}" onclick="event.stopPropagation()" class="inline-flex" data-no-submit-lock="true">
@@ -446,9 +450,9 @@
                 } elseif ($snapshot !== []) {
                     if ($isFilledReportValue($snapshot['loginProofUrl'] ?? null)) {
                         $relatedSections[] = [
-                            'title' => 'Bukti Login',
+                            'title' => 'Bukti Masuk',
                             'lines' => [[
-                                'label' => 'Link Bukti Login',
+                                'label' => 'Tautan Bukti Masuk',
                                 'value' => trim((string) $snapshot['loginProofUrl']),
                             ]],
                         ];
@@ -461,7 +465,7 @@
                     $appendReportDetailLine($orderLines, 'Total Bayar', $snapshot['amount'] ?? null);
                     $appendReportDetailLine($orderLines, 'Metode', $snapshot['payment'] ?? null);
                     $appendReportDetailLine($orderLines, 'Status Pesanan', $snapshot['status'] ?? null);
-                    $appendReportDetailLine($orderLines, 'ID Provider', $snapshot['providerId'] ?? null);
+                    $appendReportDetailLine($orderLines, 'ID Penyedia', $snapshot['providerId'] ?? null);
                     $appendReportDetailLine($orderLines, 'Waktu', $snapshot['created'] ?? null);
 
                     if ($orderLines !== []) {
@@ -492,7 +496,7 @@
                     <div class="admin-detail-header mb-3.5 flex items-start justify-between gap-3 p-3.5">
                         <div>
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Detail Laporan</p>
-                            <h3 class="mt-1 break-all text-xl font-black text-[#2b3a67]">{{ $report->related_invoice ?: 'LAP-' . str_pad((string) $report->id, 5, '0', STR_PAD_LEFT) }}</h3>
+                            <h2 class="mt-1 break-all text-xl font-black text-[#2b3a67]">{{ $report->related_invoice ?: 'LAP-' . str_pad((string) $report->id, 5, '0', STR_PAD_LEFT) }}</h2>
                             <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $report->created_at?->format('d M Y, H:i') }}</p>
                         </div>
                         <button type="button" onclick="closeAdminReportDetail('admin-report-detail-{{ $report->id }}')" class="admin-detail-close flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#ffe5e5] text-lg font-black text-[#ff6b6b]">
@@ -503,12 +507,16 @@
                     <div class="admin-detail-body">
                         <div class="grid gap-3.5 md:grid-cols-2">
                             <div class="admin-detail-panel">
-                                <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Pelanggan</p>
+                                <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nama</p>
                                 <p class="mt-1 font-black text-[#2b3a67]">{{ $report->user?->name ?: '-' }}</p>
-                                <p class="mt-1 break-all text-xs font-bold text-[#8faaf3]">{{ $report->user?->email ?: '-' }}</p>
-                                @if($report->user?->whatsapp)
-                                    <p class="mt-1 break-all text-xs font-bold text-[#8faaf3]">WhatsApp: {{ $report->user->whatsapp }}</p>
-                                @endif
+                            </div>
+                            <div class="admin-detail-panel">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Email</p>
+                                <p class="mt-1 break-all font-bold text-[#2b3a67]">{{ $report->user?->email ?: '-' }}</p>
+                            </div>
+                            <div class="admin-detail-panel">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nomor Kontak</p>
+                                <p class="mt-1 whitespace-nowrap font-bold text-[#2b3a67]">{{ $report->user?->whatsapp ?: '-' }}</p>
                             </div>
                             <div class="admin-detail-panel">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Status</p>
@@ -549,13 +557,13 @@
                                         @foreach($relatedSections as $section)
                                             <div class="rounded-[1rem] border-2 border-white bg-white/70 p-3 shadow-sm">
                                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#5a76c8]">{{ $section['title'] }}</p>
-                                                <div class="mt-3 grid gap-3 md:grid-cols-2">
+                                                <div class="admin-detail-subgrid mt-3">
                                                     @foreach($section['lines'] as $line)
                                                         @php
                                                             $lineValue = (string) ($line['value'] ?? '');
                                                             $lineIsUrl = preg_match('/^https?:\/\//i', $lineValue);
                                                         @endphp
-                                                        <div>
+                                                        <div class="admin-detail-subfield">
                                                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">{{ $line['label'] }}</p>
                                                             @if($lineIsUrl)
                                                                 <a href="{{ $lineValue }}" target="_blank" rel="noopener" class="mt-1 block break-all text-sm font-bold text-[#5a76c8] underline decoration-[#bde0fe] underline-offset-4">
@@ -581,7 +589,7 @@
         @endforeach
 
         @if(isset($reports) && method_exists($reports, 'links') && $reports->hasPages())
-            <div class="w-full min-w-0 border-t-4 border-dashed border-[#f4f9ff] bg-[#f8faff] p-5 sm:p-8">
+            <div class="w-full min-w-0 p-5 sm:p-8">
                 {{ $reports->links() }}
             </div>
         @endif
@@ -593,14 +601,14 @@
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.add('modal-active');
-        document.body.classList.add('overflow-hidden', 'admin-detail-open');
+        document.body.classList.add('admin-detail-open');
     }
 
     function closeAdminReportDetail(id) {
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.remove('modal-active');
-        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
+        document.body.classList.remove('admin-detail-open');
     }
 
     document.addEventListener('keydown', (event) => {
@@ -608,7 +616,7 @@
         document.querySelectorAll('.admin-detail-modal.modal-active').forEach((modal) => {
             modal.classList.remove('modal-active');
         });
-        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
+        document.body.classList.remove('admin-detail-open');
     });
 </script>
 @endsection

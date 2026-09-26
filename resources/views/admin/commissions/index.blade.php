@@ -7,8 +7,8 @@
 @php
     $searchValue = $search ?? request('search');
     $activeCommissionFilter = $commissionFilter ?? request('commission_filter', 'all');
-    $selectedMonth = $selectedMonth ?? request('month', date('m'));
-    $selectedYear = $selectedYear ?? request('year', date('Y'));
+    $selectedMonth = $selectedMonth ?? request('month', now()->format('m'));
+    $selectedYear = $selectedYear ?? request('year', now()->format('Y'));
     $adminMonthNames = [
         1 => 'Januari',
         2 => 'Februari',
@@ -273,8 +273,8 @@
                     </a>
                 </div>
 
-                <div class="flex flex-col gap-3 border-t-4 border-dashed border-[#f4f9ff] pt-4 md:flex-row md:items-center md:justify-end">
-                    <div class="grid w-full grid-cols-2 gap-2 md:w-auto">
+                <div class="mt-1 flex w-full flex-col items-center justify-start gap-3 border-t-4 border-dashed border-[#f4f9ff] pt-4 md:flex-row md:justify-end">
+                    <div class="flex w-full items-center gap-2 md:w-auto">
                         <input type="hidden" name="month" value="{{ $selectedMonth }}">
                         <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
                             <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
@@ -296,15 +296,15 @@
                                 <span class="admin-theme-select-arrow">⌄</span>
                             </button>
                             <div class="admin-theme-select-menu">
-                            @for($y = date('Y'); $y >= date('Y') - 3; $y--)
+                            @for($y = now()->year; $y >= now()->year - 3; $y--)
                                 <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
                             @endfor
                             </div>
                         </div>
                     </div>
-                    <a href="{{ route('admin.commissions.export', array_filter(['search' => $searchValue, 'commission_filter' => $activeCommissionFilter === 'all' ? null : $activeCommissionFilter, 'month' => $selectedMonth, 'year' => $selectedYear])) }}" target="_blank" class="flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-[1rem] border-4 border-white bg-[#4bc6b9] px-5 text-xs font-black text-white shadow-md shadow-[#4bc6b9]/25 transition-transform hover:bg-[#3ba398] active:scale-95 md:w-auto sm:rounded-[1.2rem]" title="Cetak Laporan">
+                    <a href="{{ route('admin.commissions.export', array_filter(['search' => $searchValue, 'commission_filter' => $activeCommissionFilter === 'all' ? null : $activeCommissionFilter, 'month' => $selectedMonth, 'year' => $selectedYear])) }}" target="_blank" class="flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-[1rem] border-4 border-white bg-[#4bc6b9] px-6 py-2 text-xs font-black text-white shadow-md shadow-[#4bc6b9]/25 transition-transform hover:bg-[#3ba398] active:scale-95 md:w-auto sm:min-h-[3rem] sm:rounded-[1.2rem] sm:text-sm" title="Cetak Laporan">
                         @include('partials.wiboost-icon', ['name' => 'chart', 'class' => 'h-5 w-5'])
-                        <span>Cetak Laporan</span>
+                        <span class="whitespace-nowrap">Cetak Laporan</span>
                     </a>
                 </div>
             </form>
@@ -322,18 +322,18 @@
     <div class="relative z-10 flex w-full min-w-0 flex-col overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:rounded-[2.5rem]">
         <div class="table-scroll w-full overflow-x-auto pb-2">
             <div class="inline-block min-w-full p-4 align-middle sm:p-6">
-                <table class="w-full whitespace-nowrap text-left" style="min-width:1690px;table-layout:fixed;">
+                <table class="w-full whitespace-nowrap text-left" style="min-width:2170px;table-layout:auto;">
                     <thead>
                         <tr>
-                            <th style="width:190px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Invoice</th>
-                            <th style="width:150px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Waktu</th>
-                            <th style="width:190px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nama Reseller</th>
-                            <th style="width:240px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Email</th>
-                            <th style="width:360px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nama Produk</th>
-                            <th style="width:170px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Kategori</th>
-                            <th style="width:130px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Harga</th>
-                            <th style="width:140px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Komisi</th>
-                            <th style="width:120px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Status</th>
+                            <th style="width:220px;" class="border-b-4 border-dashed border-[#f4f9ff] px-7 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Invoice</th>
+                            <th style="width:175px;" class="border-b-4 border-dashed border-[#f4f9ff] px-7 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Waktu</th>
+                            <th style="min-width:340px;" class="border-b-4 border-dashed border-[#f4f9ff] px-7 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Reseller</th>
+                            <th style="width:310px;" class="border-b-4 border-dashed border-[#f4f9ff] px-7 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Email</th>
+                            <th style="width:470px;" class="border-b-4 border-dashed border-[#f4f9ff] px-7 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Produk</th>
+                            <th style="width:210px;" class="border-b-4 border-dashed border-[#f4f9ff] px-7 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Kategori</th>
+                            <th style="width:170px;" class="border-b-4 border-dashed border-[#f4f9ff] px-7 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Harga</th>
+                            <th style="width:175px;" class="border-b-4 border-dashed border-[#f4f9ff] px-7 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Komisi</th>
+                            <th style="width:150px;" class="border-b-4 border-dashed border-[#f4f9ff] px-7 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
@@ -348,31 +348,31 @@
                                     ?? $commission->base_amount;
                             @endphp
                             <tr onclick="openAdminCommissionDetail('admin-commission-detail-{{ $commission->id }}')" class="group cursor-pointer transition-colors hover:bg-[#f8faff]">
-                                <td class="px-5 py-4 align-top sm:py-5">
-                                    <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-3 py-1 text-xs font-black text-[#5a76c8]">{{ $commissionInvoice }}</p>
+                                <td class="px-7 py-4 align-top sm:py-5">
+                                    <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $commissionInvoice }}</p>
                                 </td>
-                                <td class="px-5 py-4 align-top sm:py-5">
-                                    <p class="whitespace-nowrap text-[10px] font-bold text-[#8faaf3]">{{ $formatDate($commissionTime) }}</p>
+                                <td class="px-7 py-4 align-top sm:py-5">
+                                    <p class="whitespace-nowrap text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $formatDate($commissionTime) }}</p>
                                 </td>
-                                <td class="min-w-[190px] px-5 py-4 align-top sm:py-5">
-                                    <p class="whitespace-nowrap text-sm font-black text-[#2b3a67]">{{ $commission->user?->name ?? '-' }}</p>
+                                <td class="px-7 py-4 align-top sm:py-5" style="min-width:340px;">
+                                    <p class="whitespace-nowrap text-sm font-black leading-relaxed text-[#2b3a67]">{{ $commission->user?->name ?? '-' }}</p>
                                 </td>
-                                <td class="min-w-[220px] px-5 py-4 align-top sm:py-5">
-                                    <p class="whitespace-nowrap text-[10px] font-bold text-[#8faaf3] sm:text-[11px]">{{ $commission->user?->email ?? '-' }}</p>
+                                <td class="px-7 py-4 align-top sm:py-5">
+                                    <p class="whitespace-normal break-all text-[10px] font-bold leading-relaxed text-[#8faaf3] sm:text-[11px]">{{ $commission->user?->email ?? '-' }}</p>
                                 </td>
-                                <td class="px-5 py-4 align-top sm:py-5" style="width:360px;max-width:360px;">
-                                    <p class="text-[11px] font-black leading-tight text-[#2b3a67] sm:text-xs" style="display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;text-overflow:clip;white-space:normal;word-break:normal;overflow-wrap:anywhere;" title="{{ $commissionProductName }}">{{ $commissionProductName }}</p>
+                                <td class="px-7 py-4 align-top sm:py-5" style="width:470px;max-width:470px;">
+                                    <p class="text-[11px] font-black leading-relaxed text-[#2b3a67] sm:text-xs" style="display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;text-overflow:clip;white-space:normal;word-break:normal;overflow-wrap:anywhere;" title="{{ $commissionProductName }}">{{ $commissionProductName }}</p>
                                 </td>
-                                <td class="px-5 py-4 align-top sm:py-5">
-                                    <p class="text-[10px] font-bold text-[#8faaf3]">{{ $commission->category_name ?: '-' }}</p>
+                                <td class="px-7 py-4 align-top sm:py-5">
+                                    <p class="whitespace-normal text-[10px] font-bold leading-relaxed text-[#8faaf3]">{{ $commission->category_name ?: '-' }}</p>
                                 </td>
-                                <td class="px-5 py-4 align-top sm:py-5">
+                                <td class="px-7 py-4 align-top sm:py-5">
                                     <p class="text-sm font-black text-[#2b3a67]">{{ $formatRupiah($commissionPrice) }}</p>
                                 </td>
-                                <td class="px-5 py-4 align-top sm:py-5">
+                                <td class="px-7 py-4 align-top sm:py-5">
                                     <p class="text-sm font-black text-[#4bc6b9] sm:text-base">+ {{ $formatRupiah($commission->amount) }}</p>
                                 </td>
-                                <td class="px-5 py-4 text-center align-top sm:py-5">
+                                <td class="px-7 py-4 text-center align-top sm:py-5">
                                     <span class="inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#5a76c8] shadow-sm">{{ $commission->display_status }}</span>
                                 </td>
                             </tr>
@@ -390,13 +390,13 @@
                 </table>
             </div>
         </div>
-    </div>
 
-    @if(method_exists($incomeCommissions, 'links') && $incomeCommissions->hasPages())
-        <div class="mt-6 w-full min-w-0 rounded-[2rem] border-4 border-white bg-[#f8faff] p-5 shadow-xl shadow-[#bde0fe]/25 sm:mt-8 sm:p-8">
-            {{ $incomeCommissions->links() }}
-        </div>
-    @endif
+        @if(method_exists($incomeCommissions, 'links') && $incomeCommissions->hasPages())
+            <div class="p-5 sm:p-8 w-full min-w-0">
+                {{ $incomeCommissions->links('vendor.pagination.tailwind') }}
+            </div>
+        @endif
+    </div>
 
     @foreach($incomeCommissions as $commission)
         @php
@@ -499,9 +499,9 @@
 
             if ($detailIsFilledValue($detailLoginProofUrl)) {
                 $detailRelatedSections[] = [
-                    'title' => 'Bukti Login',
+                    'title' => 'Bukti Masuk',
                     'lines' => [[
-                        'label' => 'Link Bukti Login',
+                        'label' => 'Tautan Bukti Masuk',
                         'value' => trim((string) $detailLoginProofUrl),
                     ]],
                 ];
@@ -514,7 +514,7 @@
             $detailAppendLine($detailOrderLines, 'Total Bayar', $detailOrderData['total'] ?? $detailPrice);
             $detailAppendLine($detailOrderLines, 'Metode', $detailOrderData['payment'] ?? $detailPaymentMethod);
             $detailAppendLine($detailOrderLines, 'Status Pesanan', $detailOrderData['status'] ?? $detailOrderStatus);
-            $detailAppendLine($detailOrderLines, 'ID Provider', $detailOrderData['provider_id'] ?? $detailTransaction?->provider_order_id);
+            $detailAppendLine($detailOrderLines, 'ID Penyedia', $detailOrderData['provider_id'] ?? $detailTransaction?->provider_order_id);
             $detailAppendLine($detailOrderLines, 'Waktu', $detailOrderData['time'] ?? $formatDate($detailTime));
 
             if ($detailOrderLines !== []) {
@@ -524,11 +524,13 @@
             $detailAccountLines = [];
             foreach ([
                 'email' => 'Email',
-                'password' => 'Password',
+                'username' => 'Nama Pengguna',
+                'password' => 'Kata Sandi',
                 'profile' => 'Profil',
                 'pin' => 'PIN',
-                'link' => 'Link Akses',
-                'tutorial_link' => 'Link Tutorial',
+                'link' => 'Tautan Akses',
+                'tutorial_link' => 'Tautan Tutorial',
+                'notes' => 'Catatan',
             ] as $credentialKey => $credentialLabel) {
                 $detailAppendLine($detailAccountLines, $credentialLabel, $detailCredentials[$credentialKey] ?? null);
             }
@@ -549,7 +551,7 @@
                 <div class="admin-detail-header mb-3.5 flex items-start justify-between gap-3 p-3.5">
                     <div class="min-w-0">
                         <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Detail Komisi</p>
-                        <h3 class="mt-1 break-all text-xl font-black text-[#2b3a67]">{{ $detailInvoice }}</h3>
+                        <h2 class="mt-1 break-all text-xl font-black text-[#2b3a67]">{{ $detailInvoice }}</h2>
                         <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $formatDate($detailTime) }}</p>
                     </div>
                     <button type="button" onclick="closeAdminCommissionDetail('admin-commission-detail-{{ $commission->id }}')" class="admin-detail-close flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#ffe5e5] text-[#ff6b6b]">
@@ -560,18 +562,27 @@
                 <div class="admin-detail-body">
                     <div class="grid gap-3 md:grid-cols-2">
                         <div class="admin-detail-panel">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Reseller</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nama Reseller</p>
                             <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $commission->user?->name ?? '-' }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Email Reseller</p>
                             <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $commission->user?->email ?? '-' }}</p>
                         </div>
                         <div class="admin-detail-panel">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Pembeli</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nama Pembeli</p>
                             <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $detailBuyer?->name ?? '-' }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Email Pembeli</p>
                             <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $detailBuyer?->email ?? '-' }}</p>
                         </div>
-                        <div class="admin-detail-panel md:col-span-2">
+                        <div class="admin-detail-panel">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Produk</p>
                             <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $detailProductName }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Kategori</p>
                             <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $commission->category_name ?: '-' }}</p>
                         </div>
                         <div class="admin-detail-panel">
@@ -597,13 +608,13 @@
                                     @foreach($detailRelatedSections as $section)
                                         <div class="rounded-[1rem] border-2 border-white bg-white/70 p-3 shadow-sm">
                                             <p class="text-[10px] font-black uppercase tracking-widest text-[#5a76c8]">{{ $section['title'] }}</p>
-                                            <div class="mt-3 grid gap-3 md:grid-cols-2">
+                                            <div class="admin-detail-subgrid mt-3">
                                                 @foreach($section['lines'] as $line)
                                                     @php
                                                         $lineValue = (string) ($line['value'] ?? '');
                                                         $lineIsUrl = preg_match('/^https?:\/\//i', $lineValue);
                                                     @endphp
-                                                    <div>
+                                                    <div class="admin-detail-subfield">
                                                         <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">{{ $line['label'] }}</p>
                                                         @if($lineIsUrl)
                                                             <a href="{{ $lineValue }}" target="_blank" rel="noopener" class="mt-1 block break-all text-sm font-bold text-[#5a76c8] underline decoration-[#bde0fe] underline-offset-4">
@@ -638,14 +649,14 @@
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.add('modal-active');
-        document.body.classList.add('overflow-hidden', 'admin-detail-open');
+        document.body.classList.add('admin-detail-open');
     }
 
     function closeAdminCommissionDetail(id) {
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.remove('modal-active');
-        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
+        document.body.classList.remove('admin-detail-open');
     }
 
     document.addEventListener('keydown', function (event) {
@@ -659,7 +670,7 @@
             window.wiboostResetFloatingMenu?.(dropdown);
         });
 
-        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
+        document.body.classList.remove('admin-detail-open');
     });
 
     (() => {

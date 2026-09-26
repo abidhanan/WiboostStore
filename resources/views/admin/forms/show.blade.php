@@ -20,12 +20,12 @@
 
     <div class="mb-8 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <section class="min-w-0 rounded-[2rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/25 sm:rounded-[2.5rem] sm:p-6">
-            <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Link Publik</p>
+            <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Tautan Publik</p>
             <div class="mt-3 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
                 <input type="text" readonly value="{{ $form->publicUrl() }}" class="min-w-0 flex-1 truncate rounded-[1rem] border-2 border-white bg-[#f4f9ff] px-4 py-3 text-xs font-black text-[#5a76c8] shadow-inner">
-                <button type="button" data-copy-form-link="{{ $form->publicUrl() }}" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-[1rem] border-2 border-white bg-[#5a76c8] px-4 py-3 text-xs font-black text-white shadow-md transition-transform active:scale-95">
+                <button type="button" data-copy-form-link="{{ $form->publicUrl() }}" class="inline-flex w-[8.75rem] shrink-0 items-center justify-center gap-2 rounded-[1rem] border-2 border-white bg-[#5a76c8] px-4 py-3 text-xs font-black text-white shadow-md">
                     @include('partials.wiboost-icon', ['name' => 'note', 'class' => 'h-4 w-4'])
-                    Salin Link
+                    <span data-copy-label>Salin Tautan</span>
                 </button>
             </div>
         </section>
@@ -183,8 +183,9 @@
     <div class="mb-8 rounded-[2rem] border-4 border-white bg-white/90 p-3 shadow-xl shadow-[#bde0fe]/25 backdrop-blur-sm sm:rounded-[2.5rem] sm:p-4">
         <form action="{{ route('admin.forms.show', $form) }}" method="GET" class="flex w-full items-center gap-2 sm:gap-3">
             <input type="text" name="search" value="{{ $search ?? request('search') }}"
+                placeholder="Cari nama atau jawaban..."
                 class="min-w-0 flex-1 truncate rounded-[1.2rem] border-4 border-white bg-[#f4f9ff] px-5 py-3 text-xs font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe] sm:rounded-[1.5rem] sm:px-6 sm:py-4 sm:text-sm"
-                placeholder="Cari isi jawaban atau IP...">
+                >
             <button type="submit" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/25 transition-transform hover:bg-[#4760a9] active:scale-95 sm:rounded-[1.2rem]" title="Cari Jawaban">
                 @include('partials.wiboost-icon', ['name' => 'search', 'class' => 'h-5 w-5'])
             </button>
@@ -238,102 +239,55 @@
     </div>
 
     @if($submissions->hasPages())
-        @php
-            $currentPage = $submissions->currentPage();
-            $lastPage = $submissions->lastPage();
-            $desktopWindow = 10;
-            $mobileWindow = 5;
-            $desktopStart = (int) (floor(($currentPage - 1) / $desktopWindow) * $desktopWindow) + 1;
-            $desktopEnd = min($lastPage, $desktopStart + $desktopWindow - 1);
-            $mobileStart = (int) (floor(($currentPage - 1) / $mobileWindow) * $mobileWindow) + 1;
-            $mobileEnd = min($lastPage, $mobileStart + $mobileWindow - 1);
-        @endphp
-        <div class="mt-6 w-full min-w-0 rounded-[2rem] border-4 border-white bg-white/90 p-5 shadow-xl shadow-[#bde0fe]/25 sm:mt-8 sm:p-8">
-            <div class="flex flex-col items-center justify-between gap-4 md:flex-row">
-                <p class="hidden text-sm font-black text-[#5a76c8] md:block">
-                    Menampilkan {{ $submissions->firstItem() }}-{{ $submissions->lastItem() }} dari {{ $submissions->total() }} jawaban
-                </p>
-
-                <p class="text-sm font-black text-[#5a76c8] md:hidden">
-                    Halaman {{ $currentPage }} dari {{ $lastPage }}
-                </p>
-
-                <nav class="hidden max-w-full flex-wrap items-center justify-center gap-2 md:flex" aria-label="Pagination desktop">
-                    @if($submissions->onFirstPage())
-                        <span class="inline-flex h-10 min-w-[2.5rem] cursor-not-allowed items-center justify-center rounded-full border-2 border-white bg-[#f8faff] px-3 text-[#b9c8ef] shadow-sm">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
-                        </span>
-                    @else
-                        <a href="{{ $submissions->previousPageUrl() }}" class="inline-flex h-10 min-w-[2.5rem] items-center justify-center rounded-full border-2 border-white bg-[#f4f9ff] px-3 text-[#5a76c8] shadow-sm transition hover:bg-[#e0fbfc] hover:text-[#2b3a67]">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
-                        </a>
-                    @endif
-
-                    @for($page = $desktopStart; $page <= $desktopEnd; $page++)
-                        @if($page === $currentPage)
-                            <span class="inline-flex h-10 min-w-[2.5rem] items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-3 text-sm font-black text-white shadow-md shadow-[#5a76c8]/25">{{ $page }}</span>
-                        @else
-                            <a href="{{ $submissions->url($page) }}" class="inline-flex h-10 min-w-[2.5rem] items-center justify-center rounded-full border-2 border-white bg-[#f4f9ff] px-3 text-sm font-black text-[#5a76c8] shadow-sm transition hover:bg-[#e0fbfc] hover:text-[#2b3a67]">{{ $page }}</a>
-                        @endif
-                    @endfor
-
-                    @if($submissions->hasMorePages())
-                        <a href="{{ $submissions->nextPageUrl() }}" class="inline-flex h-10 min-w-[2.5rem] items-center justify-center rounded-full border-2 border-white bg-[#f4f9ff] px-3 text-[#5a76c8] shadow-sm transition hover:bg-[#e0fbfc] hover:text-[#2b3a67]">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                        </a>
-                    @else
-                        <span class="inline-flex h-10 min-w-[2.5rem] cursor-not-allowed items-center justify-center rounded-full border-2 border-white bg-[#f8faff] px-3 text-[#b9c8ef] shadow-sm">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                        </span>
-                    @endif
-                </nav>
-
-                <nav class="flex max-w-full items-center justify-center gap-2 md:hidden" aria-label="Pagination mobile">
-                    @if($submissions->onFirstPage())
-                        <span class="inline-flex h-10 min-w-[2.5rem] cursor-not-allowed items-center justify-center rounded-full border-2 border-white bg-[#f8faff] px-3 text-[#b9c8ef] shadow-sm">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
-                        </span>
-                    @else
-                        <a href="{{ $submissions->previousPageUrl() }}" class="inline-flex h-10 min-w-[2.5rem] items-center justify-center rounded-full border-2 border-white bg-[#f4f9ff] px-3 text-[#5a76c8] shadow-sm">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
-                        </a>
-                    @endif
-
-                    @for($page = $mobileStart; $page <= $mobileEnd; $page++)
-                        @if($page === $currentPage)
-                            <span class="inline-flex h-10 min-w-[2.5rem] items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-3 text-sm font-black text-white shadow-md shadow-[#5a76c8]/25">{{ $page }}</span>
-                        @else
-                            <a href="{{ $submissions->url($page) }}" class="inline-flex h-10 min-w-[2.5rem] items-center justify-center rounded-full border-2 border-white bg-[#f4f9ff] px-3 text-sm font-black text-[#5a76c8] shadow-sm">{{ $page }}</a>
-                        @endif
-                    @endfor
-
-                    @if($submissions->hasMorePages())
-                        <a href="{{ $submissions->nextPageUrl() }}" class="inline-flex h-10 min-w-[2.5rem] items-center justify-center rounded-full border-2 border-white bg-[#f4f9ff] px-3 text-[#5a76c8] shadow-sm">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                        </a>
-                    @else
-                        <span class="inline-flex h-10 min-w-[2.5rem] cursor-not-allowed items-center justify-center rounded-full border-2 border-white bg-[#f8faff] px-3 text-[#b9c8ef] shadow-sm">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                        </span>
-                    @endif
-                </nav>
-            </div>
+        <div class="p-5 sm:p-8 w-full min-w-0">
+            {{ $submissions->links() }}
         </div>
     @endif
 </div>
 <script>
-    document.addEventListener('click', async function (event) {
-        const button = event.target.closest('[data-copy-form-link]');
+    (() => {
+        const fallbackCopy = (value) => {
+            const textarea = document.createElement('textarea');
+            textarea.value = value;
+            textarea.setAttribute('readonly', '');
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            textarea.setSelectionRange(0, value.length);
+            const copied = document.execCommand('copy');
+            textarea.remove();
+            return copied;
+        };
 
-        if (!button) {
-            return;
-        }
+        document.querySelectorAll('[data-copy-form-link]').forEach((button) => {
+            button.addEventListener('click', async (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const value = button.dataset.copyFormLink || '';
+                const label = button.querySelector('[data-copy-label]');
+                let copied = false;
 
-        try {
-            await navigator.clipboard.writeText(button.dataset.copyFormLink || '');
-        } catch (error) {
-            window.prompt('Salin link formulir:', button.dataset.copyFormLink || '');
-        }
-    });
+                try {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(value);
+                        copied = true;
+                    } else {
+                        copied = fallbackCopy(value);
+                    }
+                } catch (error) {
+                    copied = fallbackCopy(value);
+                }
+
+                if (!copied) {
+                    window.prompt('Salin tautan formulir:', value);
+                    return;
+                }
+
+                if (label) label.textContent = 'Tersalin';
+                window.setTimeout(() => { if (label) label.textContent = 'Salin Tautan'; }, 1400);
+            });
+        });
+    })();
 </script>
 @endsection

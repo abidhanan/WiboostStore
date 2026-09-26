@@ -60,7 +60,7 @@
                             <th style="width: 150px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Waktu</th>
                             <th style="width: 190px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nama</th>
                             <th style="width: 240px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Email</th>
-                            <th style="width: 360px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Layanan</th>
+                            <th style="width: 360px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Produk</th>
                             <th style="width: 130px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Harga</th>
                             <th style="width: 120px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Metode</th>
                             <th style="width: 190px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Aksi</th>
@@ -79,10 +79,10 @@
                             @endphp
                             <tr class="transition-colors hover:bg-[#f8faff]">
                                 <td class="px-5 py-5 align-middle">
-                                    <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8]">{{ $trx->invoice_number ?? '-' }}</p>
+                                    <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $trx->invoice_number ?? '-' }}</p>
                                 </td>
                                 <td class="px-5 py-5 align-middle">
-                                    <p class="whitespace-nowrap text-[10px] font-bold text-[#8faaf3]">{{ $trx->created_at?->format('d M Y, H:i') ?? '-' }}</p>
+                                    <p class="whitespace-nowrap text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $trx->created_at?->format('d M Y, H:i') ?? '-' }}</p>
                                 </td>
                                 <td class="px-5 py-5 align-middle">
                                     <p class="line-clamp-2 text-sm font-black leading-snug text-[#2b3a67]">{{ $trx->user?->name ?? 'Guest' }}</p>
@@ -178,7 +178,7 @@
         </div>
 
         @if($transactions->hasPages())
-            <div class="border-t-4 border-dashed border-[#f4f9ff] px-5 py-5">
+            <div class="p-5 sm:p-8 w-full min-w-0">
                 {{ $transactions->links() }}
             </div>
         @endif

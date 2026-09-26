@@ -128,6 +128,13 @@ class Deposit extends Model
             || str_starts_with((string) $this->invoice_number, 'POIN-');
     }
 
+    public function isRefundCredit(): bool
+    {
+        return (string) data_get($this->payment_response, 'purpose') === 'refund_wallet'
+            || strtolower((string) $this->payment_method) === 'refund'
+            || str_starts_with((string) $this->invoice_number, 'REFUND-');
+    }
+
     public function membershipActivated(): bool
     {
         return filled(data_get($this->payment_response, 'membership_activated_at'));

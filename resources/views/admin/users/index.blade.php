@@ -308,7 +308,7 @@
         </div>
 
         @if(method_exists($users, 'links') && $users->hasPages())
-            <div class="w-full min-w-0 border-t-4 border-dashed border-[#f4f9ff] bg-[#f8faff] p-5 sm:p-8">
+            <div class="w-full min-w-0 p-5 sm:p-8">
                 {{ $users->links() }}
             </div>
         @endif
@@ -324,7 +324,7 @@
                         <img src="{{ $user->profile_photo_url }}" alt="{{ $user->name }}" class="admin-user-detail-photo shrink-0 rounded-full border-2 shadow-sm" style="border-color: {{ $detailRoleMeta['text'] }};">
                         <div class="min-w-0">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Detail Pengguna</p>
-                            <h3 class="mt-1 truncate text-xl font-black text-[#2b3a67]">{{ $user->name }}</h3>
+                            <h2 class="mt-1 truncate text-xl font-black text-[#2b3a67]">{{ $user->name }}</h2>
                         </div>
                     </div>
                     <button type="button" onclick="closeAdminUserDetail('admin-user-detail-{{ $user->id }}')" class="admin-detail-close flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#ffe5e5] text-lg font-black text-[#ff6b6b]">x</button>
@@ -368,15 +368,17 @@
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Tanggal Jadi Reseller</p>
                             <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $formatDate($user->reseller_joined_at) }}</p>
                         </div>
-                        <div class="admin-detail-panel md:col-span-2">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Tujuan Penarikan</p>
-                            @if(filled($user->reseller_payout_method) || filled($user->reseller_payout_account) || filled($user->reseller_payout_name))
-                                <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $user->reseller_payout_method ?: '-' }}</p>
-                                <p class="mt-1 break-all text-sm font-bold text-[#5a76c8]">{{ $user->reseller_payout_account ?: '-' }}</p>
-                                <p class="mt-1 text-xs font-black uppercase tracking-widest text-[#4bc6b9]">{{ $user->reseller_payout_name ?: '-' }}</p>
-                            @else
-                                <p class="mt-1 text-sm font-black text-[#8faaf3]">-</p>
-                            @endif
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Metode Penarikan</p>
+                            <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $user->reseller_payout_method ?: '-' }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nomor Tujuan</p>
+                            <p class="mt-1 break-all text-sm font-bold text-[#5a76c8]">{{ $user->reseller_payout_account ?: '-' }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nama Pemilik Tujuan</p>
+                            <p class="mt-1 text-sm font-black text-[#4bc6b9]">{{ $user->reseller_payout_name ?: '-' }}</p>
                         </div>
                         <div class="admin-detail-panel admin-detail-panel-soft">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#08a878]">Saldo</p>
@@ -402,14 +404,14 @@
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.add('modal-active');
-        document.body.classList.add('overflow-hidden', 'admin-detail-open');
+        document.body.classList.add('admin-detail-open');
     }
 
     function closeAdminUserDetail(id) {
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.remove('modal-active');
-        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
+        document.body.classList.remove('admin-detail-open');
     }
 
     document.addEventListener('keydown', function (event) {
@@ -419,7 +421,7 @@
             modal.classList.remove('modal-active');
         });
 
-        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
+        document.body.classList.remove('admin-detail-open');
     });
 </script>
 @endsection

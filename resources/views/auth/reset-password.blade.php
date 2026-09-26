@@ -8,9 +8,9 @@
             <div class="inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1 text-xs font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
                 Sandi Baru
             </div>
-            <h2 class="text-3xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm sm:text-4xl">
+            <h1 class="text-3xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm sm:text-4xl">
                 Atur Ulang Sandi!
-            </h2>
+            </h1>
             <p class="mt-2 text-sm font-bold text-[#8faaf3]">Gunakan kata sandi baru yang aman!</p>
         </div>
 

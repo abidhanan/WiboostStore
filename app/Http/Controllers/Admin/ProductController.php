@@ -108,7 +108,8 @@ class ProductController extends Controller
         $imagePath = null;
 
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('products', 'public');
+            $imagePath = app(\App\Support\WebpImageOptimizer::class)
+                ->storeUploadedFile($request->file('image'), 'products');
         }
 
         Product::create($this->buildPayload($validated, $request, $imagePath));
@@ -138,7 +139,8 @@ class ProductController extends Controller
                 Storage::disk('public')->delete($product->image);
             }
 
-            $imagePath = $request->file('image')->store('products', 'public');
+            $imagePath = app(\App\Support\WebpImageOptimizer::class)
+                ->storeUploadedFile($request->file('image'), 'products');
         }
 
         $product->update($this->buildPayload($validated, $request, $imagePath, $product));
@@ -159,7 +161,9 @@ class ProductController extends Controller
 
     public function syncDigiflazz()
     {
-        return $this->runSyncCommand('sync:digiflazz', 'Digiflazz');
+        return $this->runSyncCommand('sync:digiflazz', 'Digiflazz', [
+            '--match-local-categories' => true,
+        ]);
     }
 
     public function syncOrderSosmed()

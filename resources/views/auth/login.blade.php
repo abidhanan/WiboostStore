@@ -8,9 +8,9 @@
             <div class="inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1 text-xs font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
                 Yuk Masuk!
             </div>
-            <h2 class="font-black tracking-tight text-[#2b3a67] drop-shadow-sm" style="white-space: nowrap; font-size: clamp(1.35rem, 6.6vw, 2.25rem); line-height: 1.1;">
+            <h1 class="font-black tracking-tight text-[#2b3a67] drop-shadow-sm" style="white-space: nowrap; font-size: clamp(1.35rem, 6.6vw, 2.25rem); line-height: 1.1;">
                 Selamat Datang Kembali!
-            </h2>
+            </h1>
             <p class="mt-2 text-sm font-bold text-[#8faaf3]">Silakan masuk untuk melakukan transaksi!</p>
         </div>
 

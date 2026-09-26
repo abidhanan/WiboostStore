@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Services\OrderFulfillmentService;
 use App\Services\TransactionPaymentSyncService;
+use App\Support\SimpleXlsx;
 use App\Support\WiboostCatalog;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -71,8 +72,16 @@ class TransactionController extends Controller
         }
 
         // 2. Filter Bulan & Tahun
-        $selectedMonth = $request->input('month', date('m'));
-        $selectedYear = $request->input('year', date('Y'));
+        $selectedMonth = $request->input('month', now()->format('m'));
+        $selectedYear = $request->input('year', now()->format('Y'));
+
+        if (! preg_match('/^(0[1-9]|1[0-2])$/', (string) $selectedMonth)) {
+            $selectedMonth = now()->format('m');
+        }
+
+        if (! preg_match('/^\d{4}$/', (string) $selectedYear)) {
+            $selectedYear = now()->format('Y');
+        }
 
         $query->whereMonth('created_at', $selectedMonth)
               ->whereYear('created_at', $selectedYear);
@@ -244,8 +253,16 @@ class TransactionController extends Controller
     public function exportPdf(Request $request)
     {
         try {
-            $month = $request->input('month', date('m'));
-            $year = $request->input('year', date('Y'));
+            $month = $request->input('month', now()->format('m'));
+            $year = $request->input('year', now()->format('Y'));
+
+            if (! preg_match('/^(0[1-9]|1[0-2])$/', (string) $month)) {
+                $month = now()->format('m');
+            }
+
+            if (! preg_match('/^\d{4}$/', (string) $year)) {
+                $year = now()->format('Y');
+            }
 
             // Laporan pendapatan hanya menghitung transaksi yang benar-benar sukses.
             $transactions = Transaction::with(['refund', 'user', 'product'])
@@ -289,20 +306,56 @@ class TransactionController extends Controller
     public function exportExcel(Request $request)
     {
         try {
-            $month = $request->input('month', date('m'));
-            $year = $request->input('year', date('Y'));
+            $month = (string) $request->input('month', now()->format('m'));
+            $year = (string) $request->input('year', now()->format('Y'));
+            $search = trim((string) $request->query('search', ''));
+            $transactionFilter = (string) $request->query('transaction_filter', 'all');
+            $allowedTransactionFilters = ['all', 'pending', 'processing', 'success', 'failed'];
 
-            $transactions = Transaction::with(['refund', 'user', 'product'])
-                ->where('payment_status', 'paid')
-                ->where('order_status', 'success')
-                ->whereNull('refunded_at')
-                ->doesntHave('refund')
+            if (! preg_match('/^(0[1-9]|1[0-2])$/', $month)) {
+                $month = now()->format('m');
+            }
+
+            if (! preg_match('/^\d{4}$/', $year)) {
+                $year = now()->format('Y');
+            }
+
+            if (! in_array($transactionFilter, $allowedTransactionFilters, true)) {
+                $transactionFilter = 'all';
+            }
+
+            $transactions = Transaction::with(['refund', 'user', 'product.category.parent.parent.parent'])
                 ->where(function ($transactionQuery) {
                     $transactionQuery->where('invoice_number', 'like', 'MEM-%')
+                        ->orWhere('target_data', 'like', '%Membership Wiboost%')
+                        ->orWhere('response_data', 'like', '%membership%')
                         ->orWhereHas('product', fn ($productQuery) => $productQuery->whereIn('process_type', WiboostCatalog::activeProductProcessTypes()));
                 })
                 ->whereMonth('created_at', $month)
                 ->whereYear('created_at', $year)
+                ->when($transactionFilter !== 'all', fn ($query) => $query->where('order_status', $transactionFilter))
+                ->when($search !== '', function ($query) use ($search) {
+                    $query->where(function ($innerQuery) use ($search) {
+                        $innerQuery->where('invoice_number', 'like', "%{$search}%")
+                            ->orWhere('target_data', 'like', "%{$search}%")
+                            ->orWhere('order_input_data', 'like', "%{$search}%")
+                            ->orWhere('credential_data', 'like', "%{$search}%")
+                            ->orWhere('response_data', 'like', "%{$search}%")
+                            ->orWhere('target_notes', 'like', "%{$search}%")
+                            ->orWhere('login_proof_path', 'like', "%{$search}%")
+                            ->orWhereHas('user', function ($userQuery) use ($search) {
+                                $userQuery->where('name', 'like', "%{$search}%")
+                                    ->orWhere('email', 'like', "%{$search}%")
+                                    ->orWhere('whatsapp', 'like', "%{$search}%");
+                            })
+                            ->orWhereHas('product', function ($productQuery) use ($search) {
+                                $productQuery->where('name', 'like', "%{$search}%")
+                                    ->orWhere('provider_product_id', 'like', "%{$search}%")
+                                    ->orWhere('provider_id', 'like', "%{$search}%")
+                                    ->orWhere('provider_source', 'like', "%{$search}%");
+                            });
+                    });
+                })
                 ->latest()
                 ->get();
 
@@ -310,14 +363,33 @@ class TransactionController extends Controller
 
             Carbon::setLocale('id');
             $monthName = Carbon::createFromDate($year, $month, 1)->translatedFormat('F Y');
-            $fileName = 'Laporan_Wiboost_' . str_replace(' ', '_', $monthName) . '.xlsx';
-            $workbook = $this->buildTransactionWorkbook($transactions, $totalRevenue, $monthName);
+            $fileName = 'laporan-transaksi-' . str_replace(' ', '-', strtolower($monthName)) . '.xlsx';
+            $rows = $transactions->map(function ($trx, $index) {
+                return [
+                    $index + 1,
+                    $trx->created_at?->timezone(config('app.timezone'))->format('d/m/Y H:i') ?? '-',
+                    $trx->invoice_number ?? '-',
+                    $trx->user->name ?? 'Guest',
+                    $trx->user->email ?? '-',
+                    $trx->display_product_name,
+                    $trx->payment_status ?? '-',
+                    $trx->order_status ?? '-',
+                    (float) ($trx->display_total_payable ?? 0),
+                ];
+            })->all();
 
-            return response($workbook)
-                ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-                ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
-                ->header('Content-Length', strlen($workbook))
-                ->header('Cache-Control', 'max-age=0');
+            return SimpleXlsx::download(
+                'Wiboost Store - Laporan Transaksi',
+                'Transaksi',
+                $fileName,
+                'Periode: ' . $monthName,
+                ['No', 'Waktu Transaksi', 'Invoice', 'Nama Pelanggan', 'Email', 'Produk', 'Status Bayar', 'Status Pesanan', 'Total'],
+                $rows,
+                [8, 20, 24, 28, 34, 58, 18, 18, 18],
+                [1],
+                [9],
+                ['', '', '', '', '', '', '', 'TOTAL', (float) $totalRevenue]
+            );
         } catch (Exception $e) {
             dd('HALO ADMIN, ADA ERROR CETAK EXCEL: ' . $e->getMessage() . ' | DI BARIS: ' . $e->getLine());
         }
@@ -337,7 +409,7 @@ class TransactionController extends Controller
             ['B', 'Waktu Transaksi', 'text', 2],
             ['C', 'Invoice', 'text', 2],
             ['D', 'Nama Pelanggan', 'text', 2],
-            ['E', 'Layanan / Produk', 'text', 2],
+            ['E', 'Produk', 'text', 2],
             ['F', 'Total Pendapatan', 'text', 2],
         ]];
 

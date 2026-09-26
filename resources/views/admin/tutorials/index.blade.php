@@ -65,9 +65,9 @@
                 <section class="relative z-10 w-full min-w-0 overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:rounded-[2.75rem]">
                     <div class="flex flex-col gap-4 border-b-4 border-dashed border-[#f4f9ff] bg-gradient-to-r from-[#f8fbff] via-white to-[#eefbff] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
                         <div class="min-w-0">
-                            <h3 class="truncate text-xl font-black text-[#2b3a67] sm:text-2xl">
+                            <h2 class="truncate text-xl font-black text-[#2b3a67] sm:text-2xl">
                                 {{ $section['name'] }}
-                            </h3>
+                            </h2>
                         </div>
                     </div>
 
@@ -119,7 +119,7 @@
     @endif
 
     @if(isset($tutorials) && method_exists($tutorials, 'links') && $tutorials->hasPages())
-        <div class="mt-6 w-full min-w-0 rounded-[2rem] border-4 border-white bg-white/90 p-5 shadow-xl shadow-[#bde0fe]/25 sm:mt-8 sm:p-8">
+        <div class="p-5 sm:p-8 w-full min-w-0">
             {{ $tutorials->links() }}
         </div>
     @endif

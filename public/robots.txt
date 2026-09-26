@@ -1,4 +1,14 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /user
+Disallow: /profile
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /formulir/
+Disallow: /checkout
+Disallow: /email/verify
 
 Sitemap: https://wiboostore.com/sitemap.xml

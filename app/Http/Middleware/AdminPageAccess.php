@@ -12,8 +12,9 @@ class AdminPageAccess
 {
     public function handle(Request $request, Closure $next, ...$areas): Response
     {
+        // Sesi kadaluwarsa di halaman admin -> arahkan ke login admin, selain itu -> login user.
         if (! Auth::check()) {
-            return redirect()->route('login');
+            return redirect()->route($request->is('admin/*') ? 'admin.login' : 'login');
         }
 
         $user = Auth::user();

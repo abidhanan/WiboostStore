@@ -8,10 +8,10 @@
             <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-xs border-2 border-white shadow-sm uppercase tracking-widest">
                 Reset Kata Sandi
             </div>
-            <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm">
+            <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm">
                 Lupa Kata Sandi?
-            </h2>
-            <p class="mt-2 text-sm font-bold text-[#8faaf3]">Masukkan email kamu dan kami akan kirimkan tautan untuk membuat kata sandi baru!</p>
+            </h1>
+            <p class="mt-2 text-sm font-bold text-[#8faaf3]">Masukkan email untuk reset sandi.</p>
         </div>
 
         @if (session('status'))

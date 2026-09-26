@@ -4,7 +4,7 @@
     $submitLabel = $submitLabel ?? 'Simpan Formulir';
     $formEditorId = 'wiboost-marketing-form-editor-' . ($form?->id ?? 'create');
     $defaultFields = [
-        ['key' => 'nama_lengkap', 'label' => 'Nama Lengkap', 'type' => 'text', 'help' => '', 'options' => '', 'required' => true],
+        ['key' => 'nama_lengkap', 'label' => 'Nama Lengkap', 'type' => 'text', 'help' => '', 'options' => [], 'option_images' => [], 'option_image_names' => [], 'required' => true],
     ];
     $fieldTypes = [
         'text' => 'Teks pendek',
@@ -14,22 +14,34 @@
         'date' => 'Tanggal',
         'select' => 'Pilihan',
         'checkbox' => 'Centang',
-        'file' => 'Upload File',
+        'file' => 'Unggah File',
     ];
     $rawFields = old('fields', $form?->fields ?? $defaultFields);
     $fields = collect($rawFields)->map(function ($field) {
-        $options = $field['options'] ?? '';
+        $options = is_array($field['options'] ?? null) ? $field['options'] : [];
+        $optionImages = is_array($field['option_images'] ?? null) ? $field['option_images'] : [];
+        $optionImageNames = is_array($field['option_image_names'] ?? null) ? $field['option_image_names'] : [];
+        $optionItems = is_array($field['option_items'] ?? null)
+            ? $field['option_items']
+            : collect($options)->map(function ($option) use ($optionImages, $optionImageNames) {
+                $label = trim((string) (is_array($option) ? ($option['label'] ?? '') : $option));
+                $existingImage = $optionImages[$label] ?? (is_array($option) ? ($option['image'] ?? '') : '');
 
-        if (is_array($options)) {
-            $options = implode("\n", $options);
-        }
+                return [
+                    'label' => $label,
+                    'existing_image' => $existingImage,
+                    'existing_image_name' => $optionImageNames[$label] ?? ($existingImage ? basename($existingImage) : ''),
+                    'remove_image' => false,
+                ];
+            })->filter(fn ($option) => $option['label'] !== '')->values()->all();
+        $optionItems = array_values($optionItems);
 
         return [
             'key' => $field['key'] ?? '',
             'label' => $field['label'] ?? '',
             'type' => $field['type'] ?? 'text',
             'help' => $field['help'] ?? '',
-            'options' => $options,
+            'option_items' => $optionItems,
             'required' => ! empty($field['required']),
         ];
     })->values();
@@ -208,6 +220,23 @@
     .wiboost-answer-options-wrap.is-visible {
         display: block;
     }
+
+    .wiboost-option-image-preview {
+        width: 4.25rem;
+        height: 4.25rem;
+        flex: 0 0 4.25rem;
+        overflow: hidden;
+        border: 3px solid #fff;
+        border-radius: 1rem;
+        background: #f4f9ff;
+        box-shadow: 0 6px 16px rgba(143, 170, 243, .16);
+    }
+
+    .wiboost-option-image-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 </style>
 
 @if ($errors->any())
@@ -221,8 +250,8 @@
     </div>
 @endif
 
-<label class="mb-6 flex cursor-pointer items-center justify-between gap-4 rounded-[1.6rem] border-4 border-white bg-white/95 px-5 py-4 shadow-lg shadow-[#bde0fe]/25">
-    <span class="text-sm font-black text-[#2b3a67]">Formulir aktif</span>
+<label class="flex cursor-pointer items-center justify-between gap-4 rounded-[1.6rem] border-4 border-white bg-white/95 px-5 py-4 shadow-lg shadow-[#bde0fe]/25" style="margin-bottom: 2rem;">
+    <span class="text-sm font-black text-[#2b3a67]">Formulir</span>
     <input type="hidden" name="is_active" value="0" form="{{ $formEditorId }}">
     <input type="checkbox" name="is_active" value="1" class="wiboost-form-toggle-input sr-only" form="{{ $formEditorId }}" @checked(old('is_active', $form?->is_active ?? true))>
     <span class="wiboost-form-toggle-track" aria-hidden="true">
@@ -230,12 +259,13 @@
     </span>
 </label>
 
-<form id="{{ $formEditorId }}" action="{{ $action }}" method="POST" class="relative z-10 rounded-[2.5rem] border-4 border-white bg-white/95 p-6 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm md:p-10">
+<form id="{{ $formEditorId }}" action="{{ $action }}" method="POST" enctype="multipart/form-data" class="relative z-10">
     @csrf
     @if($method !== 'POST')
         @method($method)
     @endif
 
+    <div class="rounded-[2.5rem] border-4 border-white bg-white/95 p-6 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm md:p-10">
     <section class="mb-8 rounded-[2rem] border-4 border-[#f0f5ff] bg-[#f8faff] p-5 shadow-sm sm:p-6">
         <div class="mb-6 flex items-center gap-3">
             <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.3rem] border-2 border-white bg-[#e0fbfc] text-[#4bc6b9] shadow-sm">
@@ -247,24 +277,26 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div>
-                <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Judul Formulir</label>
-                <input type="text" name="title" value="{{ old('title', $form?->title) }}" required class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="Cth: Survey Minat Aplikasi Premium">
+        <div class="rounded-[1.8rem] border-4 border-white bg-white p-4 shadow-sm sm:p-5">
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div>
+                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Judul Formulir</label>
+                    <input type="text" name="title" value="{{ old('title', $form?->title) }}" required class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
+                </div>
+                <div>
+                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Slug Tautan (Opsional)</label>
+                    <input type="text" name="slug" value="{{ old('slug', $form?->slug) }}" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
+                </div>
             </div>
-            <div>
-                <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Slug Link (Opsional)</label>
-                <input type="text" name="slug" value="{{ old('slug', $form?->slug) }}" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="survey-aplikasi-premium">
-            </div>
-        </div>
 
-        <div class="mt-6">
-            <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Deskripsi Formulir</label>
-            <textarea name="description" rows="3" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="Tulis tujuan formulir ini.">{{ old('description', $form?->description) }}</textarea>
+            <div class="mt-6">
+                <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Deskripsi Formulir</label>
+                <textarea name="description" rows="3" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">{{ old('description', $form?->description) }}</textarea>
+            </div>
         </div>
     </section>
 
-    <section class="mb-8 rounded-[2rem] border-4 border-[#f0f5ff] bg-[#f8faff] p-5 shadow-sm sm:p-6" data-form-builder data-next-index="{{ $fields->count() }}">
+    <section class="rounded-[2rem] border-4 border-[#f0f5ff] bg-[#f8faff] p-5 shadow-sm sm:p-6" data-form-builder data-next-index="{{ $fields->count() }}">
         <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex min-w-0 items-center gap-3">
                 <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.3rem] border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm">
@@ -283,7 +315,7 @@
 
         <div class="space-y-5" data-fields-list>
             @foreach($fields as $index => $field)
-                <div class="rounded-[1.8rem] border-4 border-white bg-white p-4 shadow-md shadow-[#bde0fe]/15 sm:p-5" data-field-row>
+                <div class="rounded-[1.8rem] border-4 border-white bg-white p-4 shadow-md shadow-[#bde0fe]/15 sm:p-5" data-field-row data-field-index="{{ $index }}">
                     <input type="hidden" name="fields[{{ $index }}][key]" value="{{ $field['key'] }}">
                     <div class="mb-4 flex items-center justify-between gap-3">
                         <p class="rounded-full bg-[#f4f9ff] px-4 py-2 text-xs font-black text-[#5a76c8]" data-field-title>Pertanyaan #{{ $index + 1 }}</p>
@@ -295,7 +327,7 @@
                     <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.4fr)_14rem]">
                         <div>
                             <label class="mb-2 ml-2 block text-xs font-black text-[#5a76c8]">Label Pertanyaan</label>
-                            <input type="text" name="fields[{{ $index }}][label]" value="{{ $field['label'] }}" required class="w-full rounded-[1.3rem] border-4 border-white bg-[#f4f9ff] px-5 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="Cth: Email aktif">
+                            <input type="text" name="fields[{{ $index }}][label]" value="{{ $field['label'] }}" required class="w-full rounded-[1.3rem] border-4 border-white bg-[#f4f9ff] px-5 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
                         </div>
                         <div>
                             <label class="mb-2 ml-2 block text-xs font-black text-[#5a76c8]">Tipe Jawaban</label>
@@ -320,12 +352,49 @@
 
                     <div class="mt-4">
                         <label class="mb-2 ml-2 block text-xs font-black text-[#5a76c8]">Deskripsi (Opsional)</label>
-                        <input type="text" name="fields[{{ $index }}][help]" value="{{ $field['help'] }}" class="w-full rounded-[1.3rem] border-4 border-white bg-[#f4f9ff] px-5 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="Cth: Pastikan email masih aktif.">
+                        <input type="text" name="fields[{{ $index }}][help]" value="{{ $field['help'] }}" class="w-full rounded-[1.3rem] border-4 border-white bg-[#f4f9ff] px-5 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
                     </div>
 
                     <div class="wiboost-answer-options-wrap mt-4 {{ in_array($field['type'], ['select', 'checkbox'], true) ? 'is-visible' : '' }}" data-answer-options-wrap>
-                        <label class="mb-2 ml-2 block text-xs font-black text-[#5a76c8]">Opsi Jawaban</label>
-                        <textarea name="fields[{{ $index }}][options]" rows="3" class="w-full rounded-[1.3rem] border-4 border-white bg-[#f4f9ff] px-5 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="Satu opsi per baris.">{{ $field['options'] }}</textarea>
+                        <div class="mb-3 flex items-center justify-between gap-3">
+                            <label class="ml-2 block text-xs font-black text-[#5a76c8]">Opsi Jawaban</label>
+                            <button type="button" data-add-option class="inline-flex items-center gap-2 rounded-xl border-2 border-white bg-[#e0fbfc] px-3 py-2 text-xs font-black text-[#4bc6b9] shadow-sm">
+                                @include('partials.wiboost-icon', ['name' => 'plus', 'class' => 'h-4 w-4'])
+                                Tambah Opsi
+                            </button>
+                        </div>
+                        <div class="space-y-3" data-option-list>
+                            @foreach(($field['option_items'] ?? []) as $optionIndex => $option)
+                                @php($existingOptionImage = trim((string) ($option['existing_image'] ?? '')))
+                                @php($existingOptionImageName = trim((string) ($option['existing_image_name'] ?? '')) ?: ($existingOptionImage ? basename($existingOptionImage) : ''))
+                                <div class="flex flex-col gap-3 rounded-[1.25rem] border-2 border-white bg-[#f8fbff] p-3 sm:flex-row sm:items-center" data-option-row>
+                                    @if($existingOptionImage)
+                                        <div class="wiboost-option-image-preview" data-option-preview>
+                                            <img src="{{ Storage::disk('public')->url($existingOptionImage) }}" alt="">
+                                        </div>
+                                    @else
+                                        <div class="wiboost-option-image-preview hidden" data-option-preview><img src="" alt=""></div>
+                                    @endif
+                                    <div class="min-w-0 flex-1">
+                                        <input type="text" name="fields[{{ $index }}][option_items][{{ $optionIndex }}][label]" value="{{ $option['label'] ?? '' }}" class="w-full rounded-[1.1rem] border-4 border-white bg-white px-4 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none focus:border-[#bde0fe]">
+                                        <input type="hidden" name="fields[{{ $index }}][option_items][{{ $optionIndex }}][existing_image]" value="{{ $existingOptionImage }}">
+                                        <input type="hidden" name="fields[{{ $index }}][option_items][{{ $optionIndex }}][existing_image_name]" value="{{ $existingOptionImageName }}" data-option-existing-image-name>
+                                        <input type="hidden" name="fields[{{ $index }}][option_items][{{ $optionIndex }}][remove_image]" value="0" data-remove-image-input>
+                                        <label class="relative mt-2 flex min-h-[3.25rem] w-full cursor-pointer items-center gap-3 overflow-hidden rounded-[1.1rem] border-4 border-white bg-white px-3 py-2 shadow-inner">
+                                            <input type="file" name="fields[{{ $index }}][option_items][{{ $optionIndex }}][image]" accept="image/*" class="absolute inset-0 h-full w-full cursor-pointer opacity-0" data-option-image>
+                                            <span class="shrink-0 rounded-full bg-[#e0fbfc] px-3 py-2 text-xs font-black text-[#4bc6b9]">Pilih File</span>
+                                            <span class="min-w-0 flex-1 truncate text-xs font-bold text-[#8faaf3]" data-option-image-name>{{ $existingOptionImageName ?: 'Belum ada foto' }}</span>
+                                        </label>
+                                    </div>
+                                    <div class="flex shrink-0 justify-end gap-2">
+                                        <button type="button" data-remove-option-image class="{{ $existingOptionImage ? '' : 'hidden' }} h-10 rounded-xl border-2 border-white bg-[#ffe5e5] px-3 text-xs font-black text-[#ff6b6b]" title="Hapus Foto">Hapus Foto</button>
+                                        <button type="button" data-remove-option class="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-white bg-[#ffe5e5] text-[#ff6b6b]" title="Hapus Opsi">
+                                            @include('partials.wiboost-icon', ['name' => 'trash', 'class' => 'h-4 w-4'])
+                                        </button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
 
                     <label class="mt-4 ml-2 flex cursor-pointer items-center gap-3">
@@ -336,8 +405,19 @@
             @endforeach
         </div>
     </section>
+    </div>
 
-    <section class="mb-8 rounded-[2rem] border-4 border-[#f0f5ff] bg-[#f8faff] p-5 shadow-sm sm:p-6">
+    <label class="flex cursor-pointer items-center justify-between gap-4 rounded-[1.6rem] border-4 border-white bg-white/95 px-5 py-4 shadow-lg shadow-[#bde0fe]/25" style="margin-top: 2rem; margin-bottom: 2rem;">
+        <span class="text-sm font-black text-[#2b3a67]">Benefit</span>
+        <input type="hidden" name="benefit_enabled" value="0">
+        <input type="checkbox" name="benefit_enabled" value="1" class="wiboost-form-toggle-input sr-only" @checked(old('benefit_enabled', $form?->benefit_enabled ?? false))>
+        <span class="wiboost-form-toggle-track" aria-hidden="true">
+            <span class="wiboost-form-toggle-knob"></span>
+        </span>
+    </label>
+
+    <div class="rounded-[2.5rem] border-4 border-white bg-white/95 p-6 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm md:p-10">
+    <section class="rounded-[2rem] border-4 border-[#f0f5ff] bg-[#f8faff] p-5 shadow-sm sm:p-6">
         <div class="mb-6 flex items-center gap-3">
             <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.3rem] border-2 border-white bg-[#fff7d6] text-[#d99b16] shadow-sm">
                 @include('partials.wiboost-icon', ['name' => 'gift', 'class' => 'h-6 w-6'])
@@ -348,19 +428,16 @@
             </div>
         </div>
 
-        <label class="mb-6 flex cursor-pointer items-center gap-3 rounded-[1.5rem] border-4 border-white bg-white px-5 py-4 shadow-sm">
-            <input type="checkbox" name="benefit_enabled" value="1" class="h-5 w-5 rounded-md border-2 border-[#d99b16] bg-white text-[#d99b16] shadow-sm focus:ring-2 focus:ring-[#fff0bf]" style="accent-color: #d99b16;" @checked(old('benefit_enabled', $form?->benefit_enabled ?? false))>
-            <span class="text-sm font-black text-[#2b3a67]">Berikan benefit</span>
-        </label>
+        <div class="rounded-[1.8rem] border-4 border-white bg-white p-4 shadow-sm sm:p-5">
+            <div>
+                <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Judul Benefit</label>
+                <input type="text" name="benefit_title" value="{{ old('benefit_title', $form?->benefit_title) }}" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
+            </div>
 
-        <div>
-            <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Judul Benefit</label>
-            <input type="text" name="benefit_title" value="{{ old('benefit_title', $form?->benefit_title) }}" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="Cth: Voucher Aplikasi Premium">
-        </div>
-
-        <div class="mt-6">
-            <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Deskripsi Benefit</label>
-            <textarea name="benefit_description" rows="3" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="Cth: Terima kasih sudah mengisi form. Gunakan benefit ini untuk produk aplikasi premium.">{{ old('benefit_description', $form?->benefit_description) }}</textarea>
+            <div class="mt-6">
+                <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Deskripsi Benefit</label>
+                <textarea name="benefit_description" rows="3" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">{{ old('benefit_description', $form?->benefit_description) }}</textarea>
+            </div>
         </div>
 
         <div class="mt-6 rounded-[1.8rem] border-4 border-white bg-white p-4 shadow-sm sm:p-5">
@@ -370,45 +447,46 @@
                 </span>
                 <div class="min-w-0">
                     <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#d99b16]">Akun Kredensial</p>
-                    <h3 class="text-xl font-black text-[#2b3a67]">Data Benefit Premium</h3>
+                    <h3 class="text-xl font-black text-[#2b3a67]">Data Aplikasi Premium</h3>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div>
                     <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Email</label>
-                    <input type="text" name="benefit_credentials[email]" value="{{ old('benefit_credentials.email', $benefitCredentials['email']) }}" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="Cth: akun@premium.com">
+                    <input type="text" name="benefit_credentials[email]" value="{{ old('benefit_credentials.email', $benefitCredentials['email']) }}" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
                 </div>
                 <div>
-                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Password</label>
-                    <input type="text" name="benefit_credentials[password]" value="{{ old('benefit_credentials.password', $benefitCredentials['password']) }}" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="Password akun premium">
+                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Kata Sandi</label>
+                    <input type="text" name="benefit_credentials[password]" value="{{ old('benefit_credentials.password', $benefitCredentials['password']) }}" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
                 </div>
                 <div>
                     <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Profil</label>
-                    <input type="text" name="benefit_credentials[profile]" value="{{ old('benefit_credentials.profile', $benefitCredentials['profile']) }}" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="Cth: Profil 1">
+                    <input type="text" name="benefit_credentials[profile]" value="{{ old('benefit_credentials.profile', $benefitCredentials['profile']) }}" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
                 </div>
                 <div>
                     <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">PIN</label>
-                    <input type="text" name="benefit_credentials[pin]" value="{{ old('benefit_credentials.pin', $benefitCredentials['pin']) }}" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="PIN profil jika ada">
+                    <input type="text" name="benefit_credentials[pin]" value="{{ old('benefit_credentials.pin', $benefitCredentials['pin']) }}" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
                 </div>
                 <div>
-                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Link Akses</label>
-                    <input type="url" name="benefit_credentials[link]" value="{{ old('benefit_credentials.link', $benefitCredentials['link']) }}" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="https://...">
+                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Tautan Akses</label>
+                    <input type="url" name="benefit_credentials[link]" value="{{ old('benefit_credentials.link', $benefitCredentials['link']) }}" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
                 </div>
                 <div>
-                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Link Tutorial</label>
-                    <input type="url" name="benefit_credentials[tutorial_link]" value="{{ old('benefit_credentials.tutorial_link', $benefitCredentials['tutorial_link']) }}" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="https://...">
+                    <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Tautan Tutorial</label>
+                    <input type="url" name="benefit_credentials[tutorial_link]" value="{{ old('benefit_credentials.tutorial_link', $benefitCredentials['tutorial_link']) }}" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
                 </div>
             </div>
 
             <div class="mt-5">
-                <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Catatan Login</label>
-                <textarea name="benefit_credentials[notes]" rows="3" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="Cth: Jangan ubah password, gunakan profil sesuai instruksi.">{{ old('benefit_credentials.notes', $benefitCredentials['notes']) }}</textarea>
+                <label class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Catatan Masuk</label>
+                <textarea name="benefit_credentials[notes]" rows="3" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">{{ old('benefit_credentials.notes', $benefitCredentials['notes']) }}</textarea>
             </div>
         </div>
     </section>
+    </div>
 
-    <button type="submit" class="flex w-full items-center justify-center rounded-full border-4 border-white bg-[#5a76c8] py-5 text-lg font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform hover:bg-[#4760a9] active:scale-95 sm:text-xl">
+    <button type="submit" class="mt-6 flex w-full items-center justify-center rounded-full border-4 border-white bg-[#5a76c8] py-5 text-lg font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform hover:bg-[#4760a9] active:scale-95 sm:text-xl">
         {{ $submitLabel }}
     </button>
 </form>
@@ -438,7 +516,14 @@
 
         const syncOptionsVisibility = (row) => {
             const value = row?.querySelector('[data-answer-type-input]')?.value || 'text';
-            row?.querySelector('[data-answer-options-wrap]')?.classList.toggle('is-visible', optionTypes.has(value));
+            const optionsWrap = row?.querySelector('[data-answer-options-wrap]');
+            const visible = optionTypes.has(value);
+            optionsWrap?.classList.toggle('is-visible', visible);
+
+            if (visible && row?.querySelectorAll('[data-option-row]').length === 0) {
+                addOption(row);
+                addOption(row);
+            }
         };
 
         const setupTypeDropdown = (dropdown) => {
@@ -483,8 +568,21 @@
         };
 
         const setupRow = (row) => {
+            if (row && !row.dataset.nextOptionIndex) {
+                row.dataset.nextOptionIndex = String(row.querySelectorAll('[data-option-row]').length);
+            }
             row?.querySelectorAll('[data-answer-type-select]').forEach(setupTypeDropdown);
             syncOptionsVisibility(row);
+        };
+
+        const addOption = (row) => {
+            const optionList = row?.querySelector('[data-option-list]');
+            if (!row || !optionList) return;
+
+            const fieldIndex = row.dataset.fieldIndex || '0';
+            const optionIndex = Number(row.dataset.nextOptionIndex || optionList.querySelectorAll('[data-option-row]').length);
+            optionList.insertAdjacentHTML('beforeend', optionTemplate(fieldIndex, optionIndex));
+            row.dataset.nextOptionIndex = String(optionIndex + 1);
         };
 
         const renumberFields = () => {
@@ -498,7 +596,7 @@
         };
 
         const fieldTemplate = (index) => `
-            <div class="rounded-[1.8rem] border-4 border-white bg-white p-4 shadow-md shadow-[#bde0fe]/15 sm:p-5" data-field-row>
+            <div class="rounded-[1.8rem] border-4 border-white bg-white p-4 shadow-md shadow-[#bde0fe]/15 sm:p-5" data-field-row data-field-index="${index}">
                 <input type="hidden" name="fields[${index}][key]" value="">
                 <div class="mb-4 flex items-center justify-between gap-3">
                     <p class="rounded-full bg-[#f4f9ff] px-4 py-2 text-xs font-black text-[#5a76c8]" data-field-title>Pertanyaan #${index + 1}</p>
@@ -509,7 +607,7 @@
                 <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.4fr)_14rem]">
                     <div>
                         <label class="mb-2 ml-2 block text-xs font-black text-[#5a76c8]">Label Pertanyaan</label>
-                        <input type="text" name="fields[${index}][label]" required class="w-full rounded-[1.3rem] border-4 border-white bg-[#f4f9ff] px-5 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="Cth: Email aktif">
+                        <input type="text" name="fields[${index}][label]" required class="w-full rounded-[1.3rem] border-4 border-white bg-[#f4f9ff] px-5 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
                     </div>
                     <div>
                         <label class="mb-2 ml-2 block text-xs font-black text-[#5a76c8]">Tipe Jawaban</label>
@@ -531,23 +629,46 @@
                                 <button type="button" class="wiboost-answer-type-option" role="option" aria-selected="false" data-answer-type-option data-value="date" data-label="Tanggal">Tanggal</button>
                                 <button type="button" class="wiboost-answer-type-option" role="option" aria-selected="false" data-answer-type-option data-value="select" data-label="Pilihan">Pilihan</button>
                                 <button type="button" class="wiboost-answer-type-option" role="option" aria-selected="false" data-answer-type-option data-value="checkbox" data-label="Centang">Centang</button>
-                                <button type="button" class="wiboost-answer-type-option" role="option" aria-selected="false" data-answer-type-option data-value="file" data-label="Upload File">Upload File</button>
+                                <button type="button" class="wiboost-answer-type-option" role="option" aria-selected="false" data-answer-type-option data-value="file" data-label="Unggah File">Unggah File</button>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="mt-4">
                     <label class="mb-2 ml-2 block text-xs font-black text-[#5a76c8]">Deskripsi (Opsional)</label>
-                    <input type="text" name="fields[${index}][help]" class="w-full rounded-[1.3rem] border-4 border-white bg-[#f4f9ff] px-5 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="Cth: Pastikan email masih aktif.">
+                    <input type="text" name="fields[${index}][help]" class="w-full rounded-[1.3rem] border-4 border-white bg-[#f4f9ff] px-5 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
                 </div>
                 <div class="wiboost-answer-options-wrap mt-4" data-answer-options-wrap>
-                    <label class="mb-2 ml-2 block text-xs font-black text-[#5a76c8]">Opsi Jawaban</label>
-                    <textarea name="fields[${index}][options]" rows="3" class="w-full rounded-[1.3rem] border-4 border-white bg-[#f4f9ff] px-5 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="Satu opsi per baris."></textarea>
+                    <div class="mb-3 flex items-center justify-between gap-3">
+                        <label class="ml-2 block text-xs font-black text-[#5a76c8]">Opsi Jawaban</label>
+                        <button type="button" data-add-option class="inline-flex items-center gap-2 rounded-xl border-2 border-white bg-[#e0fbfc] px-3 py-2 text-xs font-black text-[#4bc6b9] shadow-sm">+ Tambah Opsi</button>
+                    </div>
+                    <div class="space-y-3" data-option-list></div>
                 </div>
                 <label class="mt-4 ml-2 flex cursor-pointer items-center gap-3">
                     <input type="checkbox" name="fields[${index}][required]" value="1" class="h-5 w-5 rounded-md border-2 border-[#5a76c8] bg-white text-[#5a76c8] shadow-sm focus:ring-2 focus:ring-[#bde0fe]" style="accent-color: #5a76c8;">
                     <span class="text-sm font-black text-[#2b3a67]">Wajib diisi</span>
                 </label>
+            </div>`;
+
+        const optionTemplate = (fieldIndex, optionIndex) => `
+            <div class="flex flex-col gap-3 rounded-[1.25rem] border-2 border-white bg-[#f8fbff] p-3 sm:flex-row sm:items-center" data-option-row>
+                <div class="wiboost-option-image-preview hidden" data-option-preview><img src="" alt=""></div>
+                <div class="min-w-0 flex-1">
+                    <input type="text" name="fields[${fieldIndex}][option_items][${optionIndex}][label]" class="w-full rounded-[1.1rem] border-4 border-white bg-white px-4 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none focus:border-[#bde0fe]">
+                    <input type="hidden" name="fields[${fieldIndex}][option_items][${optionIndex}][existing_image]" value="">
+                    <input type="hidden" name="fields[${fieldIndex}][option_items][${optionIndex}][existing_image_name]" value="" data-option-existing-image-name>
+                    <input type="hidden" name="fields[${fieldIndex}][option_items][${optionIndex}][remove_image]" value="0" data-remove-image-input>
+                    <label class="relative mt-2 flex min-h-[3.25rem] w-full cursor-pointer items-center gap-3 overflow-hidden rounded-[1.1rem] border-4 border-white bg-white px-3 py-2 shadow-inner">
+                        <input type="file" name="fields[${fieldIndex}][option_items][${optionIndex}][image]" accept="image/*" class="absolute inset-0 h-full w-full cursor-pointer opacity-0" data-option-image>
+                        <span class="shrink-0 rounded-full bg-[#e0fbfc] px-3 py-2 text-xs font-black text-[#4bc6b9]">Pilih File</span>
+                        <span class="min-w-0 flex-1 truncate text-xs font-bold text-[#8faaf3]" data-option-image-name>Belum ada foto</span>
+                    </label>
+                </div>
+                <div class="flex shrink-0 justify-end gap-2">
+                    <button type="button" data-remove-option-image class="hidden h-10 rounded-xl border-2 border-white bg-[#ffe5e5] px-3 text-xs font-black text-[#ff6b6b]">Hapus Foto</button>
+                    <button type="button" data-remove-option class="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-white bg-[#ffe5e5] text-[#ff6b6b]" title="Hapus Opsi">×</button>
+                </div>
             </div>`;
 
         addButton?.addEventListener('click', () => {
@@ -558,6 +679,40 @@
         });
 
         list?.addEventListener('click', (event) => {
+            const addOptionButton = event.target.closest('[data-add-option]');
+            if (addOptionButton) {
+                addOption(addOptionButton.closest('[data-field-row]'));
+                return;
+            }
+
+            const removeOptionButton = event.target.closest('[data-remove-option]');
+            if (removeOptionButton) {
+                removeOptionButton.closest('[data-option-row]')?.remove();
+                return;
+            }
+
+            const removeImageButton = event.target.closest('[data-remove-option-image]');
+            if (removeImageButton) {
+                const optionRow = removeImageButton.closest('[data-option-row]');
+                const preview = optionRow?.querySelector('[data-option-preview]');
+                const imageInput = optionRow?.querySelector('[data-option-image]');
+                const imageName = optionRow?.querySelector('[data-option-image-name]');
+                const existingImageName = optionRow?.querySelector('[data-option-existing-image-name]');
+                const removeInput = optionRow?.querySelector('[data-remove-image-input]');
+
+                if (preview) {
+                    preview.classList.add('hidden');
+                    const image = preview.querySelector('img');
+                    if (image) image.src = '';
+                }
+                if (imageInput) imageInput.value = '';
+                if (imageName) imageName.textContent = 'Belum ada foto';
+                if (existingImageName) existingImageName.value = '';
+                if (removeInput) removeInput.value = '1';
+                removeImageButton.classList.add('hidden');
+                return;
+            }
+
             const button = event.target.closest('[data-remove-field]');
             if (!button) return;
 
@@ -568,6 +723,26 @@
 
             button.closest('[data-field-row]')?.remove();
             renumberFields();
+        });
+
+        list?.addEventListener('change', (event) => {
+            const imageInput = event.target.closest('[data-option-image]');
+            if (!imageInput || !imageInput.files?.[0]) return;
+
+            const optionRow = imageInput.closest('[data-option-row]');
+            const preview = optionRow?.querySelector('[data-option-preview]');
+            const previewImage = preview?.querySelector('img');
+            const imageName = optionRow?.querySelector('[data-option-image-name]');
+            const existingImageName = optionRow?.querySelector('[data-option-existing-image-name]');
+            const removeInput = optionRow?.querySelector('[data-remove-image-input]');
+            const removeButton = optionRow?.querySelector('[data-remove-option-image]');
+
+            if (previewImage) previewImage.src = URL.createObjectURL(imageInput.files[0]);
+            if (imageName) imageName.textContent = imageInput.files[0].name;
+            if (existingImageName) existingImageName.value = imageInput.files[0].name;
+            preview?.classList.remove('hidden');
+            if (removeInput) removeInput.value = '0';
+            removeButton?.classList.remove('hidden');
         });
 
         list?.querySelectorAll('[data-field-row]').forEach(setupRow);

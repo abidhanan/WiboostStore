@@ -78,6 +78,12 @@ class WiboostCatalog
             'buzzer-youtube',
             'buzzer-twitter-x',
             'buzzer-lainnya',
+            'game-call-of-duty-mobile',
+            'game-fc-mobile',
+            'game-genshin-impact',
+            'game-lol-wild-rift',
+            'game-league-of-legends',
+            'game-honkai-star-rail',
         ];
     }
 
@@ -97,55 +103,7 @@ class WiboostCatalog
 
     public static function subcategories(): array
     {
-        $platformCategories = self::ordersosmedPlatformCategories();
-        $metricDefinitions = self::ordersosmedMetricDefinitions();
-        $subcategories = [
-            'suntik-sosmed' => array_values($platformCategories),
-        ];
-
-        foreach ($platformCategories as $platformSlug => $platformDefinition) {
-            $subcategories[$platformSlug] = [];
-
-            foreach ($metricDefinitions as $metricKey => $metricDefinition) {
-                $metricSlug = self::ordersosmedMetricSlug($platformSlug, $metricKey);
-                $subcategories[$platformSlug][] = self::subcategory(
-                    $metricSlug,
-                    $metricDefinition['name'],
-                    'Layanan ' . Str::lower($metricDefinition['name']) . ' untuk kategori ' . $platformDefinition['name'] . '.',
-                    $metricDefinition['logo_text'],
-                    $metricDefinition['logo_background'],
-                    $metricDefinition['logo_foreground'],
-                );
-
-                $subcategories[$metricSlug] = self::ordersosmedRegionalChildren($platformSlug, $metricKey, $metricDefinition);
-            }
-        }
-
-        $configuredSubcategories = array_merge($subcategories, [
-            'top-up-game' => [
-                self::subcategory('game-mobile-legends', 'Mobile Legends', 'Produk top up dan voucher Mobile Legends.', 'ML', '#2563EB', '#FFFFFF'),
-                self::subcategory('game-free-fire', 'Free Fire', 'Produk diamond dan membership Free Fire.', 'FF', '#F97316', '#FFFFFF'),
-                self::subcategory('game-pubg-mobile', 'PUBG Mobile', 'UC dan produk PUBG Mobile.', 'PUBG', '#0F172A', '#FFFFFF'),
-                self::subcategory('game-valorant', 'Valorant', 'Valorant Point dan kebutuhan akun Valorant.', 'VAL', '#F43F5E', '#FFFFFF'),
-                self::subcategory('game-arena-of-valor', 'Arena of Valor', 'Voucher dan top up Arena of Valor.', 'AOV', '#9333EA', '#FFFFFF'),
-                self::subcategory('game-lainnya', 'Lainnya', 'Game lain yang tersedia di provider Digiflazz.', 'GAME', '#5A76C8', '#FFFFFF'),
-            ],
-            'kuota-murah' => [
-                self::subcategory('kuota-axis', 'Axis', 'Paket data dan voucher Axis.', 'AX', '#7C3AED', '#FFFFFF'),
-                self::subcategory('kuota-telkomsel', 'Telkomsel', 'Kuota dan paket Telkomsel / by.U.', 'TS', '#DC2626', '#FFFFFF'),
-                self::subcategory('kuota-tri', 'Tri', 'Paket data dan voucher Tri.', 'TRI', '#111827', '#FFFFFF'),
-                self::subcategory('kuota-indosat', 'Indosat', 'Paket internet Indosat / IM3.', 'IM3', '#F59E0B', '#111827'),
-                self::subcategory('kuota-smartfren', 'Smartfren', 'Paket data Smartfren.', 'SF', '#EC4899', '#FFFFFF'),
-                self::subcategory('kuota-xl', 'XL Axiata', 'Paket data XL dan voucher XL.', 'XL', '#1D4ED8', '#FFFFFF'),
-                self::subcategory('kuota-lainnya', 'Lainnya', 'Operator lain yang tidak masuk subkategori utama.', 'NET', '#5A76C8', '#FFFFFF'),
-            ],
-            'aplikasi-premium' => [
-                self::subcategory('premium-netflix', 'Netflix', 'Akun Netflix sharing atau private sesuai stok yang kamu masukkan.', 'N', '#E50914', '#FFFFFF'),
-                self::subcategory('premium-spotify', 'Spotify', 'Akun Spotify premium family atau individual.', 'SP', '#1DB954', '#FFFFFF'),
-                self::subcategory('premium-canva', 'Canva', 'Akun Canva Pro dan akses desain premium.', 'C', '#06B6D4', '#FFFFFF'),
-                self::subcategory('premium-youtube', 'YouTube Premium', 'Akun YouTube Premium / Music Premium.', 'YT', '#FF0033', '#FFFFFF'),
-                self::subcategory('premium-lainnya', 'Lainnya', 'Aplikasi premium lain yang dikelola lewat stok akun.', 'APP', '#5A76C8', '#FFFFFF'),
-            ],
+        $configuredSubcategories = [
             'nomor-luar' => [
                 self::subcategory('nomor-whatsapp', 'WhatsApp', 'Nomor luar untuk kebutuhan WhatsApp atau verifikasi terkait.', 'WA', '#25D366', '#FFFFFF'),
                 self::subcategory('nomor-telegram', 'Telegram', 'Nomor luar untuk Telegram dan layanan sejenis.', 'TG', '#229ED9', '#FFFFFF'),
@@ -159,7 +117,7 @@ class WiboostCatalog
                 self::subcategory('buzzer-twitter-x', 'X / Twitter', 'Campaign buzzer manual untuk X / Twitter.', 'X', '#111827', '#FFFFFF'),
                 self::subcategory('buzzer-lainnya', 'Lainnya', 'Campaign buzzer manual untuk platform lain.', 'BZ', '#5A76C8', '#FFFFFF'),
             ],
-        ]);
+        ];
 
         unset($configuredSubcategories['nomor-luar']);
         unset($configuredSubcategories['buzzer']);
@@ -169,7 +127,7 @@ class WiboostCatalog
 
     public static function deprecatedCategorySlugs(): array
     {
-        $oldMetricSlugs = [];
+        $oldMetricSlugs = self::ordersosmedAutoCategorySlugs();
 
         foreach (array_keys(self::ordersosmedMetricDefinitions()) as $metricKey) {
             $rootSlug = 'sosmed-' . $metricKey;
@@ -180,7 +138,80 @@ class WiboostCatalog
             }
         }
 
-        return $oldMetricSlugs;
+        return array_merge($oldMetricSlugs, [
+            'game-call-of-duty-mobile',
+            'game-fc-mobile',
+            'game-genshin-impact',
+            'game-lol-wild-rift',
+            'game-league-of-legends',
+            'game-honkai-star-rail',
+        ]);
+    }
+
+    public static function ordersosmedAutoCategorySlugs(): array
+    {
+        $slugs = [];
+
+        foreach (array_keys(self::ordersosmedPlatformCategories()) as $platformSlug) {
+            $slugs[] = $platformSlug;
+
+            foreach (array_keys(self::ordersosmedMetricDefinitions()) as $metricKey) {
+                $metricSlug = self::ordersosmedMetricSlug($platformSlug, $metricKey);
+                $slugs[] = $metricSlug;
+
+                foreach (['indonesia', 'luar-negeri', 'global'] as $region) {
+                    $slugs[] = $metricSlug . '-' . $region;
+                }
+            }
+        }
+
+        return $slugs;
+    }
+
+    public static function digiflazzGameAutoCategorySlugs(): array
+    {
+        return [
+            'game-mobile-legends',
+            'game-free-fire',
+            'game-pubg-mobile',
+            'game-valorant',
+            'game-arena-of-valor',
+            'game-honor-of-kings',
+            'game-honor-of-kings-umum',
+            'game-honor-of-kings-kombinasi',
+            'game-genshin-impact',
+            'game-honkai-star-rail',
+            'game-call-of-duty-mobile',
+            'game-fc-mobile',
+            'game-lol-wild-rift',
+            'game-league-of-legends',
+            'game-lol-pc',
+            'game-lainnya',
+        ];
+    }
+
+    public static function digiflazzQuotaAutoCategorySlugs(): array
+    {
+        return [
+            'kuota-axis',
+            'kuota-telkomsel',
+            'kuota-tri',
+            'kuota-indosat',
+            'kuota-smartfren',
+            'kuota-xl',
+            'kuota-lainnya',
+        ];
+    }
+
+    public static function premiumAutoCategorySlugs(): array
+    {
+        return [
+            'premium-netflix',
+            'premium-spotify',
+            'premium-canva',
+            'premium-youtube',
+            'premium-lainnya',
+        ];
     }
 
     public static function subcategoriesFor(string $parentSlug): array
@@ -244,7 +275,7 @@ class WiboostCatalog
                     ['required', 'string', 'min:1', 'max:50']
                 ),
             ],
-            'kuota-murah' => [
+            'kuota-murah', 'paket-data' => [
                 self::checkoutField(
                     'phone_number',
                     'Nomor handphone',
@@ -273,8 +304,9 @@ class WiboostCatalog
     public static function resolveDigiflazzTopCategorySlug(string $name, string $brand = '', string $category = '', string $description = ''): ?string
     {
         $text = Str::lower(trim("{$brand} {$category} {$name} {$description}"));
-        $telcoBrands = ['axis', 'telkomsel', 'by.u', 'tri', 'indosat', 'smartfren', 'xl'];
-        $quotaKeywords = ['data', 'kuota', 'internet', 'paket', 'voucher', 'gb', 'mb', 'unlimited', 'combo', 'freedom', 'flash', 'happy', 'hotrod', 'xtra'];
+        $telcoBrands = ['axis', 'aigo', 'bronet', 'owsem', 'telkomsel', 'by.u', 'by u', 'byu', 'tri', 'aon', 'alwayson', 'indosat', 'im3', 'yellow', 'smartfren', 'sf', 'xl', 'hotrod', 'xtra'];
+        $strongQuotaKeywords = ['data', 'kuota', 'internet', 'gb', 'mb', 'unlimited', 'combo', 'freedom', 'flash', 'happy', 'hotrod', 'xtra', 'owsem', 'aigo', 'bronet', 'aon', 'sakti', 'h3ro'];
+        $quotaKeywords = array_merge($strongQuotaKeywords, ['paket', 'voucher']);
         $quotaExclusions = ['pulsa', 'masa aktif', 'sms', 'telpon', 'voice'];
         $gameKeywords = [
             'games',
@@ -291,8 +323,23 @@ class WiboostCatalog
             'pb cash',
             'arena of valor',
             'genshin',
+            'genesis crystal',
+            'welkin',
+            'honkai',
+            'star rail',
             'codm',
             'call of duty',
+            'fc mobile',
+            'fifa mobile',
+            'eafc mobile',
+            'honor of kings',
+            'hok',
+            'wild rift',
+            'wild core',
+            'wild cores',
+            'wild pass',
+            'league of legends',
+            'riot points',
             'free fire',
             'mobile legends',
             'mobilelegend',
@@ -301,9 +348,10 @@ class WiboostCatalog
 
         $mentionsTelcoBrand = collect($telcoBrands)->contains(fn (string $keyword) => str_contains($text, $keyword));
         $mentionsQuotaPackage = collect($quotaKeywords)->contains(fn (string $keyword) => str_contains($text, $keyword));
+        $mentionsStrongQuotaPackage = collect($strongQuotaKeywords)->contains(fn (string $keyword) => str_contains($text, $keyword));
         $mentionsQuotaExclusion = collect($quotaExclusions)->contains(fn (string $keyword) => str_contains($text, $keyword));
 
-        if ($mentionsTelcoBrand && $mentionsQuotaPackage && ! $mentionsQuotaExclusion) {
+        if ($mentionsTelcoBrand && $mentionsQuotaPackage && ($mentionsStrongQuotaPackage || ! $mentionsQuotaExclusion)) {
             return 'kuota-murah';
         }
 
@@ -318,24 +366,27 @@ class WiboostCatalog
 
     public static function resolveDigiflazzSubcategorySlug(string $topCategorySlug, string $name, string $brand = '', string $description = ''): ?string
     {
-        $text = Str::lower(trim("{$brand} {$name} {$description}"));
+        $text = ' ' . Str::lower(trim("{$brand} {$name} {$description}")) . ' ';
 
         return match ($topCategorySlug) {
             'top-up-game' => match (true) {
-                str_contains($text, 'mobile legends'), str_contains($text, 'mobilelegend') => 'game-mobile-legends',
+                str_contains($text, 'mobile legends'), str_contains($text, 'mobile legend'), str_contains($text, 'mobilelegend'), str_contains($text, ' mlbb '), str_contains($text, ' ml ') => 'game-mobile-legends',
                 str_contains($text, 'free fire'), str_contains($text, 'freefire') => 'game-free-fire',
                 str_contains($text, 'pubg') => 'game-pubg-mobile',
-                str_contains($text, 'valorant'), str_contains($text, 'vp') => 'game-valorant',
+                str_contains($text, 'valorant'), str_contains($text, ' valo '), str_contains($text, ' vp ') => 'game-valorant',
+                str_contains($text, 'wild rift'), str_contains($text, 'wildrift'), str_contains($text, 'wild core'), str_contains($text, 'wild cores'), str_contains($text, 'wild pass'), str_contains($text, ' lol wr '), str_contains($text, ' lolwr ') => 'game-lol-wild-rift',
                 str_contains($text, 'arena of valor'), str_contains($text, 'aov') => 'game-arena-of-valor',
+                str_contains($text, ' honor of kings '), str_contains($text, ' hok ') => 'game-honor-of-kings',
                 default => 'game-lainnya',
             },
-            'kuota-murah' => match (true) {
-                str_contains($text, 'axis') => 'kuota-axis',
-                str_contains($text, 'telkomsel'), str_contains($text, 'by.u') => 'kuota-telkomsel',
-                str_contains($text, ' tri '), str_starts_with($text, 'tri'), str_contains($text, '3 ') => 'kuota-tri',
-                str_contains($text, 'indosat'), str_contains($text, 'im3') => 'kuota-indosat',
-                str_contains($text, 'smartfren') => 'kuota-smartfren',
-                str_contains($text, ' xl '), str_starts_with($text, 'xl'), str_contains($text, 'xtra') => 'kuota-xl',
+            'kuota-murah', 'paket-data' => match (true) {
+                str_contains($text, 'axis'), str_contains($text, 'aigo'), str_contains($text, 'bronet'), str_contains($text, 'owsem') => 'kuota-axis',
+                str_contains($text, 'by.u'), str_contains($text, 'by u'), str_contains($text, 'byu') => 'kuota-by-u',
+                str_contains($text, 'telkomsel'), str_contains($text, 'simpati'), str_contains($text, 'kartu as') => 'kuota-telkomsel',
+                str_contains($text, ' tri '), str_starts_with($text, 'tri'), str_contains($text, 'three'), str_contains($text, 'aon'), str_contains($text, 'alwayson') => 'kuota-tri',
+                str_contains($text, 'indosat'), str_contains($text, 'im3'), str_contains($text, 'yellow'), str_contains($text, 'freedom') => 'kuota-indosat',
+                str_contains($text, 'smartfren'), str_contains($text, ' sf ') => 'kuota-smartfren',
+                str_contains($text, ' xl '), str_starts_with($text, 'xl'), str_contains($text, 'xtra'), str_contains($text, 'hotrod') => 'kuota-xl',
                 default => 'kuota-lainnya',
             },
             default => null,
@@ -354,13 +405,7 @@ class WiboostCatalog
 
     public static function stockProductTemplates(): array
     {
-        return [
-            self::template('premium-netflix', 'Netflix Premium Sharing', 'account', 'Template akun Netflix sharing. Isi email, password, profil, PIN, link akses, tutorial, dan kuota pemakaian di gudang kredensial.'),
-            self::template('premium-spotify', 'Spotify Premium Family', 'account', 'Template akun Spotify premium. Isi data akun, profil, tutorial, dan batas pemakaian sesuai stok yang kamu punya.'),
-            self::template('premium-canva', 'Canva Pro Sharing', 'account', 'Template akun Canva Pro sharing. Cocok untuk stok akun yang bisa dipakai beberapa pembeli.'),
-            self::template('premium-youtube', 'YouTube Premium Family', 'account', 'Template akun YouTube Premium / Music Premium. Isi stok kredensial dari panel gudang akun.'),
-            self::template('premium-lainnya', 'Aplikasi Premium Custom', 'account', 'Template akun premium custom untuk aplikasi selain Netflix, Spotify, Canva, dan YouTube Premium.'),
-        ];
+        return [];
     }
 
     protected static function ordersosmedPlatformCategories(): array

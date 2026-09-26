@@ -93,7 +93,9 @@ class AdminReportController extends Controller
         }
 
         $proofFile = $request->file('proof');
-        $proofPath = $proofFile?->store('admin-reports', 'public');
+        $proofPath = $proofFile
+            ? app(\App\Support\WebpImageOptimizer::class)->storeUploadedFile($proofFile, 'admin-reports')
+            : null;
         $proofUrl = $proofPath ? url(Storage::url($proofPath)) : null;
 
         $message = $this->buildWhatsappMessage($selectedCategory, $issue, $selectedRecord, $proofUrl);

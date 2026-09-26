@@ -38,6 +38,12 @@ class SyncTripayDeposits extends Command
                 return self::FAILURE;
             }
 
+            if ($deposit->isRefundCredit()) {
+                $this->warn("{$invoice} adalah catatan refund, bukan deposit pembayaran. Sinkronisasi dilewati.");
+
+                return self::SUCCESS;
+            }
+
             $depositSyncService->syncDepositFromProvider($deposit);
             $depositSyncService->creditPaidDepositsForUser((int) $deposit->user_id, 200);
 
@@ -53,6 +59,12 @@ class SyncTripayDeposits extends Command
                 $this->error('Deposit dengan invoice tersebut tidak ditemukan.');
 
                 return self::FAILURE;
+            }
+
+            if ($deposit->isRefundCredit()) {
+                $this->warn("{$deposit->invoice_number} adalah catatan refund, bukan deposit pembayaran. Sinkronisasi dilewati.");
+
+                return self::SUCCESS;
             }
 
             $depositSyncService->syncDepositFromProvider($deposit);
@@ -90,6 +102,11 @@ class SyncTripayDeposits extends Command
         }
 
         $query = Deposit::query()
+            ->where('invoice_number', 'not like', 'REFUND-%')
+            ->where(function ($refundQuery) {
+                $refundQuery->whereNull('payment_method')
+                    ->orWhere('payment_method', '!=', 'refund');
+            })
             ->where(function ($depositQuery) {
                 $depositQuery
                     ->where(function ($pendingQuery) {

@@ -121,7 +121,8 @@ class TutorialController extends Controller
         $data['image'] = null;
 
         if ($request->hasFile('sub_category_image')) {
-            $data['sub_category_image'] = $request->file('sub_category_image')->store('tutorials/subcategories', 'public');
+            $data['sub_category_image'] = app(\App\Support\WebpImageOptimizer::class)
+                ->storeUploadedFile($request->file('sub_category_image'), 'tutorials/subcategories');
         } elseif ($data['sub_category']) {
             $data['sub_category_image'] = $this->existingSubCategoryImage(
                 $validated['main_category'],
@@ -164,7 +165,8 @@ class TutorialController extends Controller
         if ($request->hasFile('sub_category_image')) {
             $this->deleteTutorialFileIfUnused($tutorial->sub_category_image, $tutorial->id);
 
-            $data['sub_category_image'] = $request->file('sub_category_image')->store('tutorials/subcategories', 'public');
+            $data['sub_category_image'] = app(\App\Support\WebpImageOptimizer::class)
+                ->storeUploadedFile($request->file('sub_category_image'), 'tutorials/subcategories');
         } elseif (
             $data['sub_category']
             && $this->sameCategory($tutorial, $validated['main_category'], $data['sub_category'])

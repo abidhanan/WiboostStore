@@ -21,7 +21,10 @@ class ProductCredential extends Model
         'tutorial_link',
         'needs_otp',
         'requires_login_proof',
+        'requires_logout_proof',
         'max_usage',
+        'duration_value',
+        'duration_unit',
         'current_usage',
         'is_active',
     ];
@@ -29,6 +32,8 @@ class ProductCredential extends Model
     protected $casts = [
         'needs_otp' => 'boolean',
         'requires_login_proof' => 'boolean',
+        'requires_logout_proof' => 'boolean',
+        'duration_value' => 'integer',
         'is_active' => 'boolean',
     ];
 

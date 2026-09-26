@@ -7,6 +7,8 @@ use App\Models\ResellerCommission;
 use App\Models\Transaction;
 use App\Services\DiscordWebhookService;
 use App\Services\ResellerCommissionService;
+use App\Support\SimpleXlsx;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -20,8 +22,8 @@ class ResellerController extends Controller
 
         $search = trim((string) $request->query('search', ''));
         $commissionFilter = (string) $request->query('commission_filter', 'all');
-        $selectedMonth = $request->query('month', date('m'));
-        $selectedYear = $request->query('year', date('Y'));
+        $selectedMonth = $request->query('month', now()->format('m'));
+        $selectedYear = $request->query('year', now()->format('Y'));
         $allowedCommissionFilters = ['all', 'suntik-sosmed', 'top-up-game', 'paket-data', 'aplikasi-premium'];
 
         if (! in_array($commissionFilter, $allowedCommissionFilters, true)) {
@@ -29,11 +31,11 @@ class ResellerController extends Controller
         }
 
         if (! preg_match('/^(0[1-9]|1[0-2])$/', (string) $selectedMonth)) {
-            $selectedMonth = date('m');
+            $selectedMonth = now()->format('m');
         }
 
         if (! preg_match('/^\d{4}$/', (string) $selectedYear)) {
-            $selectedYear = date('Y');
+            $selectedYear = now()->format('Y');
         }
 
         $incomeCommissions = ResellerCommission::query()
@@ -75,8 +77,8 @@ class ResellerController extends Controller
 
         $search = trim((string) $request->query('search', ''));
         $commissionFilter = (string) $request->query('commission_filter', 'all');
-        $selectedMonth = $request->query('month', date('m'));
-        $selectedYear = $request->query('year', date('Y'));
+        $selectedMonth = $request->query('month', now()->format('m'));
+        $selectedYear = $request->query('year', now()->format('Y'));
         $allowedCommissionFilters = ['all', 'suntik-sosmed', 'top-up-game', 'paket-data', 'aplikasi-premium'];
 
         if (! in_array($commissionFilter, $allowedCommissionFilters, true)) {
@@ -84,11 +86,11 @@ class ResellerController extends Controller
         }
 
         if (! preg_match('/^(0[1-9]|1[0-2])$/', (string) $selectedMonth)) {
-            $selectedMonth = date('m');
+            $selectedMonth = now()->format('m');
         }
 
         if (! preg_match('/^\d{4}$/', (string) $selectedYear)) {
-            $selectedYear = date('Y');
+            $selectedYear = now()->format('Y');
         }
 
         $commissions = ResellerCommission::query()
@@ -118,39 +120,45 @@ class ResellerController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        $fileName = 'laporan-komisi-' . now()->format('Ymd-His') . '.csv';
+        Carbon::setLocale('id');
+        $monthName = Carbon::createFromDate((int) $selectedYear, (int) $selectedMonth, 1)->translatedFormat('F Y');
+        $rows = $commissions->map(function (ResellerCommission $commission, int $index) {
+            $transaction = $commission->transaction;
 
-        return response()->streamDownload(function () use ($commissions) {
-            $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Waktu', 'Invoice', 'Reseller', 'Email Reseller', 'Produk', 'Kategori', 'Harga Transaksi', 'Komisi', 'Status']);
+            return [
+                $index + 1,
+                optional($transaction?->created_at ?: $commission->created_at)->timezone(config('app.timezone'))->format('d/m/Y H:i'),
+                $transaction?->invoice_number ?? '-',
+                $commission->user?->name ?? '-',
+                $commission->user?->email ?? '-',
+                $commission->product_name ?: ($transaction?->display_product_name ?? '-'),
+                $commission->category_name ?: '-',
+                (float) ($transaction?->display_total_payable ?? $transaction?->amount ?? $commission->base_amount),
+                (float) $commission->amount,
+                $commission->display_status,
+            ];
+        })->all();
 
-            foreach ($commissions as $commission) {
-                $transaction = $commission->transaction;
-                fputcsv($handle, [
-                    optional($transaction?->created_at ?: $commission->created_at)->timezone(config('app.timezone'))->format('d/m/Y H:i'),
-                    $transaction?->invoice_number ?? '-',
-                    $commission->user?->name ?? '-',
-                    $commission->user?->email ?? '-',
-                    $commission->product_name ?: ($transaction?->display_product_name ?? '-'),
-                    $commission->category_name ?: '-',
-                    (float) ($transaction?->display_total_payable ?? $transaction?->amount ?? $commission->base_amount),
-                    (float) $commission->amount,
-                    $commission->display_status,
-                ]);
-            }
-
-            fclose($handle);
-        }, $fileName, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-        ]);
+        return SimpleXlsx::download(
+            'Wiboost Store - Laporan Komisi',
+            'Komisi',
+            'laporan-komisi-' . str_replace(' ', '-', strtolower($monthName)) . '.xlsx',
+            'Periode: ' . $monthName,
+            ['No', 'Waktu', 'Invoice', 'Reseller', 'Email Reseller', 'Produk', 'Kategori', 'Harga Transaksi', 'Komisi', 'Status'],
+            $rows,
+            [8, 20, 24, 28, 34, 52, 26, 20, 18, 18],
+            [1],
+            [8, 9],
+            ['', '', '', '', '', '', 'TOTAL', (float) $commissions->sum('base_amount'), (float) $commissions->sum('amount'), '']
+        );
     }
 
     public function withdrawals(Request $request)
     {
         $search = trim((string) $request->query('search', ''));
         $status = (string) $request->query('status', 'all');
-        $selectedMonth = $request->query('month', date('m'));
-        $selectedYear = $request->query('year', date('Y'));
+        $selectedMonth = $request->query('month', now()->format('m'));
+        $selectedYear = $request->query('year', now()->format('Y'));
         $allowedStatuses = ['all', 'pending', 'processing', 'success', 'failed'];
 
         if (! in_array($status, $allowedStatuses, true)) {
@@ -158,11 +166,11 @@ class ResellerController extends Controller
         }
 
         if (! preg_match('/^(0[1-9]|1[0-2])$/', (string) $selectedMonth)) {
-            $selectedMonth = date('m');
+            $selectedMonth = now()->format('m');
         }
 
         if (! preg_match('/^\d{4}$/', (string) $selectedYear)) {
-            $selectedYear = date('Y');
+            $selectedYear = now()->format('Y');
         }
 
         $withdrawals = ResellerCommission::query()
@@ -196,6 +204,90 @@ class ResellerController extends Controller
             ->withQueryString();
 
         return view('admin.withdrawals.index', compact('withdrawals', 'search', 'status', 'selectedMonth', 'selectedYear'));
+    }
+
+    public function exportWithdrawals(Request $request)
+    {
+        $search = trim((string) $request->query('search', ''));
+        $status = (string) $request->query('status', 'all');
+        $selectedMonth = (string) $request->query('month', now()->format('m'));
+        $selectedYear = (string) $request->query('year', now()->format('Y'));
+        $allowedStatuses = ['all', 'pending', 'processing', 'success', 'failed'];
+
+        if (! in_array($status, $allowedStatuses, true)) {
+            $status = 'all';
+        }
+
+        if (! preg_match('/^(0[1-9]|1[0-2])$/', $selectedMonth)) {
+            $selectedMonth = now()->format('m');
+        }
+
+        if (! preg_match('/^\d{4}$/', $selectedYear)) {
+            $selectedYear = now()->format('Y');
+        }
+
+        $withdrawals = ResellerCommission::query()
+            ->with(['user', 'approver'])
+            ->where('type', 'withdrawal')
+            ->whereMonth('created_at', $selectedMonth)
+            ->whereYear('created_at', $selectedYear)
+            ->when($status !== 'all', function ($query) use ($status) {
+                $statusValues = match ($status) {
+                    'success' => ['success', 'approved'],
+                    'failed' => ['failed', 'rejected'],
+                    default => [$status],
+                };
+
+                $query->whereIn('status', $statusValues);
+            })
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($innerQuery) use ($search) {
+                    $innerQuery->where('payout_method', 'like', "%{$search}%")
+                        ->orWhere('payout_account', 'like', "%{$search}%")
+                        ->orWhere('notes', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($userQuery) use ($search) {
+                            $userQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%")
+                                ->orWhere('whatsapp', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->latest()
+            ->get();
+
+        Carbon::setLocale('id');
+        $monthName = Carbon::createFromDate((int) $selectedYear, (int) $selectedMonth, 1)->translatedFormat('F Y');
+        $rows = $withdrawals->map(function (ResellerCommission $withdrawal, int $index) {
+            return [
+                $index + 1,
+                'WD-' . str_pad((string) $withdrawal->id, 5, '0', STR_PAD_LEFT),
+                $withdrawal->created_at?->timezone(config('app.timezone'))->format('d/m/Y H:i') ?? '-',
+                $withdrawal->user?->name ?? '-',
+                $withdrawal->user?->email ?? '-',
+                $withdrawal->user?->whatsapp ?? '-',
+                $withdrawal->payout_method ?: '-',
+                $withdrawal->payout_account ?: '-',
+                data_get($withdrawal->metadata, 'payout_name') ?: ($withdrawal->user?->reseller_payout_name ?? '-'),
+                (float) $withdrawal->amount,
+                $withdrawal->display_status,
+                $withdrawal->approver?->name ?? '-',
+                $withdrawal->approved_at?->timezone(config('app.timezone'))->format('d/m/Y H:i') ?? '-',
+                $withdrawal->notes ?: '-',
+            ];
+        })->all();
+
+        return SimpleXlsx::download(
+            'Wiboost Store - Laporan Penarikan',
+            'Penarikan',
+            'laporan-penarikan-' . str_replace(' ', '-', strtolower($monthName)) . '.xlsx',
+            'Periode: ' . $monthName,
+            ['No', 'Invoice', 'Waktu', 'Reseller', 'Email', 'WhatsApp', 'Metode', 'Nomor Tujuan', 'Nama Tujuan', 'Nominal', 'Status', 'Admin', 'Waktu Proses', 'Catatan'],
+            $rows,
+            [8, 16, 20, 28, 34, 20, 18, 26, 28, 18, 16, 24, 20, 48],
+            [1],
+            [10],
+            ['', '', '', '', '', '', '', '', 'TOTAL', (float) $withdrawals->sum('amount'), '', '', '', '']
+        );
     }
 
     public function updateWithdrawal(Request $request, ResellerCommission $commission, DiscordWebhookService $discordWebhookService)

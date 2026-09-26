@@ -13,18 +13,15 @@
     <style>
         .wiboost-pagination-wrap {
             align-items: center;
-            background: rgba(255, 255, 255, .9);
-            border: 4px solid #fff;
-            border-radius: 2.2rem;
-            box-shadow: 0 18px 34px rgba(189, 224, 254, .28);
             display: flex;
             gap: 1rem;
             justify-content: space-between;
             min-width: 0;
             overflow-x: auto;
             -ms-overflow-style: none;
-            padding: 1.2rem 1.35rem;
+            padding: 0;
             scrollbar-width: none;
+            width: 100%;
         }
 
         .wiboost-pagination-wrap::-webkit-scrollbar {
@@ -43,7 +40,7 @@
             align-items: center;
             display: flex;
             flex-wrap: nowrap;
-            gap: .45rem;
+            gap: .5rem;
             justify-content: center;
             min-width: max-content;
             white-space: nowrap;
@@ -62,27 +59,25 @@
             justify-content: center;
             min-width: 2.45rem;
             padding: 0 .72rem;
-            transition: all 120ms ease-out;
+            box-shadow: none !important;
+            transition: background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
             white-space: nowrap;
         }
 
         .wiboost-pagination-link {
             background: #f4f9ff;
             color: #5a76c8;
-            box-shadow: 0 10px 24px rgba(189, 224, 254, .25);
         }
 
         .wiboost-pagination-link:hover {
             background: #e0fbfc;
             border-color: #bde0fe;
             color: #2b3a67;
-            transform: translateY(-1px);
         }
 
         .wiboost-pagination-active {
             background: #5a76c8;
             color: #fff;
-            box-shadow: 0 12px 24px rgba(90, 118, 200, .28);
         }
 
         .wiboost-pagination-disabled {
@@ -99,7 +94,6 @@
             .wiboost-pagination-wrap {
                 flex-direction: column;
                 gap: .85rem;
-                padding: 1rem;
             }
 
             .wiboost-pagination-info,

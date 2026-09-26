@@ -23,6 +23,11 @@ class TripayDepositSyncService
                 $query->whereNull('payment_status')
                     ->orWhereIn('payment_status', ['unpaid', 'pending']);
             })
+            ->where('invoice_number', 'not like', 'REFUND-%')
+            ->where(function ($query) {
+                $query->whereNull('payment_method')
+                    ->orWhere('payment_method', '!=', 'refund');
+            })
             ->latest()
             ->take($limit)
             ->get();
@@ -36,6 +41,10 @@ class TripayDepositSyncService
 
     public function syncDepositFromProvider(Deposit $pendingDeposit): void
     {
+        if ($pendingDeposit->isRefundCredit()) {
+            return;
+        }
+
         $tripayReference = $this->resolveTripayReference($pendingDeposit);
 
         if (! filled($tripayReference)) {
@@ -100,6 +109,10 @@ class TripayDepositSyncService
                 ->first();
 
             if (! $deposit || ! in_array($deposit->payment_status, [null, 'unpaid', 'pending'], true)) {
+                return null;
+            }
+
+            if ($deposit->isRefundCredit()) {
                 return null;
             }
 
@@ -211,6 +224,15 @@ class TripayDepositSyncService
     {
         $paidDeposits = Deposit::where('user_id', $userId)
             ->where('payment_status', 'paid')
+            ->where('invoice_number', 'not like', 'REFUND-%')
+            ->where(function ($query) {
+                $query->whereNull('payment_method')
+                    ->orWhere('payment_method', '!=', 'refund');
+            })
+            ->where(function ($query) {
+                $query->whereNull('payment_response->purpose')
+                    ->orWhere('payment_response->purpose', '!=', 'refund_wallet');
+            })
             ->latest()
             ->take($limit)
             ->get();
@@ -222,6 +244,10 @@ class TripayDepositSyncService
                     ->first();
 
                 if (! $deposit || $deposit->payment_status !== 'paid') {
+                    return;
+                }
+
+                if ($deposit->isRefundCredit()) {
                     return;
                 }
 

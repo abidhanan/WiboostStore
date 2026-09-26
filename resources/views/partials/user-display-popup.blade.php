@@ -100,6 +100,11 @@
             cursor: pointer !important;
         }
 
+        #wiboost-display-close:disabled {
+            opacity: .65 !important;
+            cursor: wait !important;
+        }
+
         #wiboost-display-link {
             position: relative !important;
             display: block !important;
@@ -188,14 +193,14 @@
 
     <div id="wiboost-display-overlay" aria-modal="true" role="dialog" style="position: fixed; inset: 0; z-index: 2147483647; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(23, 33, 62, .74); pointer-events: auto;">
         <div id="wiboost-display-card" style="position: relative; width: min(calc(100vw - 56px), 384px); max-height: 84vh; aspect-ratio: 4 / 5; overflow: visible; border: 4px solid #fff; border-radius: 32px; color: #fff; box-shadow: 0 28px 80px rgba(23, 33, 62, .45); background: {{ $firstDisplayBackground }};">
-            <button id="wiboost-display-close" type="button" aria-label="Tutup display" onclick="if (window.wiboostDisplayNext) { return window.wiboostDisplayNext(event); } this.closest('#wiboost-display-overlay')?.remove(); document.body.style.overflow=''; return false;" style="position: absolute; top: -22px; right: -22px; z-index: 50; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; border-radius: 999px; background: #fff; color: #ff4d4d; box-shadow: 0 12px 28px rgba(255, 77, 77, .28); cursor: pointer;">
+            <button id="wiboost-display-close" type="button" aria-label="Tutup display" disabled aria-disabled="true" onclick="if (window.wiboostDisplayNext) { return window.wiboostDisplayNext(event); } this.closest('#wiboost-display-overlay')?.remove(); document.body.style.overflow=''; return false;" style="position: absolute; top: -22px; right: -22px; z-index: 50; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; border-radius: 999px; background: #fff; color: #ff4d4d; box-shadow: 0 12px 28px rgba(255, 77, 77, .28); cursor: wait;">
                 <svg style="width: 20px; height: 20px; display: block;" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6 6 18" />
                 </svg>
             </button>
 
             <a id="wiboost-display-link" href="{{ ($firstDisplay['link'] ?? '') ?: '#' }}" style="position: relative; display: block; width: 100%; height: 100%; overflow: hidden; border-radius: 28px; color: inherit; text-decoration: none;">
-                <img id="wiboost-display-image" src="{{ $firstDisplayHasImage ? $firstDisplay['image'] : '' }}" alt="{{ $firstDisplay['title'] ?? 'Display Wiboost Store' }}" class="{{ $firstDisplayHasImage ? '' : 'wiboost-display-hidden' }}" style="position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: cover;">
+                <img id="wiboost-display-image" src="{{ $firstDisplayHasImage ? $firstDisplay['image'] : '' }}" alt="{{ $firstDisplay['title'] ?? 'Display Wiboost Store' }}" class="wiboost-display-hidden" style="position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: cover;">
                 <div id="wiboost-display-shade" class="{{ $firstDisplayHasImage ? 'wiboost-display-hidden' : '' }}" style="position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(23, 33, 62, .72), rgba(23, 33, 62, .16), rgba(23, 33, 62, .08));"></div>
                 <div id="wiboost-display-emoji" style="position: absolute; top: 64px; right: 24px; z-index: 3; color: rgba(255, 255, 255, .28); font-size: 64px; font-weight: 900; line-height: 1;">{{ $firstDisplayHasImage ? '' : ($firstDisplay['emoji'] ?? '') }}</div>
                 <div id="wiboost-display-copy" style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; padding: 24px;">
@@ -232,6 +237,7 @@
             const displaySwitchDelay = 320;
             let index = 0;
             let isSwitchingDisplay = false;
+            let isDisplayReady = false;
 
             const setHidden = (element, hidden) => {
                 if (!element) return;
@@ -256,6 +262,16 @@
                 notifyDisplayClosed();
             };
 
+            const setDisplayReady = (ready) => {
+                isDisplayReady = Boolean(ready);
+
+                if (!closeButton) return;
+
+                closeButton.toggleAttribute('disabled', !isDisplayReady);
+                closeButton.setAttribute('aria-disabled', isDisplayReady ? 'false' : 'true');
+                closeButton.style.cursor = isDisplayReady ? 'pointer' : 'wait';
+            };
+
             const showFallback = (display) => {
                 setHidden(image, true);
                 setHidden(shade, false);
@@ -266,6 +282,7 @@
                 setHidden(badge, !display.badge);
                 setHidden(title, false);
                 setHidden(description, !display.description);
+                setDisplayReady(true);
             };
 
             const showDisplay = () => {
@@ -277,25 +294,42 @@
 
                 const hasImage = Boolean(display.image);
                 card.style.background = themeMap[display.theme] || themeMap.blue;
+                setDisplayReady(false);
 
                 if (hasImage) {
-                    image.onload = () => {
+                    let imageHandled = false;
+                    const revealLoadedImage = () => {
+                        if (imageHandled) return;
+                        imageHandled = true;
                         setHidden(image, false);
                         setHidden(shade, true);
                         setHidden(badge, true);
                         setHidden(title, true);
                         setHidden(description, true);
                         emoji.textContent = '';
+                        setDisplayReady(true);
                     };
-                    image.onerror = () => showFallback(display);
+
+                    image.onload = revealLoadedImage;
+                    image.onerror = () => {
+                        if (imageHandled) return;
+                        imageHandled = true;
+                        showFallback(display);
+                    };
                     image.src = display.image;
                     image.alt = display.title || 'Display Wiboost Store';
-                    setHidden(image, false);
+                    setHidden(image, true);
                     setHidden(shade, true);
                     setHidden(badge, true);
                     setHidden(title, true);
                     setHidden(description, true);
                     emoji.textContent = '';
+
+                    window.requestAnimationFrame(() => {
+                        if (image.complete && image.naturalWidth > 0) {
+                            revealLoadedImage();
+                        }
+                    });
                 } else {
                     image.removeAttribute('src');
                     showFallback(display);
@@ -317,6 +351,10 @@
                     return false;
                 }
 
+                if (!isDisplayReady) {
+                    return false;
+                }
+
                 const nextIndex = index + 1;
 
                 if (nextIndex >= displays.length) {
@@ -325,13 +363,12 @@
                 }
 
                 isSwitchingDisplay = true;
-                closeButton?.setAttribute('disabled', 'disabled');
+                setDisplayReady(false);
                 card?.classList.add('wiboost-display-card-waiting');
 
                 window.setTimeout(() => {
                     index = nextIndex;
                     showDisplay();
-                    closeButton?.removeAttribute('disabled');
                     isSwitchingDisplay = false;
                 }, displaySwitchDelay);
 

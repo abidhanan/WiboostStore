@@ -3,17 +3,23 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    @include('partials.site-icons')
     <title>Wiboost Store</title>
+    @include('partials.seo-meta', [
+        'title' => 'Wiboost Store',
+        'description' => 'Platform penyedia layanan suntik sosmed, top up game, paket data, dan aplikasi premium dengan proses cepat, aman, dan praktis.',
+        'canonical' => route('home'),
+    ])
+    @include('partials.site-icons')
     <link rel="preload" as="image" href="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" fetchpriority="high">
 
+    @include('partials.font-nunito')
     @include('partials.vite-preload')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.vite-fallback')
     @include('partials.ui-performance-tuning')
     @include('partials.microsoft-clarity')
     @include('partials.google-analytics')
-    @include('partials.font-nunito')
+    @include('partials.responsive-qa-guards')
     <style>
          html {
              scrollbar-color: #bde0fe #f4f9ff;
@@ -432,6 +438,15 @@
                  padding-right: 2rem !important;
              }
          }
+         /* Land the catalog heading just below the fixed navbar when arriving via #kategori. */
+         #kategori-heading {
+             scroll-margin-top: 5.75rem;
+         }
+         @media (min-width: 640px) {
+             #kategori-heading {
+                 scroll-margin-top: 6.5rem;
+             }
+         }
     </style>
     @include('partials.ios-layout-fixes')
 </head>
@@ -480,7 +495,7 @@
             </p>
             
             <div class="welcome-cta-gap mt-12 flex flex-col sm:flex-row justify-center gap-4">
-                <a href="#kategori" onclick="event.preventDefault(); document.getElementById('kategori').scrollIntoView({behavior: 'smooth', block: 'center'});" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white font-extrabold text-lg px-10 py-4 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex items-center justify-center gap-3">
+                <a href="{{ route('home') }}" onclick="event.preventDefault(); window.scrollToWiboostCatalog ? window.scrollToWiboostCatalog('smooth') : document.getElementById('kategori-heading').scrollIntoView({behavior: 'smooth', block: 'start'});" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white font-extrabold text-lg px-10 py-4 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex items-center justify-center gap-3">
                     Beli Sekarang
                 </a>
             </div>
@@ -507,7 +522,7 @@
     <!-- SECTION KATEGORI (PUTIH) -->
     <section id="kategori" class="py-24 lg:py-32 bg-white relative flex-1 z-10 border-b-[6px] border-[#f0f5ff]">
         <div class="welcome-section-inner max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
+            <div id="kategori-heading" class="text-center mb-12">
                 <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-6 text-xs border-2 border-white">Katalog Utama</div>
                 <h2 class="text-3xl md:text-5xl font-black text-[#2b3a67] tracking-tight">Pilih Kategori</h2>
             </div>
@@ -729,5 +744,98 @@
 
     @include('partials.hut-ri-decoration')
     @include('partials.tv-safe')
+
+    <script>
+        (function () {
+            // Trigger via a sessionStorage flag (set by the back button) instead of a URL hash,
+            // so the address bar stays clean — no #kategori / #kategori-heading behind the link.
+            var RETURN_KEY = 'wiboostReturnCatalog';
+            var CATALOG_HASHES = ['#kategori', '#kategori-heading', '#katalog-utama'];
+            var pending = false;
+            var cancelled = false;
+
+            function isCatalogHash() {
+                return CATALOG_HASHES.indexOf(window.location.hash) !== -1;
+            }
+
+            function hasReturnFlag() {
+                try { return sessionStorage.getItem(RETURN_KEY) === '1'; } catch (e) { return false; }
+            }
+
+            function clearReturnFlag() {
+                try { sessionStorage.removeItem(RETURN_KEY); } catch (e) {}
+            }
+
+            // Remove any leftover catalog hash (e.g. from old bookmarks) so the URL stays clean.
+            function stripCatalogHash() {
+                if (!isCatalogHash()) {
+                    return;
+                }
+
+                try {
+                    history.replaceState(null, '', window.location.pathname + window.location.search);
+                } catch (e) {}
+            }
+
+            // scrollIntoView respects the heading's CSS scroll-margin-top, so the landing
+            // is deterministic. <html> has scroll-behavior:smooth, so the load-time landing
+            // MUST be 'instant' — otherwise it animates and never settles exactly at the heading.
+            function landOnCatalog(behavior) {
+                var el = document.getElementById('kategori-heading');
+
+                if (!el) {
+                    return;
+                }
+
+                el.scrollIntoView({ block: 'start', behavior: behavior || 'instant' });
+            }
+
+            window.scrollToWiboostCatalog = function (behavior) {
+                landOnCatalog(behavior || 'smooth');
+            };
+
+            function apply() {
+                if (pending && !cancelled) {
+                    landOnCatalog('instant');
+                }
+            }
+
+            function arm() {
+                if (!(isCatalogHash() || hasReturnFlag())) {
+                    return;
+                }
+
+                pending = true;
+                cancelled = false;
+                apply();
+                requestAnimationFrame(apply);
+                [80, 240, 600].forEach(function (delay) { setTimeout(apply, delay); });
+                setTimeout(function () {
+                    pending = false;
+                    clearReturnFlag();
+                    stripCatalogHash();
+                }, 700);
+            }
+
+            // Any real user scroll input stops the forced landing so nothing yanks the page.
+            ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach(function (evt) {
+                window.addEventListener(evt, function () { cancelled = true; }, { passive: true });
+            });
+
+            if ('scrollRestoration' in history && (isCatalogHash() || hasReturnFlag())) {
+                try { history.scrollRestoration = 'manual'; } catch (e) {}
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', arm);
+            } else {
+                arm();
+            }
+
+            window.addEventListener('load', arm, { once: true });
+            window.addEventListener('pageshow', arm);
+            window.addEventListener('hashchange', arm);
+        })();
+    </script>
 </body>
 </html>

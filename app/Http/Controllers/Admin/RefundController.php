@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Deposit;
 use App\Models\Refund;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\WalletHistory;
 use App\Services\DiscordWebhookService;
+use App\Support\SimpleXlsx;
 use App\Support\WiboostCatalog;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -18,21 +21,33 @@ class RefundController extends Controller
     public function index(Request $request)
     {
         $search = trim((string) $request->query('search', ''));
-        $selectedMonth = $request->query('month', date('m'));
-        $selectedYear = $request->query('year', date('Y'));
+        $refundFilter = (string) $request->query('refund_filter', 'all');
+        $selectedMonth = $request->query('month', now()->format('m'));
+        $selectedYear = $request->query('year', now()->format('Y'));
+        $allowedRefundFilters = ['all', '25', '50', '75', '100'];
+
+        if (! in_array($refundFilter, $allowedRefundFilters, true)) {
+            $refundFilter = 'all';
+        }
 
         if (! preg_match('/^(0[1-9]|1[0-2])$/', (string) $selectedMonth)) {
-            $selectedMonth = date('m');
+            $selectedMonth = now()->format('m');
         }
 
         if (! preg_match('/^\d{4}$/', (string) $selectedYear)) {
-            $selectedYear = date('Y');
+            $selectedYear = now()->format('Y');
         }
 
         $refunds = Refund::query()
             ->with(['transaction.user', 'transaction.product.category.parent.parent.parent'])
             ->whereMonth('created_at', $selectedMonth)
             ->whereYear('created_at', $selectedYear)
+            ->when($refundFilter !== 'all', function ($query) use ($refundFilter) {
+                $query->where(function ($filterQuery) use ($refundFilter) {
+                    $filterQuery->where('notes', 'like', '%"manual_refund_percent":' . $refundFilter . '%')
+                        ->orWhere('notes', 'like', '%"manual_refund_percent":"' . $refundFilter . '"%');
+                });
+            })
             ->when($search !== '', function ($query) use ($search) {
                 $query->whereHas('transaction', function ($transactionQuery) use ($search) {
                         $transactionQuery->where('invoice_number', 'like', "%{$search}%")
@@ -52,7 +67,89 @@ class RefundController extends Controller
             ->paginate(20)
             ->appends($request->query());
 
-        return view('admin.refunds.index', compact('refunds', 'search', 'selectedMonth', 'selectedYear'));
+        return view('admin.refunds.index', compact('refunds', 'search', 'refundFilter', 'selectedMonth', 'selectedYear'));
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $search = trim((string) $request->query('search', ''));
+        $refundFilter = (string) $request->query('refund_filter', 'all');
+        $selectedMonth = (string) $request->query('month', now()->format('m'));
+        $selectedYear = (string) $request->query('year', now()->format('Y'));
+        $allowedRefundFilters = ['all', '25', '50', '75', '100'];
+
+        if (! in_array($refundFilter, $allowedRefundFilters, true)) {
+            $refundFilter = 'all';
+        }
+
+        if (! preg_match('/^(0[1-9]|1[0-2])$/', $selectedMonth)) {
+            $selectedMonth = now()->format('m');
+        }
+
+        if (! preg_match('/^\d{4}$/', $selectedYear)) {
+            $selectedYear = now()->format('Y');
+        }
+
+        $refunds = Refund::query()
+            ->with(['transaction.user', 'transaction.product.category.parent.parent.parent'])
+            ->whereMonth('created_at', $selectedMonth)
+            ->whereYear('created_at', $selectedYear)
+            ->when($refundFilter !== 'all', function ($query) use ($refundFilter) {
+                $query->where(function ($filterQuery) use ($refundFilter) {
+                    $filterQuery->where('notes', 'like', '%"manual_refund_percent":' . $refundFilter . '%')
+                        ->orWhere('notes', 'like', '%"manual_refund_percent":"' . $refundFilter . '"%');
+                });
+            })
+            ->when($search !== '', function ($query) use ($search) {
+                $query->whereHas('transaction', function ($transactionQuery) use ($search) {
+                    $transactionQuery->where('invoice_number', 'like', "%{$search}%")
+                        ->orWhere('target_data', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($userQuery) use ($search) {
+                            $userQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%")
+                                ->orWhere('whatsapp', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('product', function ($productQuery) use ($search) {
+                            $productQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('provider_product_id', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->latest()
+            ->get();
+
+        Carbon::setLocale('id');
+        $monthName = Carbon::createFromDate((int) $selectedYear, (int) $selectedMonth, 1)->translatedFormat('F Y');
+        $totalTransaction = $refunds->sum(fn (Refund $refund) => (float) ($refund->transaction?->display_total_payable ?? 0));
+        $totalRefund = $refunds->sum(fn (Refund $refund) => (float) $refund->manual_refund_amount);
+        $rows = $refunds->map(function (Refund $refund, int $index) {
+            $transaction = $refund->transaction;
+
+            return [
+                $index + 1,
+                $refund->created_at?->timezone(config('app.timezone'))->format('d/m/Y H:i') ?? '-',
+                $transaction?->invoice_number ?? '-',
+                $transaction?->user?->name ?? 'Guest',
+                $transaction?->user?->email ?? '-',
+                $transaction?->display_product_name ?? 'Produk Wiboost',
+                (float) ($transaction?->display_total_payable ?? 0),
+                (float) $refund->manual_refund_amount,
+                $refund->manual_refund_percent . '%',
+            ];
+        })->all();
+
+        return SimpleXlsx::download(
+            'Wiboost Store - Laporan Refund',
+            'Refund',
+            'laporan-refund-' . str_replace(' ', '-', strtolower($monthName)) . '.xlsx',
+            'Periode: ' . $monthName,
+            ['No', 'Waktu Refund', 'Invoice', 'Nama', 'Email', 'Produk', 'Harga', 'Nominal Refund', 'Persen'],
+            $rows,
+            [8, 20, 24, 28, 34, 58, 18, 20, 14],
+            [1],
+            [7, 8],
+            ['', '', '', '', '', 'TOTAL', (float) $totalTransaction, (float) $totalRefund, '']
+        );
     }
 
     public function create(Request $request)
@@ -244,19 +341,38 @@ class RefundController extends Controller
                 ->find($transaction->user_id);
 
             if ($user) {
-                $user->increment('balance', $amount);
+                $refundInvoiceNumber = $this->refundInvoiceNumber($transaction);
+                $history = WalletHistory::query()
+                    ->where('invoice_number', $refundInvoiceNumber)
+                    ->where('type', 'refund')
+                    ->lockForUpdate()
+                    ->first();
+                $previousAmount = $history ? (float) $history->amount : 0;
+                $balanceDelta = $amount - $previousAmount;
 
-                WalletHistory::updateOrCreate(
-                    [
-                        'invoice_number' => $this->refundInvoiceNumber($transaction),
-                        'type' => 'refund',
-                    ],
-                    [
+                if ($history) {
+                    $history->forceFill([
                         'user_id' => $user->id,
                         'amount' => $amount,
                         'description' => 'Refund transaksi ' . $transaction->invoice_number,
-                    ]
-                );
+                    ])->save();
+                } else {
+                    $history = WalletHistory::create([
+                        'invoice_number' => $refundInvoiceNumber,
+                        'type' => 'refund',
+                        'user_id' => $user->id,
+                        'amount' => $amount,
+                        'description' => 'Refund transaksi ' . $transaction->invoice_number,
+                    ]);
+                }
+
+                if ($balanceDelta > 0) {
+                    $user->increment('balance', $balanceDelta);
+                } elseif ($balanceDelta < 0) {
+                    $user->decrement('balance', abs($balanceDelta));
+                }
+
+                $this->syncRefundDeposit($transaction, $user, $amount, $history);
             }
         }
 
@@ -290,6 +406,11 @@ class RefundController extends Controller
 
             $history->delete();
         }
+
+        Deposit::query()
+            ->where('invoice_number', $this->refundInvoiceNumber($transaction))
+            ->where('payment_method', 'refund')
+            ->delete();
 
         $updates = [];
 
@@ -344,6 +465,26 @@ class RefundController extends Controller
     protected function refundInvoiceNumber(Transaction $transaction): string
     {
         return 'REFUND-' . $transaction->invoice_number;
+    }
+
+    protected function syncRefundDeposit(Transaction $transaction, User $user, int $amount, WalletHistory $history): void
+    {
+        Deposit::updateOrCreate(
+            ['invoice_number' => $this->refundInvoiceNumber($transaction)],
+            [
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'paid_amount' => $amount,
+                'payment_status' => 'refund',
+                'payment_method' => 'refund',
+                'payment_response' => [
+                    'purpose' => 'refund_wallet',
+                    'wallet_history_id' => $history->id,
+                    'source_invoice_number' => $transaction->invoice_number,
+                    'description' => $history->description,
+                ],
+            ]
+        );
     }
 
     protected function refundMetadata(Refund $refund): array

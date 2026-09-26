@@ -442,6 +442,76 @@ class WiboostOperationsCommandTest extends TestCase
         Http::assertSent(fn ($request) => $request->url() === 'https://ordersosmed.id/api');
     }
 
+    public function test_sync_digiflazz_update_existing_only_preserves_mapping_and_skips_new_skus(): void
+    {
+        $this->seedCategory(1, 'top-up-game');
+        $this->seedCategory(2, 'mobile-legends', 'Mobile Legends', parentId: 1);
+
+        $product = Product::create([
+            'category_id' => 2,
+            'provider_id' => 'digiflazz',
+            'provider_source' => 'digiflazz',
+            'process_type' => 'api',
+            'name' => 'Nama Lama',
+            'slug' => 'nama-lama',
+            'description' => 'Deskripsi lama',
+            'price' => 9000,
+            'provider_product_id' => 'ML-86',
+            'status' => 'active',
+            'is_active' => true,
+            'image' => 'products/logo.png',
+            'stock_reminder' => 0,
+        ]);
+
+        $this->mock(DigiflazzService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('getPriceList')
+                ->twice()
+                ->andReturn([
+                    'success' => true,
+                    'raw' => ['data' => [
+                        [
+                            'buyer_sku_code' => 'ML-86',
+                            'product_name' => 'Mobile Legends 86 Diamonds',
+                            'desc' => 'Deskripsi baru',
+                            'price' => 10000,
+                            'buyer_product_status' => false,
+                            'seller_product_status' => true,
+                        ],
+                        [
+                            'buyer_sku_code' => 'NEW-SKU',
+                            'product_name' => 'Produk Baru',
+                            'desc' => 'Belum dipetakan',
+                            'price' => 20000,
+                            'buyer_product_status' => true,
+                            'seller_product_status' => true,
+                        ],
+                    ]],
+                ]);
+        });
+
+        $this->artisan('sync:digiflazz', ['--update-existing-only' => true])
+            ->assertExitCode(0);
+
+        $product->refresh();
+        $this->assertSame('Nama Lama', $product->name);
+        $this->assertSame(9000.0, (float) $product->price);
+
+        $this->artisan('sync:digiflazz', ['--update-existing-only' => true, '--execute' => true])
+            ->assertExitCode(0);
+
+        $product->refresh();
+        $this->assertSame(2, $product->category_id);
+        $this->assertSame('nama-lama', $product->slug);
+        $this->assertSame('products/logo.png', $product->image);
+        $this->assertSame('ML-86', $product->provider_product_id);
+        $this->assertSame('Mobile Legends 86 Diamonds', $product->name);
+        $this->assertSame('Deskripsi baru', $product->description);
+        $this->assertSame(10000.0, (float) $product->price);
+        $this->assertFalse($product->is_active);
+        $this->assertSame('inactive', $product->status);
+        $this->assertDatabaseMissing('products', ['provider_product_id' => 'NEW-SKU']);
+    }
+
     public function test_sync_digiflazz_command_preserves_existing_slug_and_falls_back_to_default_category(): void
     {
         $this->seedCategory(1, 'default-category');

@@ -22,7 +22,16 @@
             } catch (e) {}
         })();
     </script>
-    <title>@yield('title') - Wiboost Store</title>
+    @php
+        $userPageTitle = trim($__env->yieldContent('title', 'Akun Saya'));
+        $userDocumentTitle = str_contains($userPageTitle, 'Wiboost Store') ? $userPageTitle : $userPageTitle.' - Wiboost Store';
+    @endphp
+    <title>{{ $userDocumentTitle }}</title>
+    @include('partials.seo-meta', [
+        'title' => $userDocumentTitle,
+        'description' => 'Halaman akun pelanggan Wiboost Store.',
+        'robots' => 'noindex,nofollow,noarchive,nosnippet',
+    ])
     @include('partials.site-icons')
     <link rel="preload" as="image" href="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" fetchpriority="high">
     @include('partials.font-nunito')
@@ -32,6 +41,7 @@
     @include('partials.ui-performance-tuning')
     @include('partials.microsoft-clarity')
     @include('partials.google-analytics')
+    @include('partials.responsive-qa-guards')
     <style>
         /* Kritis: sidebar desktop tidak boleh muncul di mobile, walau CSS build telat/gagal load
            (mencegah "tampilan desktop" di HP setelah login Google). */

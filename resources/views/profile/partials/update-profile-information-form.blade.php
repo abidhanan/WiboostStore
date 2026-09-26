@@ -5,7 +5,7 @@
 
 <section>
     <header class="mb-6 text-left">
-        <h3 class="text-xl font-black text-[#2b3a67] md:text-2xl">Informasi Profil</h3>
+        <h2 class="text-xl font-black text-[#2b3a67] md:text-2xl">Informasi Profil</h2>
         <p class="mt-1 text-sm font-bold text-[#8faaf3]">Perbarui informasi profil dan alamat email akunmu.</p>
     </header>
 

@@ -6,6 +6,11 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Wiboost Store') }}</title>
+        @include('partials.seo-meta', [
+            'title' => config('app.name', 'Wiboost Store'),
+            'description' => 'Halaman akun Wiboost Store.',
+            'robots' => 'noindex,nofollow,noarchive,nosnippet',
+        ])
         @include('partials.site-icons')
 
         @include('partials.font-nunito')

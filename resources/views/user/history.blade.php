@@ -64,8 +64,8 @@
             padding: 1.5rem;
         }
         .history-modal-card {
-            max-height: min(760px, calc(100vh - 3rem));
-            max-height: min(760px, calc(100dvh - 3rem));
+            max-height: calc(100vh - 3rem);
+            max-height: calc(100dvh - 3rem);
         }
     }
 
@@ -106,27 +106,26 @@
         height: 2.45rem;
         justify-content: center;
         min-width: 2.45rem;
-        padding: 0 0.9rem;
-        transition: all 120ms ease-out;
+        padding: 0 0.72rem;
+        box-shadow: none !important;
+        transition: background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
+        white-space: nowrap;
     }
 
     .history-pagination-link {
         background: #f4f9ff;
         color: #5a76c8;
-        box-shadow: 0 10px 24px rgba(189, 224, 254, 0.25);
     }
 
     .history-pagination-link:hover {
         background: #e0fbfc;
         border-color: #bde0fe;
         color: #2b3a67;
-        transform: translateY(-1px);
     }
 
     .history-pagination-active {
         background: #5a76c8;
         color: #ffffff;
-        box-shadow: 0 12px 24px rgba(90, 118, 200, 0.28);
     }
 
     .history-pagination-disabled {
@@ -155,6 +154,11 @@
     .history-pagination-info--mobile,
     .history-pagination-mobile {
         display: none;
+    }
+
+    .history-pagination-desktop,
+    .history-pagination-mobile {
+        gap: 0.5rem !important;
     }
 
     .history-pagination-mobile-current {
@@ -202,10 +206,10 @@
     
     <div class="mb-10 text-center md:text-left pl-2">
         <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">Catatan Transaksi</div>
-        <h2 class="flex items-center justify-center gap-2 text-3xl sm:text-4xl font-black text-[#2b3a67] tracking-tight drop-shadow-sm md:justify-start">
+        <h1 class="flex items-center justify-center gap-2 text-3xl sm:text-4xl font-black text-[#2b3a67] tracking-tight drop-shadow-sm md:justify-start">
             <span class="text-[#5a76c8]">@include('partials.wiboost-icon', ['name' => 'history', 'class' => 'h-8 w-8'])</span>
             <span>Riwayat Pesanan</span>
-        </h2>
+        </h1>
     </div>
 
     @if(session('success'))
@@ -266,9 +270,21 @@
                     'pin' => 'PIN',
                     'link' => 'Link Akses',
                 ];
-                $hasCredentialAccess = collect($credentialAccessLabels)->keys()->contains(fn ($key) => ! empty($credentials[$key]));
-                $hasCredentialInfo = ! empty($credentials['notes']) || ! empty($credentials['requires_login_proof']);
                 $historyProductName = $trx->display_product_name;
+                $credentialExpiresAt = $trx->credential_expires_at;
+
+                if (! $credentialExpiresAt && filled(data_get($credentials, 'credential_expires_at'))) {
+                    try {
+                        $credentialExpiresAt = \Illuminate\Support\Carbon::parse(data_get($credentials, 'credential_expires_at'));
+                    } catch (\Throwable) {
+                        $credentialExpiresAt = null;
+                    }
+                }
+
+                $requiresLogoutProof = ! empty($credentials['requires_logout_proof']);
+                $showLogoutProof = $requiresLogoutProof && $credentialExpiresAt && $credentialExpiresAt->isPast();
+                $hasCredentialAccess = collect($credentialAccessLabels)->keys()->contains(fn ($key) => ! empty($credentials[$key]));
+                $hasCredentialInfo = ! empty($credentials['notes']) || ! empty($credentials['requires_login_proof']) || $showLogoutProof;
             @endphp
 
             <div onclick="openModal('modal-{{ $trx->id }}')" class="history-order-card bg-white/95 backdrop-blur-sm rounded-[2.5rem] p-6 md:p-8 shadow-xl shadow-[#bde0fe]/30 border-4 border-white flex flex-col md:flex-row justify-between items-start md:items-center hover:border-[#bde0fe] md:hover:-translate-y-2 transition-all duration-300 group cursor-pointer relative overflow-hidden">
@@ -278,7 +294,7 @@
                         <span class="shrink-0 whitespace-nowrap font-black uppercase tracking-widest text-[#8faaf3]" style="font-size: 8.5px; line-height: 1.1;">{{ $transactionTime }}</span>
                     </div>
 
-                    <h4 class="font-black text-xl md:text-2xl text-[#2b3a67] line-clamp-2 group-hover:text-[#5a76c8] transition-colors leading-tight drop-shadow-sm">{{ $historyProductName }}</h4>
+                    <h2 class="font-black text-xl md:text-2xl text-[#2b3a67] line-clamp-2 group-hover:text-[#5a76c8] transition-colors leading-tight drop-shadow-sm">{{ $historyProductName }}</h2>
 
                     @if($trx->has_order_input && filled($trx->order_input_summary))
                         <div class="mt-3 w-full overflow-hidden rounded-xl border border-white bg-[#f8faff] px-4 py-2 shadow-inner md:inline-block md:w-auto md:max-w-full">
@@ -314,7 +330,7 @@
                             <div class="bg-[#ffe5e5] p-5 rounded-[1.5rem] border-4 border-white shadow-inner relative overflow-hidden mb-5">
                                 <div class="relative z-10">
                                     <p class="text-[10px] font-black text-[#ff6b6b] uppercase tracking-widest mb-1">Keterangan Sistem</p>
-                                    <p class="font-bold text-[#2b3a67] text-sm leading-tight">{{ $trx->target_notes }}</p>
+                                    <p class="whitespace-pre-line break-words text-left text-sm font-bold leading-relaxed text-[#2b3a67]">{{ $trx->target_notes }}</p>
                                 </div>
                             </div>
                         @endif
@@ -381,7 +397,7 @@
                                                             </span>
                                                             <span class="text-sm font-black">Upload Bukti Login</span>
                                                         </span>
-                                                        <input data-login-proof-input type="file" name="login_proof" accept="image/*" class="sr-only">
+                                                        <input data-login-proof-input type="file" name="login_proof" accept="image/*,.heic,.heif" class="sr-only">
                                                     </label>
                                                     <button type="button" data-login-proof-delete data-delete-url="{{ route('user.history.login-proof.destroy', $trx) }}" class="{{ $loginProofUrl ? '' : 'hidden' }} absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border-4 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-lg transition hover:bg-[#ff6b6b] hover:text-white active:scale-95" title="Hapus bukti login">
                                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -549,8 +565,8 @@
                                 @if(!empty($credentials['notes']))
                                     <div class="mb-5">
                                         <p class="mb-1 ml-1 text-[9px] font-black uppercase tracking-widest text-amber-600/70">Catatan</p>
-                                        <div class="flex items-center justify-between gap-3 rounded-[1.2rem] border-4 border-amber-100 bg-white px-5 py-3.5 shadow-sm">
-                                            <p class="text-sm font-black text-[#2b3a67] break-words">{{ $credentials['notes'] }}</p>
+                                        <div class="flex items-start justify-between gap-3 rounded-[1.2rem] border-4 border-amber-100 bg-white px-5 py-3.5 shadow-sm">
+                                            <p class="min-w-0 flex-1 whitespace-pre-line break-words text-left text-sm font-black leading-relaxed text-[#2b3a67]">{{ $credentials['notes'] }}</p>
                                             <button onclick="copyToClipboard('{{ addslashes($credentials['notes']) }}')" class="shrink-0 rounded-xl border border-amber-100 bg-amber-50 p-2 text-amber-400 transition-colors hover:text-amber-600 active:scale-95" title="Salin">
                                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                                             </button>
@@ -573,13 +589,53 @@
                                                         <span class="text-lg font-black leading-tight text-[#2b3a67] sm:text-xl">Upload screenshot atau foto bukti</span>
                                                         <span class="max-w-sm text-sm font-bold leading-relaxed text-[#8faaf3] sm:text-base">Kalau tidak bisa screenshot, foto layar dari device lain juga boleh.</span>
                                                     </span>
-                                                    <input data-login-proof-input type="file" name="login_proof" accept="image/*" class="sr-only">
+                                                    <input data-login-proof-input type="file" name="login_proof" accept="image/*,.heic,.heif" class="sr-only">
                                                 </label>
                                                 <button type="button" data-login-proof-delete data-delete-url="{{ route('user.history.login-proof.destroy', $trx) }}" class="{{ $loginProofUrl ? '' : 'hidden' }} absolute right-4 top-4 flex h-14 w-14 items-center justify-center rounded-[1.4rem] border-4 border-white bg-[#ffe5e5] text-[#ff4d4d] shadow-xl shadow-red-100 transition hover:bg-[#ff4d4d] hover:text-white active:scale-95" title="Hapus bukti login" style="position:absolute;top:16px;right:16px;width:56px;height:56px;border-radius:22px;border:4px solid #fff;background:#ffe5e5;color:#ff4d4d;box-shadow:0 12px 24px rgba(255,77,77,.18);z-index:20;">
                                                     <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="2.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M10 11v6m4-6v6M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m3 0v12a2 2 0 01-2 2H8a2 2 0 01-2-2V7h12z"></path></svg>
                                                 </button>
                                             </div>
                                             <p class="hidden" aria-hidden="true"></p>
+                                        </form>
+                                    </div>
+                                @endif
+
+                                @if($showLogoutProof)
+                                    @php
+                                        $logoutProofUrl = $trx->logout_proof_path
+                                            ? url(\Illuminate\Support\Facades\Storage::url($trx->logout_proof_path))
+                                            : null;
+                                    @endphp
+                                    <div class="mt-5 rounded-[2rem] border-4 border-white bg-white p-5 shadow-md shadow-[#bde0fe]/20">
+                                        <div class="mb-5">
+                                            <p class="text-[10px] font-black uppercase tracking-[0.25em] text-[#5a76c8]">Bukti Logout</p>
+                                            <p class="mt-1 text-xs font-bold leading-relaxed text-[#8faaf3]">
+                                                Durasi akses sudah habis{{ $credentialExpiresAt ? ' pada ' . $credentialExpiresAt->copy()->locale('id')->translatedFormat('d F Y, H:i') : '' }}. Upload screenshot atau foto bukti logout.
+                                            </p>
+                                        </div>
+                                        <form action="{{ route('user.history.logout-proof', $trx) }}" method="POST" enctype="multipart/form-data" data-login-proof-form>
+                                            @csrf
+                                            <div class="relative">
+                                                <label class="relative flex min-h-[15rem] cursor-pointer items-center justify-center overflow-hidden rounded-[2rem] border-4 border-dashed border-[#bde0fe] bg-[#f8fbff] text-center shadow-inner transition hover:border-[#8faaf3] md:min-h-[18rem]" style="position:relative;min-height:240px;width:100%;overflow:hidden;border:4px dashed #bde0fe;border-radius:32px;background:#f8fbff;text-align:center;">
+                                                    <img data-login-proof-image src="{{ $logoutProofUrl ?: '' }}" alt="Bukti logout" class="{{ $logoutProofUrl ? '' : 'hidden' }} absolute inset-0 h-full w-full object-cover" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+                                                    <span data-login-proof-empty class="{{ $logoutProofUrl ? 'hidden' : '' }} flex h-full w-full flex-col items-center justify-center gap-5 px-6 py-12 text-[#5a76c8]" style="min-height:232px;width:100%;align-items:center;justify-content:center;">
+                                                        <span class="flex h-20 w-20 items-center justify-center rounded-[1.8rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/30">
+                                                            <svg class="h-10 w-10" fill="none" stroke="currentColor" stroke-width="2.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"></path></svg>
+                                                        </span>
+                                                        <span class="text-lg font-black leading-tight text-[#2b3a67] sm:text-xl">Upload Bukti Logout</span>
+                                                        <span class="max-w-sm text-sm font-bold leading-relaxed text-[#8faaf3] sm:text-base">Bukti ini akan membantu admin memastikan akun sudah keluar dari device kamu.</span>
+                                                    </span>
+                                                    <input data-login-proof-input type="file" name="logout_proof" accept="image/*,.heic,.heif" class="sr-only">
+                                                </label>
+                                                <button type="button" data-login-proof-delete data-delete-url="{{ route('user.history.logout-proof.destroy', $trx) }}" class="{{ $logoutProofUrl ? '' : 'hidden' }} absolute right-4 top-4 flex h-14 w-14 items-center justify-center rounded-[1.4rem] border-4 border-white bg-[#ffe5e5] text-[#ff4d4d] shadow-xl shadow-red-100 transition hover:bg-[#ff4d4d] hover:text-white active:scale-95" title="Hapus bukti logout" style="position:absolute;top:16px;right:16px;width:56px;height:56px;border-radius:22px;border:4px solid #fff;background:#ffe5e5;color:#ff4d4d;box-shadow:0 12px 24px rgba(255,77,77,.18);z-index:20;">
+                                                    <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="2.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M10 11v6m4-6v6M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m3 0v12a2 2 0 01-2 2H8a2 2 0 01-2-2V7h12z"></path></svg>
+                                                </button>
+                                            </div>
+                                            <p data-login-proof-uploaded class="{{ $trx->logout_proof_uploaded_at ? '' : 'hidden' }} mt-3 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">
+                                                @if($trx->logout_proof_uploaded_at)
+                                                    Diunggah {{ $trx->logout_proof_uploaded_at->copy()->locale('id')->translatedFormat('d F Y, H:i') }}
+                                                @endif
+                                            </p>
                                         </form>
                                     </div>
                                 @endif
@@ -670,7 +726,7 @@
         @empty
             <div class="text-center py-20 bg-white/90 backdrop-blur-sm rounded-[2.5rem] border-4 border-dashed border-[#bde0fe] shadow-lg shadow-[#bde0fe]/20 relative z-10">
                 <div class="mb-5 flex justify-center text-[#8faaf3] opacity-70 animate-float">@include('partials.wiboost-icon', ['name' => 'receipt', 'class' => 'h-16 w-16'])</div>
-                <h3 class="text-2xl font-black text-[#5a76c8] mb-2 drop-shadow-sm">Belum Ada Pesanan</h3>
+                <h2 class="text-2xl font-black text-[#5a76c8] mb-2 drop-shadow-sm">Belum Ada Pesanan</h2>
                 <p class="text-[#8faaf3] font-bold max-w-sm mx-auto px-4 mb-8">Yuk, mulai buat pesanan pertamamu dan nikmati layanan kami!</p>
                 <a href="{{ route('user.dashboard') }}" class="inline-flex items-center justify-center gap-2 bg-[#5a76c8] hover:bg-[#4760a9] text-white font-black px-8 py-4 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white">
                     <span>Lihat Katalog Layanan</span>
@@ -679,85 +735,11 @@
         @endforelse
     </div>
 
-    <?php if (method_exists($transactions, 'links') && $transactions->hasPages()): ?>
-        <?php
-            $currentPage = $transactions->currentPage();
-            $lastPage = $transactions->lastPage();
-            $desktopWindow = 10;
-            $mobileWindow = 5;
-            $desktopStart = (int) (floor(($currentPage - 1) / $desktopWindow) * $desktopWindow) + 1;
-            $desktopEnd = min($lastPage, $desktopStart + $desktopWindow - 1);
-            $mobileStart = (int) (floor(($currentPage - 1) / $mobileWindow) * $mobileWindow) + 1;
-            $mobileEnd = min($lastPage, $mobileStart + $mobileWindow - 1);
-        ?>
-        <div class="mt-10 p-5 bg-white/90 backdrop-blur-md rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white relative z-10">
-            <div class="history-pagination-layout">
-                <p class="history-pagination-info history-pagination-info--desktop text-sm">
-                    Menampilkan <?php echo e($transactions->firstItem()); ?>-<?php echo e($transactions->lastItem()); ?> dari <?php echo e($transactions->total()); ?> pesanan
-                </p>
-
-                <nav class="history-pagination-desktop max-w-full flex-wrap items-center justify-center gap-2" aria-label="Pagination desktop">
-                    <?php if ($transactions->onFirstPage()): ?>
-                        <span class="history-pagination-disabled" aria-disabled="true" aria-label="Previous page">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
-                        </span>
-                    <?php else: ?>
-                        <a href="<?php echo e($transactions->previousPageUrl()); ?>" class="history-pagination-link" aria-label="Previous page">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
-                        </a>
-                    <?php endif; ?>
-
-                    <?php for ($page = $desktopStart; $page <= $desktopEnd; $page++): ?>
-                        <?php if ($page === $currentPage): ?>
-                            <span class="history-pagination-active" aria-current="page"><?php echo e($page); ?></span>
-                        <?php else: ?>
-                            <a href="<?php echo e($transactions->url($page)); ?>" class="history-pagination-link"><?php echo e($page); ?></a>
-                        <?php endif; ?>
-                    <?php endfor; ?>
-
-                    <?php if ($transactions->hasMorePages()): ?>
-                        <a href="<?php echo e($transactions->nextPageUrl()); ?>" class="history-pagination-link" aria-label="Next page">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                        </a>
-                    <?php else: ?>
-                        <span class="history-pagination-disabled" aria-disabled="true" aria-label="Next page">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                        </span>
-                    <?php endif; ?>
-                </nav>
-
-                <nav class="history-pagination-mobile max-w-full items-center justify-center gap-2" aria-label="Pagination mobile">
-                    <?php if ($transactions->onFirstPage()): ?>
-                        <span class="history-pagination-disabled" aria-disabled="true" aria-label="Previous page">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
-                        </span>
-                    <?php else: ?>
-                        <a href="<?php echo e($transactions->previousPageUrl()); ?>" class="history-pagination-link" aria-label="Previous page">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
-                        </a>
-                    <?php endif; ?>
-
-                    <?php for ($page = $mobileStart; $page <= $mobileEnd; $page++): ?>
-                        <?php if ($page === $currentPage): ?>
-                            <span class="history-pagination-active" aria-current="page"><?php echo e($page); ?></span>
-                        <?php else: ?>
-                            <a href="<?php echo e($transactions->url($page)); ?>" class="history-pagination-link"><?php echo e($page); ?></a>
-                        <?php endif; ?>
-                    <?php endfor; ?>
-
-                    <?php if ($transactions->hasMorePages()): ?>
-                        <a href="<?php echo e($transactions->nextPageUrl()); ?>" class="history-pagination-link" aria-label="Next page">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                        </a>
-                    <?php else: ?>
-                        <span class="history-pagination-disabled" aria-disabled="true" aria-label="Next page">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
-                        </span>
-                    <?php endif; ?>
-                </nav>
-            </div>
+    @if (method_exists($transactions, 'links') && $transactions->hasPages())
+        <div class="relative z-10 mt-10 rounded-[2rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
+            {{ $transactions->links() }}
         </div>
-    <?php endif; ?>
+    @endif
 </div>
 
 <script>
@@ -863,6 +845,96 @@
         );
     }
 
+    async function prepareHistoryProof(file) {
+        const maxBytes = 1400 * 1024;
+        const supportedType = /image\/(jpe?g|png|webp|gif)/i.test(file.type)
+            || (/^$|application\/octet-stream/i.test(file.type) && /\.(jpe?g|png|webp|gif)$/i.test(file.name));
+        const heicType = /image\/(heic|heif)/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
+
+        if (file.size <= maxBytes && (supportedType || heicType)) {
+            return { data: file, name: file.name };
+        }
+
+        const imageUrl = URL.createObjectURL(file);
+
+        try {
+            const image = await new Promise((resolve, reject) => {
+                const preview = new Image();
+                preview.onload = () => resolve(preview);
+                preview.onerror = reject;
+                preview.src = imageUrl;
+            });
+
+            const width = image.naturalWidth || image.width;
+            const height = image.naturalHeight || image.height;
+
+            if (!width || !height) {
+                throw new Error('Gambar tidak dapat dibaca.');
+            }
+
+            for (const maxEdge of [1600, 1200, 900, 700]) {
+                const scale = Math.min(1, maxEdge / Math.max(width, height));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.max(1, Math.round(width * scale));
+                canvas.height = Math.max(1, Math.round(height * scale));
+                const context = canvas.getContext('2d');
+
+                if (!context) {
+                    throw new Error('Gambar tidak dapat diproses.');
+                }
+
+                context.fillStyle = '#fff';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+                for (const quality of [0.82, 0.68, 0.54]) {
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+
+                    if (blob && blob.size <= maxBytes) {
+                        return { data: blob, name: 'bukti-' + Date.now() + '.jpg' };
+                    }
+                }
+            }
+
+            throw new Error('Foto terlalu besar. Coba unggah screenshot yang lebih kecil.');
+        } catch (error) {
+            if (error instanceof Error && error.message.startsWith('Foto terlalu besar')) {
+                throw error;
+            }
+
+            throw new Error('Foto tidak dapat diproses di perangkat ini. Coba unggah screenshot JPG atau PNG.');
+        } finally {
+            URL.revokeObjectURL(imageUrl);
+        }
+    }
+
+    async function historyProofResponse(response, proofLabel) {
+        const data = response.headers.get('content-type')?.includes('application/json')
+            ? await response.json()
+            : null;
+
+        if (response.ok && data) {
+            return data;
+        }
+
+        if (response.ok) {
+            throw new Error('Sesi berubah. Muat ulang halaman lalu coba lagi.');
+        }
+
+        if (response.status === 413) {
+            throw new Error('Foto terlalu besar untuk server. Coba unggah screenshot yang lebih kecil.');
+        }
+
+        if (response.status === 419) {
+            throw new Error('Sesi habis. Muat ulang halaman lalu coba lagi.');
+        }
+
+        const validationMessage = data?.errors
+            ? Object.values(data.errors).flat()[0]
+            : null;
+        throw new Error(validationMessage || data?.message || proofLabel + ' gagal diunggah. Coba lagi.');
+    }
+
     document.addEventListener('change', async function (event) {
         const input = event.target.closest('[data-login-proof-input]');
         if (!input || !input.files || input.files.length === 0) {
@@ -874,12 +946,16 @@
             return;
         }
 
-        const formData = new FormData(form);
+        const proofLabel = input.name === 'logout_proof' ? 'Bukti logout' : 'Bukti login';
         const token = form.querySelector('input[name="_token"]')?.value || document.querySelector('meta[name="csrf-token"]')?.content || '';
 
         input.disabled = true;
 
         try {
+            const proofFile = await prepareHistoryProof(input.files[0]);
+            const formData = new FormData(form);
+            formData.set(input.name, proofFile.data, proofFile.name);
+
             const response = await fetch(form.action, {
                 method: 'POST',
                 headers: {
@@ -890,10 +966,7 @@
                 body: formData,
             });
 
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.message || 'Bukti login gagal diupload.');
-            }
+            const data = await historyProofResponse(response, proofLabel);
 
             const image = form.querySelector('[data-login-proof-image]');
             const emptyState = form.querySelector('[data-login-proof-empty]');
@@ -912,9 +985,10 @@
             }
             input.value = '';
         } catch (error) {
-            alert(error.message || 'Bukti login gagal diupload.');
+            alert(error.message || proofLabel + ' gagal diunggah. Coba lagi.');
         } finally {
             input.disabled = false;
+            input.value = '';
         }
     });
 

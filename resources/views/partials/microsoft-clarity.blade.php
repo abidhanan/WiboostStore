@@ -1,7 +1,26 @@
-<script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "xw4sah6hw9");
+<script>
+    (() => {
+        window.clarity = window.clarity || function () {
+            (window.clarity.q = window.clarity.q || []).push(arguments);
+        };
+
+        let loaded = false;
+        const loadClarity = () => {
+            if (loaded) return;
+            loaded = true;
+
+            const script = document.createElement('script');
+            script.async = true;
+            script.src = 'https://www.clarity.ms/tag/xw4sah6hw9';
+            document.head.appendChild(script);
+        };
+
+        ['pointerdown', 'touchstart', 'keydown'].forEach((eventName) => {
+            window.addEventListener(eventName, loadClarity, { once: true, passive: true });
+        });
+
+        window.addEventListener('load', () => {
+            window.setTimeout(loadClarity, 4000);
+        }, { once: true });
+    })();
 </script>

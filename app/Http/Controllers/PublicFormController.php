@@ -13,9 +13,10 @@ class PublicFormController extends Controller
 {
     public function show(MarketingForm $form)
     {
-        abort_unless($form->is_active, 404);
-
-        return view('public.forms.show', compact('form'));
+        return view('public.forms.show', [
+            'form' => $form,
+            'formInactive' => ! $form->is_active,
+        ]);
     }
 
     public function store(Request $request, MarketingForm $form)
@@ -44,7 +45,6 @@ class PublicFormController extends Controller
 
     public function thanks(MarketingForm $form, MarketingFormSubmission $submission)
     {
-        abort_unless($form->is_active, 404);
         abort_unless((int) $submission->marketing_form_id === (int) $form->id, 404);
 
         return view('public.forms.thanks', compact('form', 'submission'));
@@ -70,14 +70,14 @@ class PublicFormController extends Controller
                 'number' => [$baseRule, 'numeric'],
                 'date' => [$baseRule, 'date'],
                 'textarea' => [$baseRule, 'string', 'max:5000'],
-                'select' => [$baseRule, 'string', Rule::in((array) ($field['options'] ?? []))],
+                'select' => [$baseRule, 'string', Rule::in($this->optionLabels($field))],
                 'checkbox' => [$baseRule, 'array', ! empty($field['required']) ? 'min:1' : 'nullable'],
                 'file' => [$baseRule, 'file'],
                 default => [$baseRule, 'string', 'max:1000'],
             };
 
             if ($type === 'checkbox') {
-                $rules[$path.'.*'] = ['string', Rule::in((array) ($field['options'] ?? []))];
+                $rules[$path.'.*'] = ['string', Rule::in($this->optionLabels($field))];
             }
         }
 
@@ -114,7 +114,8 @@ class PublicFormController extends Controller
                 $value = null;
 
                 if ($file) {
-                    $path = $file->store('form-submissions', 'public');
+                    $path = app(\App\Support\WebpImageOptimizer::class)
+                        ->storeUploadedFile($file, 'form-submissions');
                     $value = [
                         'path' => $path,
                         'url' => Storage::disk('public')->url($path),
@@ -135,5 +136,15 @@ class PublicFormController extends Controller
         }
 
         return $answers;
+    }
+
+    protected function optionLabels(array $field): array
+    {
+        return collect($field['options'] ?? [])
+            ->map(fn ($option) => trim((string) (is_array($option) ? ($option['label'] ?? '') : $option)))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 }

@@ -7,8 +7,8 @@
 @php
     $searchValue = $search ?? request('search');
     $activeStatus = $status ?? request('status', 'all');
-    $selectedMonth = $selectedMonth ?? request('month', date('m'));
-    $selectedYear = $selectedYear ?? request('year', date('Y'));
+    $selectedMonth = $selectedMonth ?? request('month', now()->format('m'));
+    $selectedYear = $selectedYear ?? request('year', now()->format('Y'));
     $adminMonthNames = [
         1 => 'Januari',
         2 => 'Februari',
@@ -183,29 +183,35 @@
             </a>
             </div>
 
-            <div class="flex w-full items-center justify-start gap-2 border-t-4 border-dashed border-[#f4f9ff] pt-4 md:justify-end md:border-t-0 md:pt-0">
-                <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
-                    <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
-                        <span data-admin-theme-select-label>{{ $adminMonthNames[$selectedMonthNumber] ?? '-' }}</span>
-                        <span class="admin-theme-select-arrow">v</span>
-                    </button>
-                    <div class="admin-theme-select-menu">
-                        @for($m = 1; $m <= 12; $m++)
-                            <button type="button" class="admin-theme-select-option {{ (string) $selectedMonth === sprintf('%02d', $m) ? 'is-selected' : '' }}" data-value="{{ sprintf('%02d', $m) }}" data-label="{{ $adminMonthNames[$m] }}">{{ $adminMonthNames[$m] }}</button>
-                        @endfor
+            <div class="mt-1 flex w-full flex-col items-center justify-start gap-3 border-t-4 border-dashed border-[#f4f9ff] pt-4 md:flex-row md:justify-end">
+                <div class="flex w-full items-center gap-2 md:w-auto">
+                    <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
+                        <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                            <span data-admin-theme-select-label>{{ $adminMonthNames[$selectedMonthNumber] ?? '-' }}</span>
+                            <span class="admin-theme-select-arrow">v</span>
+                        </button>
+                        <div class="admin-theme-select-menu">
+                            @for($m = 1; $m <= 12; $m++)
+                                <button type="button" class="admin-theme-select-option {{ (string) $selectedMonth === sprintf('%02d', $m) ? 'is-selected' : '' }}" data-value="{{ sprintf('%02d', $m) }}" data-label="{{ $adminMonthNames[$m] }}">{{ $adminMonthNames[$m] }}</button>
+                            @endfor
+                        </div>
+                    </div>
+                    <div class="admin-theme-select admin-theme-select-year" data-admin-theme-select data-submit-on-change="true" data-input-name="year">
+                        <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                            <span data-admin-theme-select-label>{{ $selectedYear }}</span>
+                            <span class="admin-theme-select-arrow">v</span>
+                        </button>
+                        <div class="admin-theme-select-menu">
+                            @for($y = now()->year; $y >= now()->year - 3; $y--)
+                                <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
+                            @endfor
+                        </div>
                     </div>
                 </div>
-                <div class="admin-theme-select admin-theme-select-year" data-admin-theme-select data-submit-on-change="true" data-input-name="year">
-                    <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
-                        <span data-admin-theme-select-label>{{ $selectedYear }}</span>
-                        <span class="admin-theme-select-arrow">v</span>
-                    </button>
-                    <div class="admin-theme-select-menu">
-                        @for($y = date('Y'); $y >= date('Y') - 3; $y--)
-                            <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
-                        @endfor
-                    </div>
-                </div>
+                <a href="{{ route('admin.withdrawals.export_excel', array_filter(['search' => $searchValue, 'status' => $activeStatus === 'all' ? null : $activeStatus, 'month' => $selectedMonth, 'year' => $selectedYear])) }}" target="_blank" class="flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-[1rem] border-4 border-white bg-[#4bc6b9] px-6 py-3 text-sm font-black text-white shadow-md shadow-[#4bc6b9]/25 transition-transform hover:bg-[#3ba398] active:scale-95 md:w-auto sm:rounded-[1.2rem]">
+                    @include('partials.wiboost-icon', ['name' => 'chart', 'class' => 'h-5 w-5'])
+                    <span class="whitespace-nowrap">Cetak Laporan</span>
+                </a>
             </div>
         </form>
     </div>
@@ -226,7 +232,7 @@
                         <tr>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Invoice</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Waktu</th>
-                            <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nama Reseller</th>
+                            <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Reseller</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Email</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Metode</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nomor Tujuan</th>
@@ -243,10 +249,10 @@
                             @endphp
                             <tr onclick="openAdminWithdrawalDetail('admin-withdrawal-detail-{{ $withdrawal->id }}')" class="group cursor-pointer transition-colors hover:bg-[#f8faff]">
                                 <td class="px-5 py-5 align-middle">
-                                    <p class="inline-flex rounded-md border border-white bg-[#f4f9ff] px-3 py-1 text-xs font-black text-[#5a76c8]">WD-{{ str_pad((string) $withdrawal->id, 5, '0', STR_PAD_LEFT) }}</p>
+                                    <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">WD-{{ str_pad((string) $withdrawal->id, 5, '0', STR_PAD_LEFT) }}</p>
                                 </td>
                                 <td class="px-5 py-5 align-middle">
-                                    <p class="text-sm font-black text-[#2b3a67]">{{ $formatDate($withdrawal->created_at) }}</p>
+                                    <p class="whitespace-nowrap text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $formatDate($withdrawal->created_at) }}</p>
                                 </td>
                                 <td class="min-w-[180px] px-5 py-5 align-middle">
                                     <p class="text-sm font-black text-[#2b3a67]">{{ $withdrawal->user?->name ?: '-' }}</p>
@@ -310,7 +316,7 @@
     </div>
 
     @if(method_exists($withdrawals, 'links') && $withdrawals->hasPages())
-        <div class="mt-6 w-full min-w-0 rounded-[2rem] border-4 border-white bg-[#f8faff] p-5 shadow-xl shadow-[#bde0fe]/25 sm:p-8">
+        <div class="p-5 sm:p-8 w-full min-w-0">
             {{ $withdrawals->links() }}
         </div>
     @endif
@@ -326,7 +332,7 @@
                 <div class="admin-detail-header mb-3.5 flex items-start justify-between gap-3 p-3.5">
                     <div class="min-w-0">
                         <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Detail Penarikan</p>
-                        <h3 class="mt-1 text-xl font-black text-[#2b3a67]">WD-{{ str_pad((string) $withdrawal->id, 5, '0', STR_PAD_LEFT) }}</h3>
+                        <h2 class="mt-1 text-xl font-black text-[#2b3a67]">WD-{{ str_pad((string) $withdrawal->id, 5, '0', STR_PAD_LEFT) }}</h2>
                         <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $formatDate($withdrawal->created_at) }}</p>
                     </div>
                     <button type="button" onclick="closeAdminWithdrawalDetail('admin-withdrawal-detail-{{ $withdrawal->id }}')" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#ffe5e5] text-lg font-black text-[#ff6b6b]">
@@ -352,11 +358,17 @@
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Status</p>
                             <span class="{{ $detailMeta['class'] }} mt-2 inline-flex rounded-full border-2 border-white px-4 py-1.5 text-[9px] font-black uppercase tracking-widest shadow-sm">{{ $detailMeta['label'] }}</span>
                         </div>
-                        <div class="admin-detail-panel md:col-span-2">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Tujuan Penarikan</p>
-                            <p class="mt-2 text-base font-black text-[#2b3a67]">{{ $withdrawal->payout_method ?: '-' }}</p>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Metode Penarikan</p>
+                            <p class="mt-1 text-base font-black text-[#2b3a67]">{{ $withdrawal->payout_method ?: '-' }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nomor Tujuan</p>
                             <p class="mt-1 break-all text-sm font-bold text-[#5a76c8]">{{ $withdrawal->payout_account ?: '-' }}</p>
-                            <p class="mt-1 text-xs font-black uppercase tracking-widest text-[#4bc6b9]">{{ $detailPayoutName ?: '-' }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nama Pemilik Tujuan</p>
+                            <p class="mt-1 text-sm font-black text-[#4bc6b9]">{{ $detailPayoutName ?: '-' }}</p>
                         </div>
                         <div class="admin-detail-panel admin-detail-panel-soft">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#08a878]">Total Komisi</p>
@@ -365,6 +377,9 @@
                         <div class="admin-detail-panel">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Dikonfirmasi Oleh</p>
                             <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $withdrawal->approver?->name ?: '-' }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Waktu Konfirmasi</p>
                             <p class="mt-1 text-[10px] font-bold text-[#8faaf3]">{{ $formatDate($withdrawal->approved_at) }}</p>
                         </div>
                         <div class="admin-detail-panel md:col-span-2">
@@ -412,14 +427,14 @@
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.add('modal-active');
-        document.body.classList.add('overflow-hidden', 'admin-detail-open');
+        document.body.classList.add('admin-detail-open');
     }
 
     function closeAdminWithdrawalDetail(id) {
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.remove('modal-active');
-        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
+        document.body.classList.remove('admin-detail-open');
     }
 
     document.addEventListener('keydown', function (event) {
@@ -427,7 +442,7 @@
         document.querySelectorAll('.admin-detail-modal.modal-active').forEach((modal) => {
             modal.classList.remove('modal-active');
         });
-        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
+        document.body.classList.remove('admin-detail-open');
     });
 </script>
 @endsection

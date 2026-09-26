@@ -54,7 +54,8 @@ class PromoController extends Controller
         $data = $this->normalizePayload($data, $request);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('promos', 'public');
+            $data['image'] = app(\App\Support\WebpImageOptimizer::class)
+                ->storeUploadedFile($request->file('image'), 'promos');
         }
 
         Promo::create($data);
@@ -82,7 +83,8 @@ class PromoController extends Controller
                 Storage::disk('public')->delete($promo->image);
             }
 
-            $data['image'] = $request->file('image')->store('promos', 'public');
+            $data['image'] = app(\App\Support\WebpImageOptimizer::class)
+                ->storeUploadedFile($request->file('image'), 'promos');
         }
 
         $promo->update($data);

@@ -3,8 +3,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    @php
+        $catalogPageTitle = trim($__env->yieldContent('title', 'Katalog'));
+        $catalogDocumentTitle = str_contains($catalogPageTitle, 'Wiboost Store') ? $catalogPageTitle : $catalogPageTitle.' - Wiboost Store';
+    @endphp
+    <title>{{ $catalogDocumentTitle }}</title>
+    @include('partials.seo-meta', [
+        'title' => $catalogDocumentTitle,
+        'description' => trim($__env->yieldContent('meta_description', 'Temukan layanan dan produk digital yang tersedia di Wiboost Store.')),
+    ])
     @include('partials.site-icons')
-    <title>@yield('title') - Wiboost Store</title>
     <link rel="preload" as="image" href="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" fetchpriority="high">
     @include('partials.font-nunito')
 

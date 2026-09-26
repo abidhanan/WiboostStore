@@ -11,6 +11,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $pageTitle }}</title>
+    @include('partials.seo-meta', [
+        'title' => $pageTitle,
+        'description' => trim($__env->yieldContent('meta_description', 'Akses layanan Wiboost Store dengan aman dan praktis.')),
+        'robots' => 'noindex,nofollow,noarchive,nosnippet',
+    ])
     @include('partials.site-icons')
     <link rel="preload" as="image" href="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" fetchpriority="high">
 
@@ -21,6 +26,7 @@
     @include('partials.ui-performance-tuning')
     @include('partials.microsoft-clarity')
     @include('partials.google-analytics')
+    @include('partials.responsive-qa-guards')
     
     <style>
         html {
@@ -46,6 +52,48 @@
             50% { transform: translateY(-15px); }
             100% { transform: translateY(0px); }
         }
+        @if($isCompactAuth)
+            .wiboost-auth-card .max-w-md > .mb-8,
+            .wiboost-auth-card .max-w-md > .mb-8 h1,
+            .wiboost-auth-card .max-w-md > .mb-8 h2,
+            .wiboost-auth-card .max-w-md > .mb-8 h3,
+            .wiboost-auth-card .max-w-md > .mb-8 p {
+                text-align: center !important;
+            }
+
+            .wiboost-auth-card .max-w-md > .mb-8 > .inline-block:first-child {
+                display: none !important;
+            }
+
+            .wiboost-auth-card form,
+            .wiboost-auth-card form p,
+            .wiboost-auth-card form a {
+                text-align: left !important;
+            }
+
+            .wiboost-auth-card form > div > .mb-2.flex {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                text-align: left;
+            }
+
+            .wiboost-auth-card label[for="remember_me"] {
+                justify-content: flex-start;
+                text-align: left;
+            }
+
+            .wiboost-auth-card input,
+            .wiboost-auth-card textarea {
+                text-align: left !important;
+            }
+
+            .wiboost-auth-card form button[type="submit"] {
+                justify-content: center !important;
+                text-align: center !important;
+            }
+        @endif
     </style>
     @if($isPublicMarketingForm)
         <style>
@@ -274,6 +322,10 @@
                     padding-left: 2rem;
                     padding-right: 2rem;
                 }
+
+                .wiboost-public-guest-footer > div {
+                    max-width: min(1600px, calc(100vw - 8rem));
+                }
             }
         </style>
     @endif
@@ -305,7 +357,7 @@
         @endif
 
         <main class="{{ $isPublicMarketingForm ? 'wiboost-public-guest-main' : '' }} relative z-10 mx-auto flex w-full {{ $isPublicMarketingForm ? 'max-w-4xl flex-1 items-start justify-center py-8 sm:py-10 lg:py-12' : 'max-w-xl items-center justify-center' }} {{ $isCompactAuth ? 'flex-1 py-8 lg:py-10' : ($isPublicMarketingForm ? '' : 'min-h-[calc(100vh-7rem)] py-12 lg:py-16') }}">
-            <section class="{{ $isPublicMarketingForm ? 'wiboost-public-guest-card' : '' }} w-full rounded-[2.5rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/50 backdrop-blur {{ $isPublicMarketingForm ? 'p-5 sm:p-7 md:p-9' : 'p-6 md:p-8' }}">
+            <section class="{{ $isPublicMarketingForm ? 'wiboost-public-guest-card' : '' }} {{ $isCompactAuth ? 'wiboost-auth-card' : '' }} w-full rounded-[2.5rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/50 backdrop-blur {{ $isPublicMarketingForm ? 'p-5 sm:p-7 md:p-9' : 'p-6 md:p-8' }}">
                 @auth
                     @if(! \App\Support\WiboostInputRules::validName(auth()->user()?->name))
                         <div class="mb-6 rounded-[1.5rem] border-4 border-white bg-[#fff5eb] px-5 py-4 text-sm font-black text-amber-600 shadow-lg shadow-amber-100/60">

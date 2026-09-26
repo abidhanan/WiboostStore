@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 use App\Http\Controllers\Admin\ResellerController as AdminResellerController;
 use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogController;
+use App\Http\Controllers\Admin\DurationController as AdminDurationController;
+use App\Http\Controllers\Admin\EmailController as AdminEmailController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
 use App\Http\Controllers\Admin\TutorialController;
@@ -200,6 +202,51 @@ Route::get('/sitemap.xml', function () {
     ]);
 });
 
+Route::get('/site.webmanifest', function () {
+    $path = public_path('site.webmanifest');
+
+    if (is_file($path)) {
+        return response((string) file_get_contents($path), 200, [
+            'Content-Type' => 'application/manifest+json; charset=UTF-8',
+            'Cache-Control' => 'public, max-age=604800, must-revalidate',
+        ]);
+    }
+
+    return response()->json([
+        'name' => 'Wiboost Store',
+        'short_name' => 'Wiboost',
+        'description' => 'Platform layanan dan produk digital dalam satu tempat.',
+        'start_url' => '/',
+        'scope' => '/',
+        'display' => 'standalone',
+        'background_color' => '#f4f9ff',
+        'theme_color' => '#a6ccfd',
+        'lang' => 'id-ID',
+        'icons' => [
+            [
+                'src' => '/images/wiboost-icon-192.png',
+                'sizes' => '192x192',
+                'type' => 'image/png',
+                'purpose' => 'any maskable',
+            ],
+            [
+                'src' => '/images/wiboost-icon-512.png',
+                'sizes' => '512x512',
+                'type' => 'image/png',
+                'purpose' => 'any maskable',
+            ],
+        ],
+    ], 200, [
+        'Content-Type' => 'application/manifest+json; charset=UTF-8',
+        'Cache-Control' => 'public, max-age=604800, must-revalidate',
+    ]);
+})->withoutMiddleware([
+    \App\Http\Middleware\LogActivity::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    ValidateCsrfToken::class,
+])->name('site.webmanifest');
+
 Route::get('/llms.txt', function () {
     $path = public_path('llms.txt');
 
@@ -310,6 +357,53 @@ Route::get('/ads.txt', function () {
     ValidateCsrfToken::class,
 ])->name('ads');
 
+Route::get('/meta.json', fn () => response()->json([
+    'name' => 'Wiboost Store',
+    'url' => route('home'),
+    'login_url' => route('login'),
+    'register_url' => route('register'),
+], 200, [
+    'Cache-Control' => 'public, max-age=3600, must-revalidate',
+]))->withoutMiddleware([
+    \App\Http\Middleware\LogActivity::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    ValidateCsrfToken::class,
+])->name('site.meta');
+
+Route::get('/app-ads.txt', fn () => response("# Wiboost Store does not publish an app-ads.txt inventory file.\n", 200, [
+    'Content-Type' => 'text/plain; charset=UTF-8',
+    'Cache-Control' => 'public, max-age=3600, must-revalidate',
+]))->withoutMiddleware([
+    \App\Http\Middleware\LogActivity::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    ValidateCsrfToken::class,
+])->name('app-ads');
+
+Route::get('/sellers.json', fn () => response()->json([
+    'version' => '1.0',
+    'sellers' => [],
+], 200, [
+    'Cache-Control' => 'public, max-age=3600, must-revalidate',
+]))->withoutMiddleware([
+    \App\Http\Middleware\LogActivity::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    ValidateCsrfToken::class,
+])->name('sellers');
+
+Route::get('/dsrdelete.json', fn () => response()->json([
+    'status' => 'not_configured',
+], 200, [
+    'Cache-Control' => 'public, max-age=3600, must-revalidate',
+]))->withoutMiddleware([
+    \App\Http\Middleware\LogActivity::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    ValidateCsrfToken::class,
+])->name('dsr-delete');
+
 Route::match(['GET', 'HEAD', 'POST'], '/{probe}', fn () => response('Not found', 404, [
     'Content-Type' => 'text/plain; charset=UTF-8',
     'Cache-Control' => 'public, max-age=300, must-revalidate',
@@ -340,6 +434,26 @@ Route::get('/admin', function () {
 
     return redirect()->route('admin.login');
 })->name('admin.entry');
+
+Route::get('/user', function () {
+    $user = auth()->user();
+
+    if (! $user) {
+        return redirect()->route('login');
+    }
+
+    return $user->isAdmin()
+        ? redirect()->route('admin.dashboard')
+        : redirect()->route('user.dashboard');
+})->name('user.entry');
+
+Route::redirect('/client/privacy-policy', '/legal/privacy-policy', 301);
+Route::redirect('/client/register', '/register', 301);
+Route::redirect('/about', '/', 301);
+Route::redirect('/about-us', '/', 301);
+Route::redirect('/team', '/', 301);
+Route::redirect('/contact', '/legal/contact', 301);
+Route::redirect('/contact-us', '/legal/contact', 301);
 
 Route::get('/order/{slug}', [OrderController::class, 'showGuestCategory'])->name('guest.order.category');
 Route::get('/legal/{page}', [FrontendController::class, 'legal'])
@@ -387,6 +501,8 @@ Route::middleware(['auth', 'role:buyer,reseller'])->prefix('user')->name('user.'
     Route::get('/history', [TransactionHistoryController::class, 'index'])->name('history');
     Route::post('/history/{transaction}/login-proof', [TransactionHistoryController::class, 'storeLoginProof'])->name('history.login-proof');
     Route::delete('/history/{transaction}/login-proof', [TransactionHistoryController::class, 'destroyLoginProof'])->name('history.login-proof.destroy');
+    Route::post('/history/{transaction}/logout-proof', [TransactionHistoryController::class, 'storeLogoutProof'])->name('history.logout-proof');
+    Route::delete('/history/{transaction}/logout-proof', [TransactionHistoryController::class, 'destroyLogoutProof'])->name('history.logout-proof.destroy');
     Route::get('/report-admin', [AdminReportController::class, 'create'])->name('report.admin');
     Route::post('/report-admin', [AdminReportController::class, 'store'])->name('report.admin.store');
 
@@ -394,6 +510,7 @@ Route::middleware(['auth', 'role:buyer,reseller'])->prefix('user')->name('user.'
     Route::get('/order/category/{category}/ordersosmed-services', [OrderController::class, 'ordersosmedCategoryServices'])->name('order.ordersosmed-services');
     Route::get('/order/service/{product}/ordersosmed', [OrderController::class, 'ordersosmedServiceMeta'])->name('order.ordersosmed-service');
     Route::get('/order/{slug}', [OrderController::class, 'showCategory'])->name('order.category');
+    Route::get('/checkout/process', fn () => redirect()->route('user.dashboard'))->name('checkout.process.get');
     Route::post('/checkout/process', [OrderController::class, 'processCheckout'])->name('checkout.process');
     Route::delete('/checkout/{transaction}/cancel', [OrderController::class, 'cancelTripayCheckout'])->name('checkout.cancel');
     Route::get('/qris/{invoice_number}/status', [QrisPaymentController::class, 'status'])->name('qris.status');
@@ -424,6 +541,8 @@ Route::middleware(['auth', 'role:buyer,reseller'])->prefix('user')->name('user.'
 */
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard')->middleware('admin.access:dashboard');
+    Route::get('/dashboard/weekly-chart', [AdminDashboardController::class, 'weeklyChart'])->name('dashboard.weekly_chart')->middleware('admin.access:dashboard');
+    Route::get('/dashboard/export-excel', [AdminDashboardController::class, 'exportExcel'])->name('dashboard.export_excel')->middleware('admin.access:dashboard');
     Route::get('/dashboard/contact-numbers', fn () => redirect()->route('admin.reports.index'))->middleware('admin.access:reports');
     Route::post('/dashboard/contact-numbers', [AdminDashboardController::class, 'updateContactNumbers'])->name('dashboard.contact-numbers.update')->middleware('admin.access:reports');
 
@@ -437,6 +556,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/commissions', [AdminResellerController::class, 'commissions'])->name('commissions.index')->middleware('admin.access:commissions');
     Route::get('/commissions/export', [AdminResellerController::class, 'exportCommissions'])->name('commissions.export')->middleware('admin.access:commissions');
     Route::get('/withdrawals', [AdminResellerController::class, 'withdrawals'])->name('withdrawals.index')->middleware('admin.access:withdrawals');
+    Route::get('/withdrawals/export-excel', [AdminResellerController::class, 'exportWithdrawals'])->name('withdrawals.export_excel')->middleware('admin.access:withdrawals');
     Route::patch('/withdrawals/{commission}', [AdminResellerController::class, 'updateWithdrawal'])->name('withdrawals.update')->middleware('admin.access:withdrawals');
 
     // Produk & Manajemen Stok Kredensial (Akun Premium)
@@ -446,11 +566,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/products/{product}/credentials', [CredentialController::class, 'index'])->name('credentials.index')->middleware('admin.access:products');
     Route::post('/products/{product}/credentials', [CredentialController::class, 'store'])->name('credentials.store')->middleware('admin.access:products');
     Route::delete('/credentials/{credential}', [CredentialController::class, 'destroy'])->name('credentials.destroy')->middleware('admin.access:products');
+    Route::get('/durations', [AdminDurationController::class, 'index'])->name('durations.index')->middleware('admin.access:products');
+    Route::get('/durations/export-excel', [AdminDurationController::class, 'exportExcel'])->name('durations.export_excel')->middleware('admin.access:products');
 
     // Promos, Stocks, & TUTORIAL
     Route::resource('promos', PromoController::class)->middleware('admin.access:promos');
     Route::resource('displays', DisplayController::class)->except(['show'])->middleware('admin.access:displays');
     Route::resource('forms', AdminFormController::class)->middleware('admin.access:forms');
+    Route::get('/emails', [AdminEmailController::class, 'index'])->name('emails.index')->middleware('admin.access:emails');
+    Route::get('/emails/create', [AdminEmailController::class, 'create'])->name('emails.create')->middleware('admin.access:emails');
+    Route::post('/emails', [AdminEmailController::class, 'store'])->name('emails.store')->middleware('admin.access:emails');
     Route::resource('stocks', StockController::class)->middleware('admin.access:products');
     Route::resource('tutorials', TutorialController::class)->middleware('admin.access:tutorials');
 
@@ -462,6 +587,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/transactions/export-excel', [AdminTransactionController::class, 'exportExcel'])->name('transactions.export_excel')->middleware('admin.access:transactions');
     Route::patch('/transactions/{id}/update', [AdminTransactionController::class, 'updateStatus'])->name('transactions.update')->middleware('admin.access:transactions');
     Route::get('/refunds', [AdminRefundController::class, 'index'])->name('refunds.index')->middleware('admin.access:refunds');
+    Route::get('/refunds/export-excel', [AdminRefundController::class, 'exportExcel'])->name('refunds.export_excel')->middleware('admin.access:refunds');
     Route::get('/refunds/create', [AdminRefundController::class, 'create'])->name('refunds.create')->middleware('admin.access:refunds');
     Route::post('/refunds', [AdminRefundController::class, 'store'])->name('refunds.store')->middleware('admin.access:refunds');
     Route::get('/refunds/{refund}/edit', [AdminRefundController::class, 'edit'])->name('refunds.edit')->middleware('admin.access:refunds');
@@ -470,8 +596,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Deposit Management
     Route::get('/deposits', [AdminDepositController::class, 'index'])->name('deposits.index')->middleware('admin.access:deposits');
+    Route::get('/deposits/export-excel', [AdminDepositController::class, 'exportExcel'])->name('deposits.export_excel')->middleware('admin.access:deposits');
     Route::patch('/deposits/{id}', [AdminDepositController::class, 'update'])->name('deposits.update')->middleware('admin.access:deposits');
     Route::get('/reports', [AdminAdminReportController::class, 'index'])->name('reports.index')->middleware('admin.access:reports');
+    Route::get('/reports/export-excel', [AdminAdminReportController::class, 'exportExcel'])->name('reports.export_excel')->middleware('admin.access:reports');
     Route::patch('/reports/{report}', [AdminAdminReportController::class, 'update'])->name('reports.update')->middleware('admin.access:reports');
 
     // Log Aktivitas (khusus Super Admin)

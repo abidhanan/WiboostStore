@@ -162,7 +162,7 @@
                         <p class="mt-1 break-all text-lg font-black">{{ $invoice }}</p>
                     </div>
                     <div class="qris-info-box rounded-[1.5rem] border-2 border-white/50 bg-[#4965b5] p-4 shadow-inner">
-                        <p class="text-[10px] font-black uppercase tracking-widest text-white">Layanan</p>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-white">Produk</p>
                         <p class="mt-1 text-lg font-black">{{ $title }}</p>
                     </div>
                     <div class="qris-info-box rounded-[1.5rem] border-2 border-white/50 bg-[#4965b5] p-4 shadow-inner">

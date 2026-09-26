@@ -234,8 +234,8 @@
     }
 
     .wiboost-public-checkbox-grid {
-        display: grid;
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
         gap: .5rem;
     }
 
@@ -249,6 +249,85 @@
         padding: .75rem 1rem;
         box-shadow: 0 8px 18px rgba(143, 170, 243, .12);
         cursor: pointer;
+    }
+
+    .wiboost-public-checkbox-option:has(input:checked) {
+        border-color: #bde0fe;
+        background: #eef5ff;
+        box-shadow: 0 10px 24px rgba(90, 118, 200, .15);
+    }
+
+    .wiboost-public-option-image {
+        width: 7rem;
+        height: 7rem;
+        flex: 0 0 7rem;
+        overflow: hidden;
+        border: 3px solid #fff;
+        border-radius: 1rem;
+        background: #f4f9ff;
+        box-shadow: 0 6px 16px rgba(143, 170, 243, .16);
+    }
+
+    .wiboost-public-option-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .wiboost-public-file-picker {
+        position: relative;
+        display: flex;
+        min-height: 3.85rem;
+        width: 100%;
+        cursor: pointer;
+        align-items: center;
+        gap: .85rem;
+        overflow: hidden;
+        border: 4px solid #fff;
+        border-radius: 1.4rem;
+        background: #fff;
+        padding: .5rem;
+        box-shadow: inset 0 2px 8px rgba(143, 170, 243, .16);
+    }
+
+    .wiboost-public-file-input {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+        opacity: 0;
+    }
+
+    .wiboost-public-file-button {
+        flex-shrink: 0;
+        border-radius: 9999px;
+        background: #e0fbfc;
+        padding: .7rem 1.1rem;
+        color: #4bc6b9;
+        font-size: .8rem;
+        font-weight: 900;
+        box-shadow: 0 5px 12px rgba(75, 198, 185, .14);
+    }
+
+    .wiboost-public-file-name {
+        min-width: 0;
+        flex: 1;
+        overflow: hidden;
+        color: #8faaf3;
+        font-size: .8rem;
+        font-weight: 800;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .wiboost-public-inactive {
+        border: 4px solid #fff;
+        border-radius: 2rem;
+        background: #fff;
+        padding: 2.5rem 1.5rem;
+        text-align: center;
+        box-shadow: 0 20px 42px rgba(143, 170, 243, .2);
     }
 
     .wiboost-public-checkbox {
@@ -302,16 +381,19 @@
             padding: 1.25rem;
         }
 
-        .wiboost-public-checkbox-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+        .wiboost-public-option-image {
+            width: 9rem;
+            height: 9rem;
+            flex-basis: 9rem;
         }
+
     }
 </style>
 
 <div class="wiboost-font wiboost-public-form-page">
     <div class="wiboost-public-form-heading mb-8 text-center">
         <span class="wiboost-public-form-badge inline-flex rounded-full border-2 border-white bg-[#e0fbfc] px-5 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-[#4bc6b9] shadow-sm">
-            Formulir Wiboost
+            Formulir Wiboost Store
         </span>
         <h1 class="wiboost-public-form-title mt-5 text-3xl font-black leading-tight text-[#2b3a67] sm:text-4xl">{{ $form->title }}</h1>
         @if($form->description)
@@ -319,6 +401,16 @@
         @endif
     </div>
 
+    @if(!empty($formInactive))
+        <div class="wiboost-public-inactive">
+            <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-[1.4rem] border-4 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/15">
+                @include('partials.wiboost-icon', ['name' => 'note', 'class' => 'h-7 w-7'])
+            </span>
+            <h2 class="mt-5 text-2xl font-black text-[#2b3a67]">Formulir sedang tidak aktif</h2>
+            <p class="mx-auto mt-2 max-w-xl text-sm font-bold leading-relaxed text-[#8faaf3]">Silakan hubungi pengelola formulir untuk informasi selengkapnya.</p>
+            <a href="{{ route('home') }}" class="mt-6 inline-flex items-center justify-center rounded-full border-4 border-white bg-[#5a76c8] px-7 py-3 text-sm font-black text-white shadow-lg shadow-[#5a76c8]/25">Kembali ke Beranda</a>
+        </div>
+    @else
     @if ($errors->any())
         <div class="wiboost-public-errors mb-6 rounded-[2rem] border-4 border-white bg-[#ffe5e5] px-5 py-4 font-black text-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20">
             <p class="mb-2 text-sm">Periksa jawaban berikut:</p>
@@ -340,7 +432,8 @@
                 $label = (string) ($field['label'] ?? $key);
                 $help = (string) ($field['help'] ?? '');
                 $required = ! empty($field['required']);
-                $options = (array) ($field['options'] ?? []);
+                $options = collect((array) ($field['options'] ?? []))->map(fn ($option) => trim((string) (is_array($option) ? ($option['label'] ?? '') : $option)))->filter()->values()->all();
+                $optionImages = is_array($field['option_images'] ?? null) ? $field['option_images'] : [];
                 $oldValue = old("answers.$key");
             @endphp
 
@@ -355,38 +448,39 @@
                 @endif
 
                 @if($type === 'textarea')
-                    <textarea name="answers[{{ $key }}]" rows="4" @required($required) class="wiboost-public-input wiboost-public-textarea w-full rounded-[1.4rem] border-4 border-white bg-white px-5 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="Tulis jawabanmu di sini...">{{ old("answers.$key") }}</textarea>
+                    <textarea name="answers[{{ $key }}]" rows="4" @required($required) class="wiboost-public-input wiboost-public-textarea w-full rounded-[1.4rem] border-4 border-white bg-white px-5 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">{{ old("answers.$key") }}</textarea>
                 @elseif($type === 'select')
-                    <div class="wiboost-public-form-select" data-public-form-select>
-                        <input type="hidden" name="answers[{{ $key }}]" value="{{ $oldValue }}" data-public-form-select-input>
-                        <button type="button" class="wiboost-public-form-select-button" aria-haspopup="listbox" aria-expanded="false" data-public-form-select-button>
-                            <span class="truncate" data-public-form-select-label>{{ $oldValue ?: 'Pilih jawaban' }}</span>
-                            <span class="wiboost-public-form-select-arrow" aria-hidden="true">
-                                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none">
-                                    <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </span>
-                        </button>
-                        <div class="wiboost-public-form-select-menu" role="listbox" data-public-form-select-menu>
-                            <button type="button" class="wiboost-public-form-select-option {{ $oldValue ? '' : 'is-selected' }}" role="option" aria-selected="{{ $oldValue ? 'false' : 'true' }}" data-public-form-select-option data-value="" data-label="Pilih jawaban">Pilih jawaban</button>
+                    <div class="wiboost-public-checkbox-grid">
                         @foreach($options as $option)
-                            <button type="button" class="wiboost-public-form-select-option {{ $oldValue === $option ? 'is-selected' : '' }}" role="option" aria-selected="{{ $oldValue === $option ? 'true' : 'false' }}" data-public-form-select-option data-value="{{ $option }}" data-label="{{ $option }}">{{ $option }}</button>
+                            <label class="wiboost-public-checkbox-option">
+                                <input type="radio" name="answers[{{ $key }}]" value="{{ $option }}" class="wiboost-public-checkbox" style="accent-color: #5a76c8;" @required($required) @checked($oldValue === $option)>
+                                @if(!empty($optionImages[$option]))
+                                    <span class="wiboost-public-option-image"><img src="{{ Storage::disk('public')->url($optionImages[$option]) }}" alt="{{ $option }}"></span>
+                                @endif
+                                <span class="wiboost-public-checkbox-text">{{ $option }}</span>
+                            </label>
                         @endforeach
-                        </div>
                     </div>
                 @elseif($type === 'checkbox')
                     <div class="wiboost-public-checkbox-grid grid grid-cols-1 gap-2 sm:grid-cols-2">
                         @foreach($options as $option)
                             <label class="wiboost-public-checkbox-option flex cursor-pointer items-center gap-3 rounded-[1.2rem] border-2 border-white bg-white px-4 py-3 shadow-sm">
                                 <input type="checkbox" name="answers[{{ $key }}][]" value="{{ $option }}" class="wiboost-public-checkbox h-5 w-5 rounded-md border-2 border-[#5a76c8] bg-white text-[#5a76c8] shadow-sm focus:ring-2 focus:ring-[#bde0fe]" style="accent-color: #5a76c8;" @checked(in_array($option, (array) $oldValue, true))>
+                                @if(!empty($optionImages[$option]))
+                                    <span class="wiboost-public-option-image"><img src="{{ Storage::disk('public')->url($optionImages[$option]) }}" alt="{{ $option }}"></span>
+                                @endif
                                 <span class="wiboost-public-checkbox-text text-sm font-black text-[#2b3a67]">{{ $option }}</span>
                             </label>
                         @endforeach
                     </div>
                 @elseif($type === 'file')
-                    <input type="file" name="answers[{{ $key }}]" @required($required) class="wiboost-public-input wiboost-public-file w-full cursor-pointer rounded-[1.4rem] border-4 border-white bg-white p-2 text-sm font-bold text-[#8faaf3] shadow-inner file:mr-4 file:rounded-full file:border-0 file:bg-[#e0fbfc] file:px-5 file:py-3 file:text-[#4bc6b9] file:shadow-sm">
+                    <label class="wiboost-public-file-picker">
+                        <input type="file" name="answers[{{ $key }}]" @required($required) class="wiboost-public-file-input" data-public-file-input>
+                        <span class="wiboost-public-file-button">Pilih File</span>
+                        <span class="wiboost-public-file-name" data-public-file-name>Belum ada file</span>
+                    </label>
                 @else
-                    <input type="{{ in_array($type, ['email', 'number', 'date'], true) ? $type : 'text' }}" name="answers[{{ $key }}]" value="{{ old("answers.$key") }}" @required($required) class="wiboost-public-input w-full rounded-[1.4rem] border-4 border-white bg-white px-5 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]" placeholder="Isi jawabanmu">
+                    <input type="{{ in_array($type, ['email', 'number', 'date'], true) ? $type : 'text' }}" name="answers[{{ $key }}]" value="{{ old("answers.$key") }}" @required($required) class="wiboost-public-input w-full rounded-[1.4rem] border-4 border-white bg-white px-5 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
                 @endif
             </div>
         @endforeach
@@ -395,6 +489,7 @@
             Kirim Formulir
         </button>
     </form>
+    @endif
 </div>
 
 <script>
@@ -443,6 +538,14 @@
 
                     closeSelect(dropdown);
                 });
+            });
+        });
+
+        document.querySelectorAll('[data-public-file-input]').forEach((input) => {
+            input.addEventListener('change', () => {
+                const name = input.files?.[0]?.name || 'Belum ada file';
+                const label = input.closest('.wiboost-public-file-picker')?.querySelector('[data-public-file-name]');
+                if (label) label.textContent = name;
             });
         });
 

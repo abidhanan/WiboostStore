@@ -45,7 +45,8 @@ class ProfileController extends Controller
                 Storage::disk('public')->delete($user->profile_photo_path);
             }
 
-            $user->profile_photo_path = $request->file('profile_photo')->store('profile-photos', 'public');
+            $user->profile_photo_path = app(\App\Support\WebpImageOptimizer::class)
+                ->storeUploadedFile($request->file('profile_photo'), 'profile-photos');
         }
 
         $user->save();

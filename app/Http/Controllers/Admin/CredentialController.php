@@ -41,10 +41,14 @@ class CredentialController extends Controller
             'notes' => 'nullable|string|max:2000',
             'tutorial_link' => 'nullable|url|max:500',
             'requires_login_proof' => 'nullable|boolean',
+            'requires_logout_proof' => 'nullable|boolean',
+            'duration_value' => 'nullable|required_if:requires_logout_proof,1|integer|min:1',
+            'duration_unit' => 'nullable|required_with:duration_value|in:day,week,month,year',
         ]);
 
         $data1 = $request->data_1 ?? '-';
         $maxUsage = (int) $request->max_usage;
+        $durationValue = $request->filled('duration_value') ? (int) $request->duration_value : null;
 
         $credential = $product->credentials()->create([
             'created_by_user_id' => $request->user()?->id,
@@ -57,7 +61,10 @@ class CredentialController extends Controller
             'tutorial_link' => $request->tutorial_link,
             'needs_otp' => $request->boolean('needs_otp'),
             'requires_login_proof' => $request->boolean('requires_login_proof'),
+            'requires_logout_proof' => $request->boolean('requires_logout_proof'),
             'max_usage' => $maxUsage,
+            'duration_value' => $durationValue,
+            'duration_unit' => $durationValue ? ($request->duration_unit ?: 'day') : null,
             'current_usage' => 0,
             'is_active' => true,
         ]);

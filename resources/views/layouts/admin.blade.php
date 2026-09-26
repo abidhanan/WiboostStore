@@ -3,7 +3,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title') - Wiboost Store</title>
+    @php
+        $adminPageTitle = trim($__env->yieldContent('title', 'Admin'));
+        $adminDocumentTitle = str_contains($adminPageTitle, 'Wiboost Store') ? $adminPageTitle : $adminPageTitle.' - Wiboost Store';
+    @endphp
+    <title>{{ $adminDocumentTitle }}</title>
+    @include('partials.seo-meta', [
+        'title' => $adminDocumentTitle,
+        'description' => 'Halaman administrasi Wiboost Store.',
+        'robots' => 'noindex,nofollow,noarchive,nosnippet',
+    ])
     @include('partials.site-icons')
     <link rel="preload" as="image" href="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" fetchpriority="high">
     @include('partials.font-nunito')
@@ -13,6 +22,7 @@
     @include('partials.ui-performance-tuning')
     @include('partials.microsoft-clarity')
     @include('partials.google-analytics')
+    @include('partials.responsive-qa-guards')
     <style>
         html { min-height: 100%; overflow-x: hidden; }
         body { font-family: 'Nunito', sans-serif; overflow-x: hidden; }
@@ -459,13 +469,17 @@
             width: 100%;
             display: block;
             border-radius: .85rem;
-            padding: .65rem .8rem;
+            padding: .78rem .9rem;
             text-align: left;
             font-size: .72rem;
             font-weight: 900;
             color: #2b3a67;
             white-space: nowrap;
             transition: background .16s ease, color .16s ease;
+        }
+
+        body.wiboost-admin-shell .admin-theme-select-option + .admin-theme-select-option {
+            margin-top: .45rem;
         }
 
         body.wiboost-admin-shell .admin-theme-select-option:hover,
@@ -649,20 +663,39 @@
             ['access' => 'users', 'route' => 'admin.users.index', 'pattern' => 'admin.users.*', 'label' => 'Pengguna', 'title' => 'Manajemen Pengguna', 'description' => 'Kelola data pengguna dan role akun.', 'icon' => 'users'],
             ['access' => 'categories', 'route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'label' => 'Kategori', 'title' => 'Manajemen Kategori', 'description' => 'Atur kategori layanan dan produk.', 'icon' => 'category'],
             ['access' => 'products', 'route' => 'admin.products.index', 'pattern' => 'admin.products.*', 'label' => 'Produk', 'title' => 'Manajemen Produk', 'description' => 'Kelola harga, stok, dan provider.', 'icon' => 'product'],
+            ['access' => 'durations', 'route' => 'admin.durations.index', 'pattern' => 'admin.durations.*', 'label' => 'Durasi', 'title' => 'Durasi Produk', 'description' => 'Pantau produk aplikasi premium yang masa aksesnya sudah habis.', 'icon' => 'duration'],
             ['access' => 'transactions', 'route' => 'admin.transactions.index', 'pattern' => 'admin.transactions.*', 'label' => 'Transaksi', 'title' => 'Manajemen Transaksi', 'description' => 'Pantau transaksi dan pesanan pelanggan.', 'icon' => 'transaction'],
             ['access' => 'refunds', 'route' => 'admin.refunds.index', 'pattern' => 'admin.refunds.*', 'label' => 'Refund', 'title' => 'Manajemen Refund', 'description' => 'Catat refund transaksi ke saldo user.', 'icon' => 'refund'],
             ['access' => 'reports', 'route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Laporan', 'title' => 'Manajemen Laporan', 'description' => 'Pantau laporan kendala pelanggan.', 'icon' => 'report'],
-            ['access' => 'deposits', 'route' => 'admin.deposits.index', 'pattern' => 'admin.deposits.*', 'label' => 'Deposit', 'title' => 'Manajemen Deposit', 'description' => 'Pantau top-up saldo pengguna.', 'icon' => 'deposit'],
+            ['access' => 'deposits', 'route' => 'admin.deposits.index', 'pattern' => 'admin.deposits.*', 'label' => 'Deposit', 'title' => 'Manajemen Deposit', 'description' => 'Pantau top-up dan refund saldo pengguna.', 'icon' => 'deposit'],
             ['access' => 'commissions', 'route' => 'admin.commissions.index', 'pattern' => 'admin.commissions.*', 'label' => 'Komisi', 'title' => 'Manajemen Komisi', 'description' => 'Pantau komisi masuk reseller.', 'icon' => 'commission'],
             ['access' => 'withdrawals', 'route' => 'admin.withdrawals.index', 'pattern' => 'admin.withdrawals.*', 'label' => 'Penarikan', 'title' => 'Manajemen Penarikan', 'description' => 'Konfirmasi penarikan reseller setelah transfer.', 'icon' => 'withdrawal'],
             ['access' => 'promos', 'route' => 'admin.promos.index', 'pattern' => 'admin.promos.*', 'label' => 'Banner', 'title' => 'Manajemen Banner', 'description' => 'Kelola banner dan pengumuman user.', 'icon' => 'banner'],
             ['access' => 'displays', 'route' => 'admin.displays.index', 'pattern' => 'admin.displays.*', 'label' => 'Display', 'title' => 'Manajemen Display', 'description' => 'Kelola display popup user.', 'icon' => 'display'],
             ['access' => 'forms', 'route' => 'admin.forms.index', 'pattern' => 'admin.forms.*', 'label' => 'Formulir', 'title' => 'Manajemen Formulir', 'description' => 'Kelola form publik dan benefit aplikasi premium.', 'icon' => 'forms'],
+            ['access' => 'emails', 'route' => 'admin.emails.index', 'pattern' => 'admin.emails.*', 'label' => 'Email', 'title' => 'Manajemen Email', 'description' => 'Kirim informasi kepada pengguna.', 'icon' => 'email'],
             ['access' => 'tutorials', 'route' => 'admin.tutorials.index', 'pattern' => 'admin.tutorials.*', 'label' => 'Tutorial', 'title' => 'Manajemen Tutorial', 'description' => 'Kelola panduan dan tutorial pelanggan.', 'icon' => 'tutorial'],
             ['access' => 'logs', 'route' => 'admin.logs.index', 'pattern' => 'admin.logs.*', 'label' => 'Log Aktivitas', 'title' => 'Log Aktivitas', 'description' => 'Aktivitas & lokasi (IP) seluruh pengunjung situs.', 'icon' => 'log'],
         ];
 
         $adminNav = array_values(array_filter($adminNav, fn (array $item) => $adminCanAccessArea($item['access'])));
+        $adminNavByAccess = collect($adminNav)->keyBy('access');
+        $adminNavGroups = collect([
+            ['label' => 'Utama', 'items' => ['dashboard']],
+            ['label' => 'Operasional', 'items' => ['transactions', 'reports', 'refunds', 'deposits']],
+            ['label' => 'Produk & Gudang', 'items' => ['categories', 'products', 'durations', 'tutorials']],
+            ['label' => 'Akun & Reseller', 'items' => ['users', 'commissions', 'withdrawals']],
+            ['label' => 'Konten', 'items' => ['promos', 'displays', 'forms', 'emails']],
+            ['label' => 'Sistem', 'items' => ['logs']],
+        ])->map(function (array $group) use ($adminNavByAccess) {
+            $group['items'] = collect($group['items'])
+                ->map(fn (string $access) => $adminNavByAccess->get($access))
+                ->filter()
+                ->values()
+                ->all();
+
+            return $group;
+        })->filter(fn (array $group) => count($group['items']) > 0)->values()->all();
 
         $adminNavIconPaths = [
             'dashboard' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 13.5h6.5V4H4v9.5Zm9.5 6.5H20V4h-6.5v16ZM4 20h6.5v-3.5H4V20Z" />',
@@ -674,9 +707,11 @@
             'users' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm6.5 9a6.5 6.5 0 0 0-13 0M17 10.5a3 3 0 1 0 0-6M21.5 20a5.5 5.5 0 0 0-4-5.3" />',
             'category' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 5.5h6l2 2h8v11H4v-13Z" />',
             'product' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3.5 20 8v8.5L12 21l-8-4.5V8l8-4.5Z M4 8l8 4.5L20 8 M12 12.5V21" />',
+            'duration' => '<path stroke-linecap="round" stroke-linejoin="round" d="M5 5.5h14A2.5 2.5 0 0 1 21.5 8v10A2.5 2.5 0 0 1 19 20.5H5A2.5 2.5 0 0 1 2.5 18V8A2.5 2.5 0 0 1 5 5.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M8 3.5v4M16 3.5v4M2.5 10h19M12 13v3l2 1.3" />',
             'banner' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6.5h16v11H4v-11Zm3 7 2.2-2.2 2 2 3.3-3.3L18 13.5" />',
             'display' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.5h15v10h-15v-10Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M8 19h8M10 16.5 9.5 19M14 16.5l.5 2.5" />',
             'forms' => '<path stroke-linecap="round" stroke-linejoin="round" d="M6 3.5h9l3 3v14H6v-17Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 3.5v3h3M9 9.5h6M9 13h6M9 16.5h4" />',
+            'email' => '<path stroke-linecap="round" stroke-linejoin="round" d="M3.5 6.5h17v12h-17v-12Z" /><path stroke-linecap="round" stroke-linejoin="round" d="m4 7 8 6 8-6" />',
             'tutorial' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 5.5A2.5 2.5 0 0 1 7 3h11.5v16H7a2.5 2.5 0 0 0-2.5 2.5v-16Zm0 0v16M8.25 7.25h6.5M8.25 10.75h5M8.25 14.25h4" />',
             'transaction' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5h16v11H4v-11Zm0 3.5h16M8 15h4" />',
             'refund' => '<path stroke-linecap="round" stroke-linejoin="round" d="M7.2 7.1A7.2 7.2 0 0 1 18.5 9.2" /><path stroke-linecap="round" stroke-linejoin="round" d="M18.5 5.6v3.6h-3.6" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.8 16.9A7.2 7.2 0 0 1 5.5 14.8" /><path stroke-linecap="round" stroke-linejoin="round" d="M5.5 18.4v-3.6h3.6" />',
@@ -716,18 +751,27 @@
                 </a>
             </div>
 
-            <nav id="wiboost-admin-sidebar-nav" x-ref="adminSidebarNav" @scroll.debounce.100ms="saveSidebarScroll()" class="hide-scroll flex-1 space-y-2 overflow-y-auto overscroll-contain px-5 py-4">
-                @foreach($adminNav as $item)
-                    <?php $isActiveAdminNav = $adminNavMatches($item); ?>
-                    <?php $adminIconStyle = $item['icon'] === 'commission' ? 'transform: scaleX(-1); transform-origin: center;' : ''; ?>
-                    <a href="{{ route($item['route']) }}" data-admin-sidebar-link @click="saveSidebarScroll()" class="flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-black transition-all duration-300 {{ $isActiveAdminNav ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 scale-[1.02]' : 'border-2 border-transparent text-[#5a76c8] hover:border-white hover:bg-[#f4f9ff] hover:scale-[1.02]' }}">
-                        <span class="flex h-8 w-8 items-center justify-center rounded-xl {{ $isActiveAdminNav ? 'bg-white/20 text-white' : 'bg-white text-[#5a76c8] shadow-sm' }}">
-                            <svg class="h-5 w-5" style="{{ $adminIconStyle }}" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">
-                                {!! $adminNavIconPaths[$item['icon']] ?? $adminNavIconPaths['dashboard'] !!}
-                            </svg>
-                        </span>
-                        <span class="wiboost-sidebar-link-label">{{ $item['label'] }}</span>
-                    </a>
+            <nav id="wiboost-admin-sidebar-nav" x-ref="adminSidebarNav" @scroll.debounce.100ms="saveSidebarScroll()" class="hide-scroll flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+                @foreach($adminNavGroups as $group)
+                    <div class="py-3 first:pt-0">
+                        <div class="flex items-center gap-3 px-6 pb-2">
+                            <p class="wiboost-sidebar-link-label shrink-0 text-[9px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">{{ $group['label'] }}</p>
+                        </div>
+                        <div class="space-y-2">
+                            @foreach($group['items'] as $item)
+                                <?php $isActiveAdminNav = $adminNavMatches($item); ?>
+                                <?php $adminIconStyle = $item['icon'] === 'commission' ? 'transform: scaleX(-1); transform-origin: center;' : ''; ?>
+                                <a href="{{ route($item['route']) }}" data-admin-sidebar-link @click="saveSidebarScroll()" class="flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-black transition-all duration-300 {{ $isActiveAdminNav ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 scale-[1.02]' : 'border-2 border-transparent text-[#5a76c8] hover:border-white hover:bg-[#f4f9ff] hover:scale-[1.02]' }}">
+                                    <span class="flex h-8 w-8 items-center justify-center rounded-xl {{ $isActiveAdminNav ? 'bg-white/20 text-white' : 'bg-white text-[#5a76c8] shadow-sm' }}">
+                                        <svg class="h-5 w-5" style="{{ $adminIconStyle }}" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">
+                                            {!! $adminNavIconPaths[$item['icon']] ?? $adminNavIconPaths['dashboard'] !!}
+                                        </svg>
+                                    </span>
+                                    <span class="wiboost-sidebar-link-label">{{ $item['label'] }}</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
                 @endforeach
             </nav>
 
@@ -861,18 +905,27 @@
                     <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></p>
                 </div>
                 
-                <nav id="wiboost-admin-mobile-sidebar-nav" @scroll.debounce.100ms="saveSidebarScroll($event)" class="wiboost-admin-mobile-sidebar-nav hide-scroll flex min-h-0 flex-col gap-2 overflow-y-auto py-4">
-                    @foreach($adminNav as $item)
-                        <?php $isActiveAdminNav = $adminNavMatches($item); ?>
-                        <?php $adminIconStyle = $item['icon'] === 'commission' ? 'transform: scaleX(-1); transform-origin: center;' : ''; ?>
-                        <a href="{{ route($item['route']) }}" data-admin-sidebar-link @click="saveSidebarScroll($event)" class="flex items-center rounded-[1.5rem] border-2 {{ $isActiveAdminNav ? 'border-white bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/30' : 'border-transparent bg-[#f8fbff] text-[#5a76c8] hover:border-white hover:bg-[#e0fbfc]' }} px-5 py-3 font-black transition-all">
-                            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {{ $isActiveAdminNav ? 'bg-white/20 shadow-inner' : 'bg-white shadow-sm border border-[#f0f5ff]' }}">
-                                <svg class="h-5 w-5" style="{{ $adminIconStyle }}" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">
-                                    {!! $adminNavIconPaths[$item['icon']] ?? $adminNavIconPaths['dashboard'] !!}
-                                </svg>
-                            </span>
-                            <span class="ml-4 text-sm uppercase tracking-widest">{{ $item['label'] }}</span>
-                        </a>
+                <nav id="wiboost-admin-mobile-sidebar-nav" @scroll.debounce.100ms="saveSidebarScroll($event)" class="wiboost-admin-mobile-sidebar-nav hide-scroll flex min-h-0 flex-col overflow-y-auto py-4">
+                    @foreach($adminNavGroups as $group)
+                        <div class="py-3 first:pt-0">
+                            <div class="flex items-center gap-3 px-3 pb-2">
+                                <p class="shrink-0 text-[9px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">{{ $group['label'] }}</p>
+                            </div>
+                            <div class="space-y-2">
+                                @foreach($group['items'] as $item)
+                                    <?php $isActiveAdminNav = $adminNavMatches($item); ?>
+                                    <?php $adminIconStyle = $item['icon'] === 'commission' ? 'transform: scaleX(-1); transform-origin: center;' : ''; ?>
+                                    <a href="{{ route($item['route']) }}" data-admin-sidebar-link @click="saveSidebarScroll($event)" class="flex items-center rounded-[1.5rem] border-2 {{ $isActiveAdminNav ? 'border-white bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/30' : 'border-transparent bg-[#f8fbff] text-[#5a76c8] hover:border-white hover:bg-[#e0fbfc]' }} px-5 py-3 font-black transition-all">
+                                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {{ $isActiveAdminNav ? 'bg-white/20 shadow-inner' : 'bg-white shadow-sm border border-[#f0f5ff]' }}">
+                                            <svg class="h-5 w-5" style="{{ $adminIconStyle }}" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">
+                                                {!! $adminNavIconPaths[$item['icon']] ?? $adminNavIconPaths['dashboard'] !!}
+                                            </svg>
+                                        </span>
+                                        <span class="ml-4 text-sm uppercase tracking-widest">{{ $item['label'] }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
                     @endforeach
                 </nav>
 
@@ -1274,6 +1327,7 @@
             button.classList.add('cursor-wait', 'opacity-75');
         });
     </script>
+    @include('admin.partials.detail-modal-assets')
     @include('partials.wiboost-input-guards')
     @include('partials.page-loading')
     @include('partials.hut-ri-decoration')

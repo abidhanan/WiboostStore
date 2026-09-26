@@ -386,17 +386,17 @@ class Product extends Model
 
         $this->topUpGameKeyLoaded = true;
         $this->topUpGameKeyCache = match (true) {
-            $this->containsAny($text, ['mobile legends', 'mobile legend', 'mobilelegend', 'mlbb', 'game mobile legends']) => 'mobile-legends',
+            $this->containsAny($text, ['mobile legends bang bang', 'mobile legends bangbang', 'mobile legends', 'mobile legend', 'mobilelegend', 'mlbb', ' ml ', 'game mobile legends']) => 'mobile-legends',
             $this->containsAny($text, ['free fire max', 'freefire max', 'ff max', 'game free fire max']) => 'free-fire-max',
             $this->containsAny($text, ['free fire', 'freefire', 'ff', 'game free fire']) => 'free-fire',
             $this->containsAny($text, ['pubg', 'pubg mobile', 'uc pubg', 'uc mobile']) => 'pubg-mobile',
-            $this->containsAny($text, ['valorant', 'valorant points', 'valorant point', 'vp']) => 'valorant',
+            $this->containsAny($text, ['valorant', 'valorant points', 'valorant point', 'valorant vp', 'vp valorant', 'valo', ' vp ']) => 'valorant',
             $this->containsAny($text, ['arena of valor', ' aov ', 'game arena of valor']) => 'arena-of-valor',
             $this->containsAny($text, ['call of duty mobile', 'call of duty', 'cod mobile', 'codm', 'cp cod']) => 'cod-mobile',
             $this->containsAny($text, ['fc mobile', 'fifa mobile', 'fifa points', 'eafc mobile', 'ea fc mobile', 'fc points', 'fc point']) => 'fc-mobile',
             $this->containsAny($text, ['genshin impact', 'genshin', 'genesis crystal', 'genesis crystals', 'welkin']) => 'genshin-impact',
             $this->containsAny($text, ['honor of kings', 'hok']) => 'honor-of-kings',
-            $this->containsAny($text, ['wild rift', 'wildrift', 'wild core', 'wild cores', 'lol wild rift', 'lol wr']) => 'lol-wild-rift',
+            $this->containsAny($text, ['league of legends wild rift', 'league of legend wild rift', 'lol wild rift', 'wild rift', 'wildrift', 'wild core', 'wild cores', 'wild pass', 'wildrift pass', 'lol wr', 'lolwr', 'wr wild core', 'wr wild cores']) => 'lol-wild-rift',
             $this->containsAny($text, ['league of legends pc', 'league of legend pc', 'lol pc', 'league pc', 'riot points', 'riot point', 'riot cash']) => 'lol-pc',
             default => null,
         };
@@ -675,10 +675,10 @@ class Product extends Model
     public function getDisplayLogoImageAttribute(): ?string
     {
         if ($this->usesCategoryLogo()) {
-            return $this->category?->image;
+            return $this->category?->image ?: $this->image;
         }
 
-        return $this->image;
+        return $this->image ?: $this->category?->image;
     }
 
     public function getDisplayLogoEmoteAttribute(): ?string
@@ -687,7 +687,7 @@ class Product extends Model
             return $this->category?->emote ?: $this->emote;
         }
 
-        return $this->emote;
+        return $this->emote ?: $this->category?->emote;
     }
 
     protected function usesCategoryLogo(): bool

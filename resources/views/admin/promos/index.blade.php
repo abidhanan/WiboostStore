@@ -110,9 +110,9 @@
                 
                 <!-- Card Content -->
                 <div class="relative z-20 mt-auto pt-6 flex flex-col min-w-0">
-                    <h4 class="text-xl sm:text-2xl font-black mb-1 sm:mb-2 leading-tight drop-shadow-md break-words line-clamp-2">
+                    <h2 class="text-xl sm:text-2xl font-black mb-1 sm:mb-2 leading-tight drop-shadow-md break-words line-clamp-2">
                         {{ $promo->title ?? '-' }}
-                    </h4>
+                    </h2>
                     <p class="font-bold text-white/90 text-xs sm:text-sm line-clamp-2 sm:line-clamp-3 drop-shadow-sm break-words">
                         {{ $promo->description ?? '-' }}
                     </p>
@@ -138,7 +138,7 @@
 
     <!-- Paginasi (Aman dari Error: Pengecekan method links()) -->
     @if(isset($promos) && method_exists($promos, 'links') && $promos->hasPages())
-        <div class="mt-6 sm:mt-8 p-5 sm:p-8 border-4 border-white rounded-[2rem] sm:rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 bg-white/90 backdrop-blur-sm min-w-0 w-full">
+        <div class="p-5 sm:p-8 w-full min-w-0">
             {{ $promos->links() }}
         </div>
     @endif

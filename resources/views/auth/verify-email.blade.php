@@ -8,9 +8,9 @@
             <div class="inline-block rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1 text-xs font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
                 Verifikasi
             </div>
-            <h2 class="text-3xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm sm:text-4xl">
+            <h1 class="text-3xl font-black tracking-tight text-[#2b3a67] drop-shadow-sm sm:text-4xl">
                 Cek <span class="bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5] bg-clip-text text-transparent">Emailmu!</span>
-            </h2>
+            </h1>
             <p class="mt-2 text-sm font-bold text-[#8faaf3]">Kami sudah mengirim tautan verifikasi ke email terdaftar. Klik tautan itu untuk mengaktifkan akunmu.</p>
         </div>
 

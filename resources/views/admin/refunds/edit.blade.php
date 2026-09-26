@@ -56,7 +56,7 @@
                         <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $transaction?->user?->name ?? 'Guest' }}</p>
                     </div>
                     <div class="md:col-span-2">
-                        <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Layanan</p>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Produk</p>
                         <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $productName }}</p>
                     </div>
                     <div>

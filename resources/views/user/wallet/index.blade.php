@@ -33,10 +33,10 @@
         <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">
             Keuangan
         </div>
-        <h2 class="flex items-center justify-center gap-2 text-3xl sm:text-4xl font-black text-[#2b3a67] tracking-tight drop-shadow-sm md:justify-start">
+        <h1 class="flex items-center justify-center gap-2 text-3xl sm:text-4xl font-black text-[#2b3a67] tracking-tight drop-shadow-sm md:justify-start">
             <span class="text-[#5a76c8]">@include('partials.wiboost-icon', ['name' => 'wallet', 'class' => 'h-8 w-8'])</span>
             <span>Dompet Anda</span>
-        </h2>
+        </h1>
     </div>
 
     @if(session('success'))
@@ -56,7 +56,7 @@
             <div class="bg-gradient-to-br from-[#8faaf3] to-[#5a76c8] rounded-[2.5rem] p-8 shadow-xl shadow-[#5a76c8]/30 text-white relative overflow-hidden border-4 border-white hover:scale-[1.02] transition-transform duration-300">
                 <div class="relative z-10">
                     <p class="text-[#e0fbfc] text-xs font-black uppercase tracking-widest mb-2">Total Saldo Tersedia</p>
-                    <h3 class="text-4xl font-black tracking-tight mb-5 drop-shadow-md">Rp {{ number_format(Auth::user()->balance ?? 0, 0, ',', '.') }}</h3>
+                    <h2 class="text-4xl font-black tracking-tight mb-5 drop-shadow-md">Rp {{ number_format(Auth::user()->balance ?? 0, 0, ',', '.') }}</h2>
                     <div class="inline-flex items-center gap-2 text-[10px] font-black bg-white/20 px-4 py-2 rounded-full backdrop-blur-sm border-2 border-white/40 shadow-inner uppercase tracking-wider">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                         Aman & Terenkripsi
@@ -68,7 +68,7 @@
             <div class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/30" data-wallet-topup-box>
                 <div class="flex items-center gap-2 mb-6 ml-2">
                     <span class="text-[#5a76c8]">@include('partials.wiboost-icon', ['name' => 'zap', 'class' => 'h-7 w-7'])</span>
-                    <h4 class="font-black text-[#2b3a67] text-xl">Isi Saldo Cepat</h4>
+                    <h2 class="font-black text-[#2b3a67] text-xl">Isi Saldo Cepat</h2>
                 </div>
                 <form action="{{ route('user.wallet.topup') }}" method="POST" data-single-submit>
                     @csrf
@@ -98,10 +98,10 @@
             <div class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white h-full flex flex-col overflow-hidden relative" data-wallet-mutation-box>
                 
                 <div class="px-8 py-6 border-b-4 border-dashed border-[#f4f9ff] flex flex-col md:flex-row md:justify-between items-start md:items-center bg-[#ffffff] gap-3 relative z-10" data-wallet-mutation-header>
-                    <h4 class="flex items-center gap-2 font-black text-xl text-[#2b3a67]">
+                    <h2 class="flex items-center gap-2 font-black text-xl text-[#2b3a67]">
                         Mutasi Saldo
                         <span class="text-[#4bc6b9]">@include('partials.wiboost-icon', ['name' => 'cash', 'class' => 'h-6 w-6'])</span>
-                    </h4>
+                    </h2>
                 </div>
                 
                 @php
@@ -150,9 +150,9 @@
                                     {{ $iconChar }}
                                 </div>
                                 <div class="min-w-0">
-                                    <h5 class="font-black text-[#2b3a67] text-sm md:text-base group-hover:text-[#5a76c8] transition-colors leading-tight break-words md:line-clamp-2">
+                                    <h3 class="font-black text-[#2b3a67] text-sm md:text-base group-hover:text-[#5a76c8] transition-colors leading-tight break-words md:line-clamp-2">
                                         {{ $displayDesc }}
-                                    </h5>
+                                    </h3>
                                     <p class="mt-1.5 flex min-w-0 flex-nowrap items-center gap-1 whitespace-nowrap text-[8px] font-black uppercase tracking-[0.05em] text-[#8faaf3] sm:text-[9px] md:text-[10px] md:tracking-widest">
                                         <span class="shrink-0 rounded border border-white bg-[#f4f9ff] px-1.5 py-0.5 sm:px-2">{{ $log->invoice_number ?? '-' }}</span>
                                         <span class="shrink-0">&bull;</span>

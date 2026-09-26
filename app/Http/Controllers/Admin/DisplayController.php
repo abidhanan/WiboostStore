@@ -54,7 +54,8 @@ class DisplayController extends Controller
         $data = $this->normalizePayload(collect($validated)->except('submission_token')->all(), $request);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('displays', 'public');
+            $data['image'] = app(\App\Support\WebpImageOptimizer::class)
+                ->storeUploadedFile($request->file('image'), 'displays');
         }
 
         Display::create($data);
@@ -82,7 +83,8 @@ class DisplayController extends Controller
                 Storage::disk('public')->delete($display->image);
             }
 
-            $data['image'] = $request->file('image')->store('displays', 'public');
+            $data['image'] = app(\App\Support\WebpImageOptimizer::class)
+                ->storeUploadedFile($request->file('image'), 'displays');
         }
 
         $display->update($data);

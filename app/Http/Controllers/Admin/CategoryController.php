@@ -58,7 +58,7 @@ class CategoryController extends Controller
             ->values();
 
         $page = max(1, (int) $request->query('page', 1));
-        $perPage = 20;
+        $perPage = min(200, max(50, (int) $request->query('per_page', 120)));
         $categories = new LengthAwarePaginator(
             $filteredCategories->forPage($page, $perPage)->values(),
             $filteredCategories->count(),
@@ -150,7 +150,8 @@ class CategoryController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('categories', 'public');
+            $imagePath = app(\App\Support\WebpImageOptimizer::class)
+                ->storeUploadedFile($request->file('image'), 'categories');
         }
 
         Category::create([
@@ -235,7 +236,8 @@ class CategoryController extends Controller
                 Storage::disk('public')->delete($category->image);
             }
 
-            $data['image'] = $request->file('image')->store('categories', 'public');
+            $data['image'] = app(\App\Support\WebpImageOptimizer::class)
+                ->storeUploadedFile($request->file('image'), 'categories');
         }
 
         $category->update($data);

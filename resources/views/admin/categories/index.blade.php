@@ -127,7 +127,7 @@
                     <div class="border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-6">
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <h3 class="text-xl font-black text-[#2b3a67] sm:text-2xl">{{ $separatedCategoryLabels[$sectionKey] ?? 'Semua Kategori' }}</h3>
+                                <h2 class="text-xl font-black text-[#2b3a67] sm:text-2xl">{{ $separatedCategoryLabels[$sectionKey] ?? 'Semua Kategori' }}</h2>
                             </div>
                         </div>
                     </div>
@@ -204,6 +204,12 @@
                 </section>
             @endforeach
         </div>
+
+        @if(isset($categories) && method_exists($categories, 'links') && $categories->hasPages())
+            <div class="p-5 sm:p-8 w-full min-w-0">
+                {{ $categories->links() }}
+            </div>
+        @endif
     @else
         <div class="bg-white/95 backdrop-blur-sm rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl shadow-[#bde0fe]/30 border-4 border-white relative z-10 min-w-0 w-full px-5 py-16 text-center">
             <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-[2rem] sm:rounded-[2.5rem] bg-[#f0f5ff] border-4 border-white mb-4 sm:mb-5 shadow-inner">
@@ -321,7 +327,7 @@
         
         <!-- Aman dari Error: Pengecekan method links() -->
         @if(isset($categories) && method_exists($categories, 'links') && $categories->hasPages())
-            <div class="p-5 sm:p-8 border-t-4 border-dashed border-[#f4f9ff] bg-[#f8faff] min-w-0 w-full">
+            <div class="p-5 sm:p-8 w-full min-w-0">
                 {{ $categories->links() }}
             </div>
         @endif

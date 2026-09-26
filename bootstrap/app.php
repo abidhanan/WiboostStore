@@ -93,6 +93,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
             $ignoredExactPaths = [
                 'ads.txt',
+                'app-ads.txt',
+                'sellers.json',
+                'dsrdelete.json',
+                'meta.json',
+                'site.webmanifest',
+                'null',
+                'livewire/livewire.js',
+                'comments/feed',
                 'wp',
                 'old',
                 'blog',
@@ -112,13 +120,32 @@ return Application::configure(basePath: dirname(__DIR__))
 
             $ignoredPrefixes = [
                 '.well-known/',
+                'build/assets/',
+                'wp-',
                 'wp/',
+                'wp1/',
+                'wp-json/',
                 'wp-admin/',
+                'wp-content/',
+                'wp-includes/',
                 'wordpress/',
                 'blog/',
                 'old/',
                 'backup/',
                 'new/',
+                'cms/',
+                'site/',
+                'shop/',
+                'test/',
+                'web/',
+                '2019/',
+                '2020/',
+                '2021/',
+                'log/',
+                'logs/',
+                'config/',
+                'secrets/',
+                'var/run/secrets/',
             ];
 
             foreach ($ignoredPrefixes as $prefix) {
@@ -127,7 +154,25 @@ return Application::configure(basePath: dirname(__DIR__))
                 }
             }
 
-            return false;
+            $scannerPatterns = [
+                '/(?:%25)*%?2eenv/i',
+                '/(?:^|\/)(?:\.env|env\.(?:js|json)|environment(?:\.prod)?\.ts)$/i',
+                '/(?:^|\/)(?:aws[-._]|awsconfiguration|amplifyconfiguration)/i',
+                '/^assets\/(?:config|environment)\.json$/i',
+                '/(?:^|\/)(?:rclone\.conf|samconfig\.toml)$/i',
+                '/\.(?:log|csv|map)$/i',
+            ];
+
+            foreach ($scannerPatterns as $pattern) {
+                if (preg_match($pattern, $path) === 1) {
+                    return true;
+                }
+            }
+
+            // Sisa 404/405 di host utama yang tidak cocok pola apa pun juga di-skip dari Discord:
+            // praktis selalu bot/scanner atau URL salah ketik, jadi tidak perlu spam. Error nyata
+            // (500 dll.) tetap dilaporkan, dan 404 tetap tercatat di storage/logs/laravel.log.
+            return true;
         };
 
         $exceptions->report(function (\Throwable $exception) use ($shouldSkipDiscordReport) {
@@ -196,7 +241,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return redirect()
-                ->route('login')
+                ->route($request->is('admin/*') ? 'admin.login' : 'login')
                 ->with('status', 'Sesi login sudah kedaluwarsa. Silakan login ulang.');
         });
     })->create();

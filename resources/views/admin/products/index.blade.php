@@ -85,23 +85,23 @@
 
     @php
         $sections = collect($productSections ?? []);
-        $hasProducts = $sections->contains(fn ($section) => collect($section['categories'] ?? [])->isNotEmpty());
+        $visibleProductSections = $sections->filter(fn ($section) => collect($section['categories'] ?? [])->isNotEmpty())->values();
+        $hasProducts = $visibleProductSections->isNotEmpty();
+        $productDetailItems = collect();
     @endphp
 
     @if($hasProducts)
         <div class="space-y-8">
-            @foreach($sections as $section)
+            @foreach($visibleProductSections as $section)
                 @php
                     $categorySections = collect($section['categories'] ?? []);
                 @endphp
-
-                @continue($categorySections->isEmpty())
 
                 <section class="overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm shadow-2xl shadow-[#bde0fe]/30 relative z-10 min-w-0 w-full">
                     <div class="border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-6">
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <h3 class="text-xl font-black text-[#2b3a67] sm:text-2xl">{{ $section['name'] }}</h3>
+                                <h2 class="text-xl font-black text-[#2b3a67] sm:text-2xl">{{ $section['name'] }}</h2>
                             </div>
                         </div>
                     </div>
@@ -114,10 +114,10 @@
                                         <th style="font-size: 10px; width: 90px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Visual</th>
                                         <th style="font-size: 10px; width: 320px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Produk</th>
                                         <th style="font-size: 10px; width: 170px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Tipe Proses</th>
-                                        <th style="font-size: 10px; width: 150px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga Buyer</th>
+                                        <th style="font-size: 10px; width: 150px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga Pembeli</th>
                                         <th style="font-size: 10px; width: 160px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga Member</th>
                                         <th style="font-size: 10px; width: 135px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Modal</th>
-                                        <th style="font-size: 10px; width: 210px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Provider</th>
+                                        <th style="font-size: 10px; width: 210px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Penyedia</th>
                                         <th style="font-size: 10px; width: 115px;" class="whitespace-nowrap px-5 py-4 pr-8 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Stok</th>
                                         <th style="font-size: 10px; width: 145px;" class="whitespace-nowrap px-5 py-4 pl-8 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Aksi</th>
                                     </tr>
@@ -126,6 +126,14 @@
                                     @foreach($categorySections as $categorySection)
                                         @foreach($categorySection['products'] as $product)
                                             @php
+                                                $pType = $product->process_type ?? 'api';
+                                                $productCategoryPath = collect([
+                                                    $product->category?->parent?->parent?->name,
+                                                    $product->category?->parent?->name,
+                                                    $product->category?->name,
+                                                ])->filter()->implode(' / ');
+                                                $productStock = (int) ($product->available_stock ?? 0);
+                                                $productReminder = (int) ($product->stock_reminder ?? 0);
                                                 $productRootCategory = $product->category;
                                                 while($productRootCategory?->parent) {
                                                     $productRootCategory = $productRootCategory->parent;
@@ -149,8 +157,16 @@
                                                 $memberDisplayPrice = $memberOriginalPrice !== null
                                                     ? (float) max(0, ceil(round($memberOriginalPrice * (1 - \App\Models\Product::currentDiscountRate()), 6)))
                                                     : null;
+                                                $productDetailItems->push([
+                                                    'product' => $product,
+                                                    'processType' => $pType,
+                                                    'categoryPath' => $productCategoryPath,
+                                                    'memberPrice' => $memberDisplayPrice,
+                                                    'stock' => $productStock,
+                                                    'reminder' => $productReminder,
+                                                ]);
                                             @endphp
-                                            <tr class="transition-colors hover:bg-[#f8faff] group">
+                                            <tr onclick="openAdminUniversalDetail('admin-product-detail-{{ $product->id }}')" class="cursor-pointer transition-colors hover:bg-[#f8faff] group">
                                                 <td class="px-5 py-4 align-middle sm:py-5">
                                                     @if(!empty($product->display_logo_image))
                                                         <div class="h-10 w-10 shrink-0 overflow-hidden rounded-[1rem] border-2 border-white bg-[#f4f9ff] shadow-sm">
@@ -170,11 +186,10 @@
                                                 </td>
 
                                                 <td class="px-5 py-4 pr-8 sm:py-5 align-middle text-center">
-                                                    @php $pType = $product->process_type ?? 'api'; @endphp
                                                     @if($pType === 'api')
                                                         <span style="font-size: 10px;" class="inline-block rounded-lg border-2 border-white bg-[#f4f9ff] shadow-sm px-3 py-1.5 font-black uppercase tracking-widest text-[#8faaf3]">API</span>
                                                     @elseif($pType === 'account')
-                                                        <a href="{{ route('admin.credentials.index', $product->id) }}" style="font-size: 10px;" class="inline-flex items-center gap-1.5 rounded-lg border-2 border-white bg-[#ffeef2] shadow-sm px-3 py-1.5 font-black uppercase tracking-widest text-[#e1306c] transition-transform hover:scale-105 active:scale-95">
+                                                        <a href="{{ route('admin.credentials.index', $product->id) }}" onclick="event.stopPropagation()" style="font-size: 10px;" class="inline-flex items-center gap-1.5 rounded-lg border-2 border-white bg-[#ffeef2] shadow-sm px-3 py-1.5 font-black uppercase tracking-widest text-[#e1306c] transition-transform hover:scale-105 active:scale-95">
                                                             Gudang Akun
                                                         </a>
                                                     @else
@@ -235,10 +250,10 @@
 
                                                 <td class="px-5 py-4 sm:py-5 align-middle text-center">
                                                     <div class="flex items-center justify-center gap-2">
-                                                        <a href="{{ route('admin.products.edit', $product->id) }}" class="flex h-9 w-9 items-center justify-center rounded-[1rem] border-2 border-white bg-white text-lg text-[#5a76c8] shadow-md shadow-[#bde0fe]/20 transition-transform active:scale-95 hover:scale-110 hover:bg-[#f0f5ff]" title="Edit">
+                                                        <a href="{{ route('admin.products.edit', $product->id) }}" onclick="event.stopPropagation()" class="flex h-9 w-9 items-center justify-center rounded-[1rem] border-2 border-white bg-white text-lg text-[#5a76c8] shadow-md shadow-[#bde0fe]/20 transition-transform active:scale-95 hover:scale-110 hover:bg-[#f0f5ff]" title="Edit">
                                                             @include('partials.wiboost-icon', ['name' => 'edit', 'class' => 'h-4 w-4'])
                                                         </a>
-                                                        <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus produk ini? Semua data gudang terkait juga akan hilang!');" class="m-0">
+                                                        <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" onclick="event.stopPropagation()" onsubmit="return confirm('Yakin ingin menghapus produk ini? Semua data gudang terkait juga akan hilang!');" class="m-0">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-[1rem] border-2 border-white bg-white text-lg text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95 hover:scale-110 hover:bg-[#ffe5e5]" title="Hapus">
@@ -254,7 +269,92 @@
                             </table>
                         </div>
                     </div>
+
+                    @if($loop->last && isset($products) && method_exists($products, 'links') && $products->hasPages())
+                        <div class="p-5 sm:p-8 w-full min-w-0">
+                            {{ $products->links() }}
+                        </div>
+                    @endif
                 </section>
+            @endforeach
+            @foreach($productDetailItems as $detail)
+                @php
+                    $product = $detail['product'];
+                    $pType = $detail['processType'];
+                    $productCategoryPath = $detail['categoryPath'];
+                    $memberDisplayPrice = $detail['memberPrice'];
+                    $productStock = $detail['stock'];
+                    $productReminder = $detail['reminder'];
+                @endphp
+                <div id="admin-product-detail-{{ $product->id }}" class="admin-detail-modal fixed inset-0 z-[9999] flex items-center justify-center opacity-0 pointer-events-none transition-all duration-200">
+                    <div class="absolute inset-0" onclick="closeAdminUniversalDetail('admin-product-detail-{{ $product->id }}')"></div>
+                    <div class="admin-detail-card relative flex w-full flex-col rounded-[1.75rem] border-4 border-white bg-white p-4 shadow-2xl shadow-[#2b3a67]/20 transform scale-95 transition-transform duration-200 sm:p-5">
+                        <div class="admin-detail-header mb-3.5 flex items-start justify-between gap-3 p-3.5">
+                            <div>
+                                <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Detail Produk</p>
+                                <h2 class="mt-1 break-words text-xl font-black text-[#2b3a67]">{{ $product->name }}</h2>
+                                <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $productCategoryPath ?: 'Kategori tidak tersedia' }}</p>
+                            </div>
+                            <button type="button" onclick="closeAdminUniversalDetail('admin-product-detail-{{ $product->id }}')" class="admin-detail-close flex h-11 w-11 shrink-0 items-center justify-center border-2 border-white">
+                                @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-4 w-4'])
+                            </button>
+                        </div>
+
+                        <div class="admin-detail-body">
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <div class="admin-detail-panel md:col-span-2">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Produk</p>
+                                    <p class="mt-1 font-black text-[#2b3a67]">{{ $product->name }}</p>
+                                </div>
+                                                            <div class="admin-detail-panel">
+                                                                <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Harga Pembeli</p>
+                                    <p class="mt-1 text-lg font-black text-[#5a76c8]">Rp {{ number_format($product->selling_price ?? 0, 0, ',', '.') }}</p>
+                                </div>
+                                <div class="admin-detail-panel">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Harga Member</p>
+                                    <p class="mt-1 text-lg font-black" style="color:#8b5cf6;">{{ $memberDisplayPrice !== null ? 'Rp ' . number_format($memberDisplayPrice, 0, ',', '.') : '-' }}</p>
+                                </div>
+                                <div class="admin-detail-panel">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Modal Penyedia</p>
+                                    <p class="mt-1 text-lg font-black text-[#4bc6b9]">{{ $product->uses_api_selling_markup ? 'Rp ' . number_format($product->price ?? 0, 0, ',', '.') : '-' }}</p>
+                                </div>
+                                <div class="admin-detail-panel">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Tipe Proses</p>
+                                    <p class="mt-1 text-sm font-black uppercase text-[#2b3a67]">{{ $pType === 'account' ? 'Gudang Akun' : strtoupper((string) $pType) }}</p>
+                                </div>
+                                <div class="admin-detail-panel">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Penyedia</p>
+                                    <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $product->provider_source ?? '-' }}</p>
+                                </div>
+                                <div class="admin-detail-panel">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">ID Produk Penyedia</p>
+                                    <p class="mt-1 break-all text-xs font-bold text-[#8faaf3]">{{ $product->provider_product_id ?? '-' }}</p>
+                                </div>
+                                <div class="admin-detail-panel">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Stok</p>
+                                    <p class="mt-1 text-lg font-black {{ $pType === 'account' && $productStock <= $productReminder ? 'text-[#ff6b6b]' : 'text-[#4bc6b9]' }}">{{ $pType === 'account' ? $productStock : '-' }}</p>
+                                </div>
+                                <div class="admin-detail-panel">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Pengingat Stok</p>
+                                    <p class="mt-1 text-lg font-black text-[#8faaf3]">{{ $pType === 'account' ? $productReminder : '-' }}</p>
+                                </div>
+                                <div class="admin-detail-panel md:col-span-2">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Kategori</p>
+                                    <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $productCategoryPath ?: '-' }}</p>
+                                </div>
+                                <div class="admin-detail-panel admin-detail-panel-soft md:col-span-2">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Aksi</p>
+                                    <div class="mt-3 flex flex-wrap gap-2">
+                                        @if($pType === 'account')
+                                            <a href="{{ route('admin.credentials.index', $product->id) }}" class="rounded-full border-2 border-white bg-[#ffeef2] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#e1306c] shadow-sm">Gudang Akun</a>
+                                        @endif
+                                        <a href="{{ route('admin.products.edit', $product->id) }}" class="rounded-full border-2 border-white bg-[#5a76c8] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-sm">Edit Produk</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             @endforeach
         </div>
     @else
@@ -266,10 +366,5 @@
         </div>
     @endif
 
-    @if(isset($products) && method_exists($products, 'links') && $products->hasPages())
-        <div class="mt-8 rounded-[2rem] border-4 border-white bg-[#f8faff] p-5 sm:p-8 shadow-xl shadow-[#bde0fe]/20 min-w-0 w-full">
-            {{ $products->links() }}
-        </div>
-    @endif
 </div>
 @endsection

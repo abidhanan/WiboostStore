@@ -62,7 +62,7 @@
                 })
                 ->all();
         };
-        $formatDashboardTime = static fn ($value) => $value ? $value->diffForHumans() : '-';
+        $formatDashboardTime = static fn ($value) => $value ? $value->format('d M Y, H:i') : '-';
         $currentAdminRoleId = (int) (auth()->user()?->role_id ?? 0);
         $dashboardCanAccess = static function (string $area) use ($currentAdminRoleId): bool {
             if ($currentAdminRoleId === 1) {
@@ -88,8 +88,8 @@
         $showDashboardCommissions = $dashboardCanAccess('commissions');
         $showDashboardWithdrawals = $dashboardCanAccess('withdrawals');
         $showDashboardRefunds = $dashboardCanAccess('refunds');
-        $selectedMonth = $selectedMonth ?? request('month', date('m'));
-        $selectedYear = $selectedYear ?? request('year', date('Y'));
+        $selectedMonth = $selectedMonth ?? request('month', now()->format('m'));
+        $selectedYear = $selectedYear ?? request('year', now()->format('Y'));
         $adminMonthNames = [
             1 => 'Januari',
             2 => 'Februari',
@@ -105,6 +105,13 @@
             12 => 'Desember',
         ];
         $selectedMonthNumber = (int) $selectedMonth;
+        $dashboardChartWeekStartLabel = isset($dashboardChartWeekStart)
+            ? \Carbon\Carbon::parse($dashboardChartWeekStart)->locale('id')->translatedFormat('d M Y')
+            : '-';
+        $dashboardChartWeekEndLabel = isset($dashboardChartWeekEnd)
+            ? \Carbon\Carbon::parse($dashboardChartWeekEnd)->locale('id')->translatedFormat('d M Y')
+            : '-';
+        $dashboardChartBaseQuery = ['month' => $selectedMonth, 'year' => $selectedYear];
         $dashboardChartCards = collect([
             ['enabled' => $showDashboardTransactions, 'key' => 'transactions', 'title' => 'Transaksi', 'max' => $transactionMax, 'stroke' => '#5a76c8', 'bg' => 'bg-[#f8fbff]', 'text' => 'text-[#8faaf3]', 'suffix' => ' transaksi'],
             ['enabled' => $showDashboardRevenue, 'key' => 'revenue', 'title' => 'Pendapatan', 'max' => $revenueMax, 'stroke' => '#4bc6b9', 'bg' => 'bg-[#f6fffb]', 'text' => 'text-emerald-500', 'suffix' => ''],
@@ -152,9 +159,9 @@
     </style>
 
     <div class="wiboost-admin-dashboard space-y-6 sm:space-y-8 pb-12 relative z-10 w-full min-w-0">
-        <div class="relative z-30 rounded-[2rem] border-4 border-white bg-white/90 p-4 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:rounded-[2.5rem] sm:p-5">
-            <form action="{{ route('admin.dashboard') }}" method="GET" class="flex w-full flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div class="flex w-full items-center gap-2 md:w-auto">
+        <div class="relative z-30">
+            <form action="{{ route('admin.dashboard') }}" method="GET" class="flex w-full flex-col items-stretch gap-3 md:flex-row md:items-center md:justify-end">
+                <div class="flex w-full items-center justify-end gap-2 md:w-auto">
                     <input type="hidden" name="month" value="{{ $selectedMonth }}">
                     <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
                         <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
@@ -175,7 +182,7 @@
                             <span class="admin-theme-select-arrow">v</span>
                         </button>
                         <div class="admin-theme-select-menu">
-                            @for($y = date('Y'); $y >= date('Y') - 3; $y--)
+                            @for($y = now()->year; $y >= now()->year - 3; $y--)
                                 <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
                             @endfor
                         </div>
@@ -183,7 +190,7 @@
                 </div>
 
                 @if($showDashboardTransactions)
-                    <a href="{{ route('admin.transactions.export_excel', ['month' => $selectedMonth, 'year' => $selectedYear]) }}" target="_blank" class="flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-[1rem] border-4 border-white bg-[#4bc6b9] px-6 text-sm font-black text-white shadow-md shadow-[#4bc6b9]/25 transition-transform hover:bg-[#3ba398] active:scale-95 md:w-auto sm:rounded-[1.2rem]">
+                    <a href="{{ route('admin.dashboard.export_excel', ['month' => $selectedMonth, 'year' => $selectedYear]) }}" target="_blank" class="flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-[1rem] border-4 border-white bg-[#4bc6b9] px-6 text-sm font-black text-white shadow-md shadow-[#4bc6b9]/25 transition-transform hover:bg-[#3ba398] active:scale-95 md:w-auto sm:rounded-[1.2rem]">
                         @include('partials.wiboost-icon', ['name' => 'chart', 'class' => 'h-5 w-5'])
                         <span class="whitespace-nowrap">Cetak Laporan</span>
                     </a>
@@ -192,15 +199,8 @@
         </div>
         
         <!-- Monthly Summary -->
-        @if($showDashboardTransactions || $showDashboardRevenue || $showDashboardUsers || $showDashboardResellers || $showDashboardCommissions || $showDashboardRefunds)
+        @if($showDashboardTransactions || $showDashboardRevenue || $showDashboardUsers || $showDashboardResellers || $showDashboardCommissions || $showDashboardWithdrawals || $showDashboardRefunds)
         <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-            @if($showDashboardTransactions)
-            <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
-                <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Transaksi Bulan Ini</p>
-                <p class="mt-3 text-4xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalTransactionsMonth ?? 0, 0, ',', '.') }}</p>
-            </article>
-            @endif
-
             @if($showDashboardRevenue)
             <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
                 <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Pendapatan Bulan Ini</p>
@@ -215,10 +215,24 @@
             </article>
             @endif
 
+            @if($showDashboardWithdrawals)
+            <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
+                <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Penarikan Bulan Ini</p>
+                <p class="mt-3 truncate text-4xl font-black tracking-tight text-[#2b3a67]">Rp {{ number_format($withdrawalMonth ?? 0, 0, ',', '.') }}</p>
+            </article>
+            @endif
+
             @if($showDashboardRefunds)
             <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
                 <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Refund Bulan Ini</p>
                 <p class="mt-3 truncate text-4xl font-black tracking-tight text-[#2b3a67]">Rp {{ number_format($refundMonth ?? 0, 0, ',', '.') }}</p>
+            </article>
+            @endif
+
+            @if($showDashboardTransactions)
+            <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
+                <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Transaksi Bulan Ini</p>
+                <p class="mt-3 text-4xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalTransactionsMonth ?? 0, 0, ',', '.') }}</p>
             </article>
             @endif
 
@@ -235,10 +249,6 @@
                 <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Total Member</p>
                 <p class="mt-3 text-4xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalMembers ?? 0, 0, ',', '.') }}</p>
             </article>
-            <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
-                <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Total Buyer</p>
-                <p class="mt-3 text-4xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalBuyers ?? 0, 0, ',', '.') }}</p>
-            </article>
             @endif
 
             @if($showDashboardResellers)
@@ -247,15 +257,47 @@
                 <p class="mt-3 text-4xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalResellers ?? 0, 0, ',', '.') }}</p>
             </article>
             @endif
+
+            @if($showDashboardUsers)
+            <article class="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-8">
+                <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Total Buyer</p>
+                <p class="mt-3 text-4xl font-black tracking-tight text-[#2b3a67]">{{ number_format($totalBuyers ?? 0, 0, ',', '.') }}</p>
+            </article>
+            @endif
         </section>
         @endif
 
         @if($dashboardChartCards->isNotEmpty())
-        <section class="overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:rounded-[2.5rem]">
-            <div class="flex flex-col gap-2 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-7 sm:py-6 sm:flex-row sm:items-center sm:justify-between">
-                <div class="min-w-0">
+        @php
+            $dashboardChartPrevUrl = route('admin.dashboard', array_filter(array_merge($dashboardChartBaseQuery, ['chart_week' => $dashboardChartPrevWeek ?? null]))) . '#dashboard-weekly-chart';
+            $dashboardChartNextUrl = route('admin.dashboard', array_filter(array_merge($dashboardChartBaseQuery, ['chart_week' => $dashboardChartNextWeek ?? null]))) . '#dashboard-weekly-chart';
+            $dashboardChartPrevFetchUrl = route('admin.dashboard.weekly_chart', array_filter(array_merge($dashboardChartBaseQuery, ['chart_week' => $dashboardChartPrevWeek ?? null])));
+            $dashboardChartNextFetchUrl = route('admin.dashboard.weekly_chart', array_filter(array_merge($dashboardChartBaseQuery, ['chart_week' => $dashboardChartNextWeek ?? null])));
+        @endphp
+        <section id="dashboard-weekly-chart" class="scroll-mt-24 overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:scroll-mt-28 sm:rounded-[2.5rem]">
+            <div class="flex items-start justify-between gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:items-center sm:px-7 sm:py-6">
+                <div class="min-w-0 flex-1">
                     <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Grafik</p>
-                    <h3 class="mt-1 text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Grafik 7 hari terakhir</h3>
+                    <div class="mt-1 flex min-w-0 items-center justify-between gap-3 sm:block">
+                        <h2 class="min-w-0 text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Grafik Mingguan</h2>
+                        <div class="flex shrink-0 items-center justify-end gap-2 sm:hidden">
+                            <a href="{{ $dashboardChartPrevUrl }}" data-dashboard-week-nav data-dashboard-week-fetch="{{ $dashboardChartPrevFetchUrl }}" data-no-page-loader="true" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/25 transition-transform hover:bg-[#4760a9] active:scale-95" title="Minggu Sebelumnya">
+                                <span class="text-base font-black">&lt;</span>
+                            </a>
+                            <a href="{{ $dashboardChartNextUrl }}" data-dashboard-week-nav data-dashboard-week-fetch="{{ $dashboardChartNextFetchUrl }}" data-no-page-loader="true" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/25 transition-transform hover:bg-[#4760a9] active:scale-95" title="Minggu Selanjutnya">
+                                <span class="text-base font-black">&gt;</span>
+                            </a>
+                        </div>
+                    </div>
+                    <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $dashboardChartWeekStartLabel }} - {{ $dashboardChartWeekEndLabel }}</p>
+                </div>
+                <div class="hidden shrink-0 items-center justify-end gap-2 sm:flex">
+                    <a href="{{ $dashboardChartPrevUrl }}" data-dashboard-week-nav data-dashboard-week-fetch="{{ $dashboardChartPrevFetchUrl }}" data-no-page-loader="true" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/25 transition-transform hover:bg-[#4760a9] active:scale-95 sm:rounded-[1.2rem]" title="Minggu Sebelumnya">
+                        <span class="text-lg font-black">&lt;</span>
+                    </a>
+                    <a href="{{ $dashboardChartNextUrl }}" data-dashboard-week-nav data-dashboard-week-fetch="{{ $dashboardChartNextFetchUrl }}" data-no-page-loader="true" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/25 transition-transform hover:bg-[#4760a9] active:scale-95 sm:rounded-[1.2rem]" title="Minggu Selanjutnya">
+                        <span class="text-lg font-black">&gt;</span>
+                    </a>
                 </div>
             </div>
 
@@ -288,7 +330,7 @@
         <section class="overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:rounded-[2.5rem]">
             <div class="border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-7 sm:py-6">
                 <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Produk Terlaris</p>
-                <h3 class="mt-1 text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Paling Sering Dibeli</h3>
+                <h2 class="mt-1 text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Paling Sering Dibeli</h2>
             </div>
 
             <div class="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 sm:p-7 xl:grid-cols-4">
@@ -299,14 +341,14 @@
                             <a href="{{ route('admin.products.index', ['search' => $summary['product']->name]) }}" class="mt-3 block line-clamp-3 text-lg font-black leading-tight text-[#2b3a67] transition-colors hover:text-[#5a76c8]">
                                 {{ $summary['product']->name }}
                             </a>
-                            <div class="mt-auto grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-2 pt-5">
-                                <div class="min-w-0 rounded-2xl border-2 border-white bg-white px-3 py-2 shadow-sm">
-                                    <p class="text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">Dibeli</p>
+                            <div class="mt-auto grid grid-cols-[4rem_minmax(8.75rem,1fr)] gap-2 pt-5">
+                                <div class="min-w-0 rounded-2xl border-2 border-white bg-white px-2.5 py-2 shadow-sm">
+                                    <p class="text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">Terjual</p>
                                     <p class="text-xl font-black text-[#5a76c8]">{{ number_format($summary['orders'], 0, ',', '.') }}</p>
                                 </div>
-                                <div class="min-w-0 overflow-hidden rounded-2xl border-2 border-white bg-white px-3 py-2 shadow-sm">
+                                <div class="min-w-0 overflow-hidden rounded-2xl border-2 border-white bg-white px-2.5 py-2 shadow-sm">
                                     <p class="text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">Omzet</p>
-                                    <p class="break-words text-lg font-black leading-tight text-[#4bc6b9] sm:text-xl">Rp {{ number_format($summary['revenue'], 0, ',', '.') }}</p>
+                                    <p class="max-w-full truncate whitespace-nowrap text-xl font-black leading-tight tracking-tight text-[#4bc6b9]" title="Rp {{ number_format($summary['revenue'], 0, ',', '.') }}">Rp {{ number_format($summary['revenue'], 0, ',', '.') }}</p>
                                 </div>
                             </div>
                         @else
@@ -368,8 +410,8 @@
             <div class="mb-6 flex items-center gap-3 border-b-4 border-dashed border-[#f4f9ff] pb-6">
                 <div class="text-3xl">🛡️</div>
                 <div>
-                    <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Risiko Stok</p>
-                    <h4 class="text-2xl font-black text-[#2b3a67]">Produk Perlu Restock</h4>
+                        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Ringkasan Stok</p>
+                    <h3 class="text-2xl font-black text-[#2b3a67]">Produk Perlu Restock</h3>
                 </div>
             </div>
 
@@ -401,8 +443,8 @@
                 <div class="flex items-center gap-3 min-w-0">
                     <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.25rem] border-2 border-white bg-[#f4f9ff] text-2xl shadow-inner">&#128229;</div>
                     <div class="min-w-0">
-                        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Laporan User</p>
-                        <h4 class="truncate text-xl font-black text-[#2b3a67] sm:text-2xl">Laporan Terbaru</h4>
+                        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Ringkasan Laporan</p>
+                        <h3 class="truncate text-xl font-black text-[#2b3a67] sm:text-2xl">Laporan Terbaru</h3>
                     </div>
                 </div>
                 <a href="{{ route('admin.reports.index') }}" class="hidden shrink-0 rounded-full border-2 border-white bg-[#5a76c8] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-md transition-transform hover:scale-105 sm:inline-flex">Lihat</a>
@@ -443,8 +485,8 @@
             <article class="flex flex-col overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
                 <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#fffdf7] px-5 py-5 sm:px-6 sm:py-6 md:flex-row md:items-center md:justify-between">
                     <div class="min-w-0">
-                        <p class="mb-1 truncate text-[10px] font-black uppercase tracking-[0.3em] text-amber-500">Risiko Stok</p>
-                        <h3 class="truncate text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Produk Perlu Restock</h3>
+                        <p class="mb-1 truncate text-[10px] font-black uppercase tracking-[0.3em] text-amber-500">Ringkasan Stok</p>
+                        <h2 class="truncate text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Produk Perlu Restock</h2>
                     </div>
                     <a href="{{ route('admin.products.index') }}" class="inline-flex w-full shrink-0 items-center justify-center rounded-full border-2 border-white bg-amber-500 px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-amber-500/20 transition-transform hover:scale-105 active:scale-95 md:w-auto">
                         Kelola Produk
@@ -509,8 +551,8 @@
             <article class="flex flex-col overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
                 <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-6 sm:py-6 md:flex-row md:items-center md:justify-between">
                     <div class="min-w-0">
-                        <p class="mb-1 truncate text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Laporan User</p>
-                        <h3 class="truncate text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Laporan Terbaru</h3>
+                        <p class="mb-1 truncate text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Ringkasan Laporan</p>
+                        <h2 class="truncate text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Laporan Terbaru</h2>
                     </div>
                     <a href="{{ route('admin.reports.index') }}" class="inline-flex w-full shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform hover:scale-105 active:scale-95 md:w-auto">
                         Lihat Semua
@@ -523,7 +565,7 @@
                                 <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">
                                     <th class="px-3 py-3">Invoice</th>
                                     <th class="px-3 py-3">Waktu</th>
-                                    <th class="px-3 py-3">User</th>
+                                    <th class="px-3 py-3">Pengguna</th>
                                     <th class="px-3 py-3">Jenis</th>
                                     <th class="px-3 py-3 text-center">Status</th>
                                 </tr>
@@ -533,9 +575,9 @@
                             <?php $reportInvoice = $report->related_invoice ?: 'LAP-' . str_pad((string) $report->id, 5, '0', STR_PAD_LEFT); ?>
                                     <tr class="transition hover:bg-[#f8faff]">
                                         <td class="px-3 py-3">
-                                            <a href="{{ route('admin.reports.index', ['search' => $reportInvoice]) }}" class="whitespace-nowrap text-xs font-black text-[#2b3a67]">{{ $reportInvoice }}</a>
+                                            <a href="{{ route('admin.reports.index', ['search' => $reportInvoice]) }}" class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $reportInvoice }}</a>
                                         </td>
-                                        <td class="whitespace-nowrap px-3 py-3 text-[10px] font-bold text-[#8faaf3]">{{ $formatDashboardTime($report->created_at) }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $formatDashboardTime($report->created_at) }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67]">{{ $report->user?->name ?: '-' }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#8faaf3]">{{ $report->category_label ?: '-' }}</td>
                                         <td class="px-3 py-3 text-center">
@@ -561,7 +603,7 @@
                                 <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">
                                     <th class="w-[24%] px-3 py-3">Invoice</th>
                                     <th class="w-[18%] px-3 py-3">Waktu</th>
-                                    <th class="w-[22%] px-3 py-3">User</th>
+                                    <th class="w-[22%] px-3 py-3">Pengguna</th>
                                     <th class="w-[20%] px-3 py-3">Jenis</th>
                                     <th class="w-[16%] px-3 py-3 text-center">Status</th>
                                 </tr>
@@ -571,9 +613,9 @@
                                     <?php $reportInvoice = $report->related_invoice ?: 'LAP-' . str_pad((string) $report->id, 5, '0', STR_PAD_LEFT); ?>
                                     <tr class="transition hover:bg-[#f8faff]">
                                         <td class="min-w-0 px-3 py-3">
-                                            <a href="{{ route('admin.reports.index', ['search' => $reportInvoice]) }}" class="block whitespace-nowrap text-xs font-black text-[#2b3a67] xl:text-sm">{{ $reportInvoice }}</a>
+                                            <a href="{{ route('admin.reports.index', ['search' => $reportInvoice]) }}" class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $reportInvoice }}</a>
                                         </td>
-                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-bold text-[#8faaf3] xl:text-sm">{{ $formatDashboardTime($report->created_at) }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $formatDashboardTime($report->created_at) }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67] xl:text-sm">{{ $report->user?->name ?: '-' }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#8faaf3] xl:text-sm">{{ $report->category_label ?: '-' }}</td>
                                         <td class="px-3 py-3 text-center">
@@ -604,7 +646,7 @@
                 <div class="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between w-full">
                     <div class="max-w-2xl min-w-0">
                         <p class="inline-flex px-3 py-1 bg-[#fff5eb] text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 rounded-full border border-amber-200 mb-2 shadow-sm">Perlu Perhatian</p>
-                        <h3 class="mt-2 text-xl sm:text-2xl font-black tracking-tight text-amber-600 md:text-3xl drop-shadow-sm">Stok produk mulai menipis!</h3>
+                        <h2 class="mt-2 text-xl sm:text-2xl font-black tracking-tight text-amber-600 md:text-3xl drop-shadow-sm">Stok produk mulai menipis!</h2>
                         <p class="mt-3 text-xs sm:text-sm font-bold text-amber-700 bg-amber-50 p-3 sm:p-4 rounded-2xl border-2 border-white shadow-inner">Beberapa produk akun premium sudah menyentuh batas pengingat stok. Segera restock supaya order dari pengguna tetap lancar.</p>
                     </div>
                     <a href="{{ route('admin.products.index') }}" class="w-full sm:w-auto text-center inline-flex items-center justify-center gap-2 rounded-full border-4 border-white bg-amber-500 px-6 py-3 sm:py-4 text-sm font-black text-white shadow-lg shadow-amber-500/30 transition-transform active:scale-95 hover:bg-amber-600 mt-2 shrink-0">
@@ -666,8 +708,8 @@
             <article class="flex flex-col overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
                 <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 sm:px-6 py-5 sm:py-6 md:flex-row md:items-center md:justify-between w-full">
                     <div class="min-w-0">
-                        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3] mb-1 truncate">Realtime Order</p>
-                        <h3 class="text-xl sm:text-2xl font-black tracking-tight text-[#2b3a67] truncate">Transaksi Terbaru</h3>
+                        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3] mb-1 truncate">Ringkasan Transaksi</p>
+                        <h2 class="text-xl sm:text-2xl font-black tracking-tight text-[#2b3a67] truncate">Transaksi Terbaru</h2>
                     </div>
                     <a href="{{ route('admin.transactions.index') }}" class="shrink-0 text-center w-full md:w-auto inline-flex items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform hover:scale-105 active:scale-95">
                         Lihat Semua
@@ -681,7 +723,7 @@
                                 <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">
                                     <th class="px-3 py-3">Invoice</th>
                                     <th class="px-3 py-3">Waktu</th>
-                                    <th class="px-3 py-3">User</th>
+                                    <th class="px-3 py-3">Pengguna</th>
                                     <th class="px-3 py-3">Nominal</th>
                                     <th class="px-3 py-3 text-center">Status</th>
                                     <th class="px-3 py-3 text-center">Metode</th>
@@ -692,8 +734,8 @@
                                     <?php $method = $paymentMethodMeta($trx); ?>
                                     <?php $status = $transactionStatusMeta($trx); ?>
                                     <tr class="transition hover:bg-[#f8faff]">
-                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67]">{{ $trx->invoice_number }}</td>
-                                        <td class="whitespace-nowrap px-3 py-3 text-[10px] font-bold text-[#8faaf3]">{{ $formatDashboardTime($trx->created_at) }}</td>
+                                        <td class="px-3 py-3"><p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $trx->invoice_number }}</p></td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $formatDashboardTime($trx->created_at) }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67]">{{ $trx->user->name ?? 'Guest' }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-emerald-500">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</td>
                                         <td class="px-3 py-3 text-center">
@@ -722,7 +764,7 @@
                                 <tr class="text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">
                                     <th class="w-[24%] px-3 py-3">Invoice</th>
                                     <th class="w-[16%] px-3 py-3">Waktu</th>
-                                    <th class="w-[18%] px-3 py-3">User</th>
+                                    <th class="w-[18%] px-3 py-3">Pengguna</th>
                                     <th class="w-[16%] px-3 py-3">Nominal</th>
                                     <th class="w-[13%] px-3 py-3 text-center">Status</th>
                                     <th class="w-[13%] px-3 py-3 text-center">Metode</th>
@@ -734,9 +776,9 @@
                                     <?php $status = $transactionStatusMeta($trx); ?>
                                     <tr class="transition hover:bg-[#f8faff] group">
                                         <td class="px-3 py-3 min-w-0">
-                                            <p class="whitespace-nowrap text-xs font-black text-[#2b3a67] xl:text-sm">{{ $trx->invoice_number }}</p>
+                                            <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $trx->invoice_number }}</p>
                                         </td>
-                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-bold text-[#8faaf3] xl:text-sm">{{ $formatDashboardTime($trx->created_at) }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $formatDashboardTime($trx->created_at) }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67] xl:text-sm">{{ $trx->user->name ?? 'Guest' }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-emerald-500 xl:text-sm">Rp {{ number_format($trx->display_total_payable, 0, ',', '.') }}</td>
                                         <td class="px-3 py-3 text-center">
@@ -766,8 +808,8 @@
             <article class="flex flex-col overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
                 <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#fffcf0] px-5 sm:px-6 py-5 sm:py-6 md:flex-row md:items-center md:justify-between w-full">
                     <div class="min-w-0">
-                        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 mb-1 truncate">Arus Saldo</p>
-                        <h3 class="text-xl sm:text-2xl font-black tracking-tight text-[#2b3a67] truncate">Mutasi Saldo</h3>
+                        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 mb-1 truncate">Ringkasan Saldo</p>
+                        <h2 class="text-xl sm:text-2xl font-black tracking-tight text-[#2b3a67] truncate">Mutasi Saldo</h2>
                     </div>
                     <a href="{{ route('admin.deposits.index') }}" class="shrink-0 text-center w-full md:w-auto inline-flex items-center justify-center rounded-full border-2 border-white bg-amber-500 px-5 py-2.5 text-xs font-black text-white shadow-md shadow-amber-500/30 transition-transform hover:scale-105 active:scale-95">
                         Lihat Semua
@@ -781,7 +823,7 @@
                                 <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">
                                     <th class="px-3 py-3">Invoice</th>
                                     <th class="px-3 py-3">Waktu</th>
-                                    <th class="px-3 py-3">User</th>
+                                    <th class="px-3 py-3">Pengguna</th>
                                     <th class="px-3 py-3">Nominal</th>
                                     <th class="px-3 py-3 text-center">Tipe</th>
                                 </tr>
@@ -790,8 +832,8 @@
                                 @forelse(collect($globalWalletLogs ?? [])->take(5) as $log)
                                     <?php $logMeta = $walletLogMeta($log); ?>
                                     <tr class="transition hover:bg-[#fffdf7]">
-                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67]">{{ $log->invoice_number ?? '-' }}</td>
-                                        <td class="whitespace-nowrap px-3 py-3 text-[10px] font-bold text-[#8faaf3]">{{ $formatDashboardTime($log->created_at) }}</td>
+                                        <td class="px-3 py-3"><p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $log->invoice_number ?? '-' }}</p></td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $formatDashboardTime($log->created_at) }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67]">{{ $log->user->name ?? 'Deleted' }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black {{ $log->type === 'purchase' ? 'text-[#ff6b6b]' : 'text-emerald-500' }}">
                                             {{ $log->type === 'purchase' ? '-' : '+' }} Rp {{ number_format($log->amount, 0, ',', '.') }}
@@ -821,7 +863,7 @@
                                 <tr class="text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">
                                     <th class="w-[28%] px-3 py-3">Invoice</th>
                                     <th class="w-[18%] px-3 py-3">Waktu</th>
-                                    <th class="w-[22%] px-3 py-3">User</th>
+                                    <th class="w-[22%] px-3 py-3">Pengguna</th>
                                     <th class="w-[18%] px-3 py-3">Nominal</th>
                                     <th class="w-[14%] px-3 py-3 text-center">Tipe</th>
                                 </tr>
@@ -831,9 +873,9 @@
                                     <?php $logMeta = $walletLogMeta($log); ?>
                                     <tr class="transition hover:bg-[#fffdf7] group">
                                         <td class="px-3 py-3 min-w-0">
-                                            <p class="whitespace-nowrap text-xs font-black text-[#2b3a67] xl:text-sm">{{ $log->invoice_number ?? '-' }}</p>
+                                            <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $log->invoice_number ?? '-' }}</p>
                                         </td>
-                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-bold text-[#8faaf3] xl:text-sm">{{ $formatDashboardTime($log->created_at) }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $formatDashboardTime($log->created_at) }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#2b3a67] xl:text-sm">{{ $log->user->name ?? 'Deleted' }}</td>
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black xl:text-sm {{ $log->type === 'purchase' ? 'text-[#ff6b6b]' : 'text-emerald-500' }}">
                                             {{ $log->type === 'purchase' ? '-' : '+' }} Rp {{ number_format($log->amount, 0, ',', '.') }}
@@ -861,6 +903,121 @@
         </section>
         @endif
 
+        @if($showDashboardRefunds || $showDashboardProducts)
+        <section class="grid grid-cols-1 gap-6 sm:gap-8 {{ ($showDashboardRefunds && $showDashboardProducts) ? 'xl:grid-cols-2' : 'xl:grid-cols-1' }} w-full min-w-0">
+            @if($showDashboardRefunds)
+            <article class="flex w-full min-w-0 flex-col overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:rounded-[2.5rem]">
+                <div class="flex w-full flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#fff5f5] px-5 py-5 sm:px-6 sm:py-6 md:flex-row md:items-center md:justify-between">
+                    <div class="min-w-0">
+                        <p class="mb-1 truncate text-[10px] font-black uppercase tracking-[0.3em] text-[#ff6b6b]">Ringkasan Refund</p>
+                        <h2 class="truncate text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Refund Terbaru</h2>
+                    </div>
+                    <a href="{{ route('admin.refunds.index') }}" class="inline-flex w-full shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#ff6b6b] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#ff6b6b]/20 transition-transform hover:scale-105 active:scale-95 md:w-auto">
+                        Lihat Semua
+                    </a>
+                </div>
+                <div class="w-full min-w-0 p-4 sm:p-6 md:p-8">
+                    <div class="table-scroll w-full overflow-x-auto pb-2">
+                        <table class="min-w-[760px] w-full table-auto text-left">
+                            <thead>
+                                <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">
+                                    <th class="w-[26%] px-3 py-3">Invoice</th>
+                                    <th class="w-[18%] px-3 py-3">Waktu</th>
+                                    <th class="w-[24%] px-3 py-3">Pengguna</th>
+                                    <th class="w-[16%] px-3 py-3">Refund</th>
+                                    <th class="w-[16%] px-3 py-3 text-center">Persen</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
+                                @forelse(collect($latestRefunds ?? [])->take(5) as $refund)
+                                    @php
+                                        $refundTransaction = $refund->transaction;
+                                        $refundInvoice = $refundTransaction?->invoice_number ?: 'REF-' . str_pad((string) $refund->id, 5, '0', STR_PAD_LEFT);
+                                    @endphp
+                                    <tr class="transition hover:bg-[#f8faff]">
+                                        <td class="min-w-0 px-3 py-3">
+                                            <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $refundInvoice }}</p>
+                                        </td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $formatDashboardTime($refund->created_at) }}</td>
+                                        <td class="px-3 py-3">
+                                            <p class="max-w-[11rem] truncate whitespace-nowrap text-xs font-black text-[#2b3a67] xl:text-sm">{{ $refundTransaction?->user?->name ?: '-' }}</p>
+                                        </td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#ff6b6b] xl:text-sm">Rp {{ number_format($refund->manual_refund_amount, 0, ',', '.') }}</td>
+                                        <td class="px-3 py-3 text-center">
+                                            <span class="inline-flex whitespace-nowrap rounded-full border-2 border-white bg-[#ffe5e5] px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-[#ff6b6b] shadow-sm xl:text-[9px]">{{ $refund->manual_refund_percent }}%</span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-4 py-10 text-center">
+                                            <p class="text-sm font-black text-[#2b3a67]">Belum ada refund.</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </article>
+            @endif
+
+            @if($showDashboardProducts)
+            <article class="flex w-full min-w-0 flex-col overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:rounded-[2.5rem]">
+                <div class="flex w-full flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-6 sm:py-6 md:flex-row md:items-center md:justify-between">
+                    <div class="min-w-0">
+                        <p class="mb-1 truncate text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Ringkasan Durasi</p>
+                        <h2 class="truncate text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Durasi Habis</h2>
+                    </div>
+                    <a href="{{ route('admin.durations.index') }}" class="inline-flex w-full shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform hover:scale-105 active:scale-95 md:w-auto">
+                        Lihat Semua
+                    </a>
+                </div>
+                <div class="w-full min-w-0 p-4 sm:p-6 md:p-8">
+                    <div class="table-scroll w-full overflow-x-auto pb-2">
+                        <table class="min-w-[820px] w-full table-auto text-left">
+                            <thead>
+                                <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">
+                                    <th class="w-[25%] px-3 py-3">Invoice</th>
+                                    <th class="w-[18%] px-3 py-3">Waktu</th>
+                                    <th class="w-[20%] px-3 py-3">Nama</th>
+                                    <th class="w-[23%] px-3 py-3">Produk</th>
+                                    <th class="w-[14%] px-3 py-3 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
+                                @forelse(collect($latestExpiredDurations ?? [])->take(5) as $duration)
+                                    @php $durationUploaded = filled($duration->logout_proof_path); @endphp
+                                    <tr class="transition hover:bg-[#f8faff]">
+                                        <td class="min-w-0 px-3 py-3">
+                                            <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $duration->invoice_number ?? '-' }}</p>
+                                        </td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $formatDashboardTime($duration->credential_expires_at) }}</td>
+                                        <td class="px-3 py-3">
+                                            <p class="max-w-[10rem] truncate whitespace-nowrap text-xs font-black text-[#2b3a67] xl:text-sm">{{ $duration->user?->name ?? 'Pengguna' }}</p>
+                                        </td>
+                                        <td class="px-3 py-3">
+                                            <p class="max-w-[12rem] truncate whitespace-nowrap text-xs font-black text-[#5a76c8] xl:text-sm" title="{{ $duration->display_product_name }}">{{ $duration->display_product_name }}</p>
+                                        </td>
+                                        <td class="px-3 py-3 text-center">
+                                            <span class="{{ $durationUploaded ? 'bg-[#e6fff7] text-emerald-500' : 'bg-[#fff5eb] text-amber-500' }} inline-flex whitespace-nowrap rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm xl:text-[9px]">{{ $durationUploaded ? 'Sudah Unggah' : 'Belum Keluar' }}</span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-4 py-10 text-center">
+                                            <p class="text-sm font-black text-[#2b3a67]">Belum ada durasi habis.</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </article>
+            @endif
+        </section>
+        @endif
+
         @if($showDashboardCommissions || $showDashboardWithdrawals)
         <section class="grid grid-cols-1 gap-6 sm:mt-8 {{ ($showDashboardCommissions && $showDashboardWithdrawals) ? 'xl:grid-cols-2' : 'xl:grid-cols-1' }}">
             @if($showDashboardCommissions)
@@ -868,7 +1025,7 @@
                 <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f6fffb] px-5 py-5 sm:px-6 md:flex-row md:items-center md:justify-between">
                     <div class="min-w-0">
                         <p class="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500">Ringkasan Komisi</p>
-                        <h3 class="mt-1 text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Komisi Reseller</h3>
+                        <h2 class="mt-1 text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Komisi Reseller</h2>
                     </div>
                     <a href="{{ route('admin.commissions.index') }}" class="inline-flex w-full shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform hover:scale-105 active:scale-95 md:w-auto">
                         Lihat Semua
@@ -888,10 +1045,10 @@
                             @forelse(collect($latestIncomeCommissions ?? [])->take(5) as $commission)
                                 <tr class="transition hover:bg-[#f8faff] group">
                                     <td class="px-3 py-3 min-w-0">
-                                        <p class="whitespace-nowrap text-xs font-black text-[#2b3a67] xl:text-sm">{{ $commission['invoice'] ?? '-' }}</p>
+                                        <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $commission['invoice'] ?? '-' }}</p>
                                     </td>
                                     <td class="px-3 py-3">
-                                        <p class="whitespace-nowrap text-xs font-bold text-[#8faaf3] xl:text-sm">{{ $commission['time'] ?? '-' }}</p>
+                                        <p class="whitespace-nowrap text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $commission['time'] ?? '-' }}</p>
                                     </td>
                                     <td class="px-3 py-3">
                                         <p class="whitespace-nowrap text-xs font-black text-[#2b3a67] xl:text-sm">{{ $commission['reseller'] ?? '-' }}</p>
@@ -919,25 +1076,136 @@
                 <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#fffdf7] px-5 py-5 sm:px-6 md:flex-row md:items-center md:justify-between">
                     <div class="min-w-0">
                         <p class="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500">Ringkasan Penarikan</p>
-                        <h3 class="mt-1 text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Penarikan Komisi</h3>
+                        <h2 class="mt-1 text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Penarikan Komisi</h2>
                     </div>
                     <a href="{{ route('admin.withdrawals.index') }}" class="inline-flex w-full shrink-0 items-center justify-center rounded-full border-2 border-white bg-amber-500 px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-amber-500/20 transition-transform hover:scale-105 active:scale-95 md:w-auto">
                         Lihat Semua
                     </a>
                 </div>
-                <div class="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 sm:p-6">
-                    <div class="rounded-[1.5rem] border-2 border-white bg-[#f8fbff] p-4 shadow-inner">
-                        <p class="text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">Jumlah Pengajuan Penarikan</p>
-                        <p class="mt-2 text-2xl font-black text-[#2b3a67]">{{ number_format($withdrawalSummary['count'] ?? 0, 0, ',', '.') }}</p>
-                    </div>
-                    <div class="rounded-[1.5rem] border-2 border-white bg-[#f6fffb] p-4 shadow-inner">
-                        <p class="text-[9px] font-black uppercase tracking-widest text-emerald-500">Total Pengajuan Penarikan</p>
-                        <p class="mt-2 text-xl font-black text-[#4bc6b9]">Rp {{ number_format($withdrawalSummary['amount'] ?? 0, 0, ',', '.') }}</p>
-                    </div>
+                <div class="table-scroll w-full overflow-x-auto p-4 pb-2 sm:p-5 sm:pb-3">
+                    <table class="min-w-[820px] w-full table-auto text-left">
+                        <thead>
+                            <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">
+                                <th class="w-[24%] px-3 py-3">Invoice</th>
+                                <th class="w-[18%] px-3 py-3">Waktu</th>
+                                <th class="w-[24%] px-3 py-3">Reseller</th>
+                                <th class="w-[18%] px-3 py-3">Nominal</th>
+                                <th class="w-[16%] px-3 py-3 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
+                            @forelse(collect($latestWithdrawals ?? [])->take(5) as $withdrawal)
+                                @php
+                                    $withdrawalStatus = match ($withdrawal->status) {
+                                        'processing' => ['label' => 'Proses', 'class' => 'bg-[#e0fbfc] text-[#5a76c8]'],
+                                        'success', 'approved' => ['label' => 'Sukses', 'class' => 'bg-[#e6fff7] text-emerald-500'],
+                                        'failed', 'rejected' => ['label' => 'Gagal', 'class' => 'bg-[#ffe5e5] text-[#ff6b6b]'],
+                                        default => ['label' => 'Menunggu', 'class' => 'bg-[#fff5eb] text-amber-500'],
+                                    };
+                                @endphp
+                                <tr class="transition hover:bg-[#fffdf7]">
+                                    <td class="min-w-0 px-3 py-3">
+                                        <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">WD-{{ str_pad((string) $withdrawal->id, 5, '0', STR_PAD_LEFT) }}</p>
+                                    </td>
+                                    <td class="whitespace-nowrap px-3 py-3 text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $formatDashboardTime($withdrawal->created_at) }}</td>
+                                    <td class="px-3 py-3">
+                                        <p class="max-w-[11rem] truncate whitespace-nowrap text-xs font-black text-[#2b3a67] xl:text-sm">{{ $withdrawal->user?->name ?: '-' }}</p>
+                                    </td>
+                                    <td class="whitespace-nowrap px-3 py-3 text-sm font-black text-[#4bc6b9]">Rp {{ number_format($withdrawal->amount ?? 0, 0, ',', '.') }}</td>
+                                    <td class="px-3 py-3 text-center">
+                                        <span class="{{ $withdrawalStatus['class'] }} inline-flex whitespace-nowrap rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm xl:text-[9px]">{{ $withdrawalStatus['label'] }}</span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-4 py-10 text-center">
+                                        <p class="text-sm font-black text-[#2b3a67]">Belum ada pengajuan penarikan.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </article>
             @endif
         </section>
         @endif
     </div>
+    <script>
+        (function () {
+            const chartId = 'dashboard-weekly-chart';
+            const hidePageLoader = () => {
+                if (typeof window.wiboostHidePageLoader === 'function') {
+                    window.wiboostHidePageLoader();
+                }
+            };
+
+            async function loadDashboardChart(fetchUrl, browserUrl, updateHistory) {
+                const currentSection = document.getElementById(chartId);
+                hidePageLoader();
+
+                if (! currentSection || ! window.fetch || ! window.DOMParser) {
+                    window.location.href = browserUrl || fetchUrl;
+                    return;
+                }
+
+                currentSection.setAttribute('aria-busy', 'true');
+
+                const response = await fetch(fetchUrl, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    credentials: 'same-origin',
+                });
+
+                if (! response.ok) {
+                    throw new Error('Gagal memuat grafik mingguan.');
+                }
+
+                const html = await response.text();
+                const nextDocument = new DOMParser().parseFromString(html, 'text/html');
+                const nextSection = nextDocument.getElementById(chartId);
+
+                if (! nextSection) {
+                    throw new Error('Grafik mingguan tidak ditemukan.');
+                }
+
+                currentSection.replaceWith(document.importNode(nextSection, true));
+                hidePageLoader();
+
+                if (updateHistory) {
+                    window.history.pushState({ wiboostDashboardChart: true }, '', browserUrl || fetchUrl);
+                }
+            }
+
+            document.addEventListener('click', function (event) {
+                const link = event.target.closest('[data-dashboard-week-nav]');
+
+                if (! link || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                    return;
+                }
+
+                event.preventDefault();
+                hidePageLoader();
+
+                loadDashboardChart(link.dataset.dashboardWeekFetch || link.href, link.href, true).catch(function () {
+                    window.location.href = link.href;
+                });
+            });
+
+            window.addEventListener('popstate', function () {
+                if (! document.getElementById(chartId)) {
+                    return;
+                }
+
+                const dashboardUrl = new URL(window.location.href);
+                const fetchUrl = new URL(@json(route('admin.dashboard.weekly_chart')), window.location.origin);
+                fetchUrl.search = dashboardUrl.search;
+
+                loadDashboardChart(fetchUrl.toString(), window.location.href, false).catch(function () {
+                    window.location.reload();
+                });
+            });
+        })();
+    </script>
 @endsection

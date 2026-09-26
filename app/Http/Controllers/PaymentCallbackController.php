@@ -80,7 +80,7 @@ class PaymentCallbackController extends Controller
                                 $user->activateMembership((int) data_get($deposit->payment_response, 'membership_days', 30));
                                 $deposit->markMembershipActivated();
                             }
-                        } else {
+                        } elseif (! $deposit->isRefundCredit()) {
                             $walletHistory = WalletHistory::firstOrCreate(
                                 [
                                     'invoice_number' => $deposit->invoice_number,
@@ -280,7 +280,7 @@ class PaymentCallbackController extends Controller
                                 $user->activateMembership((int) data_get($deposit->payment_response, 'membership_days', 30));
                                 $deposit->markMembershipActivated();
                             }
-                        } else {
+                        } elseif (! $deposit->isRefundCredit()) {
                             $walletHistory = WalletHistory::firstOrCreate(
                                 [
                                     'invoice_number' => $deposit->invoice_number,
@@ -450,7 +450,7 @@ class PaymentCallbackController extends Controller
                                 $user->activateMembership((int) data_get($deposit->payment_response, 'membership_days', 30));
                                 $deposit->markMembershipActivated();
                             }
-                        } else {
+                        } elseif (! $deposit->isRefundCredit()) {
                             $walletHistory = WalletHistory::firstOrCreate(
                                 [
                                     'invoice_number' => $deposit->invoice_number,

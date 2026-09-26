@@ -155,13 +155,12 @@ class OrderFulfillmentService
             $product = $lockedTransaction->product;
 
             $lockedCredential->increment('current_usage');
-            $lockedTransaction->update([
+            $lockedTransaction->update(array_merge([
                 'order_status' => 'success',
-                'credential_data' => $this->credentialPayload($lockedCredential, $product),
                 'target_notes' => $lockedCredential->needs_otp
                     ? 'Pesanan ini membutuhkan bantuan admin atau link tutorial tambahan untuk OTP / akses login.'
                     : 'Data pesanan berhasil dikirim ke akun kamu.',
-            ]);
+            ], $this->credentialAssignmentData($lockedCredential, $product)));
 
             return [
                 'transaction_id' => $lockedTransaction->id,
@@ -1148,18 +1147,50 @@ class OrderFulfillmentService
             }
 
             $lockedCredential->increment('current_usage');
-            $lockedTransaction->update([
+            $lockedTransaction->update(array_merge([
                 'order_status' => 'processing',
-                'credential_data' => $this->credentialPayload($lockedCredential, $lockedTransaction->product),
                 'target_notes' => 'Pesanan sudah dibayar dan menunggu admin memproses data buyer.',
-            ]);
+            ], $this->credentialAssignmentData($lockedCredential, $lockedTransaction->product)));
 
             return true;
         });
     }
 
+    protected function credentialAssignmentData(ProductCredential $credential, ?Product $product): array
+    {
+        $payload = $this->credentialPayload($credential, $product);
+        $startedAt = null;
+        $expiresAt = null;
+        $durationValue = (int) ($credential->duration_value ?? 0);
+        $durationUnit = (string) ($credential->duration_unit ?? '');
+
+        if ($durationValue > 0 && in_array($durationUnit, ['day', 'week', 'month', 'year'], true)) {
+            $startedAt = now();
+            $expiresAt = match ($durationUnit) {
+                'week' => $startedAt->copy()->addWeeks($durationValue),
+                'month' => $startedAt->copy()->addMonthsNoOverflow($durationValue),
+                'year' => $startedAt->copy()->addYearsNoOverflow($durationValue),
+                default => $startedAt->copy()->addDays($durationValue),
+            };
+
+            $payload['credential_started_at'] = $startedAt->toDateTimeString();
+            $payload['credential_expires_at'] = $expiresAt->toDateTimeString();
+        }
+
+        return [
+            'credential_data' => $payload,
+            'credential_started_at' => $startedAt,
+            'credential_expires_at' => $expiresAt,
+        ];
+    }
+
     protected function credentialPayload(ProductCredential $credential, ?Product $product): array
     {
+        $durationValue = (int) ($credential->duration_value ?? 0);
+        $durationUnit = in_array((string) ($credential->duration_unit ?? ''), ['day', 'week', 'month', 'year'], true)
+            ? (string) $credential->duration_unit
+            : null;
+
         return [
             'credential_id' => $credential->id,
             'email' => ($credential->data_1 !== '-' && $credential->data_1 !== null) ? $credential->data_1 : null,
@@ -1171,6 +1202,17 @@ class OrderFulfillmentService
             'tutorial_link' => $credential->tutorial_link,
             'needs_otp' => $credential->needs_otp,
             'requires_login_proof' => $credential->requires_login_proof,
+            'requires_logout_proof' => $credential->requires_logout_proof,
+            'duration_value' => $durationValue > 0 ? $durationValue : null,
+            'duration_unit' => $durationUnit,
+            'duration_label' => $durationValue > 0 && $durationUnit
+                ? $durationValue . ' ' . match ($durationUnit) {
+                    'week' => 'minggu',
+                    'month' => 'bulan',
+                    'year' => 'tahun',
+                    default => 'hari',
+                }
+                : null,
             'type' => $product?->process_type,
         ];
     }

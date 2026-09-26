@@ -1,6 +1,7 @@
 @extends(($isGuestCatalog ?? false) ? 'layouts.catalog_guest' : 'layouts.user')
 
 @section('title', 'Order - ' . $category->name)
+@section('meta_description', 'Pilih layanan ' . $category->name . ' yang tersedia di Wiboost Store dan lanjutkan pesanan digital dengan mudah.')
 
 @section('content')
 <style>
@@ -534,7 +535,9 @@
     @php
         $isGuestCatalog = $isGuestCatalog ?? false;
         $categoryRouteName = $isGuestCatalog ? 'guest.order.category' : 'user.order.category';
-        $categoryHomeUrl = $isGuestCatalog ? route('home') . '#kategori' : route('user.dashboard');
+        $categoryHomeUrl = $isGuestCatalog ? route('home') : route('user.dashboard');
+        $backGoesHome = ! ($category->parent && ! in_array($category->parent->slug, \App\Support\WiboostCatalog::removedCategorySlugs(), true));
+        $backUrl = $backGoesHome ? $categoryHomeUrl : route($categoryRouteName, $category->parent->slug);
         $loginUrl = route('login');
         $showSuntikSosmedForm = $isSuntikSosmedOrder ?? false;
         $showSuntikSosmedForm = $isGuestCatalog ? false : $showSuntikSosmedForm;
@@ -586,9 +589,17 @@
         $categoryUsesTargetEmoji = \App\Support\WiboostEmoji::shouldUseForSubcategory($category);
     @endphp
 
+    @unless($isGuestCatalog)
+        <script>
+            try {
+                sessionStorage.setItem('wiboostReturnCatalogTop', '1');
+            } catch (error) {}
+        </script>
+    @endunless
+
     <div id="page-product-list" class="transition-all duration-300 relative z-10">
         <div class="relative mb-10 grid grid-cols-[auto,minmax(0,1fr)] gap-x-4 gap-y-3 overflow-visible rounded-[2.5rem] border-4 border-white bg-white/95 p-5 text-left shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:gap-x-6 sm:p-6 md:gap-x-8 md:p-8">
-            <a href="{{ $category->parent_id ? route($categoryRouteName, $category->parent->slug) : $categoryHomeUrl }}" aria-label="Kembali" class="col-start-1 row-start-1 flex h-9 w-9 shrink-0 items-center justify-center self-center justify-self-center rounded-xl border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-105 hover:bg-[#e0fbfc] active:scale-95">
+            <a href="{{ $backUrl }}"@if($isGuestCatalog && $backGoesHome) onclick="try{sessionStorage.setItem('wiboostReturnCatalog','1')}catch(e){}"@endif aria-label="Kembali" class="col-start-1 row-start-1 flex h-9 w-9 shrink-0 items-center justify-center self-center justify-self-center rounded-xl border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-105 hover:bg-[#e0fbfc] active:scale-95">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
             </a>
             <div class="col-start-2 row-start-1 inline-block self-center justify-self-start rounded-full border-2 border-white bg-[#e0fbfc] px-4 py-1 text-[10px] font-black uppercase tracking-widest text-[#4bc6b9] shadow-sm">
@@ -606,14 +617,10 @@
             </div>
 
             <div class="relative z-10 col-start-2 row-start-2 min-w-0 self-center text-left">
-                <h2 class="wiboost-order-header-title mb-2 font-black tracking-tight text-[#2b3a67] drop-shadow-sm">{{ $category->name }}</h2>
-                @if($category->description)
-                    <p class="wiboost-order-header-description inline-block rounded-2xl border-2 border-white bg-[#f8faff] p-3 text-left font-bold text-[#4a5f96] shadow-inner w-full md:w-auto md:p-4">
-                        {!! nl2br(e($category->description)) !!}
-                    </p>
-                @else
-                    <p class="wiboost-order-header-description font-bold text-[#8faaf3]">Pilih layanan di bawah ini lalu lanjutkan ke checkout.</p>
-                @endif
+                <h1 class="wiboost-order-header-title mb-2 font-black tracking-tight text-[#2b3a67] drop-shadow-sm">{{ $category->name }}</h1>
+                <p class="wiboost-order-header-description w-full text-left font-bold text-[#4a5f96] md:w-auto">
+                    Pilih kategori di bawah ini untuk lanjut.
+                </p>
             </div>
         </div>
 
@@ -624,11 +631,11 @@
                 <input type="hidden" name="product_id" id="social_product_id" value="{{ old('product_id') }}">
 
                 <div class="flex items-center gap-3 mb-6 border-b-4 border-dashed border-[#f4f9ff] pb-4">
-                    <h3 class="text-2xl font-black text-[#2b3a67]">Detail Pesanan</h3>
+                    <h2 class="text-2xl font-black text-[#2b3a67]">Detail Pesanan</h2>
                 </div>
 
                 <div class="mb-6">
-                    <label class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Layanan <span class="text-[#ff6b6b]">*</span></label>
+                    <label class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Produk <span class="text-[#ff6b6b]">*</span></label>
                     <div id="social_service_select_wrap" class="wiboost-service-select-wrap">
                         <select id="social_service_select" tabindex="-1" aria-hidden="true" class="wiboost-service-native-select">
                             <option value="">{{ $products->isEmpty() ? 'Memuat layanan...' : 'Pilih layanan...' }}</option>
@@ -683,7 +690,7 @@
 
                 @if($requiresCheckoutWhatsapp)
                     <div class="mb-6 rounded-[2rem] border-4 border-white bg-[#f8faff] p-5 shadow-inner">
-                        <h4 class="mb-4 ml-2 text-xl font-black text-[#2b3a67]">Data Buyer</h4>
+                        <h3 class="mb-4 ml-2 text-xl font-black text-[#2b3a67]">Data Buyer</h3>
                         <label class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Nomor WhatsApp</label>
                         <input type="tel" name="checkout_whatsapp" value="{{ old('checkout_whatsapp') }}" required inputmode="numeric" pattern="[0-9]*" maxlength="20" data-wiboost-number-only autocomplete="tel" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 font-black text-[#2b3a67] placeholder-[#a3bbfb] outline-none shadow-inner transition focus:border-[#bde0fe]" placeholder="Contoh: 085312345678">
                         <p class="mt-2 ml-2 text-xs font-bold text-[#8faaf3]">Cukup isi sekali. Nomor ini akan tersimpan untuk transaksi berikutnya.</p>
@@ -704,7 +711,7 @@
                 </div>
 
                 <div class="relative mb-8 rounded-[2rem] border-4 border-white bg-white p-6 shadow-md shadow-[#bde0fe]/20">
-                    <h4 class="mb-5 ml-2 text-xl font-black text-[#2b3a67]">Metode Pembayaran</h4>
+                    <h3 class="mb-5 ml-2 text-xl font-black text-[#2b3a67]">Metode Pembayaran</h3>
 
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <label id="social_wallet_option" class="group relative flex cursor-pointer items-center gap-4 rounded-[1.5rem] border-4 border-white bg-gradient-to-r from-[#e0fbfc] to-[#f4f9ff] p-5 shadow-sm transition-all hover:border-[#bde0fe]">
@@ -740,7 +747,7 @@
             </form>
         @else
         <div class="mb-6 flex items-center gap-3 pl-2">
-            <h3 class="text-2xl font-black text-[#2b3a67]">Daftar Layanan</h3>
+            <h2 class="text-2xl font-black text-[#2b3a67]">Daftar Layanan</h2>
         </div>
 
         <div class="{{ $showCompactServiceCards ? $compactProductGridClass : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5' }}">
@@ -903,7 +910,7 @@
 
             <div id="checkout_fields_section" class="relative mb-8 rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 shadow-xl shadow-[#bde0fe]/30 sm:p-8">
                 <div class="checkout-step-heading mb-6">
-                    <h4 class="min-w-0 text-2xl font-black text-[#2b3a67]">Informasi Buyer</h4>
+                    <h3 class="min-w-0 text-2xl font-black text-[#2b3a67]">Informasi Buyer</h3>
                 </div>
                 <div id="checkout_fields_wrapper" class="space-y-6"></div>
             </div>
@@ -911,7 +918,7 @@
             @if($requiresCheckoutWhatsapp)
                 <div class="relative mb-8 rounded-[2.5rem] border-4 border-white bg-white/95 p-6 shadow-xl shadow-[#bde0fe]/30 sm:p-8">
                     <div class="checkout-step-heading mb-6">
-                        <h4 class="min-w-0 text-2xl font-black text-[#2b3a67]">Data Buyer</h4>
+                        <h3 class="min-w-0 text-2xl font-black text-[#2b3a67]">Data Buyer</h3>
                     </div>
                     <label class="mb-2 ml-2 block text-sm font-black text-[#5a76c8]">Nomor WhatsApp</label>
                     <input type="tel" name="checkout_whatsapp" value="{{ old('checkout_whatsapp') }}" required inputmode="numeric" pattern="[0-9]*" maxlength="20" data-wiboost-number-only autocomplete="tel" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-5 py-4 font-black text-[#2b3a67] placeholder-[#a3bbfb] outline-none shadow-inner transition focus:border-[#bde0fe]" placeholder="Contoh: 085312345678">
@@ -921,7 +928,7 @@
 
             <div class="relative mb-8 rounded-[2.5rem] border-4 border-white bg-white/95 backdrop-blur-sm p-6 shadow-xl shadow-[#bde0fe]/30 sm:p-8">
                 <div class="checkout-step-heading mb-6">
-                    <h4 class="min-w-0 text-2xl font-black text-[#2b3a67]">Metode Pembayaran</h4>
+                    <h3 class="min-w-0 text-2xl font-black text-[#2b3a67]">Metode Pembayaran</h3>
                 </div>
 
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -967,7 +974,6 @@
     const noTargetMsg = document.getElementById('no_target_msg');
     const oldCheckoutInput = @json(old());
     const oldProductId = @json(old('product_id'));
-    const shouldStartAtTop = !oldProductId && !window.location.hash;
     const socialServiceDetailUrlTemplate = @json($socialServiceDetailUrlTemplate);
     const socialServiceListUrl = @json($socialServiceListUrl);
     const socialServiceCache = new Map();
@@ -990,23 +996,10 @@
     const checkoutProductLogoEmote = document.getElementById('checkout_product_logo_emote');
     const rupiahFormatter = new Intl.NumberFormat('id-ID');
 
-    if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-    }
-
-    function forceOrderPageTop() {
-        if (shouldStartAtTop) {
-            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-        }
-    }
-
     function userNavbarOffset() {
         const navbar = document.querySelector('.wiboost-user-navbar');
         return navbar ? Math.ceil(navbar.getBoundingClientRect().height + 16) : 120;
     }
-
-    forceOrderPageTop();
-    window.addEventListener('pageshow', forceOrderPageTop);
 
     function syncMinimumQrisOption(prefix, total) {
         const qrisOption = document.getElementById(prefix + '_qris_option');
@@ -1696,12 +1689,6 @@
             });
             socialQuantityInput?.addEventListener('input', updateSocialTotal);
             loadSocialServices().then(syncSocialService);
-        }
-
-        if (shouldStartAtTop) {
-            requestAnimationFrame(forceOrderPageTop);
-            setTimeout(forceOrderPageTop, 120);
-            return;
         }
 
         const productButton = document.querySelector(`[data-id="${oldProductId}"]`);

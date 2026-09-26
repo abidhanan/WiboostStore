@@ -22,7 +22,7 @@
 </head>
 <body>
     <div class="header-container">
-        <h2>Wiboost Store - Rekapitulasi Pendapatan</h2>
+        <h1>Wiboost Store - Rekapitulasi Pendapatan</h1>
         <p>Periode Laporan: {{ $monthName }}</p>
     </div>
 
@@ -33,7 +33,7 @@
                 <th>Waktu Transaksi</th>
                 <th>No. Invoice</th>
                 <th>Nama Pelanggan</th>
-                <th>Layanan / Produk</th>
+                <th>Produk</th>
                 <th class="text-right nowrap">Nominal Masuk</th>
             </tr>
         </thead>

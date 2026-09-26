@@ -24,6 +24,12 @@
     @case('whatsapp')
         <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.15" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.25a7.75 7.75 0 0 0-6.72 11.62L4.6 19.4l3.58-.74A7.75 7.75 0 1 0 12 4.25Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9.3 8.8c.24-.24.62-.2.8.08l.6.94c.15.24.12.55-.08.75l-.32.34a.65.65 0 0 0-.08.74 5.05 5.05 0 0 0 2.12 2.12c.24.13.53.1.73-.08l.36-.34c.2-.19.5-.22.74-.07l.96.6c.28.18.32.56.08.8-.56.56-1.35.78-2.1.53a6.86 6.86 0 0 1-4.32-4.32c-.25-.74-.02-1.53.53-2.09Z"/></svg>
         @break
+    @case('mail')
+        <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 7 7.5 5.7L19.5 7"/></svg>
+        @break
+    @case('send')
+        <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3.5 11.5 17-7-6.8 16-2.6-6.3-7.6-2.7Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m11.1 14.2 4.8-4.8"/></svg>
+        @break
     @case('image')
         <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="m7.5 16 3.4-3.4 2.4 2.4 2.8-3.2 2.4 4.2M8.5 9h.01"/></svg>
         @break

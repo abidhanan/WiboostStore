@@ -66,29 +66,12 @@ class SetupWiboostCatalog extends Command
                     'slug' => $definition['slug'],
                 ]);
 
-                $generatedLogoPath = 'categories/generated/' . $definition['slug'] . '.svg';
-                $shouldRefreshLogo = $this->option('refresh-logos')
-                    || blank($category->image)
-                    || str_starts_with((string) $category->image, 'categories/generated/');
-
-                if ($shouldRefreshLogo) {
-                    Storage::disk('public')->put(
-                        $generatedLogoPath,
-                        $this->buildLogoSvg(
-                            $definition['name'],
-                            $definition['logo_text'],
-                            $definition['logo_background'],
-                            $definition['logo_foreground'],
-                        )
-                    );
-                }
-
                 $category->fill([
                     'parent_id' => $parent->id,
                     'name' => $definition['name'],
-                    'description' => $definition['description'],
-                    'emote' => null,
-                    'image' => $shouldRefreshLogo ? $generatedLogoPath : $category->image,
+                    'description' => $category->description ?: $definition['description'],
+                    'emote' => $category->emote,
+                    'image' => $this->cleanGeneratedLogoImage($category),
                     'fulfillment_type' => $parent->fulfillment_type,
                 ]);
 
@@ -101,34 +84,16 @@ class SetupWiboostCatalog extends Command
     {
         Product::query()
             ->with('category.parent')
-            ->where('provider_source', 'ordersosmed')
-            ->where('process_type', 'api')
-            ->chunkById(200, function ($products) {
-                foreach ($products as $product) {
-                    $subcategorySlug = WiboostCatalog::resolveOrdersosmedSubcategorySlug(
-                        $product->name,
-                        $this->extractProviderCategory($product->description),
-                        (string) $product->description,
-                    );
-
-                    $categoryId = Category::query()->where('slug', $subcategorySlug)->value('id');
-
-                    if ($categoryId && (int) $product->category_id !== (int) $categoryId) {
-                        $product->update([
-                            'category_id' => $categoryId,
-                        ]);
-                    }
-                }
-            });
-
-        Product::query()
-            ->with('category.parent')
             ->where('provider_source', 'digiflazz')
             ->chunkById(200, function ($products) {
                 foreach ($products as $product) {
                     $topCategorySlug = $this->resolveProductTopCategorySlug($product);
 
                     if (! $topCategorySlug) {
+                        continue;
+                    }
+
+                    if (in_array($topCategorySlug, ['top-up-game', 'kuota-murah', 'paket-data'], true)) {
                         continue;
                     }
 
@@ -202,6 +167,14 @@ class SetupWiboostCatalog extends Command
                     return;
                 }
 
+                if ($category->image && ! str_starts_with((string) $category->image, 'categories/generated/')) {
+                    return;
+                }
+
+                if (filled($category->emote)) {
+                    return;
+                }
+
                 if ($category->image && str_starts_with((string) $category->image, 'categories/generated/')) {
                     Storage::disk('public')->delete($category->image);
                 }
@@ -236,6 +209,18 @@ class SetupWiboostCatalog extends Command
         }
 
         return '';
+    }
+
+    protected function isGeneratedLogoCategory(Category $category): bool
+    {
+        return str_starts_with((string) $category->image, 'categories/generated/');
+    }
+
+    protected function cleanGeneratedLogoImage(Category $category): ?string
+    {
+        return $this->isGeneratedLogoCategory($category)
+            ? null
+            : $category->image;
     }
 
     protected function buildLogoSvg(string $name, string $logoText, string $background, string $foreground): string

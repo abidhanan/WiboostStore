@@ -73,7 +73,7 @@
             <th>Waktu Transaksi</th>
             <th>Invoice</th>
             <th>Nama Pelanggan</th>
-            <th>Layanan / Produk</th>
+            <th>Produk</th>
             <th>Total Pendapatan</th>
         </tr>
         @forelse($transactions as $index => $trx)

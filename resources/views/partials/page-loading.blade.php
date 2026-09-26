@@ -6,6 +6,11 @@
 
         #wiboost-page-loader.wiboost-page-loader-active {
             display: flex !important;
+            pointer-events: auto !important;
+        }
+
+        #wiboost-page-loader:not(.wiboost-page-loader-active) {
+            pointer-events: none !important;
         }
 
         .wiboost-loader-mark {
@@ -79,6 +84,7 @@
 
                 loader.dataset.visible = '1';
                 loader.setAttribute('aria-hidden', 'false');
+                loader.style.pointerEvents = 'auto';
                 loader.classList.remove('hidden');
                 loader.classList.add('flex', 'wiboost-page-loader-active');
 
@@ -118,6 +124,7 @@
 
                 loader.dataset.visible = '0';
                 loader.setAttribute('aria-hidden', 'true');
+                loader.style.pointerEvents = 'none';
                 loader.classList.add('hidden');
                 loader.classList.remove('flex', 'wiboost-page-loader-active');
             };
@@ -136,7 +143,7 @@
 
                 const link = event.target.closest('a[href]');
 
-                if (!link || link.target === '_blank' || link.hasAttribute('download') || link.dataset.noPageLoader === 'true') {
+                if (!link || link.target === '_blank' || link.hasAttribute('download') || link.dataset.noPageLoader === 'true' || link.hasAttribute('data-dashboard-week-nav')) {
                     return;
                 }
 

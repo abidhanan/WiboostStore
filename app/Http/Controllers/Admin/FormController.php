@@ -28,10 +28,18 @@ class FormController extends Controller
     public function index(Request $request)
     {
         $search = trim((string) $request->query('search', ''));
+        $formFilter = (string) $request->query('form_filter', 'all');
+        $allowedFormFilters = ['all', 'active', 'inactive'];
+
+        if (! in_array($formFilter, $allowedFormFilters, true)) {
+            $formFilter = 'all';
+        }
 
         $forms = MarketingForm::query()
             ->with('creator:id,name')
             ->withCount('submissions')
+            ->when($formFilter === 'active', fn ($query) => $query->where('is_active', true))
+            ->when($formFilter === 'inactive', fn ($query) => $query->where('is_active', false))
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($innerQuery) use ($search) {
                     $innerQuery->where('title', 'like', "%{$search}%")
@@ -45,7 +53,7 @@ class FormController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('admin.forms.index', compact('forms', 'search'));
+        return view('admin.forms.index', compact('forms', 'search', 'formFilter'));
     }
 
     public function create()
@@ -56,7 +64,7 @@ class FormController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate($this->rules());
-        $fields = $this->normalizeFields((array) $request->input('fields', []));
+        $fields = $this->normalizeFields($request);
 
         $form = MarketingForm::create([
             ...$this->normalizePayload($validated, $request),
@@ -104,7 +112,8 @@ class FormController extends Controller
     public function update(Request $request, MarketingForm $form)
     {
         $validated = $request->validate($this->rules($form));
-        $fields = $this->normalizeFields((array) $request->input('fields', []));
+        $oldOptionImages = $this->optionImagePaths($form->fields ?? []);
+        $fields = $this->normalizeFields($request, $form);
         $slugSource = trim((string) ($validated['slug'] ?? '')) !== '' ? $validated['slug'] : $validated['title'];
 
         $form->update([
@@ -113,12 +122,21 @@ class FormController extends Controller
             'fields' => $fields,
         ]);
 
+        $newOptionImages = $this->optionImagePaths($fields);
+        foreach (array_diff($oldOptionImages, $newOptionImages) as $obsoleteImage) {
+            Storage::disk('public')->delete($obsoleteImage);
+        }
+
         return $this->redirectToReturnTo($request, 'admin.forms.show', [$form])
             ->with('success', 'Formulir berhasil diperbarui.');
     }
 
     public function destroy(MarketingForm $form)
     {
+        foreach ($this->optionImagePaths($form->fields ?? []) as $optionImage) {
+            Storage::disk('public')->delete($optionImage);
+        }
+
         $form->submissions()
             ->select(['id', 'answers'])
             ->chunkById(100, function ($submissions) {
@@ -147,7 +165,12 @@ class FormController extends Controller
             'fields.*.label' => ['required', 'string', 'max:120'],
             'fields.*.type' => ['required', Rule::in(self::FIELD_TYPES)],
             'fields.*.help' => ['nullable', 'string', 'max:300'],
-            'fields.*.options' => ['nullable', 'string', 'max:1200'],
+            'fields.*.option_items' => ['nullable', 'array', 'max:50'],
+            'fields.*.option_items.*.label' => ['nullable', 'string', 'max:180'],
+            'fields.*.option_items.*.image' => ['nullable', 'image', 'max:5120'],
+            'fields.*.option_items.*.existing_image' => ['nullable', 'string', 'max:500'],
+            'fields.*.option_items.*.existing_image_name' => ['nullable', 'string', 'max:255'],
+            'fields.*.option_items.*.remove_image' => ['nullable', 'boolean'],
             'fields.*.required' => ['nullable', 'boolean'],
             'benefit_enabled' => ['nullable', 'boolean'],
             'benefit_title' => ['nullable', 'string', 'max:180'],
@@ -219,7 +242,7 @@ class FormController extends Controller
             }
 
             $definedOptions = collect($field['options'] ?? [])
-                ->map(fn ($option) => trim((string) $option))
+                ->map(fn ($option) => trim((string) (is_array($option) ? ($option['label'] ?? '') : $option)))
                 ->filter()
                 ->values()
                 ->all();
@@ -455,11 +478,14 @@ class FormController extends Controller
         return number_format($number, $precision, ',', '.');
     }
 
-    protected function normalizeFields(array $rawFields): array
+    protected function normalizeFields(Request $request, ?MarketingForm $form = null): array
     {
+        $rawFields = (array) $request->input('fields', []);
+        $allowedExistingImages = $this->optionImagePaths($form?->fields ?? []);
         $fields = [];
         $usedKeys = [];
         $errors = [];
+        $uploadedOptionImages = [];
 
         foreach (array_values($rawFields) as $index => $rawField) {
             $label = trim((string) ($rawField['label'] ?? ''));
@@ -477,14 +503,42 @@ class FormController extends Controller
             $usedKeys[] = $key;
 
             $options = [];
+            $optionImages = [];
+            $optionImageNames = [];
             if (in_array($type, ['select', 'checkbox'], true)) {
-                $optionText = str_replace(',', "\n", (string) ($rawField['options'] ?? ''));
-                $options = collect(preg_split('/\r\n|\r|\n/', $optionText) ?: [])
-                    ->map(fn ($option) => trim((string) $option))
-                    ->filter()
-                    ->unique()
-                    ->values()
-                    ->all();
+                $seenOptions = [];
+
+                foreach ((array) ($rawField['option_items'] ?? []) as $optionIndex => $rawOption) {
+                    $optionLabel = trim((string) ($rawOption['label'] ?? ''));
+
+                    if ($optionLabel === '' || in_array(Str::lower($optionLabel), $seenOptions, true)) {
+                        continue;
+                    }
+
+                    $seenOptions[] = Str::lower($optionLabel);
+                    $options[] = $optionLabel;
+                    $existingImage = trim((string) ($rawOption['existing_image'] ?? ''));
+                    $existingImageName = trim((string) ($rawOption['existing_image_name'] ?? ''));
+                    if (! in_array($existingImage, $allowedExistingImages, true)) {
+                        $existingImage = '';
+                        $existingImageName = '';
+                    }
+                    $image = $request->file("fields.{$index}.option_items.{$optionIndex}.image");
+                    $imagePath = ! empty($rawOption['remove_image']) ? null : ($existingImage ?: null);
+                    $imageName = $imagePath ? ($existingImageName ?: basename($imagePath)) : null;
+
+                    if ($image) {
+                        $imagePath = app(\App\Support\WebpImageOptimizer::class)
+                            ->storeUploadedFile($image, 'form-options');
+                        $imageName = Str::limit(basename(str_replace('\\', '/', $image->getClientOriginalName())), 255, '');
+                        $uploadedOptionImages[] = $imagePath;
+                    }
+
+                    if ($imagePath) {
+                        $optionImages[$optionLabel] = $imagePath;
+                        $optionImageNames[$optionLabel] = $imageName ?: basename($imagePath);
+                    }
+                }
 
                 if ($options === []) {
                     $errors["fields.{$index}.options"] = 'Opsi wajib diisi untuk pertanyaan pilihan.';
@@ -497,6 +551,8 @@ class FormController extends Controller
                 'type' => $type,
                 'help' => trim((string) ($rawField['help'] ?? '')) ?: null,
                 'options' => $options,
+                'option_images' => $optionImages,
+                'option_image_names' => $optionImageNames,
                 'required' => ! empty($rawField['required']),
             ];
         }
@@ -506,10 +562,29 @@ class FormController extends Controller
         }
 
         if ($errors !== []) {
+            foreach ($uploadedOptionImages as $uploadedOptionImage) {
+                Storage::disk('public')->delete($uploadedOptionImage);
+            }
+
             throw ValidationException::withMessages($errors);
         }
 
         return $fields;
+    }
+
+    protected function optionImagePaths(array $fields): array
+    {
+        return collect($fields)
+            ->flatMap(function ($field) {
+                $images = is_array($field['option_images'] ?? null) ? $field['option_images'] : [];
+
+                return collect($images)
+                    ->map(fn ($path) => trim((string) $path))
+                    ->filter();
+            })
+            ->unique()
+            ->values()
+            ->all();
     }
 
     protected function uniqueFieldKey(string $key, array $usedKeys): string

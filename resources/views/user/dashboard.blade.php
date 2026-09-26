@@ -123,6 +123,9 @@
     }
     .wiboost-main-category-card {
         aspect-ratio: 1 / 1;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
     }
     .wiboost-member-category-card:hover {
         border-color: #c4b5fd !important;
@@ -143,14 +146,21 @@
     }
     .wiboost-main-category-title {
         display: block;
-        font-size: clamp(0.62rem, 3.05vw, 0.75rem);
-        line-height: 1;
+        width: 100%;
+        font-size: clamp(0.56rem, 2.45vw, 0.68rem);
+        line-height: 1.12;
         max-width: 100%;
+        text-align: center;
         overflow: visible;
-        overflow-wrap: normal;
-        text-wrap: nowrap;
-        white-space: nowrap;
+        overflow-wrap: anywhere;
+        text-wrap: balance;
+        white-space: normal;
         word-break: keep-all;
+    }
+    .wiboost-catalog-anchor {
+        display: block;
+        height: 0;
+        scroll-margin-top: calc(var(--wiboost-user-mobile-navbar-height, 4.75rem) + 1.25rem);
     }
     @media (max-width: 640px) {
         .promo-banner-shell {
@@ -170,15 +180,19 @@
             width: 6rem !important;
         }
         .wiboost-main-category-title {
-            font-size: 1.125rem;
+            font-size: 0.9rem;
+            line-height: 1.15;
         }
     }
     @media (min-width: 768px) {
         .wiboost-main-category-title {
-            font-size: 1.25rem;
+            font-size: 1rem;
         }
     }
     @media (min-width: 1024px) {
+        .wiboost-catalog-anchor {
+            scroll-margin-top: calc(var(--wiboost-user-topbar-height, 6.25rem) + 1.25rem);
+        }
         .promo-slide h2 {
             font-size: clamp(3rem, 4vw, 5.25rem) !important;
             line-height: 0.98 !important;
@@ -321,7 +335,8 @@
         </div>
     @endif
 
-    <div class="text-center md:text-left mb-8 pl-2">
+    <span id="kategori" class="wiboost-catalog-anchor" aria-hidden="true"></span>
+    <div id="katalog-utama" class="text-center md:text-left mb-8 pl-2 scroll-mt-24">
         <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">Katalog Utama</div>
         <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pilih Kategori</h2>
     </div>
@@ -357,7 +372,7 @@
     @if(false)
     <div class="text-center md:text-left mb-6 pl-2">
         <div class="inline-block px-4 py-1 bg-[#fff0f0] text-[#ff6b6b] font-black rounded-full mb-3 text-[10px] border-2 border-white shadow-sm uppercase tracking-widest">Tutorial</div>
-        <h3 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pusat Tutorial</h3>
+        <h2 class="text-3xl font-black text-[#2b3a67] tracking-tight">Pusat Tutorial</h2>
     </div>
 
     @if(($tutorialGroups ?? collect())->isNotEmpty())
@@ -394,7 +409,7 @@
                             @foreach($group['tutorials'] as $tutorial)
                                 <details class="tutorial-accordion w-full cursor-pointer overflow-hidden rounded-[1.75rem] border-4 border-white bg-white shadow-lg shadow-[#bde0fe]/20">
                                     <summary class="flex items-start justify-between gap-4 p-6 text-left focus:outline-none md:p-7">
-                                        <h4 class="text-lg font-black leading-tight text-[#2b3a67] md:text-xl">{{ $tutorial->title }}</h4>
+                                        <h3 class="text-lg font-black leading-tight text-[#2b3a67] md:text-xl">{{ $tutorial->title }}</h3>
                                         <span class="mt-1 shrink-0 text-[#5a76c8]">
                                             <svg class="faq-icon h-6 w-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
                                         </span>
@@ -451,7 +466,7 @@
                     <span class="bg-[#f0f5ff] text-[#5a76c8] text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest text-right border border-white shadow-sm">{{ $tutorial->category }}</span>
                 </div>
 
-                <h4 class="font-black text-lg text-[#2b3a67] mb-2 leading-tight">{{ $tutorial->title }}</h4>
+                <h3 class="font-black text-lg text-[#2b3a67] mb-2 leading-tight">{{ $tutorial->title }}</h3>
                 <p class="text-xs font-bold text-[#8faaf3] mb-6 flex-1 line-clamp-3">{{ $tutorial->description }}</p>
 
                 <button onclick="openTutorialModal('tut-{{ $tutorial->id }}')" class="w-full bg-[#f4f9ff] hover:bg-[#5a76c8] text-[#5a76c8] hover:text-white font-extrabold text-sm py-3.5 rounded-full transition-colors border-2 border-white shadow-sm flex items-center justify-center gap-2">
@@ -477,14 +492,14 @@
 
         <div class="relative bg-white w-full max-w-2xl rounded-[2.5rem] p-6 md:p-8 shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col overflow-hidden max-h-[90vh] border-4 border-white">
             <div class="flex justify-between items-center mb-6 pb-4 border-b-4 border-dashed border-[#f4f9ff]">
-                <h3 class="text-xl md:text-2xl font-black text-[#2b3a67] flex items-center gap-3">
+                <h2 class="text-xl md:text-2xl font-black text-[#2b3a67] flex items-center gap-3">
                     @if($tutorial->image)
                         <img src="{{ Storage::url($tutorial->image) }}" class="w-10 h-10 object-cover rounded-xl border-2 border-[#f0f5ff] shadow-sm">
                     @else
                         <span class="text-[#5a76c8]">@include('partials.wiboost-icon', ['name' => 'book', 'class' => 'h-8 w-8'])</span>
                     @endif
                     {{ $tutorial->title }}
-                </h3>
+                </h2>
                 <button onclick="closeTutorialModal('tut-{{ $tutorial->id }}')" class="w-12 h-12 bg-[#ffe5e5] text-[#ff6b6b] hover:bg-[#ff6b6b] hover:text-white rounded-[1.2rem] flex items-center justify-center transition-colors font-black border-2 border-white shadow-sm shrink-0 text-xl">
                     @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])
                 </button>
@@ -519,6 +534,103 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const catalogReturnKey = 'wiboostReturnCatalogTop';
+        const isCatalogHash = () => ['#kategori', '#katalog-utama'].includes(window.location.hash);
+        const isCatalogQuery = () => new URLSearchParams(window.location.search).get('catalog') === 'top';
+        const hasCatalogReturnFlag = () => {
+            try {
+                return sessionStorage.getItem(catalogReturnKey) === '1';
+            } catch (error) {
+                return false;
+            }
+        };
+        const clearCatalogReturnFlag = () => {
+            try {
+                sessionStorage.removeItem(catalogReturnKey);
+            } catch (error) {}
+        };
+        const shouldForceCatalogTop = () => isCatalogHash() || isCatalogQuery() || hasCatalogReturnFlag();
+        // Stays true only while we are "returning" to the catalog; any real user scroll input cancels it
+        // so a late-loading banner/image can never yank the page after the user takes over.
+        let catalogReturnActive = shouldForceCatalogTop();
+        const cancelCatalogReturn = () => { catalogReturnActive = false; };
+        ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach((evt) => {
+            window.addEventListener(evt, cancelCatalogReturn, { passive: true });
+        });
+        const navbarOffset = () => {
+            const navbar = document.querySelector('.wiboost-user-navbar');
+
+            return Math.ceil((navbar ? navbar.getBoundingClientRect().height : 0) + 18);
+        };
+        // <html> has scroll-behavior:smooth, so the load-time landing MUST be 'instant',
+        // otherwise it animates and never settles exactly at the catalog heading.
+        const scrollToCatalogTop = (behavior = 'instant') => {
+            if (!catalogReturnActive) {
+                return;
+            }
+
+            const target = document.getElementById('katalog-utama');
+
+            if (!target) {
+                return;
+            }
+
+            const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - navbarOffset());
+            window.scrollTo({ top, left: 0, behavior });
+        };
+        const normalizeCatalogUrl = () => {
+            if (!shouldForceCatalogTop()) {
+                return;
+            }
+
+            // Strip the catalog query AND any hash so the address bar stays clean
+            // (no #katalog-utama behind the link). The scroll is driven by the flag, not the URL.
+            const url = new URL(window.location.href);
+            url.searchParams.delete('catalog');
+            url.hash = '';
+            history.replaceState(null, '', url.pathname + url.search);
+        };
+        // If content above the catalog (promo banners, images) loads late and shifts the layout,
+        // re-align to the catalog heading — but only while the return is still active.
+        const bindLateLayoutCorrections = () => {
+            document.querySelectorAll('img').forEach((img) => {
+                if (img.complete) {
+                    return;
+                }
+
+                img.addEventListener('load', () => scrollToCatalogTop('instant'), { once: true });
+                img.addEventListener('error', () => scrollToCatalogTop('instant'), { once: true });
+            });
+        };
+        const scheduleCatalogScroll = (behavior = 'auto') => {
+            if (!catalogReturnActive && !shouldForceCatalogTop()) {
+                return;
+            }
+
+            if (shouldForceCatalogTop()) {
+                catalogReturnActive = true;
+            }
+
+            normalizeCatalogUrl();
+            scrollToCatalogTop(behavior);
+            requestAnimationFrame(() => scrollToCatalogTop('instant'));
+            [80, 240, 650, 1100].forEach((delay) => setTimeout(() => scrollToCatalogTop('instant'), delay));
+            setTimeout(clearCatalogReturnFlag, 650);
+        };
+
+        if ('scrollRestoration' in history && shouldForceCatalogTop()) {
+            history.scrollRestoration = 'manual';
+        }
+
+        scheduleCatalogScroll('instant');
+        bindLateLayoutCorrections();
+        document.fonts?.ready?.then(() => scrollToCatalogTop('instant')).catch(() => {});
+        window.addEventListener('pageshow', () => scheduleCatalogScroll('instant'));
+        window.addEventListener('load', () => { scheduleCatalogScroll('instant'); bindLateLayoutCorrections(); }, { once: true });
+        window.addEventListener('hashchange', () => { catalogReturnActive = true; scheduleCatalogScroll('smooth'); });
+        // Release the forced alignment after the return window so the user can scroll freely.
+        setTimeout(cancelCatalogReturn, 1600);
+
         const fitSingleLineText = (element, minSize = 14) => {
             if (!element) {
                 return;

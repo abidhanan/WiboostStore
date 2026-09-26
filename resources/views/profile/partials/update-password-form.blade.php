@@ -1,6 +1,6 @@
 <section>
     <header class="mb-6 text-left">
-        <h3 class="text-xl font-black text-[#2b3a67] md:text-2xl">Ubah Kata Sandi</h3>
+        <h2 class="text-xl font-black text-[#2b3a67] md:text-2xl">Ubah Kata Sandi</h2>
         <p class="mt-1 text-sm font-bold text-[#8faaf3]">Pastikan akun menggunakan kata sandi yang panjang dan acak agar tetap aman.</p>
     </header>
 

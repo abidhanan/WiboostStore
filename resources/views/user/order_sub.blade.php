@@ -1,18 +1,28 @@
 @extends(($isGuestCatalog ?? false) ? 'layouts.catalog_guest' : 'layouts.user')
 
 @section('title', 'Pilih Aplikasi - ' . $category->name)
+@section('meta_description', 'Temukan produk ' . $category->name . ' yang tersedia di Wiboost Store dan pilih layanan yang sesuai dengan kebutuhanmu.')
 
 @section('content')
 @php
     $isGuestCatalog = $isGuestCatalog ?? false;
     $categoryRouteName = $isGuestCatalog ? 'guest.order.category' : 'user.order.category';
-    $categoryHomeUrl = $isGuestCatalog ? route('home') . '#kategori' : route('user.dashboard');
+    $categoryHomeUrl = $isGuestCatalog ? route('home') : route('user.dashboard');
+    $backGoesHome = ! ($category->parent && ! in_array($category->parent->slug, \App\Support\WiboostCatalog::removedCategorySlugs(), true));
+    $backUrl = $backGoesHome ? $categoryHomeUrl : route($categoryRouteName, $category->parent->slug);
     $categoryDiscountLabel = \App\Models\Product::currentDiscountLabel();
     $currentUserIsMemberForSubcategory = (! $isGuestCatalog) && (auth()->user()?->isMember() ?? false);
     $memberSubcategoryHoverClass = $currentUserIsMemberForSubcategory ? ' wiboost-member-subcategory-card' : '';
     $memberSubcategoryFridayRibbonClass = $currentUserIsMemberForSubcategory && now()->isFriday() ? ' discount-corner-ribbon--member' : '';
     $categoryUsesTargetEmoji = \App\Support\WiboostEmoji::shouldUseForSubcategory($category);
 @endphp
+@unless($isGuestCatalog)
+    <script>
+        try {
+            sessionStorage.setItem('wiboostReturnCatalogTop', '1');
+        } catch (error) {}
+    </script>
+@endunless
 <style>
     .wiboost-font { font-family: 'Nunito', sans-serif; }
     
@@ -197,7 +207,7 @@
     
     <div class="relative z-10 mb-10 grid grid-cols-[auto,minmax(0,1fr)] gap-x-4 gap-y-3 overflow-visible rounded-[2.5rem] border-4 border-white bg-white/95 p-5 text-left shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:gap-x-6 sm:p-6 md:gap-x-8 md:p-8">
         <div class="contents">
-            <a href="{{ $category->parent ? route($categoryRouteName, $category->parent->slug) : $categoryHomeUrl }}" aria-label="Kembali" class="col-start-1 row-start-1 flex h-9 w-9 shrink-0 items-center justify-center self-center justify-self-center rounded-xl border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-105 hover:bg-[#e0fbfc] active:scale-95">
+            <a href="{{ $backUrl }}"@if($isGuestCatalog && $backGoesHome) onclick="try{sessionStorage.setItem('wiboostReturnCatalog','1')}catch(e){}"@endif aria-label="Kembali" class="col-start-1 row-start-1 flex h-9 w-9 shrink-0 items-center justify-center self-center justify-self-center rounded-xl border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition-transform hover:scale-105 hover:bg-[#e0fbfc] active:scale-95">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
             </a>
             <div class="wiboost-header-logo-frame col-start-1 row-start-2 flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] bg-[#f4f9ff] text-[#5a76c8] shadow-inner sm:h-24 sm:w-24">
@@ -216,14 +226,10 @@
                 Katalog
             </div>
             <div class="col-start-2 row-start-2 min-w-0 self-center text-left">
-            <h2 class="wiboost-order-header-title mb-2 font-black tracking-tight text-[#2b3a67] drop-shadow-sm">{{ $category->name }}</h2>
-            @if($category->description)
-                <p class="wiboost-order-header-description inline-block w-full rounded-2xl border-2 border-white bg-[#f8faff] p-3 text-left font-bold text-[#4a5f96] shadow-inner md:w-auto md:p-4">
-                    {!! nl2br(e($category->description)) !!}
-                </p>
-            @else
-                <p class="wiboost-order-header-description font-bold text-[#8faaf3]">Pilih kategori di bawah ini untuk lanjut.</p>
-            @endif
+            <h1 class="wiboost-order-header-title mb-2 font-black tracking-tight text-[#2b3a67] drop-shadow-sm">{{ $category->name }}</h1>
+            <p class="wiboost-order-header-description w-full text-left font-bold text-[#4a5f96] md:w-auto">
+                Pilih kategori di bawah ini untuk lanjut.
+            </p>
             </div>
         </div>
     </div>
@@ -233,16 +239,12 @@
             @php
                 $hasActiveProducts = (int) ($child->active_products_count ?? 0) > 0;
                 $hasNestedChildren = (int) ($child->children_count ?? 0) > 0;
-                $isBrowsable = $hasActiveProducts || $hasNestedChildren;
+                $isBrowsable = true;
                 $childUsesTargetEmoji = \App\Support\WiboostEmoji::shouldUseForSubcategory($child);
                 $childEmote = $childUsesTargetEmoji ? \App\Support\WiboostEmoji::forCategory($child) : null;
             @endphp
 
-            @if($isBrowsable)
-                <a href="{{ route($categoryRouteName, $child->slug) }}" class="wiboost-category-card{{ $memberSubcategoryHoverClass }} group relative overflow-hidden bg-white/95 backdrop-blur-sm p-2 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 text-center flex flex-col items-center justify-center">
-            @else
-                <div class="wiboost-category-card group relative overflow-hidden bg-white/60 backdrop-blur-sm p-2 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border-4 border-white shadow-md shadow-[#bde0fe]/10 text-center flex flex-col items-center justify-center opacity-80 grayscale-[20%]">
-            @endif
+            <a href="{{ route($categoryRouteName, $child->slug) }}" class="wiboost-category-card{{ $memberSubcategoryHoverClass }} group relative overflow-hidden bg-white/95 backdrop-blur-sm p-2 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border-4 border-white hover:border-[#bde0fe] shadow-xl shadow-[#bde0fe]/30 hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 text-center flex flex-col items-center justify-center">
 
                 @if($categoryDiscountLabel)
                     <span class="discount-corner-ribbon{{ $memberSubcategoryFridayRibbonClass }}">
@@ -264,11 +266,7 @@
 
                 <span class="wiboost-subcategory-title max-w-full break-words px-1 text-xs font-black leading-tight text-[#2b3a67] sm:text-lg md:text-xl">{{ $child->name }}</span>
 
-            @if($isBrowsable)
-                </a>
-            @else
-                </div>
-            @endif
+            </a>
         @empty
             <div class="col-span-full text-center py-20 bg-white/90 backdrop-blur-sm rounded-[2.5rem] border-4 border-dashed border-[#bde0fe] shadow-lg shadow-[#bde0fe]/20">
                 <p class="text-[#5a76c8] font-black text-2xl">Layanan sedang dipersiapkan...</p>

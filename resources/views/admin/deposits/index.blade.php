@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 @section('title', 'Riwayat Deposit')
-@section('admin_header_subtitle', 'Pantau top-up saldo pengguna.')
+@section('admin_header_subtitle', 'Pantau top-up dan refund saldo pengguna.')
 
 {{-- Section admin_header_actions dihapus, dipindah ke toolbar agar responsif --}}
 
@@ -166,8 +166,8 @@
     @php
         $searchValue = request('search');
         $activeDepositFilter = $depositFilter ?? request('deposit_filter', 'all');
-        $selectedMonth = $selectedMonth ?? request('month', date('m'));
-        $selectedYear = $selectedYear ?? request('year', date('Y'));
+        $selectedMonth = $selectedMonth ?? request('month', now()->format('m'));
+        $selectedYear = $selectedYear ?? request('year', now()->format('Y'));
         $adminMonthNames = [
             1 => 'Januari',
             2 => 'Februari',
@@ -189,6 +189,7 @@
             'failed' => ['label' => 'Gagal'],
             'topup' => ['label' => 'Top Up'],
             'poin' => ['label' => 'Poin'],
+            'refund' => ['label' => 'Refund'],
         ];
     @endphp
 
@@ -240,29 +241,35 @@
             </a>
             </div>
 
-            <div class="flex w-full items-center justify-start gap-2 border-t-4 border-dashed border-[#f4f9ff] pt-4 md:justify-end md:border-t-0 md:pt-0">
-                <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
-                    <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
-                        <span data-admin-theme-select-label>{{ $adminMonthNames[$selectedMonthNumber] ?? '-' }}</span>
-                        <span class="admin-theme-select-arrow">v</span>
-                    </button>
-                    <div class="admin-theme-select-menu">
-                        @for($m = 1; $m <= 12; $m++)
-                            <button type="button" class="admin-theme-select-option {{ (string) $selectedMonth === sprintf('%02d', $m) ? 'is-selected' : '' }}" data-value="{{ sprintf('%02d', $m) }}" data-label="{{ $adminMonthNames[$m] }}">{{ $adminMonthNames[$m] }}</button>
-                        @endfor
+            <div class="mt-1 flex w-full flex-col items-center justify-start gap-3 border-t-4 border-dashed border-[#f4f9ff] pt-4 md:flex-row md:justify-end">
+                <div class="flex w-full items-center gap-2 md:w-auto">
+                    <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
+                        <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                            <span data-admin-theme-select-label>{{ $adminMonthNames[$selectedMonthNumber] ?? '-' }}</span>
+                            <span class="admin-theme-select-arrow">v</span>
+                        </button>
+                        <div class="admin-theme-select-menu">
+                            @for($m = 1; $m <= 12; $m++)
+                                <button type="button" class="admin-theme-select-option {{ (string) $selectedMonth === sprintf('%02d', $m) ? 'is-selected' : '' }}" data-value="{{ sprintf('%02d', $m) }}" data-label="{{ $adminMonthNames[$m] }}">{{ $adminMonthNames[$m] }}</button>
+                            @endfor
+                        </div>
+                    </div>
+                    <div class="admin-theme-select admin-theme-select-year" data-admin-theme-select data-submit-on-change="true" data-input-name="year">
+                        <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                            <span data-admin-theme-select-label>{{ $selectedYear }}</span>
+                            <span class="admin-theme-select-arrow">v</span>
+                        </button>
+                        <div class="admin-theme-select-menu">
+                            @for($y = now()->year; $y >= now()->year - 3; $y--)
+                                <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
+                            @endfor
+                        </div>
                     </div>
                 </div>
-                <div class="admin-theme-select admin-theme-select-year" data-admin-theme-select data-submit-on-change="true" data-input-name="year">
-                    <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
-                        <span data-admin-theme-select-label>{{ $selectedYear }}</span>
-                        <span class="admin-theme-select-arrow">v</span>
-                    </button>
-                    <div class="admin-theme-select-menu">
-                        @for($y = date('Y'); $y >= date('Y') - 3; $y--)
-                            <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
-                        @endfor
-                    </div>
-                </div>
+                <a href="{{ route('admin.deposits.export_excel', array_filter(['search' => $searchValue, 'deposit_filter' => $activeDepositFilter === 'all' ? null : $activeDepositFilter, 'month' => $selectedMonth, 'year' => $selectedYear])) }}" target="_blank" class="shrink-0 flex items-center justify-center gap-2 rounded-[1rem] sm:rounded-[1.2rem] border-4 border-white bg-[#4bc6b9] px-6 py-3 h-12 text-sm font-black text-white shadow-md shadow-[#4bc6b9]/25 transition-transform active:scale-95 hover:bg-[#3ba398] w-full md:w-auto">
+                    @include('partials.wiboost-icon', ['name' => 'chart', 'class' => 'h-5 w-5'])
+                    <span class="whitespace-nowrap">Cetak Laporan</span>
+                </a>
             </div>
             
         </form>
@@ -285,7 +292,7 @@
                         <tr>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Invoice</th>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Waktu</th>
-                            <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Nama</th>
+                            <th style="min-width: 280px; font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Nama</th>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Email</th>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Jenis</th>
                             <th style="font-size: 10px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Nominal</th>
@@ -299,17 +306,17 @@
                             
                             <!-- Invoice -->
                             <td class="px-5 py-4 sm:py-5 align-middle min-w-[150px]">
-                                <p class="font-black text-[#5a76c8] text-xs sm:text-sm bg-[#f4f9ff] inline-block px-2 py-1 rounded-md border border-white max-w-full" style="white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;">{{ $deposit->invoice_number ?? '-' }}</p>
+                                <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $deposit->invoice_number ?? '-' }}</p>
                             </td>
 
                             <!-- Waktu -->
                             <td class="px-5 py-4 sm:py-5 align-middle min-w-[150px]">
-                                <p class="text-[9px] sm:text-[10px] font-bold text-[#8faaf3]">{{ isset($deposit->created_at) ? $deposit->created_at->format('d M Y, H:i') : '-' }}</p>
+                                <p class="whitespace-nowrap text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ isset($deposit->created_at) ? $deposit->created_at->format('d M Y, H:i') : '-' }}</p>
                             </td>
                             
                             <!-- Nama -->
-                            <td class="px-5 py-4 sm:py-5 align-middle min-w-[150px] max-w-[200px]">
-                                <p class="font-black text-[#2b3a67] text-xs sm:text-sm truncate">{{ $deposit->user->name ?? 'Guest' }}</p>
+                            <td class="px-5 py-4 sm:py-5 align-middle" style="min-width: 280px;">
+                                <p class="whitespace-nowrap font-black text-[#2b3a67] text-xs sm:text-sm">{{ $deposit->user->name ?? 'Guest' }}</p>
                             </td>
 
                             <!-- Email -->
@@ -318,7 +325,9 @@
                             </td>
 
                             <td class="px-5 py-4 sm:py-5 align-middle text-center">
-                                @if($deposit->isMembershipPayment())
+                                @if($deposit->isRefundCredit())
+                                    <span style="font-size: 9px;" class="inline-block rounded-full border-2 border-white bg-[#e6fff7] px-3 py-1.5 font-black uppercase tracking-widest text-emerald-500 shadow-sm">Refund</span>
+                                @elseif($deposit->isMembershipPayment())
                                     <span style="font-size: 9px;" class="inline-block rounded-full border-2 border-white bg-[#ede9fe] px-3 py-1.5 font-black uppercase tracking-widest text-[#8b5cf6] shadow-sm">Membership</span>
                                 @elseif($deposit->isPointExchange())
                                     <span style="font-size: 9px;" class="inline-block rounded-full border-2 border-white bg-[#f4f9ff] px-3 py-1.5 font-black uppercase tracking-widest text-[#5a76c8] shadow-sm">Poin</span>
@@ -343,10 +352,11 @@
                                     $statusLabels = [
                                         'paid' => ['bg-[#e6fff7]', 'text-emerald-500', 'Berhasil'],
                                         'success' => ['bg-[#e6fff7]', 'text-emerald-500', 'Berhasil'],
-                                        'unpaid' => ['bg-[#fff5eb]', 'text-amber-500', 'Pending'],
-                                        'pending' => ['bg-[#fff5eb]', 'text-amber-500', 'Pending'],
+                                        'unpaid' => ['bg-[#fff5eb]', 'text-amber-500', 'Menunggu'],
+                                        'pending' => ['bg-[#fff5eb]', 'text-amber-500', 'Menunggu'],
                                         'failed' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]', 'Gagal'],
                                         'expired' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]', 'Expired'],
+                                        'refund' => ['bg-[#e6fff7]', 'text-emerald-500', 'Refund'],
                                     ];
                                     $rawStatus = strtolower($deposit->payment_status ?? 'pending');
                                     $st = $statusLabels[$rawStatus] ?? ['bg-gray-100', 'text-gray-500', $rawStatus];
@@ -376,10 +386,11 @@
                 $depositStatusLabels = [
                     'paid' => ['bg-[#e6fff7]', 'text-emerald-500', 'Berhasil'],
                     'success' => ['bg-[#e6fff7]', 'text-emerald-500', 'Berhasil'],
-                    'unpaid' => ['bg-[#fff5eb]', 'text-amber-500', 'Pending'],
-                    'pending' => ['bg-[#fff5eb]', 'text-amber-500', 'Pending'],
+                    'unpaid' => ['bg-[#fff5eb]', 'text-amber-500', 'Menunggu'],
+                    'pending' => ['bg-[#fff5eb]', 'text-amber-500', 'Menunggu'],
                     'failed' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]', 'Gagal'],
                     'expired' => ['bg-[#ffe5e5]', 'text-[#ff6b6b]', 'Expired'],
+                    'refund' => ['bg-[#e6fff7]', 'text-emerald-500', 'Refund'],
                 ];
                 $depositRawStatus = strtolower($deposit->payment_status ?? 'pending');
                 $depositStatus = $depositStatusLabels[$depositRawStatus] ?? ['bg-gray-100', 'text-gray-500', $depositRawStatus];
@@ -390,7 +401,7 @@
                     <div class="admin-detail-header mb-3.5 flex items-start justify-between gap-3 p-3.5">
                         <div>
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Detail Deposit</p>
-                            <h3 class="mt-1 break-all text-xl font-black text-[#2b3a67]">{{ $deposit->invoice_number }}</h3>
+                            <h2 class="mt-1 break-all text-xl font-black text-[#2b3a67]">{{ $deposit->invoice_number }}</h2>
                             <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ optional($deposit->created_at)->format('d M Y, H:i') }}</p>
                         </div>
                         <button type="button" onclick="closeAdminDepositDetail('admin-deposit-detail-{{ $deposit->id }}')" class="admin-detail-close flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#ffe5e5] text-[#ff6b6b]">
@@ -401,8 +412,11 @@
                     <div class="admin-detail-body">
                     <div class="grid gap-3.5 md:grid-cols-2">
                         <div class="admin-detail-panel">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Pelanggan</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nama Pelanggan</p>
                             <p class="mt-1 font-black text-[#2b3a67]">{{ $deposit->user->name ?? 'Guest' }}</p>
+                        </div>
+                        <div class="admin-detail-panel">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Email</p>
                             <p class="mt-1 break-all text-xs font-bold text-[#8faaf3]">{{ $deposit->user->email ?? '-' }}</p>
                         </div>
                         <div class="admin-detail-panel">
@@ -411,10 +425,10 @@
                         </div>
                         <div class="admin-detail-panel">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Jenis Pembayaran</p>
-                            <p class="mt-1 text-lg font-black {{ $deposit->isMembershipPayment() ? 'text-[#8b5cf6]' : 'text-[#5a76c8]' }}">{{ $deposit->isMembershipPayment() ? 'Membership' : ($deposit->isPointExchange() ? 'Penukaran Poin' : 'Top Up Saldo') }}</p>
+                            <p class="mt-1 text-lg font-black {{ $deposit->isMembershipPayment() ? 'text-[#8b5cf6]' : ($deposit->isRefundCredit() ? 'text-emerald-500' : 'text-[#5a76c8]') }}">{{ $deposit->isRefundCredit() ? 'Refund Saldo' : ($deposit->isMembershipPayment() ? 'Membership' : ($deposit->isPointExchange() ? 'Penukaran Poin' : 'Top Up Saldo')) }}</p>
                         </div>
                         <div class="admin-detail-panel">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">{{ $deposit->isMembershipPayment() ? 'Biaya Membership' : 'Nominal Masuk Saldo' }}</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">{{ $deposit->isRefundCredit() ? 'Nominal Refund' : ($deposit->isMembershipPayment() ? 'Biaya Membership' : 'Nominal Masuk Saldo') }}</p>
                             <p class="mt-1 text-lg font-black text-[#4bc6b9]">Rp {{ number_format($deposit->amount ?? 0, 0, ',', '.') }}</p>
                         </div>
                         <div class="admin-detail-panel">
@@ -422,8 +436,8 @@
                             <p class="mt-1 text-lg font-black text-[#5a76c8]">Rp {{ number_format($deposit->paid_amount ?? $deposit->amount ?? 0, 0, ',', '.') }}</p>
                         </div>
                         <div class="admin-detail-panel">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Referensi QRIS</p>
-                            <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $deposit->tripay_reference ?? '-' }}</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">{{ $deposit->isRefundCredit() ? 'Referensi Refund' : 'Referensi QRIS' }}</p>
+                            <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $deposit->isRefundCredit() ? (data_get($deposit->payment_response, 'source_invoice_number') ?: '-') : ($deposit->tripay_reference ?? '-') }}</p>
                         </div>
                     </div>
                     </div>
@@ -433,7 +447,7 @@
         
         <!-- Paginasi -->
         @if(isset($deposits) && method_exists($deposits, 'links') && $deposits->hasPages())
-            <div class="border-t-4 border-dashed border-[#f4f9ff] bg-[#f8faff] p-5 sm:p-8 w-full min-w-0">
+            <div class="p-5 sm:p-8 w-full min-w-0">
                 {{ $deposits->links() }}
             </div>
         @endif
@@ -444,14 +458,14 @@
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.add('modal-active');
-        document.body.classList.add('overflow-hidden', 'admin-detail-open');
+        document.body.classList.add('admin-detail-open');
     }
 
     function closeAdminDepositDetail(id) {
         const modal = document.getElementById(id);
         if (!modal) return;
         modal.classList.remove('modal-active');
-        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
+        document.body.classList.remove('admin-detail-open');
     }
 
     document.addEventListener('keydown', (event) => {
@@ -459,7 +473,7 @@
         document.querySelectorAll('.admin-detail-modal.modal-active').forEach((modal) => {
             modal.classList.remove('modal-active');
         });
-        document.body.classList.remove('overflow-hidden', 'admin-detail-open');
+        document.body.classList.remove('admin-detail-open');
     });
 </script>
 @endsection

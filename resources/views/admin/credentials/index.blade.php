@@ -57,7 +57,7 @@
             <form action="{{ route('admin.credentials.store', $product->id) }}" method="POST" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-8 sticky top-6">
                 @csrf
                 <div class="flex items-center gap-3 mb-6 border-b-4 border-dashed border-[#f4f9ff] pb-4">
-                    <h4 class="font-black text-[#2b3a67] text-2xl">Tambah Stok</h4>
+                    <h2 class="font-black text-[#2b3a67] text-2xl">Tambah Stok</h2>
                 </div>
                 
                 <div class="space-y-5">
@@ -71,7 +71,7 @@
                             <input type="text" name="data_1" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner placeholder-[#a3bbfb]">
                         </div>
                         <div>
-                            <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Password</label>
+                            <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Kata Sandi</label>
                             <input type="text" name="data_2" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner placeholder-[#a3bbfb]">
                         </div>
                         <div class="grid grid-cols-2 gap-4">
@@ -85,7 +85,7 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Link Invite / Link Akses</label>
+                            <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Tautan Undangan / Tautan Akses</label>
                             <input type="text" name="data_5" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner placeholder-[#a3bbfb]">
                         </div>
                         <div>
@@ -93,20 +93,39 @@
                             <textarea name="notes" rows="3" class="w-full resize-none bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner placeholder-[#a3bbfb]"></textarea>
                         </div>
                         <div>
-                            <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Batas Penggunaan <span class="text-rose-500">*</span></label>
-                            <input type="number" name="max_usage" required min="1" value="1" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner">
+                            <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Tautan Tutorial</label>
+                            <input type="url" name="tutorial_link" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner placeholder-[#a3bbfb]">
                         </div>
+                        <div class="border-t-4 border-dashed border-[#f4f9ff] pt-5">
+                            <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Batas Penggunaan</label>
+                            <input type="number" name="max_usage" required min="1" value="1" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner">
+                            <div class="mt-4">
+                                <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Durasi</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <input type="number" name="duration_value" min="1" inputmode="numeric" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner">
+                                    <div class="admin-theme-select" data-admin-theme-select data-input-name="duration_unit">
+                                        <input type="hidden" name="duration_unit" value="day">
+                                        <button type="button" class="admin-theme-select-button rounded-[1.5rem] px-5 py-4 text-sm font-black">
+                                            <span data-admin-theme-select-label>Hari</span>
+                                            <span class="admin-theme-select-arrow">v</span>
+                                        </button>
+                                        <div class="admin-theme-select-menu">
+                                            <button type="button" class="admin-theme-select-option is-selected" data-value="day" data-label="Hari">Hari</button>
+                                            <button type="button" class="admin-theme-select-option" data-value="week" data-label="Minggu">Minggu</button>
+                                            <button type="button" class="admin-theme-select-option" data-value="month" data-label="Bulan">Bulan</button>
+                                            <button type="button" class="admin-theme-select-option" data-value="year" data-label="Tahun">Tahun</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border-t-4 border-dashed border-[#f4f9ff]"></div>
                     @endif
-
-                    <div class="mt-6 pt-6 border-t-4 border-dashed border-[#f4f9ff]">
-                        <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Link Tutorial</label>
-                        <input type="url" name="tutorial_link" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner placeholder-[#a3bbfb]">
-                    </div>
 
                     <div class="mt-4 bg-[#fffcf0] p-5 rounded-[1.5rem] border-4 border-white flex items-center justify-between shadow-md">
                         <div>
-                            <p class="text-sm font-black text-amber-600 mb-1">Butuh OTP Admin?</p>
-                            <p class="text-[10px] font-bold text-amber-500 leading-tight pr-4">Centang ini jika pelanggan harus chat Admin untuk meminta OTP.</p>
+                            <p class="text-sm font-black text-amber-600 mb-1">OTP Admin</p>
+                            <p class="text-[10px] font-bold text-amber-500 leading-tight pr-4">Aktifkan jika pelanggan harus chat Admin untuk meminta OTP.</p>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <input type="checkbox" name="needs_otp" class="sr-only peer" value="1">
@@ -116,12 +135,23 @@
 
                     <div class="mt-4 bg-[#eef6ff] p-5 rounded-[1.5rem] border-4 border-white flex items-center justify-between shadow-md">
                         <div>
-                            <p class="text-sm font-black text-[#5a76c8] mb-1">Perlu Upload Bukti Login?</p>
+                            <p class="text-sm font-black text-[#5a76c8] mb-1">Unggah Bukti Masuk</p>
                             <p class="text-[10px] font-bold text-[#8faaf3] leading-tight pr-4">Aktifkan jika pembeli wajib upload bukti login dari detail pesanan.</p>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <input type="checkbox" name="requires_login_proof" class="sr-only peer" value="1">
                             <div class="w-14 h-8 bg-[#bde0fe] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-[#8faaf3] after:border-2 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-[#5a76c8] shadow-inner"></div>
+                        </label>
+                    </div>
+
+                    <div class="mt-4 bg-[#fff1f1] p-5 rounded-[1.5rem] border-4 border-white flex items-center justify-between shadow-md">
+                        <div>
+                            <p class="text-sm font-black text-[#ff4d4d] mb-1">Unggah Bukti Keluar</p>
+                            <p class="text-[10px] font-bold text-[#ff8a8a] leading-tight pr-4">Aktifkan jika pembeli wajib upload bukti logout setelah durasi habis.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input type="checkbox" name="requires_logout_proof" class="sr-only peer" value="1">
+                            <div class="w-14 h-8 bg-[#ffcaca] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-[#ff8a8a] after:border-2 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-[#ff4d4d] shadow-inner"></div>
                         </label>
                     </div>
                 </div>
@@ -134,10 +164,10 @@
 
         <div class="lg:col-span-2 bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-2xl shadow-[#bde0fe]/30 border-4 border-white overflow-hidden flex flex-col">
             <div class="px-6 py-6 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff]">
-                <h4 class="font-black text-[#2b3a67] text-2xl flex items-center gap-3">
+                <h2 class="font-black text-[#2b3a67] text-2xl flex items-center gap-3">
                     @include('partials.wiboost-icon', ['name' => 'package', 'class' => 'h-7 w-7 text-[#5a76c8]'])
                     Daftar Data Tersedia
-                </h4>
+                </h2>
             </div>
             
             <div class="overflow-x-auto flex-1 p-4 md:p-6">
@@ -162,7 +192,7 @@
                                     @endif
                                     @if($cred->data_2)
                                         <div class="rounded-xl border border-amber-100 bg-amber-50 px-3 py-2">
-                                            <p class="text-[8px] font-black uppercase tracking-widest text-amber-500">Password</p>
+                                            <p class="text-[8px] font-black uppercase tracking-widest text-amber-500">Kata Sandi</p>
                                             <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $cred->data_2 }}</p>
                                         </div>
                                     @endif
@@ -180,7 +210,7 @@
                                     @endif
                                     @if($cred->data_5)
                                         <div class="rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
-                                            <p class="text-[8px] font-black uppercase tracking-widest text-blue-500">Link Akses</p>
+                                            <p class="text-[8px] font-black uppercase tracking-widest text-blue-500">Tautan Akses</p>
                                             <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $cred->data_5 }}</p>
                                         </div>
                                     @endif
@@ -199,7 +229,15 @@
                                             <span class="bg-[#fff5eb] text-amber-500 px-3 py-1 rounded-md text-[9px] font-black uppercase shadow-sm border border-white">Butuh OTP</span>
                                         @endif
                                         @if($cred->requires_login_proof)
-                                            <span class="bg-[#eef6ff] text-[#5a76c8] px-3 py-1 rounded-md text-[9px] font-black uppercase shadow-sm border border-white">Perlu Bukti Login</span>
+                                            <span class="bg-[#eef6ff] text-[#5a76c8] px-3 py-1 rounded-md text-[9px] font-black uppercase shadow-sm border border-white">Perlu Bukti Masuk</span>
+                                        @endif
+                                        @if($cred->requires_logout_proof)
+                                            <span class="bg-[#eef6ff] text-[#5a76c8] px-3 py-1 rounded-md text-[9px] font-black uppercase shadow-sm border border-white">Perlu Bukti Keluar</span>
+                                        @endif
+                                        @if($cred->duration_value && $cred->duration_unit)
+                                            <span class="bg-[#f4f9ff] text-[#5a76c8] px-3 py-1 rounded-md text-[9px] font-black uppercase shadow-sm border border-white">
+                                                Durasi {{ $cred->duration_value }} {{ ['day' => 'Hari', 'week' => 'Minggu', 'month' => 'Bulan', 'year' => 'Tahun'][$cred->duration_unit] ?? 'Hari' }}
+                                            </span>
                                         @endif
                                     </div>
                                 </div>

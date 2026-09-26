@@ -6,8 +6,9 @@
 @section('content')
 @php
     $searchValue = $search ?? request('search');
-    $selectedMonth = $selectedMonth ?? request('month', date('m'));
-    $selectedYear = $selectedYear ?? request('year', date('Y'));
+    $activeRefundFilter = $refundFilter ?? request('refund_filter', 'all');
+    $selectedMonth = $selectedMonth ?? request('month', now()->format('m'));
+    $selectedYear = $selectedYear ?? request('year', now()->format('Y'));
     $adminMonthNames = [
         1 => 'Januari',
         2 => 'Februari',
@@ -23,6 +24,13 @@
         12 => 'Desember',
     ];
     $selectedMonthNumber = (int) $selectedMonth;
+    $refundFilters = [
+        'all' => ['label' => 'Semua'],
+        '25' => ['label' => '25%'],
+        '50' => ['label' => '50%'],
+        '75' => ['label' => '75%'],
+        '100' => ['label' => '100%'],
+    ];
 @endphp
 <style>
     .table-scroll::-webkit-scrollbar { height: 8px; }
@@ -134,6 +142,9 @@
         <form action="{{ route('admin.refunds.index') }}" method="GET" class="flex w-full flex-col gap-3">
             <div class="flex w-full flex-col gap-3 md:flex-row">
             <div class="flex w-full min-w-0 flex-1 gap-2">
+                @if($activeRefundFilter !== 'all')
+                    <input type="hidden" name="refund_filter" value="{{ $activeRefundFilter }}">
+                @endif
                 <input type="hidden" name="month" value="{{ $selectedMonth }}">
                 <input type="hidden" name="year" value="{{ $selectedYear }}">
                 <input type="text" name="search" value="{{ $searchValue }}"
@@ -143,7 +154,7 @@
                     @include('partials.wiboost-icon', ['name' => 'search', 'class' => 'h-5 w-5'])
                 </button>
                 @if($searchValue)
-                    <a href="{{ route('admin.refunds.index', ['month' => $selectedMonth, 'year' => $selectedYear]) }}" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-md transition-transform active:scale-95 sm:rounded-[1.2rem]" title="Reset">
+                    <a href="{{ route('admin.refunds.index', array_filter(['refund_filter' => $activeRefundFilter === 'all' ? null : $activeRefundFilter, 'month' => $selectedMonth, 'year' => $selectedYear])) }}" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-md transition-transform active:scale-95 sm:rounded-[1.2rem]" title="Reset">
                         @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])
                     </a>
                 @endif
@@ -155,32 +166,46 @@
             </a>
             </div>
 
-            <div class="flex w-full items-center justify-start gap-2 border-t-4 border-dashed border-[#f4f9ff] pt-4 md:justify-end md:border-t-0 md:pt-0">
-                <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
-                    <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
-                        <span data-admin-theme-select-label>{{ $adminMonthNames[$selectedMonthNumber] ?? '-' }}</span>
-                        <span class="admin-theme-select-arrow">v</span>
-                    </button>
-                    <div class="admin-theme-select-menu">
-                        @for($m = 1; $m <= 12; $m++)
-                            <button type="button" class="admin-theme-select-option {{ (string) $selectedMonth === sprintf('%02d', $m) ? 'is-selected' : '' }}" data-value="{{ sprintf('%02d', $m) }}" data-label="{{ $adminMonthNames[$m] }}">{{ $adminMonthNames[$m] }}</button>
-                        @endfor
+            <div class="mt-1 flex w-full flex-col items-center justify-start gap-3 border-t-4 border-dashed border-[#f4f9ff] pt-4 md:flex-row md:justify-end">
+                <div class="flex w-full items-center gap-2 md:w-auto">
+                    <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
+                        <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                            <span data-admin-theme-select-label>{{ $adminMonthNames[$selectedMonthNumber] ?? '-' }}</span>
+                            <span class="admin-theme-select-arrow">v</span>
+                        </button>
+                        <div class="admin-theme-select-menu">
+                            @for($m = 1; $m <= 12; $m++)
+                                <button type="button" class="admin-theme-select-option {{ (string) $selectedMonth === sprintf('%02d', $m) ? 'is-selected' : '' }}" data-value="{{ sprintf('%02d', $m) }}" data-label="{{ $adminMonthNames[$m] }}">{{ $adminMonthNames[$m] }}</button>
+                            @endfor
+                        </div>
+                    </div>
+                    <div class="admin-theme-select admin-theme-select-year" data-admin-theme-select data-submit-on-change="true" data-input-name="year">
+                        <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                            <span data-admin-theme-select-label>{{ $selectedYear }}</span>
+                            <span class="admin-theme-select-arrow">v</span>
+                        </button>
+                        <div class="admin-theme-select-menu">
+                            @for($y = now()->year; $y >= now()->year - 3; $y--)
+                                <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
+                            @endfor
+                        </div>
                     </div>
                 </div>
-                <div class="admin-theme-select admin-theme-select-year" data-admin-theme-select data-submit-on-change="true" data-input-name="year">
-                    <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
-                        <span data-admin-theme-select-label>{{ $selectedYear }}</span>
-                        <span class="admin-theme-select-arrow">v</span>
-                    </button>
-                    <div class="admin-theme-select-menu">
-                        @for($y = date('Y'); $y >= date('Y') - 3; $y--)
-                            <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
-                        @endfor
-                    </div>
-                </div>
+                <a href="{{ route('admin.refunds.export_excel', array_filter(['search' => $searchValue, 'refund_filter' => $activeRefundFilter === 'all' ? null : $activeRefundFilter, 'month' => $selectedMonth, 'year' => $selectedYear])) }}" target="_blank" class="flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-[1rem] border-4 border-white bg-[#4bc6b9] px-6 py-3 text-sm font-black text-white shadow-md shadow-[#4bc6b9]/25 transition-transform hover:bg-[#3ba398] active:scale-95 md:w-auto sm:rounded-[1.2rem]">
+                    @include('partials.wiboost-icon', ['name' => 'chart', 'class' => 'h-5 w-5'])
+                    <span class="whitespace-nowrap">Cetak Laporan</span>
+                </a>
             </div>
         </form>
     </div>
+
+    @include('admin.partials.filter-tabs', [
+        'filters' => $refundFilters,
+        'activeFilter' => $activeRefundFilter,
+        'filterParam' => 'refund_filter',
+        'filterRoute' => 'admin.refunds.index',
+        'filterQuery' => ['search' => $searchValue, 'month' => $selectedMonth, 'year' => $selectedYear],
+    ])
 
     <div class="overflow-visible rounded-[2rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem]">
         <div class="w-full overflow-x-auto table-scroll pb-2">
@@ -192,7 +217,7 @@
                             <th style="width:160px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3]">Waktu Refund</th>
                             <th style="width:190px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3]">Nama</th>
                             <th style="width:240px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3]">Email</th>
-                            <th style="width:360px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3]">Layanan</th>
+                            <th style="width:360px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3]">Produk</th>
                             <th style="width:150px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3]">Harga</th>
                             <th style="width:150px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3]">Nominal Refund</th>
                             <th style="width:110px;font-size:10px;" class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center font-black uppercase tracking-widest text-[#8faaf3]">Refund</th>
@@ -219,7 +244,7 @@
                                     <p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $trx?->invoice_number ?? '-' }}</p>
                                 </td>
                                 <td class="px-5 py-5 align-middle">
-                                    <p class="whitespace-nowrap text-[10px] font-bold text-[#8faaf3]">{{ $refund->created_at?->format('d M Y, H:i') ?? '-' }}</p>
+                                    <p class="whitespace-nowrap text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $refund->created_at?->format('d M Y, H:i') ?? '-' }}</p>
                                 </td>
                                 <td class="px-5 py-5 align-middle">
                                     <p class="admin-clamp-2 text-xs font-black leading-snug text-[#2b3a67] sm:text-sm">{{ $trx?->user?->name ?? 'Guest' }}</p>
@@ -340,7 +365,7 @@
                 $detailAppendLine($detailOrderLines, 'Total Bayar', $detailOrderData['total'] ?? null);
                 $detailAppendLine($detailOrderLines, 'Metode', $detailOrderData['payment'] ?? $trx?->display_payment_method);
                 $detailAppendLine($detailOrderLines, 'Status Pesanan', $detailOrderData['status'] ?? $trx?->display_status);
-                $detailAppendLine($detailOrderLines, 'ID Provider', $detailOrderData['provider_id'] ?? $trx?->provider_order_id);
+                $detailAppendLine($detailOrderLines, 'ID Penyedia', $detailOrderData['provider_id'] ?? $trx?->provider_order_id);
                 $detailAppendLine($detailOrderLines, 'Waktu', $detailOrderData['time'] ?? $trx?->created_at?->format('d M Y, H:i'));
 
                 if ($detailOrderLines !== []) {
@@ -350,11 +375,13 @@
                 $detailAccountLines = [];
                 foreach ([
                     'email' => 'Email',
-                    'password' => 'Password',
+                    'username' => 'Nama Pengguna',
+                    'password' => 'Kata Sandi',
                     'profile' => 'Profil',
                     'pin' => 'PIN',
-                    'link' => 'Link Akses',
-                    'tutorial_link' => 'Link Tutorial',
+                    'link' => 'Tautan Akses',
+                    'tutorial_link' => 'Tautan Tutorial',
+                    'notes' => 'Catatan',
                 ] as $credentialKey => $credentialLabel) {
                     $detailAppendLine($detailAccountLines, $credentialLabel, $detailCredentials[$credentialKey] ?? null);
                 }
@@ -364,7 +391,7 @@
                 }
 
                 if ($detailLoginProofUrl) {
-                    $detailRelatedSections[] = ['title' => 'Bukti Login', 'lines' => [['label' => 'Link Bukti Login', 'value' => $detailLoginProofUrl]]];
+                    $detailRelatedSections[] = ['title' => 'Bukti Masuk', 'lines' => [['label' => 'Tautan Bukti Masuk', 'value' => $detailLoginProofUrl]]];
                 }
 
                 $detailInputBuyerLines = $detailParseTextLines($detailOrderData['input_text'] ?? ($trx?->isMembershipPayment() ? '-' : ($trx?->order_input_text ?: ($trx?->target_data ?: '-'))));
@@ -379,7 +406,7 @@
                     <div class="admin-detail-header mb-3.5 flex items-start justify-between gap-3 p-3.5">
                         <div>
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Detail Refund</p>
-                            <h3 class="mt-1 break-all text-xl font-black text-[#2b3a67]">{{ $trx?->invoice_number ?? '-' }}</h3>
+                            <h2 class="mt-1 break-all text-xl font-black text-[#2b3a67]">{{ $trx?->invoice_number ?? '-' }}</h2>
                             <p class="mt-1 text-xs font-bold text-[#8faaf3]">{{ $refund->created_at?->format('d M Y, H:i') ?? '-' }}</p>
                         </div>
                         <button type="button" onclick="closeAdminRefundModal('admin-refund-detail-{{ $refund->id }}')" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border-2 border-white bg-[#ffe5e5] text-[#ff6b6b]">
@@ -390,8 +417,11 @@
                     <div class="admin-detail-body">
                         <div class="grid gap-3.5 md:grid-cols-2">
                             <div class="admin-detail-panel">
-                                <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Pelanggan</p>
+                                <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nama Pelanggan</p>
                                 <p class="mt-1 font-black text-[#2b3a67]">{{ $trx?->user?->name ?? 'Guest' }}</p>
+                            </div>
+                            <div class="admin-detail-panel">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Email</p>
                                 <p class="mt-1 break-all text-xs font-bold text-[#8faaf3]">{{ $trx?->user?->email ?? '-' }}</p>
                             </div>
                             <div class="admin-detail-panel">
@@ -407,7 +437,7 @@
                                 <p class="mt-1 font-black text-[#5a76c8]">{{ $refundPercent }}%</p>
                             </div>
                             <div class="admin-detail-panel md:col-span-2">
-                                <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Layanan</p>
+                                <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Produk</p>
                                 <p class="mt-1 font-black text-[#2b3a67]">{{ $productName }}</p>
                             </div>
                             <div class="admin-detail-panel">
@@ -433,13 +463,13 @@
                                         @foreach($detailRelatedSections as $section)
                                             <div class="rounded-[1rem] border-2 border-white bg-white/70 p-3 shadow-sm">
                                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#5a76c8]">{{ $section['title'] }}</p>
-                                                <div class="mt-3 grid gap-3 md:grid-cols-2">
+                                                <div class="admin-detail-subgrid mt-3">
                                                     @foreach($section['lines'] as $line)
                                                         @php
                                                             $lineValue = (string) ($line['value'] ?? '');
                                                             $lineIsUrl = preg_match('/^https?:\/\//i', $lineValue);
                                                         @endphp
-                                                        <div>
+                                                        <div class="admin-detail-subfield">
                                                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">{{ $line['label'] }}</p>
                                                             @if($lineIsUrl)
                                                                 <a href="{{ $lineValue }}" target="_blank" rel="noopener" class="mt-1 block break-all text-sm font-bold text-[#5a76c8] underline decoration-[#bde0fe] underline-offset-4">
@@ -465,7 +495,7 @@
         @endforeach
 
         @if($refunds->hasPages())
-            <div class="border-t-4 border-dashed border-[#f4f9ff] px-5 py-4">
+            <div class="p-5 sm:p-8 w-full min-w-0">
                 {{ $refunds->links() }}
             </div>
         @endif
@@ -478,7 +508,7 @@
         if (!modal) return;
         modal.classList.add('modal-active');
         modal.classList.remove('opacity-0', 'pointer-events-none');
-        document.body.classList.add('admin-detail-open', 'overflow-hidden');
+        document.body.classList.add('admin-detail-open');
     }
 
     function closeAdminRefundModal(id) {
@@ -486,7 +516,7 @@
         if (!modal) return;
         modal.classList.remove('modal-active');
         modal.classList.add('opacity-0', 'pointer-events-none');
-        document.body.classList.remove('admin-detail-open', 'overflow-hidden');
+        document.body.classList.remove('admin-detail-open');
     }
 
     document.addEventListener('keydown', function (event) {

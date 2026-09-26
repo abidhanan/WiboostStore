@@ -1,6 +1,7 @@
 @extends(Auth::check() ? 'layouts.user' : 'layouts.catalog_guest')
 
 @section('title', $page['title'])
+@section('meta_description', $page['intro'])
 @section('body_class', 'wiboost-legal-page')
 
 @section('content')
