@@ -118,7 +118,7 @@
                         </div>
                         <h2 class="truncate text-2xl font-black text-[#2b3a67]">{{ $form->title }}</h2>
                         @if($form->description)
-                            <p class="mt-3 line-clamp-2 text-sm font-bold leading-relaxed text-[#5a76c8]">{{ $form->description }}</p>
+                            <p class="mt-3 line-clamp-2 whitespace-pre-line break-words text-left text-sm font-bold leading-relaxed text-[#5a76c8]" style="text-align: left; white-space: pre-line;">{{ $form->description }}</p>
                         @endif
                     </div>
 
@@ -192,7 +192,7 @@
                             </div>
                             <div class="admin-detail-panel md:col-span-2">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Deskripsi</p>
-                                <p class="mt-1 text-sm font-bold text-[#2b3a67]">{{ $form->description ?: '-' }}</p>
+                                <p class="mt-1 whitespace-pre-line break-words text-left text-sm font-bold leading-relaxed text-[#2b3a67]" style="text-align: left; white-space: pre-line;">{{ $form->description ?: '-' }}</p>
                             </div>
                             <div class="admin-detail-panel">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Pertanyaan</p>

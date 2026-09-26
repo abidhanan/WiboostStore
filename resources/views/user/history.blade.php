@@ -566,7 +566,7 @@
                                     <div class="mb-5">
                                         <p class="mb-1 ml-1 text-[9px] font-black uppercase tracking-widest text-amber-600/70">Catatan</p>
                                         <div class="flex items-start justify-between gap-3 rounded-[1.2rem] border-4 border-amber-100 bg-white px-5 py-3.5 shadow-sm">
-                                            <p class="min-w-0 flex-1 whitespace-pre-line break-words text-left text-sm font-black leading-relaxed text-[#2b3a67]">{{ $credentials['notes'] }}</p>
+                                            <p class="min-w-0 flex-1 whitespace-pre-line break-words text-left text-sm font-black leading-relaxed text-[#2b3a67]" style="text-align: left; white-space: pre-line;">{{ $credentials['notes'] }}</p>
                                             <button onclick="copyToClipboard('{{ addslashes($credentials['notes']) }}')" class="shrink-0 rounded-xl border border-amber-100 bg-amber-50 p-2 text-amber-400 transition-colors hover:text-amber-600 active:scale-95" title="Salin">
                                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                                             </button>

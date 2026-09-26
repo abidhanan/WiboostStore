@@ -289,7 +289,7 @@
                     <p class="wiboost-form-benefit-eyebrow text-[10px] font-black uppercase tracking-[0.24em] text-[#d99b16]">Benefit Aplikasi Premium</p>
                     <h2 class="wiboost-form-benefit-title mt-2 text-2xl font-black leading-tight text-[#2b3a67]">{{ $form->benefit_title ?: 'Benefit Aplikasi Premium' }}</h2>
                     @if($form->benefit_description)
-                        <p class="wiboost-form-benefit-description mt-3 text-sm font-bold leading-relaxed text-[#5a76c8]">{{ $form->benefit_description }}</p>
+                        <p class="wiboost-form-benefit-description mt-3 whitespace-pre-line break-words text-left text-sm font-bold leading-relaxed text-[#5a76c8]" style="text-align: left; white-space: pre-line;">{{ $form->benefit_description }}</p>
                     @endif
                 </div>
             </div>
@@ -309,7 +309,13 @@
                                     @if($item['is_url'])
                                         <a href="{{ $item['value'] }}" target="_blank" rel="noopener noreferrer" class="wiboost-form-benefit-value wiboost-form-benefit-value-link min-w-0 break-all text-sm font-black text-[#5a76c8] underline decoration-[#bde0fe] underline-offset-4">{{ $item['value'] }}</a>
                                     @else
-                                        <p class="wiboost-form-benefit-value min-w-0 break-words text-sm font-black text-[#2b3a67]">{{ $item['value'] }}</p>
+                                        <p @class([
+                                            'wiboost-form-benefit-value min-w-0 break-words text-sm font-black text-[#2b3a67]',
+                                            'whitespace-pre-line text-left leading-relaxed' => $item['key'] === 'notes',
+                                        ]) @style([
+                                            'text-align: left' => $item['key'] === 'notes',
+                                            'white-space: pre-line' => $item['key'] === 'notes',
+                                        ])>{{ $item['value'] }}</p>
                                     @endif
                                     <button type="button" data-copy-benefit="{{ $item['value'] }}" class="wiboost-form-benefit-copy shrink-0 rounded-xl border border-amber-100 bg-amber-50 p-2 text-amber-400 transition-colors hover:text-amber-600 active:scale-95" title="Salin">
                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">

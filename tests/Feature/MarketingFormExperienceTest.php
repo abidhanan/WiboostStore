@@ -20,7 +20,7 @@ class MarketingFormExperienceTest extends TestCase
 
         $this->get(route('public.forms.show', $form))
             ->assertOk()
-            ->assertSee('Formulir Wiboost Store')
+            ->assertDontSee('Formulir Wiboost Store')
             ->assertSee('Formulir sedang tidak aktif')
             ->assertSee('Silakan hubungi pengelola formulir untuk informasi selengkapnya.')
             ->assertDontSee('Formulir ini belum dapat menerima jawaban.')
@@ -125,6 +125,49 @@ class MarketingFormExperienceTest extends TestCase
         ])->assertRedirect();
 
         $this->assertSame('Paket B', $form->submissions()->firstOrFail()->answers['paket']['value']);
+    }
+
+    public function test_form_descriptions_and_account_notes_preserve_manual_line_breaks(): void
+    {
+        $form = $this->makeForm(true, [[
+            'key' => 'nama',
+            'label' => 'Nama',
+            'type' => 'text',
+            'help' => "Petunjuk baris pertama.\nPetunjuk baris kedua.",
+            'options' => [],
+            'option_images' => [],
+            'required' => true,
+        ]]);
+        $form->update(['description' => "Deskripsi baris pertama.\nDeskripsi baris kedua."]);
+
+        $this->get(route('public.forms.show', $form))
+            ->assertOk()
+            ->assertSee("Deskripsi baris pertama.\nDeskripsi baris kedua.")
+            ->assertSee("Petunjuk baris pertama.\nPetunjuk baris kedua.")
+            ->assertSee('text-align: left', false)
+            ->assertSee('white-space: pre-line', false);
+
+        $thanksView = file_get_contents(resource_path('views/public/forms/thanks.blade.php'));
+        $historyView = file_get_contents(resource_path('views/user/history.blade.php'));
+
+        $this->assertStringContainsString("\$item['key'] === 'notes'", $thanksView);
+        $this->assertStringContainsString('style="text-align: left; white-space: pre-line;">{{ $credentials[\'notes\'] }}', $historyView);
+    }
+
+    public function test_public_form_has_no_outer_card_but_keeps_the_heading_card(): void
+    {
+        $form = $this->makeForm(true);
+
+        $this->get(route('public.forms.show', $form))
+            ->assertOk()
+            ->assertSee('wiboost-public-guest-card--unframed', false)
+            ->assertSee('wiboost-public-form-heading', false)
+            ->assertSee('border-radius: 2rem', false)
+            ->assertSee('background: rgba(255, 255, 255, .95)', false)
+            ->assertSee('box-shadow: 0 22px 52px', false)
+            ->assertSee('background: transparent !important', false)
+            ->assertDontSee('wiboost-public-form-badge', false)
+            ->assertDontSee('Formulir Wiboost Store');
     }
 
     private function makeForm(bool $active, ?array $fields = null): MarketingForm

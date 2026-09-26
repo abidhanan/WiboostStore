@@ -217,7 +217,7 @@
                                     @if($cred->notes)
                                         <div class="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
                                             <p class="text-[8px] font-black uppercase tracking-widest text-slate-500">Catatan</p>
-                                            <p class="mt-1 whitespace-pre-line break-words text-sm font-black text-[#2b3a67]">{{ $cred->notes }}</p>
+                                            <p class="mt-1 whitespace-pre-line break-words text-left text-sm font-black leading-relaxed text-[#2b3a67]" style="text-align: left; white-space: pre-line;">{{ $cred->notes }}</p>
                                         </div>
                                     @endif
                                     

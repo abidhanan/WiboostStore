@@ -126,25 +126,17 @@
 
     .wiboost-public-form-heading {
         margin-bottom: 2rem;
+        border: 4px solid #fff;
+        border-radius: 2rem;
+        background: rgba(255, 255, 255, .95);
+        padding: 1.5rem;
         text-align: center;
-    }
-
-    .wiboost-public-form-badge {
-        display: inline-flex;
-        border: 2px solid #fff;
-        border-radius: 9999px;
-        background: #e0fbfc;
-        padding: .5rem 1.25rem;
-        color: #4bc6b9;
-        font-size: .625rem;
-        font-weight: 900;
-        letter-spacing: .24em;
-        text-transform: uppercase;
-        box-shadow: 0 2px 8px rgba(75, 198, 185, .12);
+        box-shadow: 0 22px 52px rgba(189, 224, 254, .38);
+        backdrop-filter: blur(8px);
     }
 
     .wiboost-public-form-title {
-        margin: 1.25rem 0 0;
+        margin: 0;
         color: #2b3a67;
         font-size: clamp(1.9rem, 5vw, 2.45rem);
         font-weight: 900;
@@ -157,6 +149,9 @@
         color: #5a76c8;
         font-size: .95rem;
         font-weight: 800;
+        text-align: left;
+        white-space: pre-line;
+        overflow-wrap: anywhere;
         line-height: 1.65;
     }
 
@@ -377,6 +372,10 @@
     }
 
     @media (min-width: 640px) {
+        .wiboost-public-form-heading {
+            padding: 2rem;
+        }
+
         .wiboost-public-field {
             padding: 1.25rem;
         }
@@ -392,12 +391,9 @@
 
 <div class="wiboost-font wiboost-public-form-page">
     <div class="wiboost-public-form-heading mb-8 text-center">
-        <span class="wiboost-public-form-badge inline-flex rounded-full border-2 border-white bg-[#e0fbfc] px-5 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-[#4bc6b9] shadow-sm">
-            Formulir Wiboost Store
-        </span>
-        <h1 class="wiboost-public-form-title mt-5 text-3xl font-black leading-tight text-[#2b3a67] sm:text-4xl">{{ $form->title }}</h1>
+        <h1 class="wiboost-public-form-title text-3xl font-black leading-tight text-[#2b3a67] sm:text-4xl">{{ $form->title }}</h1>
         @if($form->description)
-            <p class="wiboost-public-form-description mx-auto mt-3 max-w-2xl text-sm font-bold leading-relaxed text-[#5a76c8] sm:text-base">{{ $form->description }}</p>
+            <p class="wiboost-public-form-description mx-auto mt-3 max-w-2xl text-left text-sm font-bold leading-relaxed text-[#5a76c8] sm:text-base">{{ $form->description }}</p>
         @endif
     </div>
 
@@ -444,7 +440,7 @@
                     {{ $label }} @if($required)<span class="text-[#ff6b6b]">*</span>@endif
                 </label>
                 @if($help)
-                    <p class="wiboost-public-help mb-3 ml-2 text-xs font-bold leading-relaxed text-[#8faaf3]">{{ $help }}</p>
+                    <p class="wiboost-public-help mb-3 ml-2 whitespace-pre-line break-words text-left text-xs font-bold leading-relaxed text-[#8faaf3]" style="text-align: left; white-space: pre-line;">{{ $help }}</p>
                 @endif
 
                 @if($type === 'textarea')

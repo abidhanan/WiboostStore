@@ -2,6 +2,7 @@
     $pageTitle = trim($__env->yieldContent('title', config('app.name', 'Wiboost Store')));
     $isCompactAuth = request()->routeIs('login', 'register', 'admin.login', 'password.confirm', 'password.request', 'password.reset', 'verification.notice');
     $isPublicMarketingForm = request()->routeIs('public.forms.*') || request()->is('formulir*');
+    $isPublicFormEntry = request()->routeIs('public.forms.show');
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
@@ -246,6 +247,15 @@
                 backdrop-filter: blur(10px);
             }
 
+            .wiboost-public-guest-card--unframed {
+                border: 0 !important;
+                border-radius: 0 !important;
+                background: transparent !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                backdrop-filter: none !important;
+            }
+
             .wiboost-public-guest-footer {
                 position: relative;
                 z-index: 10;
@@ -357,7 +367,7 @@
         @endif
 
         <main class="{{ $isPublicMarketingForm ? 'wiboost-public-guest-main' : '' }} relative z-10 mx-auto flex w-full {{ $isPublicMarketingForm ? 'max-w-4xl flex-1 items-start justify-center py-8 sm:py-10 lg:py-12' : 'max-w-xl items-center justify-center' }} {{ $isCompactAuth ? 'flex-1 py-8 lg:py-10' : ($isPublicMarketingForm ? '' : 'min-h-[calc(100vh-7rem)] py-12 lg:py-16') }}">
-            <section class="{{ $isPublicMarketingForm ? 'wiboost-public-guest-card' : '' }} {{ $isCompactAuth ? 'wiboost-auth-card' : '' }} w-full rounded-[2.5rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/50 backdrop-blur {{ $isPublicMarketingForm ? 'p-5 sm:p-7 md:p-9' : 'p-6 md:p-8' }}">
+            <section class="{{ $isPublicMarketingForm ? 'wiboost-public-guest-card' : '' }} {{ $isPublicFormEntry ? 'wiboost-public-guest-card--unframed' : '' }} {{ $isCompactAuth ? 'wiboost-auth-card' : '' }} w-full rounded-[2.5rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/50 backdrop-blur {{ $isPublicMarketingForm ? 'p-5 sm:p-7 md:p-9' : 'p-6 md:p-8' }}">
                 @auth
                     @if(! \App\Support\WiboostInputRules::validName(auth()->user()?->name))
                         <div class="mb-6 rounded-[1.5rem] border-4 border-white bg-[#fff5eb] px-5 py-4 text-sm font-black text-amber-600 shadow-lg shadow-amber-100/60">
