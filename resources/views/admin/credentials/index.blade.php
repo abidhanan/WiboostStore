@@ -63,7 +63,7 @@
                 <div class="space-y-5">
                     @if($product->process_type == 'account')
                         <div class="p-4 bg-[#e6fff7] border-4 border-white rounded-[1.5rem] mb-5 shadow-sm">
-                            <p class="text-xs text-emerald-600 font-bold leading-relaxed">Semua form di bawah <span class="font-black underline">opsional</span>. Cukup isi yang diperlukan sesuai dengan jenis aplikasi premiumnya.</p>
+                            <p class="text-xs font-normal leading-relaxed text-emerald-600">Semua form di bawah opsional. Cukup isi yang diperlukan sesuai dengan jenis aplikasi premiumnya.</p>
                         </div>
 
                         <div>

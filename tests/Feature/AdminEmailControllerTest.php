@@ -19,7 +19,7 @@ class AdminEmailControllerTest extends TestCase
     public function test_admin_can_open_email_management_and_create_pages(): void
     {
         $admin = $this->userWithRole(User::ROLE_MARKETING, 'Marketing');
-        $this->userWithRole(User::ROLE_BUYER, 'Buyer');
+        $buyer = $this->userWithRole(User::ROLE_BUYER, 'Buyer');
 
         $this->actingAs($admin)
             ->get(route('admin.emails.index'))
@@ -33,7 +33,15 @@ class AdminEmailControllerTest extends TestCase
             ->get(route('admin.emails.create'))
             ->assertOk()
             ->assertSee('Pilih Penerima')
-            ->assertSee('1 penerima')
+            ->assertSee('Email Tertentu')
+            ->assertSee('Cari Email')
+            ->assertSee($buyer->email)
+            ->assertSee('recipient_ids[]', false)
+            ->assertSee('if (!search) return selected;', false)
+            ->assertSee('selectedSpecificRecipients()', false)
+            ->assertSee('visibleSpecificRecipients()', false)
+            ->assertDontSee('Email Terpilih')
+            ->assertDontSee('Halo Pelanggan Wiboost Store,')
             ->assertDontSee('Pratinjau Email')
             ->assertDontSee('Pratinjau Tombol Email');
     }
@@ -79,9 +87,41 @@ class AdminEmailControllerTest extends TestCase
             actionUrl: 'https://wiboostore.com',
         ))->render();
 
-        $this->assertStringContainsString('Halo Budi', $html);
+        $this->assertStringNotContainsString('Halo Budi', $html);
+        $this->assertStringNotContainsString('Halo Pelanggan Wiboost Store', $html);
         $this->assertStringContainsString('Promo Akhir Pekan', $html);
         $this->assertStringContainsString('Belanja Sekarang', $html);
+    }
+
+    public function test_admin_can_queue_email_for_multiple_specific_customers(): void
+    {
+        Queue::fake();
+
+        $admin = $this->userWithRole(User::ROLE_SUPER_ADMIN, 'Super Admin');
+        $firstBuyer = $this->userWithRole(User::ROLE_BUYER, 'Buyer');
+        $secondBuyer = $this->userWithRole(User::ROLE_BUYER, 'Buyer');
+        $unselectedBuyer = $this->userWithRole(User::ROLE_BUYER, 'Buyer');
+
+        $this->actingAs($admin)
+            ->post(route('admin.emails.store'), [
+                'recipient_scope' => 'specific',
+                'recipient_ids' => [$firstBuyer->id, $secondBuyer->id, $admin->id],
+                'submission_token' => (string) Str::uuid(),
+                'subject' => 'Informasi Khusus',
+                'body' => 'Pesan hanya untuk pengguna terpilih.',
+            ])
+            ->assertRedirect(route('admin.emails.index'))
+            ->assertSessionHas('success');
+
+        Queue::assertPushed(SendUserBroadcastEmail::class, 2);
+        Queue::assertPushed(SendUserBroadcastEmail::class, fn (SendUserBroadcastEmail $job) => $job->recipientEmail === $firstBuyer->email);
+        Queue::assertPushed(SendUserBroadcastEmail::class, fn (SendUserBroadcastEmail $job) => $job->recipientEmail === $secondBuyer->email);
+        Queue::assertNotPushed(SendUserBroadcastEmail::class, fn (SendUserBroadcastEmail $job) => $job->recipientEmail === $unselectedBuyer->email);
+        Queue::assertNotPushed(SendUserBroadcastEmail::class, fn (SendUserBroadcastEmail $job) => $job->recipientEmail === $admin->email);
+
+        $campaign = EmailCampaign::query()->sole();
+        $this->assertSame('specific', $campaign->recipient_scope);
+        $this->assertSame(2, $campaign->recipient_count);
     }
 
     public function test_same_submission_token_does_not_queue_duplicate_email(): void

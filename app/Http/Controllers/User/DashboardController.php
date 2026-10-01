@@ -19,6 +19,8 @@ use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
+    private const MEMBERSHIP_PRICE = 10000;
+
     public function index(TripayDepositSyncService $depositSyncService)
     {
         $depositSyncService->syncForUser((int) Auth::id());
@@ -84,6 +86,7 @@ class DashboardController extends Controller
         $remainingMinutes = intdiv($remainingTotalSeconds % 3600, 60);
         $remainingSeconds = $remainingTotalSeconds % 60;
         $membershipTickerProducts = $this->membershipTickerProducts();
+        $membershipPrice = self::MEMBERSHIP_PRICE;
 
         return view('user.membership', compact(
             'user',
@@ -94,7 +97,8 @@ class DashboardController extends Controller
             'remainingHours',
             'remainingMinutes',
             'remainingSeconds',
-            'membershipTickerProducts'
+            'membershipTickerProducts',
+            'membershipPrice'
         ));
     }
 
@@ -103,7 +107,7 @@ class DashboardController extends Controller
         $user = $request->user();
         $user?->syncExpiredMembershipRole();
         $user = $user?->fresh();
-        $amount = 30000;
+        $amount = self::MEMBERSHIP_PRICE;
         $lockKey = 'membership-payment:' . $user->id;
 
         try {
@@ -178,7 +182,7 @@ class DashboardController extends Controller
         return Transaction::query()
             ->where('user_id', $userId)
             ->whereIn('payment_status', ['unpaid', 'pending'])
-            ->where('amount', 30000)
+            ->where('amount', self::MEMBERSHIP_PRICE)
             ->where('invoice_number', 'like', 'MEM-%')
             ->where('created_at', '>=', now()->subMinutes($expiresInMinutes))
             ->latest()

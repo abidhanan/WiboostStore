@@ -10,6 +10,7 @@
         'buyer' => 'Buyer',
         'member' => 'Member',
         'reseller' => 'Reseller',
+        'specific' => 'Email Tertentu',
     ];
     $statusLabels = [
         'queued' => 'Dalam Antrean',

@@ -27,7 +27,6 @@
                 </tr>
                 <tr>
                     <td bgcolor="#f8fbff" style="padding:26px 22px;background:#f8fbff;">
-                        <p style="margin:0 0 10px;font-size:14px;line-height:1.6;font-weight:700;color:#5a76c8;">Halo {{ $recipientName }},</p>
                         <h1 style="margin:0 0 18px;font-size:26px;line-height:1.25;font-weight:900;color:#2b3a67;word-break:break-word;">{{ $subjectText }}</h1>
                         <div style="margin:0;font-size:15px;line-height:1.75;font-weight:600;color:#2b3a67;white-space:pre-line;word-break:break-word;">{{ $bodyText }}</div>
 

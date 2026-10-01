@@ -16,7 +16,7 @@ use Illuminate\View\View;
 
 class EmailController extends Controller
 {
-    private const RECIPIENT_SCOPES = ['all', 'buyer', 'member', 'reseller'];
+    private const RECIPIENT_SCOPES = ['all', 'buyer', 'member', 'reseller', 'specific'];
 
     public function index(Request $request): View
     {
@@ -46,11 +46,24 @@ class EmailController extends Controller
 
     public function create(): View
     {
+        $specificRecipients = $this->recipientQuery('all')
+            ->select(['id', 'name', 'email'])
+            ->orderBy('name')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (User $user) => [
+                'id' => (string) $user->id,
+                'name' => $user->name ?: 'Tanpa Nama',
+                'email' => $user->email,
+            ])
+            ->values();
+
         return view('admin.emails.create', [
             'submissionToken' => (string) Str::uuid(),
             'recipientCounts' => collect(self::RECIPIENT_SCOPES)
-                ->mapWithKeys(fn (string $scope) => [$scope => $this->recipientQuery($scope)->count()])
+                ->mapWithKeys(fn (string $scope) => [$scope => $scope === 'specific' ? 0 : $this->recipientQuery($scope)->count()])
                 ->all(),
+            'specificRecipients' => $specificRecipients,
         ]);
     }
 
@@ -58,6 +71,8 @@ class EmailController extends Controller
     {
         $validated = $request->validate([
             'recipient_scope' => ['required', Rule::in(self::RECIPIENT_SCOPES)],
+            'recipient_ids' => ['nullable', 'array', 'required_if:recipient_scope,specific'],
+            'recipient_ids.*' => ['integer', 'distinct', 'exists:users,id'],
             'submission_token' => ['required', 'uuid'],
             'subject' => ['required', 'string', 'max:150'],
             'body' => ['required', 'string', 'max:20000'],
@@ -65,6 +80,9 @@ class EmailController extends Controller
             'action_url' => ['nullable', 'url:http,https', 'max:500', 'required_with:action_label'],
         ], [
             'recipient_scope.required' => 'Pilih kelompok penerima email.',
+            'recipient_ids.required_if' => 'Pilih minimal satu email penerima.',
+            'recipient_ids.*.distinct' => 'Daftar penerima tidak boleh berisi email yang sama.',
+            'recipient_ids.*.exists' => 'Salah satu penerima email sudah tidak tersedia.',
             'subject.required' => 'Subjek email wajib diisi.',
             'subject.max' => 'Subjek email maksimal 150 karakter.',
             'body.required' => 'Isi email wajib diisi.',
@@ -74,13 +92,17 @@ class EmailController extends Controller
             'action_url.url' => 'Tautan tombol harus berupa URL http atau https yang valid.',
         ]);
 
-        $query = $this->recipientQuery($validated['recipient_scope']);
+        $recipientIds = array_values(array_unique(array_map('intval', $validated['recipient_ids'] ?? [])));
+        $query = $this->recipientQuery($validated['recipient_scope'], $recipientIds);
         $recipientCount = (clone $query)->count();
 
         if ($recipientCount === 0) {
             return back()
                 ->withInput()
-                ->withErrors(['recipient_scope' => 'Tidak ada pengguna dengan email aktif pada kelompok tersebut.']);
+                ->withErrors([
+                    $validated['recipient_scope'] === 'specific' ? 'recipient_ids' : 'recipient_scope'
+                        => 'Tidak ada pengguna dengan email aktif pada pilihan tersebut.',
+                ]);
         }
 
         $submissionCacheKey = 'admin-email-submission:' . hash('sha256', $validated['submission_token']);
@@ -158,7 +180,7 @@ class EmailController extends Controller
         return redirect()->route('admin.emails.index')->with('success', $message);
     }
 
-    private function recipientQuery(string $scope): Builder
+    private function recipientQuery(string $scope, array $recipientIds = []): Builder
     {
         $customerRoleIds = array_values(array_unique([
             ...User::BUYER_ROLE_IDS,
@@ -169,6 +191,9 @@ class EmailController extends Controller
             ->whereIn('role_id', $customerRoleIds)
             ->whereNotNull('email')
             ->where('email', '!=', '')
+            ->when($scope === 'specific', function (Builder $query) use ($recipientIds): void {
+                $query->whereIn('id', $recipientIds);
+            })
             ->when($scope === 'buyer', function (Builder $query): void {
                 $query->whereIn('role_id', User::BUYER_ROLE_IDS)
                     ->where(function (Builder $membershipQuery): void {

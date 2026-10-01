@@ -59,6 +59,25 @@
         -webkit-overflow-scrolling: touch;
     }
 
+    .history-credential-row {
+        gap: 0.75rem;
+    }
+
+    .history-credential-value {
+        flex: 1 1 auto;
+        font-size: clamp(0.625rem, 2.7vw, 0.875rem);
+        letter-spacing: 0;
+        line-height: 1.35;
+    }
+
+    .history-credential-value--email {
+        white-space: nowrap;
+    }
+
+    .history-credential-copy {
+        flex: 0 0 auto;
+    }
+
     @media (min-width: 768px) {
         .history-modal-shell {
             padding: 1.5rem;
@@ -91,6 +110,11 @@
 
         .history-modal-card [class*="tracking-widest"] {
             letter-spacing: 0.08em !important;
+        }
+
+        .history-credential-row {
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
         }
     }
 
@@ -349,9 +373,9 @@
                                             @if(!empty($credentials[$key]))
                                                 <div>
                                                     <p class="text-[9px] font-black text-amber-600/70 uppercase tracking-widest mb-1 ml-1">{{ $label }}</p>
-                                                    <div class="bg-white px-5 py-3.5 rounded-[1.2rem] border-4 border-amber-100 flex justify-between items-center group shadow-sm">
-                                                        <p class="font-black text-[#2b3a67] text-sm break-all">{{ $credentials[$key] }}</p>
-                                                        <button onclick="copyToClipboard('{{ addslashes($credentials[$key]) }}')" class="text-amber-400 hover:text-amber-600 transition-colors bg-amber-50 p-2 rounded-xl border border-amber-100 active:scale-95" title="Salin">
+                                                    <div class="history-credential-row flex items-center justify-between rounded-[1.2rem] border-4 border-amber-100 bg-white px-5 py-3.5 shadow-sm">
+                                                        <p class="history-credential-value min-w-0 font-black text-[#2b3a67] {{ $key === 'email' ? 'history-credential-value--email' : 'break-all' }}">{{ $credentials[$key] }}</p>
+                                                        <button onclick="copyToClipboard('{{ addslashes($credentials[$key]) }}')" class="history-credential-copy rounded-xl border border-amber-100 bg-amber-50 p-2 text-amber-400 transition-colors hover:text-amber-600 active:scale-95" title="Salin">
                                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                                                         </button>
                                                     </div>
@@ -534,14 +558,11 @@
 
                                                     $otpUrl = \App\Support\WiboostAdminContact::otpWhatsappUrl(implode("\n", $otpLines));
                                                 @endphp
-                                                <div class="bg-white p-5 rounded-[1.5rem] border-4 border-amber-100 flex flex-col gap-2 shadow-sm text-center">
-                                                    <p class="text-[10px] font-black text-amber-600 leading-relaxed uppercase tracking-widest">Silahkan cek tutorial untuk login atau minta bantuan OTP ke admin.</p>
-                                                    @if($otpUrl)
-                                                        <a href="{{ $otpUrl }}" target="_blank" rel="noopener" onclick="window.markWiboostAdminChatOpened?.()" class="mt-2 inline-flex w-full items-center justify-center rounded-full border-4 border-white bg-[#25D366] px-4 py-3 text-xs font-black text-white shadow-lg shadow-[#25D366]/20 transition active:scale-95">
-                                                            Minta OTP via WhatsApp
-                                                        </a>
-                                                    @endif
-                                                </div>
+                                                @if($otpUrl)
+                                                    <a href="{{ $otpUrl }}" target="_blank" rel="noopener" onclick="window.markWiboostAdminChatOpened?.()" class="inline-flex w-full items-center justify-center rounded-full border-4 border-white bg-[#25D366] px-4 py-3 text-xs font-black text-white shadow-lg shadow-[#25D366]/20 transition active:scale-95">
+                                                        Minta OTP
+                                                    </a>
+                                                @endif
                                             @endif
                                         </div>
                                     @endif

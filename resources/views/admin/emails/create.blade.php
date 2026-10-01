@@ -10,8 +10,11 @@
         'buyer' => 'Buyer',
         'member' => 'Member',
         'reseller' => 'Reseller',
+        'specific' => 'Email Tertentu',
     ];
     $selectedScope = old('recipient_scope', 'all');
+    $specificRecipients = collect($specificRecipients ?? [])->values()->all();
+    $selectedRecipientIds = collect(old('recipient_ids', []))->map(fn ($id) => (string) $id)->values()->all();
 @endphp
 
 <div
@@ -20,12 +23,35 @@
         recipientScope: @js($selectedScope),
         recipientCounts: @js($recipientCounts),
         scopeLabels: @js($scopeLabels),
+        specificRecipients: @js($specificRecipients),
+        selectedRecipientIds: @js($selectedRecipientIds),
+        recipientSearch: '',
         subject: @js(old('subject', '')),
         bodyText: @js(old('body', '')),
         actionLabel: @js(old('action_label', '')),
         actionUrl: @js(old('action_url', '')),
+        recipientCount() {
+            return this.recipientScope === 'specific'
+                ? this.selectedRecipientIds.length
+                : Number(this.recipientCounts[this.recipientScope] || 0);
+        },
+        selectedSpecificRecipients() {
+            return this.specificRecipients.filter((recipient) =>
+                this.selectedRecipientIds.includes(String(recipient.id))
+            );
+        },
+        visibleSpecificRecipients() {
+            const selected = this.selectedSpecificRecipients();
+            const search = this.recipientSearch.trim().toLowerCase();
+            if (!search) return selected;
+            const matches = this.specificRecipients.filter((recipient) =>
+                !this.selectedRecipientIds.includes(String(recipient.id))
+                && `${recipient.name} ${recipient.email}`.toLowerCase().includes(search)
+            );
+            return [...selected, ...matches];
+        },
         confirmSend(event) {
-            const count = Number(this.recipientCounts[this.recipientScope] || 0);
+            const count = this.recipientCount();
             const label = this.scopeLabels[this.recipientScope] || 'pengguna';
             if (!window.confirm(`Kirim email ini ke ${count} penerima (${label})?`)) {
                 event.preventDefault();
@@ -69,7 +95,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
                 @foreach($scopeLabels as $scope => $label)
                     <label
                         class="flex cursor-pointer items-center justify-between gap-4 rounded-[1.5rem] border-4 p-4 shadow-sm transition"
@@ -77,11 +103,35 @@
                     >
                         <span class="min-w-0">
                             <span class="block font-black text-[#2b3a67]">{{ $label }}</span>
-                            <span class="mt-1 block text-xs font-bold text-[#8faaf3]">{{ number_format($recipientCounts[$scope] ?? 0, 0, ',', '.') }} penerima</span>
+                            <span class="mt-1 block text-xs font-bold text-[#8faaf3]" x-text="@js($scope) === 'specific' ? `${selectedRecipientIds.length} dipilih` : `${recipientCounts[@js($scope)] || 0} penerima`"></span>
                         </span>
                         <input type="radio" name="recipient_scope" value="{{ $scope }}" x-model="recipientScope" class="h-5 w-5 shrink-0 text-[#5a76c8]" required>
                     </label>
                 @endforeach
+            </div>
+
+            <div x-show="recipientScope === 'specific'" x-cloak class="mt-6 border-t-4 border-dashed border-[#f4f9ff] pt-6">
+                <template x-for="recipientId in selectedRecipientIds" :key="`selected-input-${recipientId}`">
+                    <input type="hidden" name="recipient_ids[]" :value="recipientId">
+                </template>
+
+                <label for="recipient_search" class="mb-3 ml-2 block text-sm font-black text-[#5a76c8]">Cari Email</label>
+                <input id="recipient_search" type="search" x-model.debounce.150ms="recipientSearch" class="w-full rounded-[1.5rem] border-4 border-white bg-[#f4f9ff] px-6 py-4 font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
+
+                <div x-show="recipientSearch.trim().length > 0 || selectedRecipientIds.length > 0" class="mt-4 max-h-80 space-y-2 overflow-y-auto rounded-[1.5rem] border-4 border-white bg-[#f8fbff] p-3 shadow-inner">
+                    <template x-for="recipient in visibleSpecificRecipients()" :key="recipient.id">
+                        <label class="flex cursor-pointer items-center gap-3 rounded-[1.1rem] border-2 px-4 py-3 shadow-sm transition hover:border-[#bde0fe]" :class="selectedRecipientIds.includes(String(recipient.id)) ? 'border-[#bde0fe] bg-[#f0f5ff]' : 'border-white bg-white'">
+                            <input type="checkbox" :value="recipient.id" x-model="selectedRecipientIds" class="h-5 w-5 shrink-0 rounded text-[#5a76c8]">
+                            <span class="min-w-0">
+                                <span class="block truncate text-sm font-black text-[#2b3a67]" x-text="recipient.name"></span>
+                                <span class="block truncate text-xs font-bold text-[#8faaf3]" x-text="recipient.email"></span>
+                            </span>
+                        </label>
+                    </template>
+                    <p x-show="recipientSearch.trim().length > 0 && visibleSpecificRecipients().length === 0" class="px-4 py-6 text-center text-sm font-bold text-[#8faaf3]">Email tidak ditemukan.</p>
+                </div>
+
+                <p class="mt-3 text-right text-xs font-black text-[#5a76c8]"><span x-text="selectedRecipientIds.length"></span> email dipilih</p>
             </div>
         </section>
 
@@ -116,8 +166,7 @@
                         <p class="mt-3 text-xl font-black text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></p>
                     </div>
                     <div class="p-6">
-                        <p class="text-sm font-bold text-[#5a76c8]">Halo Pelanggan Wiboost Store,</p>
-                        <h3 class="mt-3 break-words text-2xl font-black text-[#2b3a67]" x-text="subject || 'Subjek Email'"></h3>
+                        <h3 class="break-words text-2xl font-black text-[#2b3a67]" x-text="subject || 'Subjek Email'"></h3>
                         <p class="mt-4 whitespace-pre-line break-words text-sm font-bold leading-relaxed text-[#2b3a67]" x-text="bodyText || 'Isi Email'"></p>
                         <template x-if="actionLabel && actionUrl">
                             <div class="mt-6 text-center">
@@ -155,7 +204,7 @@
         <div class="rounded-[2rem] border-4 border-white bg-white/95 p-4 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-5">
             <button type="submit" class="flex w-full items-center justify-center gap-3 rounded-full border-4 border-white bg-[#5a76c8] px-6 py-5 text-lg font-black text-white shadow-xl shadow-[#5a76c8]/30 transition-transform active:scale-95">
                 @include('partials.wiboost-icon', ['name' => 'send', 'class' => 'h-6 w-6'])
-                <span>Kirim ke <span x-text="recipientCounts[recipientScope] || 0"></span> User</span>
+                <span>Kirim ke <span x-text="recipientCount()"></span> User</span>
             </button>
         </div>
     </form>

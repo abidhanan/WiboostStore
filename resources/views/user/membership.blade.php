@@ -17,6 +17,7 @@
     $remainingMinutes = $remainingMinutes ?? intdiv($remainingTotalSeconds % 3600, 60);
     $remainingSeconds = $remainingSeconds ?? ($remainingTotalSeconds % 60);
     $memberName = $user?->short_name ?? $user?->name ?? 'Member';
+    $membershipPrice = (int) ($membershipPrice ?? 10000);
     $membershipTickerItems = collect($membershipTickerProducts ?? [])
         ->map(fn ($product) => is_array($product)
             ? trim(($product['name'] ?? '') . ': Rp ' . number_format((int) ($product['price'] ?? 0), 0, ',', '.'))
@@ -164,7 +165,7 @@
         <div class="rounded-[2rem] border-4 border-white bg-[#f8fbff] p-6 shadow-xl shadow-[#bde0fe]/20 sm:p-8">
             <p class="text-sm font-black uppercase tracking-[0.2em]" style="color: #8b5cf6;">Biaya Membership</p>
             <p class="mt-3 text-lg font-black text-[#8faaf3]" style="text-decoration: line-through;">Rp 50.000</p>
-            <h2 class="mt-1 text-3xl font-black text-[#2b3a67]">Rp 30.000 / bulan.</h2>
+            <h2 class="mt-1 text-3xl font-black text-[#2b3a67]">Rp {{ number_format($membershipPrice, 0, ',', '.') }} / bulan.</h2>
         </div>
     @endif
 
