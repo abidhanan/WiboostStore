@@ -12,6 +12,20 @@
         50% { transform: translateY(-15px); }
         100% { transform: translateY(0px); }
     }
+
+    .warehouse-email-value {
+        display: block;
+        font-size: clamp(0.625rem, 2.8vw, 0.875rem);
+        line-height: 1.35;
+        max-width: 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+        white-space: nowrap;
+    }
+
+    .warehouse-email-value::-webkit-scrollbar {
+        display: none;
+    }
 </style>
 
 <div class="wiboost-font pb-12 max-w-6xl mx-auto relative z-10">
@@ -68,7 +82,7 @@
 
                         <div>
                             <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Email</label>
-                            <input type="text" name="data_1" class="w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition text-sm shadow-inner placeholder-[#a3bbfb]">
+                            <input type="text" name="data_1" class="warehouse-email-value w-full bg-[#f4f9ff] border-4 border-white focus:border-[#bde0fe] rounded-[1.5rem] px-5 py-4 text-[#2b3a67] font-black outline-none transition shadow-inner placeholder-[#a3bbfb]">
                         </div>
                         <div>
                             <label class="block text-xs font-black text-[#5a76c8] mb-2 ml-2">Kata Sandi</label>
@@ -187,7 +201,7 @@
                                     @if($cred->data_1 && $cred->data_1 !== '-')
                                         <div class="rounded-xl border border-[#dbeafe] bg-[#f4f9ff] px-3 py-2">
                                             <p class="text-[8px] font-black uppercase tracking-widest text-[#8faaf3]">Email</p>
-                                            <p class="mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $cred->data_1 }}</p>
+                                            <p class="warehouse-email-value mt-1 font-black text-[#2b3a67]" title="{{ $cred->data_1 }}">{{ $cred->data_1 }}</p>
                                         </div>
                                     @endif
                                     @if($cred->data_2)

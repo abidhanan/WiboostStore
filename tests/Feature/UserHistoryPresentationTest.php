@@ -28,4 +28,20 @@ class UserHistoryPresentationTest extends TestCase
         $this->assertStringNotContainsString('Minta OTP via WhatsApp', $view);
         $this->assertStringNotContainsString('Silahkan cek tutorial untuk login atau minta bantuan OTP ke admin.', $view);
     }
+
+    public function test_mobile_order_metadata_and_warehouse_email_are_compact(): void
+    {
+        $historyView = file_get_contents(resource_path('views/user/history.blade.php'));
+        $warehouseView = file_get_contents(resource_path('views/admin/credentials/index.blade.php'));
+
+        $this->assertStringContainsString('.history-transaction-meta {', $historyView);
+        $this->assertStringContainsString('.history-modal-card .history-transaction-meta {', $historyView);
+        $this->assertStringContainsString('history-transaction-meta-time', $historyView);
+        $this->assertStringContainsString('history-transaction-meta-status', $historyView);
+        $this->assertStringContainsString('.warehouse-email-value {', $warehouseView);
+        $this->assertStringContainsString('white-space: nowrap;', $warehouseView);
+        $this->assertStringContainsString('name="data_1" class="warehouse-email-value', $warehouseView);
+        $this->assertStringContainsString('warehouse-email-value mt-1', $warehouseView);
+        $this->assertStringNotContainsString('mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $cred->data_1 }}', $warehouseView);
+    }
 }

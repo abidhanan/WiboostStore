@@ -78,6 +78,26 @@
         flex: 0 0 auto;
     }
 
+    .history-transaction-meta {
+        align-items: stretch;
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .history-transaction-meta-item {
+        align-items: flex-start;
+        background: #f8faff;
+        border: 4px solid #ffffff;
+        border-radius: 1.25rem;
+        box-shadow: 0 1px 2px rgba(43, 58, 103, 0.04);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-width: 0;
+        padding: 1rem;
+    }
+
     @media (min-width: 768px) {
         .history-modal-shell {
             padding: 1.5rem;
@@ -106,6 +126,33 @@
     @media (max-width: 420px) {
         .history-modal-card .grid.grid-cols-2 {
             grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        .history-modal-card .history-transaction-meta {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        .history-transaction-meta-item {
+            align-items: center;
+            flex-direction: row;
+            gap: 0.75rem;
+            justify-content: space-between;
+            padding: 0.85rem 1rem;
+        }
+
+        .history-transaction-meta-item > p,
+        .history-transaction-meta-item > span {
+            margin-bottom: 0 !important;
+        }
+
+        .history-transaction-meta-time {
+            font-size: 0.75rem !important;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .history-transaction-meta-status {
+            min-width: 7rem !important;
         }
 
         .history-modal-card [class*="tracking-widest"] {
@@ -712,14 +759,14 @@
                             </div>
                         @endif
 
-                        <div class="grid grid-cols-2 gap-4 px-2 pt-2 items-start">
-                            <div class="min-w-0">
+                        <div class="history-transaction-meta pt-2">
+                            <div class="history-transaction-meta-item">
                                 <p class="text-[9px] font-black text-[#8faaf3] uppercase tracking-widest mb-2 whitespace-nowrap">Waktu Transaksi</p>
-                                <p class="font-bold text-[#2b3a67] text-sm">{{ $transactionTime }}</p>
+                                <p class="history-transaction-meta-time font-bold text-[#2b3a67] text-sm">{{ $transactionTime }}</p>
                             </div>
-                            <div class="min-w-0 text-right">
+                            <div class="history-transaction-meta-item sm:items-end sm:text-right">
                                 <p class="text-[9px] font-black text-[#8faaf3] uppercase tracking-widest mb-2 whitespace-nowrap">Status Transaksi</p>
-                                <span class="{{ $statusClass }} inline-flex min-w-[8.5rem] items-center justify-center px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border-2 shadow-sm text-center leading-tight">
+                                <span class="history-transaction-meta-status {{ $statusClass }} inline-flex min-w-[8.5rem] items-center justify-center px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border-2 shadow-sm text-center leading-tight">
                                     {{ $statusLabel }}
                                 </span>
                             </div>
