@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Models\Deposit;
+use App\Models\OtpRequest;
 use App\Models\Product;
 use App\Models\ResellerCommission;
 use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -149,6 +151,38 @@ class DiscordWebhookService
         ], 16433050, 'stock');
     }
 
+    public function sendOtpRequestAlert(OtpRequest $otpRequest): void
+    {
+        $otpRequest->loadMissing('user', 'transaction');
+
+        $this->sendEmbed('Permintaan OTP Baru', 'Pengguna meminta bantuan admin untuk OTP akses login.', [
+            ['name' => 'Invoice', 'value' => (string) $otpRequest->invoice_number, 'inline' => true],
+            ['name' => 'Pengguna', 'value' => (string) ($otpRequest->user?->name ?: 'Pengguna'), 'inline' => true],
+            ['name' => 'Email', 'value' => (string) ($otpRequest->user?->email ?: '-'), 'inline' => true],
+            ['name' => 'Produk', 'value' => mb_strimwidth((string) ($otpRequest->product_name ?: '-'), 0, 1000, '...'), 'inline' => false],
+            ['name' => 'Admin OTP', 'value' => (string) ($otpRequest->otp_admin_name ?: '-'), 'inline' => true],
+            ['name' => 'Nomor Admin OTP', 'value' => filled($otpRequest->otp_admin_whatsapp) ? '+' . $otpRequest->otp_admin_whatsapp : '-', 'inline' => true],
+            ['name' => 'Status', 'value' => $otpRequest->status_label, 'inline' => true],
+            ['name' => 'Waktu', 'value' => $otpRequest->requested_at?->format('d M Y, H:i') ?: now()->format('d M Y, H:i'), 'inline' => true],
+        ], 16433050, 'otp');
+    }
+
+    public function sendOtpHandledAlert(OtpRequest $otpRequest, ?User $handledBy = null): void
+    {
+        $otpRequest->loadMissing('user', 'transaction');
+
+        $this->sendEmbed('Permintaan OTP Sudah Ditangani', 'Permintaan bantuan OTP pelanggan telah selesai ditangani.', [
+            ['name' => 'Invoice', 'value' => (string) $otpRequest->invoice_number, 'inline' => true],
+            ['name' => 'Pengguna', 'value' => (string) ($otpRequest->user?->name ?: 'Pengguna'), 'inline' => true],
+            ['name' => 'Email', 'value' => (string) ($otpRequest->user?->email ?: '-'), 'inline' => true],
+            ['name' => 'Produk', 'value' => mb_strimwidth((string) ($otpRequest->product_name ?: '-'), 0, 1000, '...'), 'inline' => false],
+            ['name' => 'Admin OTP', 'value' => (string) ($otpRequest->otp_admin_name ?: '-'), 'inline' => true],
+            ['name' => 'Ditangani Oleh', 'value' => (string) ($handledBy?->name ?: 'Admin'), 'inline' => true],
+            ['name' => 'Status', 'value' => $otpRequest->status_label, 'inline' => true],
+            ['name' => 'Waktu Ditangani', 'value' => $otpRequest->updated_at?->format('d M Y, H:i') ?: now()->format('d M Y, H:i'), 'inline' => true],
+        ], 5763719, 'otp');
+    }
+
     public function sendSystemAlert(string $title, ?string $description = null, array $fields = [], int $color = 16433050, string $channel = 'system'): void
     {
         $this->sendEmbed($title, $description, $fields, $color, $channel);
@@ -159,6 +193,8 @@ class DiscordWebhookService
         $webhookUrl = $this->webhookUrl($channel);
 
         if (! filled($webhookUrl)) {
+            Log::warning("Discord webhook belum dikonfigurasi [{$channel}].");
+
             return;
         }
 

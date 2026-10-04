@@ -75,6 +75,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
             $statusCode = $exception->getStatusCode();
 
+            // Penolakan akses yang memang disengaja bukan kerusakan aplikasi.
+            // Respons 403 tetap dikirim ke pengunjung, hanya notifikasi Discord yang dilewati.
+            if ($statusCode === 403) {
+                return true;
+            }
+
             if (! in_array($statusCode, [404, 405], true)) {
                 return false;
             }
@@ -98,6 +104,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 'dsrdelete.json',
                 'meta.json',
                 'site.webmanifest',
+                '@vite/client',
+                'rest/settings',
+                'livewire/update',
+                'magento_version',
                 'null',
                 'livewire/livewire.js',
                 'comments/feed',

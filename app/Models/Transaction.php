@@ -72,6 +72,11 @@ class Transaction extends Model
         return $this->hasOne(Refund::class);
     }
 
+    public function otpRequest()
+    {
+        return $this->hasOne(OtpRequest::class);
+    }
+
     public function hasManualRefund(): bool
     {
         if ($this->relationLoaded('refund')) {

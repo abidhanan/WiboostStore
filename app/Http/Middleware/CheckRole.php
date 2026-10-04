@@ -53,6 +53,8 @@ class CheckRole
                 $allowedRoles[] = User::ROLE_MARKETING;
             } elseif ($roleLower === 'customer service' || $roleLower === 'cs' || (string) $role === '8') {
                 $allowedRoles[] = User::ROLE_CUSTOMER_SERVICE;
+            } elseif ($roleLower === 'sales' || (string) $role === '9') {
+                $allowedRoles[] = User::ROLE_SALES;
             } elseif ($roleLower === 'buyer' || $roleLower === 'user' || (string) $role === '2' || (string) $role === '5') {
                 $allowedRoles = array_merge($allowedRoles, User::BUYER_ROLE_IDS);
             } elseif ($roleLower === 'reseller' || (string) $role === '3') {

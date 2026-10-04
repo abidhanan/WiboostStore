@@ -4,11 +4,15 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
+use App\Models\OtpRequest;
+use App\Services\DiscordWebhookService;
 use App\Services\OrderFulfillmentService;
 use App\Services\TransactionPaymentSyncService;
+use App\Support\WiboostAdminContact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
 
 class TransactionHistoryController extends Controller
 {
@@ -170,5 +174,56 @@ class TransactionHistoryController extends Controller
         }
 
         return back()->with('success', 'Bukti logout berhasil dihapus.');
+    }
+
+    public function requestOtp(Request $request, Transaction $transaction, DiscordWebhookService $discordWebhookService)
+    {
+        abort_unless((int) $transaction->user_id === (int) Auth::id(), 403);
+
+        $transaction->loadMissing('user', 'product');
+
+        $credentials = is_array($transaction->credential_data)
+            ? $transaction->credential_data
+            : (json_decode((string) $transaction->credential_data, true) ?: []);
+
+        abort_unless((bool) data_get($credentials, 'needs_otp'), 404);
+
+        $validated = $request->validate([
+            'message' => ['required', 'string', 'max:12000'],
+        ]);
+
+        $otpNumber = data_get($credentials, 'otp_admin_whatsapp');
+        $otpName = data_get($credentials, 'otp_admin_name')
+            ?: WiboostAdminContact::otpAdminNameForNumber($otpNumber);
+
+        $otpRequestData = [
+            'user_id' => Auth::id(),
+            'transaction_id' => $transaction->id,
+            'invoice_number' => $transaction->invoice_number,
+            'product_name' => $transaction->product_name_snapshot
+                ?: $transaction->product?->name,
+            'otp_admin_name' => $otpName,
+            'otp_admin_whatsapp' => WiboostAdminContact::normalizePhone($otpNumber),
+            'status' => 'pending',
+            'requested_at' => now(),
+        ];
+
+        if (Schema::hasTable('otp_requests')) {
+            $otpRequest = OtpRequest::query()->updateOrCreate(
+                ['transaction_id' => $transaction->id],
+                $otpRequestData
+            );
+        } else {
+            $otpRequest = new OtpRequest($otpRequestData);
+            $otpRequest->setRelation('user', $transaction->user);
+            $otpRequest->setRelation('transaction', $transaction);
+        }
+
+        $otpUrl = WiboostAdminContact::otpWhatsappUrlForNumber($otpNumber, $validated['message']);
+        abort_unless($otpUrl, 404);
+
+        $discordWebhookService->sendOtpRequestAlert($otpRequest);
+
+        return redirect()->away($otpUrl);
     }
 }

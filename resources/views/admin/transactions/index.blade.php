@@ -286,15 +286,20 @@
         text-align: left;
         font-size: .72rem;
         font-weight: 900;
+        background: #f4f9ff;
         color: #2b3a67;
         white-space: nowrap;
         transition: background .16s ease, color .16s ease;
     }
 
-    .admin-theme-select-option:hover,
-    .admin-theme-select-option.is-selected {
+    .admin-theme-select-option:hover {
         background: #e0fbfc;
-        color: #5a76c8;
+        color: #4760a9;
+    }
+
+    .admin-theme-select-option.is-selected {
+        background: #5a76c8;
+        color: #ffffff;
     }
 
     .admin-theme-select-status .admin-theme-select-menu {
@@ -513,7 +518,7 @@
                             <span class="admin-theme-select-arrow">⌄</span>
                         </button>
                         <div class="admin-theme-select-menu">
-                        @for($y=now()->year; $y>=now()->year-3; $y--)
+                        @for($y=now()->year + 1; $y>=now()->year-10; $y--)
                             <button type="button" class="admin-theme-select-option {{ ($selectedYear ?? now()->format('Y')) == $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
                         @endfor
                         </div>
@@ -557,7 +562,7 @@
                             <th style="font-size: 10px; width: 130px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga</th>
                             <th style="font-size: 10px; width: 320px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Target</th>
                             <th style="font-size: 10px; width: 120px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Metode</th>
-                            <th style="font-size: 10px; width: 120px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Bukti Masuk</th>
+                            <th style="font-size: 10px; width: 150px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Bukti Masuk</th>
                             <th style="font-size: 10px; width: 180px;" class="px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Status</th>
                         </tr>
                     </thead>
@@ -620,7 +625,7 @@
                             </td>
                             
                             <!-- Target Input -->
-                            <td class="px-5 py-4 sm:py-5 align-top text-center">
+                            <td class="whitespace-nowrap px-5 py-4 sm:py-5 align-top text-center">
                                 @if($adminTargetSummary)
                                     <span style="font-size: 9px;white-space:normal;overflow-wrap:anywhere;word-break:break-word;" class="inline-block w-full max-w-[320px] rounded-xl border-2 border-white bg-[#f0f5ff] px-3 py-1.5 font-black leading-snug text-[#2b3a67] shadow-sm" title="{{ $adminTargetText ?? '' }}">
                                         {{ $adminTargetSummary }}
@@ -648,7 +653,7 @@
                             </td>
 
                             <!-- Bukti Masuk -->
-                            <td class="px-5 py-4 sm:py-5 align-top text-center">
+                            <td class="whitespace-nowrap px-5 py-4 sm:py-5 align-top text-center">
                                 @if($adminLoginProofUrl)
                                     <a href="{{ $adminLoginProofUrl }}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size: 9px;" class="inline-flex items-center justify-center whitespace-nowrap rounded-full border-2 border-white bg-[#e0fbfc] px-3 py-1.5 font-black uppercase tracking-widest text-[#5a76c8] shadow-sm transition hover:bg-[#d4f7f4]">
                                         Lihat
@@ -1165,8 +1170,11 @@
                         label.textContent = option.dataset.label || option.textContent.trim();
                     }
 
-                        dropdown.querySelectorAll('[data-value]').forEach((item) => item.classList.remove('is-selected'));
-                        option.classList.add('is-selected');
+                        dropdown.querySelectorAll('[data-value]').forEach((item) => {
+                            const isSelected = item === option;
+                            item.classList.toggle('is-selected', isSelected);
+                            item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                        });
                         dropdown.classList.remove('is-open');
                         resetFloatingMenu(dropdown);
 

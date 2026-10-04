@@ -29,7 +29,7 @@
             {{ $title }}
         </h2>
         @if($description)
-            <p class="mt-2 text-sm font-bold leading-relaxed text-[#8faaf3] md:text-base">
+            <p class="mt-2 whitespace-pre-line text-left text-sm font-bold leading-relaxed text-[#8faaf3] md:text-base">
                 {{ $description }}
             </p>
         @endif

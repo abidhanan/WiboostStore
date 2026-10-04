@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminReport;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\OtpRequest;
 use App\Models\Refund;
 use App\Models\ResellerCommission;
 use App\Models\SiteSetting;
@@ -69,7 +70,7 @@ class DashboardController extends Controller
             ->sum('amount');
 
         $totalUsers = User::count();
-        $totalAdmins = User::whereIn('role_id', [1, 4, 6, 7, 8])->count();
+        $totalAdmins = User::whereIn('role_id', User::ADMIN_ROLE_IDS)->count();
         $totalMembers = User::where('membership_expires_at', '>', now())->count();
         $totalResellers = User::where('role_id', 3)
             ->where(function ($query) {
@@ -248,6 +249,7 @@ class DashboardController extends Controller
         $refundMonth = 0;
         $latestRefunds = collect();
         $latestExpiredDurations = collect();
+        $latestOtpRequests = collect();
 
         if (Schema::hasTable('reseller_commissions')) {
             $commissionService = app(ResellerCommissionService::class);
@@ -346,6 +348,16 @@ class DashboardController extends Controller
                 ->get();
         }
 
+        if (Schema::hasTable('otp_requests')) {
+            $latestOtpRequests = OtpRequest::query()
+                ->with(['user', 'transaction.product'])
+                ->whereMonth('requested_at', $currentMonth)
+                ->whereYear('requested_at', $currentYear)
+                ->orderByDesc('requested_at')
+                ->take(5)
+                ->get();
+        }
+
         $adminCsWhatsapp = WiboostAdminContact::csWhatsappNumber();
         $adminOtpWhatsapp = WiboostAdminContact::otpWhatsappNumber();
 
@@ -378,6 +390,7 @@ class DashboardController extends Controller
             'topProductsByRootCategory',
             'latestRefunds',
             'latestExpiredDurations',
+            'latestOtpRequests',
         ));
     }
 
@@ -496,14 +509,14 @@ class DashboardController extends Controller
     public function updateContactNumbers(Request $request)
     {
         $validated = $request->validate([
+            'admin_cs_name' => ['nullable', 'string', 'max:80'],
             'admin_cs_whatsapp' => WiboostInputRules::nullableNumberRules(40),
-            'admin_otp_whatsapp' => WiboostInputRules::nullableNumberRules(40),
         ], WiboostInputRules::validationMessages());
 
+        SiteSetting::setValue('admin_cs_name', trim((string) ($validated['admin_cs_name'] ?? '')) ?: null);
         SiteSetting::setValue('admin_cs_whatsapp', self::normalizeWhatsappInput($validated['admin_cs_whatsapp'] ?? null));
-        SiteSetting::setValue('admin_otp_whatsapp', self::normalizeWhatsappInput($validated['admin_otp_whatsapp'] ?? null));
 
-        return back()->with('success', 'Nomor admin CS dan OTP berhasil diperbarui.');
+        return back()->with('success', 'Data Admin CS berhasil diperbarui.');
     }
 
     public function exportExcel(Request $request)
@@ -542,7 +555,7 @@ class DashboardController extends Controller
         $totalTransactionsMonth = (clone $validTransactions)->count();
         $revenueMonth = (float) (clone $validTransactions)->sum('amount');
         $totalUsers = User::count();
-        $totalAdmins = User::whereIn('role_id', [1, 4, 6, 7, 8])->count();
+        $totalAdmins = User::whereIn('role_id', User::ADMIN_ROLE_IDS)->count();
         $totalMembers = User::where('membership_expires_at', '>', now())->count();
         $totalResellers = User::where('role_id', 3)
             ->where(function ($query) {
@@ -558,15 +571,14 @@ class DashboardController extends Controller
             ->count();
 
         $commissionMonth = 0.0;
-        $withdrawalPending = 0.0;
+        $withdrawalMonth = 0.0;
         if (Schema::hasTable('reseller_commissions')) {
             $commissionMonth = (float) ResellerCommission::where('type', 'income')
                 ->where('status', 'success')
                 ->whereMonth('created_at', $currentMonth)
                 ->whereYear('created_at', $currentYear)
                 ->sum('amount');
-            $withdrawalPending = (float) ResellerCommission::where('type', 'withdrawal')
-                ->whereIn('status', ['pending', 'processing'])
+            $withdrawalMonth = (float) ResellerCommission::where('type', 'withdrawal')
                 ->whereMonth('created_at', $currentMonth)
                 ->whereYear('created_at', $currentYear)
                 ->sum('amount');
@@ -585,17 +597,31 @@ class DashboardController extends Controller
             ? AdminReport::whereMonth('created_at', $currentMonth)->whereYear('created_at', $currentYear)->count()
             : 0;
 
+        $expiredDurationCount = Schema::hasColumn('transactions', 'credential_expires_at')
+            ? Transaction::query()
+                ->whereNotNull('credential_expires_at')
+                ->whereMonth('credential_expires_at', $currentMonth)
+                ->whereYear('credential_expires_at', $currentYear)
+                ->count()
+            : 0;
+
+        $otpRequestCount = Schema::hasTable('otp_requests')
+            ? OtpRequest::whereMonth('requested_at', $currentMonth)->whereYear('requested_at', $currentYear)->count()
+            : 0;
+
         $rows = [
-            ['Ringkasan', 'Transaksi Bulan Ini', number_format($totalTransactionsMonth, 0, ',', '.'), 'Transaksi paid, tidak gagal, dan belum refund'],
             ['Ringkasan', 'Pendapatan Bulan Ini', 'Rp ' . number_format($revenueMonth, 0, ',', '.'), 'Pendapatan valid pada periode terpilih'],
             ['Ringkasan', 'Komisi Bulan Ini', 'Rp ' . number_format($commissionMonth, 0, ',', '.'), 'Komisi reseller sukses pada periode terpilih'],
+            ['Ringkasan', 'Penarikan Bulan Ini', 'Rp ' . number_format($withdrawalMonth, 0, ',', '.'), 'Total penarikan pada periode terpilih'],
             ['Ringkasan', 'Refund Bulan Ini', 'Rp ' . number_format($refundMonth, 0, ',', '.'), 'Nominal refund pada periode terpilih'],
-            ['Ringkasan', 'Penarikan Diproses', 'Rp ' . number_format($withdrawalPending, 0, ',', '.'), 'Penarikan pending dan processing pada periode terpilih'],
+            ['Ringkasan', 'Transaksi Bulan Ini', number_format($totalTransactionsMonth, 0, ',', '.'), 'Transaksi paid, tidak gagal, dan belum refund'],
             ['Pengguna', 'Total Akun', number_format($totalUsers, 0, ',', '.'), 'Semua akun terdaftar'],
             ['Pengguna', 'Total Admin', number_format($totalAdmins, 0, ',', '.'), 'Super admin dan staf'],
             ['Pengguna', 'Total Member', number_format($totalMembers, 0, ',', '.'), 'Membership aktif'],
             ['Pengguna', 'Total Reseller', number_format($totalResellers, 0, ',', '.'), 'Reseller aktif'],
             ['Pengguna', 'Total Buyer', number_format($totalBuyers, 0, ',', '.'), 'User biasa dan member nonaktif'],
+            ['Operasional', 'Durasi Habis', number_format($expiredDurationCount, 0, ',', '.'), 'Akses produk yang habis pada periode terpilih'],
+            ['Operasional', 'Permintaan OTP', number_format($otpRequestCount, 0, ',', '.'), 'Permintaan OTP pada periode terpilih'],
             ['Laporan', 'Laporan Kendala', number_format($reportCount, 0, ',', '.'), 'Laporan masuk pada periode terpilih'],
         ];
 

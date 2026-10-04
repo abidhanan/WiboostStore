@@ -7,6 +7,13 @@
 @php
     $searchValue = $search ?? request('search', '');
     $activeFilter = $filter ?? request('filter', 'all');
+    $selectedMonth = $selectedMonth ?? request('month', now()->format('m'));
+    $selectedYear = $selectedYear ?? request('year', now()->format('Y'));
+    $adminMonthNames = [
+        1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+        5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+        9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+    ];
 
     $filterTabs = [
         'all' => 'Semua',
@@ -44,29 +51,75 @@
     .table-scroll::-webkit-scrollbar { height: 8px; }
     .table-scroll::-webkit-scrollbar-track { background: #f0f5ff; border-radius: 10px; }
     .table-scroll::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; border: 2px solid #f0f5ff; }
+    .admin-theme-select-month,
+    .admin-theme-select-year {
+        flex: 1 1 0;
+        width: auto;
+    }
+    @media (min-width: 768px) {
+        .admin-theme-select-month { width: 9rem; flex: 0 0 9rem; }
+        .admin-theme-select-year { width: 7rem; flex: 0 0 7rem; }
+    }
 </style>
 
-<div class="wiboost-font relative z-10 mx-auto max-w-7xl pb-12" x-data="{ detailOpen: false, detailData: {} }">
+<div class="wiboost-font relative z-10 mx-auto max-w-7xl pb-12" x-data="{ detailOpen: false, detailData: {} }" @admin-detail-closed.window="detailOpen = false">
 
     {{-- Pencarian --}}
     <div class="mb-6 rounded-[2rem] border-4 border-white bg-white/95 p-4 shadow-xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem] sm:p-5">
-        <form action="{{ route('admin.logs.index') }}" method="GET" class="flex w-full gap-2">
+        <form action="{{ route('admin.logs.index') }}" method="GET" class="w-full space-y-3">
             <input type="hidden" name="filter" value="{{ $activeFilter }}">
-            <input type="text" name="search" value="{{ $searchValue }}"
-                class="min-w-0 flex-1 truncate rounded-[1.2rem] border-4 border-white bg-[#f4f9ff] px-5 py-3 text-xs font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe] sm:rounded-[1.5rem] sm:px-6 sm:py-4 sm:text-sm"
-                placeholder="Cari IP, user, negara, kota, ISP, URL...">
-            <button type="submit" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.2rem] border-4 border-white bg-[#5a76c8] text-white shadow-md transition-transform active:scale-95 sm:h-14 sm:w-14 sm:rounded-[1.5rem]" title="Cari">
-                @include('partials.wiboost-icon', ['name' => 'search', 'class' => 'h-5 w-5'])
-            </button>
-            <a href="{{ route('admin.logs.index', array_filter(['filter' => $activeFilter === 'all' ? null : $activeFilter, 'search' => $searchValue ?: null])) }}" class="flex h-12 shrink-0 items-center justify-center gap-2 rounded-[1.2rem] border-4 border-white bg-[#8faaf3] px-4 text-xs font-black text-white shadow-md transition-transform hover:bg-[#6f8ddc] active:scale-95 sm:h-14 sm:rounded-[1.5rem] sm:px-5 sm:text-sm" title="Refresh Log">
+            <input type="hidden" name="month" value="{{ $selectedMonth }}">
+            <input type="hidden" name="year" value="{{ $selectedYear }}">
+            <div class="flex w-full flex-col gap-2 sm:flex-row">
+            <div class="flex min-w-0 flex-1 gap-2">
+                <input type="text" name="search" value="{{ $searchValue }}"
+                    class="min-w-0 flex-1 truncate rounded-[1.2rem] border-4 border-white bg-[#f4f9ff] px-5 py-3 text-xs font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe] sm:rounded-[1.5rem] sm:px-6 sm:py-4 sm:text-sm"
+                    placeholder="Cari IP, user, negara, kota, ISP, URL...">
+                <button type="submit" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.2rem] border-4 border-white bg-[#5a76c8] text-white shadow-md transition-transform active:scale-95 sm:h-14 sm:w-14 sm:rounded-[1.5rem]" title="Cari">
+                    @include('partials.wiboost-icon', ['name' => 'search', 'class' => 'h-5 w-5'])
+                </button>
+                @if($searchValue !== '')
+                    <a href="{{ route('admin.logs.index', ['filter' => $activeFilter, 'month' => $selectedMonth, 'year' => $selectedYear]) }}" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-md transition-transform active:scale-95 sm:h-14 sm:w-14 sm:rounded-[1.5rem]" title="Reset">
+                        @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])
+                    </a>
+                @endif
+            </div>
+            <a href="{{ route('admin.logs.index', array_filter(['filter' => $activeFilter === 'all' ? null : $activeFilter, 'search' => $searchValue ?: null, 'month' => $selectedMonth, 'year' => $selectedYear])) }}" class="flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-[1.2rem] border-4 border-white bg-[#8faaf3] px-4 text-xs font-black text-white shadow-md transition-transform hover:bg-[#6f8ddc] active:scale-95 sm:h-14 sm:w-auto sm:rounded-[1.5rem] sm:px-5 sm:text-sm" title="Refresh Log">
                 @include('partials.wiboost-icon', ['name' => 'refresh', 'class' => 'h-5 w-5'])
                 <span class="whitespace-nowrap">Refresh</span>
             </a>
-            @if($searchValue !== '')
-                <a href="{{ route('admin.logs.index', ['filter' => $activeFilter]) }}" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.2rem] border-4 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-md transition-transform active:scale-95 sm:h-14 sm:w-14 sm:rounded-[1.5rem]" title="Reset">
-                    @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])
+            </div>
+
+            <div class="mt-1 flex w-full flex-col items-center justify-start gap-3 border-t-4 border-dashed border-[#f4f9ff] pt-4 md:flex-row md:justify-end">
+                <div class="flex w-full items-center gap-2 md:w-auto">
+                <div class="admin-theme-select admin-theme-select-month" data-admin-theme-select data-submit-on-change="true" data-input-name="month">
+                    <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                        <span data-admin-theme-select-label>{{ $adminMonthNames[(int) $selectedMonth] ?? '-' }}</span>
+                        <span class="admin-theme-select-arrow">v</span>
+                    </button>
+                    <div class="admin-theme-select-menu">
+                        @foreach($adminMonthNames as $monthNumber => $monthName)
+                            <button type="button" class="admin-theme-select-option {{ (string) $selectedMonth === sprintf('%02d', $monthNumber) ? 'is-selected' : '' }}" data-value="{{ sprintf('%02d', $monthNumber) }}" data-label="{{ $monthName }}">{{ $monthName }}</button>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="admin-theme-select admin-theme-select-year" data-admin-theme-select data-submit-on-change="true" data-input-name="year">
+                    <button type="button" class="admin-theme-select-button rounded-[1rem] px-4 py-2 text-xs font-black sm:text-sm">
+                        <span data-admin-theme-select-label>{{ $selectedYear }}</span>
+                        <span class="admin-theme-select-arrow">v</span>
+                    </button>
+                    <div class="admin-theme-select-menu">
+                        @for($year = now()->year + 1; $year >= now()->year - 10; $year--)
+                            <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $year ? 'is-selected' : '' }}" data-value="{{ $year }}" data-label="{{ $year }}">{{ $year }}</button>
+                        @endfor
+                    </div>
+                </div>
+                </div>
+                <a href="{{ route('admin.logs.export_excel', array_filter(['search' => $searchValue ?: null, 'filter' => $activeFilter === 'all' ? null : $activeFilter, 'month' => $selectedMonth, 'year' => $selectedYear])) }}" target="_blank" class="flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-[1rem] border-4 border-white bg-[#4bc6b9] px-6 text-sm font-black text-white shadow-md shadow-[#4bc6b9]/25 transition-transform hover:bg-[#3ba398] active:scale-95 md:w-auto sm:rounded-[1.2rem]" title="Cetak Laporan">
+                    @include('partials.wiboost-icon', ['name' => 'chart', 'class' => 'h-5 w-5'])
+                    <span class="whitespace-nowrap">Cetak Laporan</span>
                 </a>
-            @endif
+            </div>
         </form>
     </div>
 
@@ -77,13 +130,13 @@
         'filterParam' => 'filter',
         'activeFilter' => $activeFilter,
         'defaultFilter' => 'all',
-        'filterQuery' => array_filter(['search' => $searchValue]),
+        'filterQuery' => array_filter(['search' => $searchValue, 'month' => $selectedMonth, 'year' => $selectedYear]),
     ])
 
     <div class="overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem]">
         <div class="w-full overflow-x-auto table-scroll pb-2">
             <div class="inline-block min-w-full align-middle p-4 sm:p-6">
-                <table class="w-full text-left" style="min-width: 2350px; table-layout: fixed;">
+                <table class="w-full text-left" style="min-width: 2230px; table-layout: fixed;">
                     <thead>
                         <tr>
                             <th style="width: 145px;" class="border-b-4 border-dashed border-[#f4f9ff] px-4 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Waktu</th>
@@ -96,7 +149,6 @@
                             <th style="width: 190px;" class="border-b-4 border-dashed border-[#f4f9ff] px-4 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Route</th>
                             <th style="width: 250px;" class="border-b-4 border-dashed border-[#f4f9ff] px-4 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Lokasi</th>
                             <th style="width: 245px;" class="border-b-4 border-dashed border-[#f4f9ff] px-4 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Jaringan</th>
-                            <th style="width: 120px;" class="border-b-4 border-dashed border-[#f4f9ff] px-4 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Detail</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
@@ -125,7 +177,7 @@
                                     'user_agent' => $log->user_agent,
                                 ]);
                             @endphp
-                            <tr class="transition-colors hover:bg-[#f8faff]">
+                            <tr @click="detailData = @js($detailArr); detailOpen = true" class="cursor-pointer transition-colors hover:bg-[#f8faff]">
                                 <td class="px-4 py-5 align-middle">
                                     <p class="whitespace-nowrap text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $log->created_at ? $log->created_at->timezone(config('app.timezone', 'Asia/Jakarta'))->format('d M Y, H:i') : '-' }}</p>
                                 </td>
@@ -170,16 +222,10 @@
                                     <p class="truncate text-[10px] font-bold text-[#8faaf3]" title="{{ $geo?->isp ?: '-' }}">{{ $geo?->isp ?: '-' }}</p>
                                     <p class="mt-1 truncate text-[10px] font-bold text-[#a3bbfb]" title="{{ $geo?->asname ?: '-' }}">{{ $geo?->asname ?: '-' }}</p>
                                 </td>
-                                <td class="px-4 py-5 text-center align-middle">
-                                    <button type="button" @click="detailData = @js($detailArr); detailOpen = true"
-                                        class="mx-auto inline-flex items-center justify-center rounded-[1rem] border-2 border-white bg-[#f4f9ff] px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[#5a76c8] shadow-sm transition hover:bg-[#e0fbfc]">
-                                        Lihat
-                                    </button>
-                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="11" class="px-5 py-12 text-center">
+                                <td colspan="10" class="px-5 py-12 text-center">
                                     <div class="mx-auto max-w-md rounded-[2rem] border-4 border-dashed border-[#e5edf9] bg-[#f8fbff] p-8">
                                         <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[1.5rem] border-4 border-white bg-[#e0fbfc] text-[#5a76c8] shadow-sm">
                                             @include('partials.wiboost-icon', ['name' => 'report', 'class' => 'h-8 w-8'])

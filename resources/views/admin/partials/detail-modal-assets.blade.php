@@ -113,6 +113,11 @@
         box-shadow: 0 6px 16px rgba(189, 224, 254, .12);
     }
 
+    body.wiboost-admin-shell .admin-detail-panel p,
+    body.wiboost-admin-shell .admin-detail-subfield p {
+        white-space: pre-line;
+    }
+
     @media (min-width: 768px) {
         body.wiboost-admin-shell .admin-detail-subgrid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -249,9 +254,43 @@
             modal.style.setProperty('--admin-detail-modal-height', `${height}px`);
         };
 
+        const closeModal = (modal) => {
+            if (!(modal instanceof HTMLElement)) return;
+            modal.dispatchEvent(new CustomEvent('admin-detail-closed', { bubbles: true }));
+            modal.classList.remove('modal-active');
+            if (!document.querySelector('.admin-detail-modal.modal-active')) {
+                document.body.classList.remove('admin-detail-open');
+            }
+        };
+
+        const fitDetailLinks = (modal) => {
+            modal?.querySelectorAll?.('[data-admin-fit-link]').forEach((link) => {
+                if (!(link instanceof HTMLElement) || link.clientWidth <= 0) return;
+
+                let size = Number.parseFloat(link.dataset.fitStartSize || '14');
+                const minimum = Number.parseFloat(link.dataset.fitMinimumSize || '7');
+                link.style.fontSize = `${size}px`;
+
+                while (link.scrollWidth > link.clientWidth && size > minimum) {
+                    size = Math.max(minimum, size - 0.5);
+                    link.style.fontSize = `${size}px`;
+                }
+            });
+        };
+
         const prepareModal = (modal) => {
             if (!modal || modal.dataset.adminDetailPrepared === 'true') return;
             modal.dataset.adminDetailPrepared = 'true';
+
+            let backdrop = Array.from(modal.children).find((child) => child.matches?.('[data-admin-detail-backdrop], .absolute.inset-0'));
+            if (!backdrop) {
+                backdrop = document.createElement('div');
+                backdrop.className = 'absolute inset-0';
+                modal.prepend(backdrop);
+            }
+            backdrop.dataset.adminDetailBackdrop = 'true';
+            backdrop.setAttribute('aria-hidden', 'true');
+
             syncFrame(modal);
             if (modal.parentElement !== document.body) {
                 document.body.appendChild(modal);
@@ -262,6 +301,7 @@
             document.querySelectorAll('.admin-detail-modal.modal-active').forEach((modal) => {
                 prepareModal(modal);
                 syncFrame(modal);
+                fitDetailLinks(modal);
             });
         };
 
@@ -272,14 +312,15 @@
             syncFrame(modal);
             modal.classList.add('modal-active');
             document.body.classList.add('admin-detail-open');
-            requestAnimationFrame(() => syncFrame(modal));
+            requestAnimationFrame(() => {
+                syncFrame(modal);
+                fitDetailLinks(modal);
+            });
         };
 
         window.closeAdminUniversalDetail = window.closeAdminUniversalDetail || function (id) {
             const modal = document.getElementById(id);
-            if (!modal) return;
-            modal.classList.remove('modal-active');
-            document.body.classList.remove('admin-detail-open');
+            closeModal(modal);
         };
 
         const observer = new MutationObserver((mutations) => {
@@ -292,7 +333,12 @@
                     prepareModal(modal);
                     syncFrame(modal);
                     document.body.classList.add('admin-detail-open');
-                    requestAnimationFrame(() => syncFrame(modal));
+                    requestAnimationFrame(() => {
+                        syncFrame(modal);
+                        fitDetailLinks(modal);
+                    });
+                } else if (!document.querySelector('.admin-detail-modal.modal-active')) {
+                    document.body.classList.remove('admin-detail-open');
                 }
             });
         });
@@ -326,8 +372,19 @@
 
         document.addEventListener('keydown', (event) => {
             if (event.key !== 'Escape') return;
-            document.querySelectorAll('.admin-detail-modal.modal-active').forEach((modal) => modal.classList.remove('modal-active'));
-            document.body.classList.remove('admin-detail-open');
+            document.querySelectorAll('.admin-detail-modal.modal-active').forEach(closeModal);
         });
+
+        document.addEventListener('pointerdown', (event) => {
+            const target = event.target;
+            if (!(target instanceof Element)) return;
+
+            const backdrop = target.closest('[data-admin-detail-backdrop]');
+            const modal = backdrop?.closest('.admin-detail-modal.modal-active')
+                || (target.matches('.admin-detail-modal.modal-active') ? target : null);
+            if (!modal) return;
+
+            closeModal(modal);
+        }, true);
     })();
 </script>

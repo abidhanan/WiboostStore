@@ -107,12 +107,18 @@
             transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
         }
 
-        .admin-product-theme-select-option:hover,
-        .admin-product-theme-select-option.is-selected {
+        .admin-product-theme-select-option:hover {
             border-color: #bde0fe;
             background: #e0fbfc;
-            color: #4bc6b9;
+            color: #4760a9;
             transform: translateX(0.15rem);
+        }
+
+        .admin-product-theme-select-option.is-selected {
+            border-color: #ffffff;
+            background: #5a76c8;
+            color: #ffffff;
+            box-shadow: 0 7px 16px rgba(90, 118, 200, .2);
         }
 
         .admin-product-theme-select-option:disabled {
@@ -169,8 +175,11 @@
                             label.textContent = text;
                         }
 
-                        dropdown.querySelectorAll('[data-admin-product-theme-select-option]').forEach((item) => item.classList.remove('is-selected'));
-                        option.classList.add('is-selected');
+                        dropdown.querySelectorAll('[data-admin-product-theme-select-option]').forEach((item) => {
+                            const isSelected = item === option;
+                            item.classList.toggle('is-selected', isSelected);
+                            item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                        });
                         dropdown.classList.remove('is-open');
                         button?.setAttribute('aria-expanded', 'false');
                         window.wiboostResetFloatingMenu?.(dropdown, '.admin-product-theme-select-menu');

@@ -113,12 +113,18 @@
             transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
         }
 
-        .admin-user-role-select-option:hover,
-        .admin-user-role-select-option.is-selected {
+        .admin-user-role-select-option:hover {
             border-color: #bde0fe;
             background: #e0fbfc;
-            color: #4bc6b9;
+            color: #4760a9;
             transform: translateX(0.15rem);
+        }
+
+        .admin-user-role-select-option.is-selected {
+            border-color: #ffffff;
+            background: #5a76c8;
+            color: #ffffff;
+            box-shadow: 0 7px 16px rgba(90, 118, 200, .2);
         }
     </style>
 
@@ -145,7 +151,9 @@
                     dropdown.classList.toggle('is-open', willOpen);
                     button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
                     if (willOpen) {
-                        window.requestAnimationFrame(() => window.wiboostPositionFloatingMenu?.(dropdown, '.admin-user-role-select-menu', 220, 288));
+                        if (window.innerWidth >= 768) {
+                            window.requestAnimationFrame(() => window.wiboostPositionFloatingMenu?.(dropdown, '.admin-user-role-select-menu', 220, 288));
+                        }
                     } else {
                         window.wiboostResetFloatingMenu?.(dropdown, '.admin-user-role-select-menu');
                     }
@@ -164,8 +172,11 @@
                             label.textContent = text;
                         }
 
-                        dropdown.querySelectorAll('[data-admin-user-role-option]').forEach((item) => item.classList.remove('is-selected'));
-                        option.classList.add('is-selected');
+                        dropdown.querySelectorAll('[data-admin-user-role-option]').forEach((item) => {
+                            const isSelected = item === option;
+                            item.classList.toggle('is-selected', isSelected);
+                            item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                        });
                         dropdown.classList.remove('is-open');
                         button?.setAttribute('aria-expanded', 'false');
                         window.wiboostResetFloatingMenu?.(dropdown, '.admin-user-role-select-menu');
@@ -186,10 +197,18 @@
             });
 
             window.addEventListener('resize', () => {
-                document.querySelectorAll('[data-admin-user-role-select].is-open').forEach((dropdown) => window.wiboostPositionFloatingMenu?.(dropdown, '.admin-user-role-select-menu', 220, 288));
+                document.querySelectorAll('[data-admin-user-role-select].is-open').forEach((dropdown) => {
+                    if (window.innerWidth >= 768) {
+                        window.wiboostPositionFloatingMenu?.(dropdown, '.admin-user-role-select-menu', 220, 288);
+                    } else {
+                        window.wiboostResetFloatingMenu?.(dropdown, '.admin-user-role-select-menu');
+                    }
+                });
             });
             window.addEventListener('scroll', () => {
-                document.querySelectorAll('[data-admin-user-role-select].is-open').forEach((dropdown) => window.wiboostPositionFloatingMenu?.(dropdown, '.admin-user-role-select-menu', 220, 288));
+                if (window.innerWidth >= 768) {
+                    document.querySelectorAll('[data-admin-user-role-select].is-open').forEach((dropdown) => window.wiboostPositionFloatingMenu?.(dropdown, '.admin-user-role-select-menu', 220, 288));
+                }
             }, true);
         });
     </script>
@@ -205,6 +224,7 @@
         '6' => 'Gudang',
         '7' => 'Marketing',
         '8' => 'Customer Service',
+        '9' => 'Sales',
     ];
     $selectedRole = (string) ($selectedRole ?? '2');
     if (! array_key_exists($selectedRole, $roleOptions)) {

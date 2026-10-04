@@ -29,12 +29,15 @@ class User extends Authenticatable
 
     public const ROLE_CUSTOMER_SERVICE = 8;
 
+    public const ROLE_SALES = 9;
+
     public const ADMIN_ROLE_IDS = [
         self::ROLE_SUPER_ADMIN,
         self::ROLE_FINANCE,
         self::ROLE_WAREHOUSE,
         self::ROLE_MARKETING,
         self::ROLE_CUSTOMER_SERVICE,
+        self::ROLE_SALES,
     ];
 
     public const BUYER_ROLE_IDS = [
@@ -143,6 +146,7 @@ class User extends Authenticatable
             self::ROLE_WAREHOUSE => 'Gudang',
             self::ROLE_MARKETING => 'Marketing',
             self::ROLE_CUSTOMER_SERVICE => 'Customer Service',
+            self::ROLE_SALES => 'Sales',
         ];
     }
 

@@ -45,6 +45,8 @@ class WiboostInputRules
             'reseller_payout_account.regex' => 'Nomor e-wallet hanya boleh berisi angka.',
             'admin_cs_whatsapp.regex' => 'Nomor Admin CS hanya boleh berisi angka.',
             'admin_otp_whatsapp.regex' => 'Nomor Admin OTP hanya boleh berisi angka.',
+            'admin_otp_whatsapps.*.regex' => 'Nomor Admin OTP hanya boleh berisi angka.',
+            'admin_otp_numbers.*.regex' => 'Nomor Admin OTP hanya boleh berisi angka.',
         ];
     }
 

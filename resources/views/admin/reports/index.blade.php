@@ -217,7 +217,7 @@
                             <span class="admin-theme-select-arrow">v</span>
                         </button>
                         <div class="admin-theme-select-menu">
-                            @for($y = now()->year; $y >= now()->year - 3; $y--)
+                            @for($y = now()->year + 1; $y >= now()->year - 10; $y--)
                                 <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
                             @endfor
                         </div>
@@ -232,35 +232,43 @@
     </div>
 
     <section class="relative z-10 mb-6 overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:mb-8 sm:rounded-[2.5rem]">
-        <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-6 sm:py-6 md:flex-row md:items-center md:justify-between">
+        <div class="border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-6 sm:py-6">
             <div>
                 <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3] mb-1">Kontak Admin</p>
-                <h2 class="text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Nomor WhatsApp Aktif</h2>
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-[9px] font-black uppercase tracking-widest text-[#5a76c8] sm:text-[10px]">
-                <span class="min-w-0 rounded-full border-2 border-white bg-[#f4f9ff] px-3 py-2 text-center shadow-sm sm:px-4">CS: {{ filled($adminCsWhatsapp ?? null) ? '+' . $adminCsWhatsapp : '-' }}</span>
-                <span class="min-w-0 rounded-full border-2 border-white bg-[#f4f9ff] px-3 py-2 text-center shadow-sm sm:px-4">OTP: {{ filled($adminOtpWhatsapp ?? null) ? '+' . $adminOtpWhatsapp : '-' }}</span>
+                <h2 class="text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Admin Customer Service</h2>
             </div>
         </div>
 
-        <form action="{{ route('admin.dashboard.contact-numbers.update') }}" method="POST" class="p-4 sm:p-6" x-data="{ cs: @js(old('admin_cs_whatsapp', $adminCsWhatsapp ?? '')), otp: @js(old('admin_otp_whatsapp', $adminOtpWhatsapp ?? '')), originalCs: @js($adminCsWhatsapp ?? ''), originalOtp: @js($adminOtpWhatsapp ?? '') }">
+        <form action="{{ route('admin.dashboard.contact-numbers.update') }}" method="POST" class="p-4 sm:p-6" x-data="{
+            csName: @js(old('admin_cs_name', $adminCsName ?? '')),
+            cs: @js(old('admin_cs_whatsapp', $adminCsWhatsapp ?? '')),
+            originalCsName: @js($adminCsName ?? ''),
+            originalCs: @js($adminCsWhatsapp ?? ''),
+            hasChanges() {
+                return this.csName !== this.originalCsName || this.cs !== this.originalCs;
+            }
+        }">
             @csrf
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <div class="rounded-[1.6rem] border-4 border-white bg-[#f8fbff] p-4 shadow-inner">
-                    <label for="admin_cs_whatsapp" class="mb-2 ml-2 block text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">Nomor Admin CS</label>
-                    <input id="admin_cs_whatsapp" type="text" name="admin_cs_whatsapp" x-model="cs" value="{{ old('admin_cs_whatsapp', $adminCsWhatsapp ?? '') }}" placeholder="0895611244000" inputmode="numeric" pattern="[0-9]*" data-wiboost-number-only class="w-full rounded-[1.25rem] border-4 border-white bg-white px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]">
-                    <p class="mt-2 ml-2 text-[10px] font-bold text-[#8faaf3]">Dipakai untuk tombol WhatsApp dan bantuan laporan.</p>
+                    <label for="admin_cs_name" class="mb-2 ml-2 block text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">NAMA ADMIN CUSTOMER SERVICE</label>
+                    <input id="admin_cs_name" type="text" name="admin_cs_name" x-model="csName" value="{{ old('admin_cs_name', $adminCsName ?? '') }}" class="w-full rounded-[1.25rem] border-4 border-white bg-white px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
+                    @error('admin_cs_name')
+                        <p class="mt-2 ml-2 text-[10px] font-black text-[#ff6b6b]">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="rounded-[1.6rem] border-4 border-white bg-[#f8fbff] p-4 shadow-inner">
-                    <label for="admin_otp_whatsapp" class="mb-2 ml-2 block text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">Nomor Admin OTP</label>
-                    <input id="admin_otp_whatsapp" type="text" name="admin_otp_whatsapp" x-model="otp" value="{{ old('admin_otp_whatsapp', $adminOtpWhatsapp ?? '') }}" placeholder="0895611244000" inputmode="numeric" pattern="[0-9]*" data-wiboost-number-only class="w-full rounded-[1.25rem] border-4 border-white bg-white px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe]">
-                    <p class="mt-2 ml-2 text-[10px] font-bold text-[#8faaf3]">Dipakai khusus tombol minta OTP di detail pesanan user.</p>
+                    <label for="admin_cs_whatsapp" class="mb-2 ml-2 block text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">NOMOR ADMIN CUSTOMER SERVICE</label>
+                    <input id="admin_cs_whatsapp" type="text" name="admin_cs_whatsapp" x-model="cs" value="{{ old('admin_cs_whatsapp', $adminCsWhatsapp ?? '') }}" inputmode="numeric" pattern="[0-9]*" data-wiboost-number-only class="w-full rounded-[1.25rem] border-4 border-white bg-white px-5 py-4 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]">
+                    @error('admin_cs_whatsapp')
+                        <p class="mt-2 ml-2 text-[10px] font-black text-[#ff6b6b]">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
 
-            <div class="mt-5 flex justify-start">
-                <button x-cloak x-show="cs !== originalCs || otp !== originalOtp" type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-[#5a76c8] px-7 py-3 text-sm font-black text-white shadow-lg shadow-[#5a76c8]/25 transition-transform active:scale-95 sm:w-auto">
+            <div class="mt-5 flex justify-end">
+                <button x-cloak x-show="hasChanges()" type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-full border-4 border-white bg-[#5a76c8] px-7 py-3 text-sm font-black text-white shadow-lg shadow-[#5a76c8]/25 transition-transform active:scale-95 sm:w-auto">
                     @include('partials.wiboost-icon', ['name' => 'save', 'class' => 'h-5 w-5'])
                     Simpan Nomor
                 </button>
@@ -279,7 +287,7 @@
     <div class="relative z-10 w-full min-w-0 overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:rounded-[2.5rem]">
         <div class="table-scroll w-full overflow-x-auto pb-2">
             <div class="inline-block min-w-full p-4 align-middle sm:p-6">
-                <table class="w-full min-w-[1320px] whitespace-nowrap text-left">
+                <table class="w-full min-w-[1440px] whitespace-nowrap text-left">
                     <thead>
                         <tr>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Invoice</th>
@@ -290,6 +298,7 @@
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Jenis</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Kendala</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Bukti</th>
+                            <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Status</th>
                             <th class="border-b-4 border-dashed border-[#f4f9ff] px-5 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Aksi</th>
                         </tr>
                     </thead>
@@ -298,7 +307,9 @@
                             @php
                                 $proofUrl = $report->proof_url;
                                 $isHandled = $report->status === 'closed';
-                                $statusClass = $isHandled ? 'bg-[#e6fff7] text-emerald-500' : 'bg-[#fff5eb] text-amber-500';
+                                $statusClass = $isHandled
+                                    ? 'bg-[#e6fff7] text-emerald-500'
+                                    : 'bg-[#fff5eb] text-amber-500';
                                 $statusText = $isHandled ? 'Sudah Ditangani' : 'Belum Ditangani';
                             @endphp
                             <tr onclick="openAdminReportDetail('admin-report-detail-{{ $report->id }}')" class="group cursor-pointer transition-colors hover:bg-[#f8faff]">
@@ -337,6 +348,9 @@
                                     @endif
                                 </td>
                                 <td class="px-5 py-5 text-center align-middle">
+                                    <span class="{{ $statusClass }} inline-flex rounded-full border-2 border-white px-4 py-1.5 text-[9px] font-black uppercase tracking-widest shadow-sm">{{ $statusText }}</span>
+                                </td>
+                                <td class="px-5 py-5 text-center align-middle">
                                     <form method="POST" action="{{ route('admin.reports.update', $report) }}" onclick="event.stopPropagation()" class="inline-flex" data-no-submit-lock="true">
                                         @csrf
                                         @method('PATCH')
@@ -349,7 +363,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="px-5 py-20 text-center">
+                                <td colspan="10" class="px-5 py-20 text-center">
                                     <div class="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[2rem] border-4 border-white bg-[#f0f5ff] text-4xl shadow-inner">
                                         @include('partials.wiboost-icon', ['name' => 'note', 'class' => 'h-10 w-10'])
                                     </div>
@@ -368,7 +382,9 @@
                 $snapshot = $report->related_snapshot ?: [];
                 $isHandled = $report->status === 'closed';
                 $statusText = $isHandled ? 'Sudah Ditangani' : 'Belum Ditangani';
-                $statusClass = $isHandled ? 'bg-[#e6fff7] text-emerald-500' : 'bg-[#fff5eb] text-amber-500';
+                $statusClass = $isHandled
+                    ? 'bg-[#e6fff7] text-emerald-500'
+                    : 'bg-[#fff5eb] text-amber-500';
                 $isFilledReportValue = function ($value): bool {
                     if ($value === null || is_array($value)) {
                         return false;
@@ -521,6 +537,14 @@
                             <div class="admin-detail-panel">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Status</p>
                                 <span class="{{ $statusClass }} mt-2 inline-flex rounded-full border-2 border-white px-4 py-1.5 text-[10px] font-black uppercase tracking-widest shadow-sm">{{ $statusText }}</span>
+                            </div>
+                            <div class="admin-detail-panel">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nama Admin Customer Service</p>
+                                <p class="mt-1 font-black text-[#2b3a67]">{{ $adminCsName ?: '-' }}</p>
+                            </div>
+                            <div class="admin-detail-panel">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Nomor Admin Customer Service</p>
+                                <p class="mt-1 whitespace-nowrap font-bold text-[#2b3a67]">{{ $adminCsWhatsapp ? '+' . $adminCsWhatsapp : '-' }}</p>
                             </div>
                             <div class="admin-detail-panel">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Jenis</p>

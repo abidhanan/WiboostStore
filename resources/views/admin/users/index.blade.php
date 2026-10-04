@@ -19,6 +19,7 @@
         'gudang' => ['label' => 'Gudang', 'text' => '#111827', 'bg' => '#f3f4f6'],
         'marketing' => ['label' => 'Marketing', 'text' => '#991b1b', 'bg' => '#fee2e2'],
         'customer_service' => ['label' => 'Customer Service', 'text' => '#ec4899', 'bg' => '#fce7f3'],
+        'sales' => ['label' => 'Sales', 'text' => '#0f766e', 'bg' => '#ccfbf1'],
     ];
     $effectiveRoleMeta = function ($user): array {
         if ($user->isMember()) {
@@ -32,6 +33,7 @@
             6 => ['label' => 'Gudang', 'bg' => '#f3f4f6', 'text' => '#111827'],
             7 => ['label' => 'Marketing', 'bg' => '#fee2e2', 'text' => '#991b1b'],
             8 => ['label' => 'Customer Service', 'bg' => '#fce7f3', 'text' => '#ec4899'],
+            9 => ['label' => 'Sales', 'bg' => '#ccfbf1', 'text' => '#0f766e'],
             default => ['label' => 'Buyer', 'bg' => '#e0fbfc', 'text' => '#5a76c8'],
         };
     };
@@ -349,7 +351,7 @@
                             <span class="mt-2 inline-block rounded-full border-2 border-white px-4 py-1.5 text-[9px] font-black uppercase tracking-widest shadow-sm" style="background: {{ $detailRoleMeta['bg'] }}; color: {{ $detailRoleMeta['text'] }};">{{ $detailRoleMeta['label'] }}</span>
                         </div>
                         <div class="admin-detail-panel">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Role Dasar</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Role</p>
                             <p class="mt-1 text-sm font-black text-[#2b3a67]">{{ $baseRoleLabel($user) }}</p>
                         </div>
                         <div class="admin-detail-panel">

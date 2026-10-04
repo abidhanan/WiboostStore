@@ -438,7 +438,7 @@
                                             <p class="mb-3 text-[10px] font-black uppercase tracking-widest text-amber-500">Informasi Login</p>
                                             <p class="text-[9px] font-black text-amber-600/70 uppercase tracking-widest mb-1 ml-1">Catatan</p>
                                             <div class="bg-white px-5 py-3.5 rounded-[1.2rem] border-4 border-amber-100 flex justify-between items-center gap-3 group shadow-sm">
-                                                <p class="font-black text-[#2b3a67] text-sm break-words">{{ $credentials['notes'] }}</p>
+                                                <p class="whitespace-pre-line break-words text-left text-sm font-black leading-relaxed text-[#2b3a67]">{{ $credentials['notes'] }}</p>
                                                 <button onclick="copyToClipboard('{{ addslashes($credentials['notes']) }}')" class="shrink-0 text-amber-400 hover:text-amber-600 transition-colors bg-amber-50 p-2 rounded-xl border border-amber-100 active:scale-95" title="Salin">
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                                                 </button>
@@ -603,12 +603,19 @@
                                                     $otpLines[] = '';
                                                     $otpLines[] = 'Mohon dibantu kirim OTP login untuk pesanan ini.';
 
-                                                    $otpUrl = \App\Support\WiboostAdminContact::otpWhatsappUrl(implode("\n", $otpLines));
+                                                    $otpUrl = \App\Support\WiboostAdminContact::otpWhatsappUrlForNumber(
+                                                        $credentials['otp_admin_whatsapp'] ?? null,
+                                                        implode("\n", $otpLines)
+                                                    );
                                                 @endphp
                                                 @if($otpUrl)
-                                                    <a href="{{ $otpUrl }}" target="_blank" rel="noopener" onclick="window.markWiboostAdminChatOpened?.()" class="inline-flex w-full items-center justify-center rounded-full border-4 border-white bg-[#25D366] px-4 py-3 text-xs font-black text-white shadow-lg shadow-[#25D366]/20 transition active:scale-95">
-                                                        Minta OTP
-                                                    </a>
+                                                    <form action="{{ route('user.history.request-otp', $trx) }}" method="POST" target="_blank" data-no-page-loader="true" data-no-submit-lock="true">
+                                                        @csrf
+                                                        <input type="hidden" name="message" value="{{ implode("\n", $otpLines) }}">
+                                                        <button type="submit" data-keep-enabled="true" onclick="window.markWiboostAdminChatOpened?.()" class="inline-flex w-full items-center justify-center rounded-full border-4 border-white bg-[#25D366] px-4 py-3 text-xs font-black text-white shadow-lg shadow-[#25D366]/20 transition active:scale-95">
+                                                            Minta OTP
+                                                        </button>
+                                                    </form>
                                                 @endif
                                             @endif
                                         </div>

@@ -264,6 +264,13 @@
         width: 100%;
     }
 
+    .wiboost-service-option:not(.is-selected):not([aria-selected="true"]) {
+        background: #ffffff !important;
+        border-color: #dbe8ff !important;
+        color: #2b3a67 !important;
+        box-shadow: none !important;
+    }
+
     .wiboost-service-option:hover,
     .wiboost-service-option:focus {
         background: #f4f9ff;
@@ -271,11 +278,13 @@
         outline: 0;
     }
 
-    .wiboost-service-option.is-selected {
-        background: #e0fbfc;
-        border-color: #bde0fe;
-        color: #5a76c8;
+    .wiboost-service-option.is-selected,
+    .wiboost-service-option[aria-selected="true"] {
+        background: #5a76c8 !important;
+        border-color: #ffffff !important;
+        color: #ffffff !important;
         font-weight: 900;
+        box-shadow: 0 7px 16px rgba(90, 118, 200, .24) !important;
     }
 
     .wiboost-service-option-label {

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\MarketingForm;
+use App\Models\MarketingFormSubmission;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -86,6 +87,198 @@ class MarketingFormExperienceTest extends TestCase
         $this->assertArrayHasKey('Produk A', $field['option_images']);
         $this->assertSame('produk-a.jpg', $field['option_image_names']['Produk A']);
         Storage::disk('public')->assertExists($field['option_images']['Produk A']);
+    }
+
+    public function test_admin_form_index_uses_the_standard_table_layout(): void
+    {
+        $admin = $this->makeAdmin();
+        $form = $this->makeForm(true);
+        $form->update(['created_by' => $admin->id]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.forms.index'))
+            ->assertOk()
+            ->assertSee('<table', false)
+            ->assertSee('Judul')
+            ->assertSee('Slug')
+            ->assertSee('Deskripsi')
+            ->assertSee('Pertanyaan')
+            ->assertSee('Jawaban')
+            ->assertSee('Dibuat Oleh')
+            ->assertSee('Waktu Dibuat')
+            ->assertSee('Tautan')
+            ->assertSee('Salin Tautan')
+            ->assertDontSee('data-input-name="month"', false)
+            ->assertDontSee('data-input-name="year"', false)
+            ->assertSee('forms-table-scroll', false);
+
+        $view = file_get_contents(resource_path('views/admin/forms/index.blade.php'));
+        $this->assertStringContainsString("['name' => 'eye'", $view);
+        $tableSource = strstr($view, '<table');
+        $tableSource = strstr($tableSource, '</table>', true);
+        $expectedColumnOrder = [
+            '>Waktu Dibuat<',
+            '>Judul<',
+            '>Slug<',
+            '>Deskripsi<',
+            '>Dibuat Oleh<',
+            '>Pertanyaan<',
+            '>Jawaban<',
+            '>Status<',
+            '>Benefit<',
+            '>Tautan<',
+            '>Aksi<',
+        ];
+        $lastPosition = -1;
+        foreach ($expectedColumnOrder as $column) {
+            $position = strpos($tableSource, $column);
+            $this->assertNotFalse($position, "Kolom {$column} tidak ditemukan.");
+            $this->assertGreaterThan($lastPosition, $position, "Urutan kolom {$column} tidak sesuai.");
+            $lastPosition = $position;
+        }
+        $this->assertStringContainsString("admin.forms.partials.copy-link-button", $tableSource);
+        $this->assertStringContainsString('is-copied', $view);
+        $this->assertStringContainsString('body.wiboost-admin-shell .wiboost-form-action-button--copy.is-copied', $view);
+        $this->assertStringContainsString('document.addEventListener', $view);
+        $this->assertStringContainsString('}, true);', $view);
+        $this->assertStringContainsString('Lihat Formulir', $view);
+        $this->assertStringContainsString('Hapus Formulir</button>', $view);
+        $this->assertStringNotContainsString('data-copy-label', $view);
+
+        $showView = file_get_contents(resource_path('views/admin/forms/show.blade.php'));
+        $copyButtonView = file_get_contents(resource_path('views/admin/forms/partials/copy-link-button.blade.php'));
+        $this->assertStringContainsString("admin.forms.partials.copy-link-button", $showView);
+        $this->assertStringContainsString('data-copy-success', $copyButtonView);
+        $this->assertStringContainsString('h-10 w-10', $copyButtonView);
+        $this->assertStringContainsString('is-copied', $showView);
+        $this->assertStringContainsString('}, true);', $showView);
+        $this->assertStringNotContainsString('data-copy-label', $showView);
+        $this->assertStringNotContainsString('data-copy-label', $copyButtonView);
+    }
+
+    public function test_form_navigation_preserves_the_selected_index_filters(): void
+    {
+        $admin = $this->makeAdmin();
+        $form = $this->makeForm(true);
+        $form->update(['created_by' => $admin->id]);
+        $returnTo = route('admin.forms.index', [
+            'search' => 'Formulir Uji',
+            'form_filter' => 'active',
+        ]);
+
+        $this->actingAs($admin)
+            ->get($returnTo)
+            ->assertOk()
+            ->assertSee(route('admin.forms.show', $form), false)
+            ->assertSee('return_to=', false);
+
+        $this->actingAs($admin)
+            ->get(route('admin.forms.show', ['form' => $form, 'return_to' => $returnTo]))
+            ->assertOk()
+            ->assertSee('href="'.e($returnTo).'"', false);
+
+        $this->actingAs($admin)
+            ->get(route('admin.forms.edit', ['form' => $form, 'return_to' => $returnTo]))
+            ->assertOk()
+            ->assertSee('name="return_to"', false)
+            ->assertSee('value="'.e($returnTo).'"', false);
+
+        $this->actingAs($admin)
+            ->get(route('admin.forms.create', ['return_to' => $returnTo]))
+            ->assertOk()
+            ->assertSee('name="return_to"', false)
+            ->assertSee('value="'.e($returnTo).'"', false);
+    }
+
+    public function test_form_answer_page_preserves_description_lines_and_exports_excel(): void
+    {
+        $admin = $this->makeAdmin();
+        $form = $this->makeForm(true);
+        $form->update([
+            'created_by' => $admin->id,
+            'description' => "Baris deskripsi pertama.\nBaris deskripsi kedua.",
+        ]);
+
+        MarketingFormSubmission::query()->create([
+            'marketing_form_id' => $form->id,
+            'public_token' => str()->random(64),
+            'answers' => [
+                'nama' => [
+                    'key' => 'nama',
+                    'label' => 'Nama',
+                    'type' => 'text',
+                    'value' => 'Budi',
+                ],
+            ],
+            'ip_address' => '127.0.0.1',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.forms.show', $form))
+            ->assertOk()
+            ->assertSee("Baris deskripsi pertama.\nBaris deskripsi kedua.")
+            ->assertSee('whitespace-pre-line', false)
+            ->assertSee('Cetak Laporan');
+
+        $export = $this->actingAs($admin)->get(route('admin.forms.export_excel', $form));
+        $export->assertOk();
+        $this->assertSame(
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            $export->headers->get('Content-Type')
+        );
+        $this->assertStringContainsString(
+            'laporan-formulir-'.$form->slug,
+            (string) $export->headers->get('Content-Disposition')
+        );
+    }
+
+    public function test_admin_form_index_has_no_period_filter_and_uses_transaction_style_pagination(): void
+    {
+        $admin = $this->makeAdmin();
+
+        foreach (range(1, 21) as $index) {
+            $form = $this->makeForm(true);
+            $form->update([
+                'title' => 'Formulir Periode '.$index,
+                'created_by' => $admin->id,
+            ]);
+        }
+
+        $olderForm = $this->makeForm(true);
+        $olderForm->forceFill([
+            'title' => 'Formulir Tahun Lama',
+            'created_by' => $admin->id,
+            'created_at' => now()->subYear(),
+            'updated_at' => now()->subYear(),
+        ])->save();
+
+        $this->actingAs($admin)
+            ->get(route('admin.forms.index'))
+            ->assertOk()
+            ->assertSee('wiboost-pagination-wrap', false)
+            ->assertSee('page=2', false)
+            ->assertDontSee('Formulir Tahun Lama');
+
+        $this->actingAs($admin)
+            ->get(route('admin.forms.index', ['page' => 2]))
+            ->assertOk()
+            ->assertSee('Formulir Tahun Lama')
+            ->assertDontSee('data-input-name="month"', false)
+            ->assertDontSee('data-input-name="year"', false);
+    }
+
+    public function test_dashboard_does_not_show_form_or_social_media_summaries(): void
+    {
+        $admin = $this->makeAdmin();
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard', [
+                'month' => now()->format('m'),
+                'year' => now()->format('Y'),
+            ]))
+            ->assertOk()
+            ->assertDontSee('Ringkasan Formulir')
+            ->assertDontSee('Ringkasan Media Sosial');
     }
 
     public function test_public_file_field_uses_an_indonesian_file_picker(): void

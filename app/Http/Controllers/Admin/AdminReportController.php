@@ -61,8 +61,8 @@ class AdminReportController extends Controller
             'reportFilter' => $reportFilter,
             'selectedMonth' => $selectedMonth,
             'selectedYear' => $selectedYear,
+            'adminCsName' => WiboostAdminContact::csName(),
             'adminCsWhatsapp' => WiboostAdminContact::csWhatsappNumber(),
-            'adminOtpWhatsapp' => WiboostAdminContact::otpWhatsappNumber(),
         ]);
     }
 

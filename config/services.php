@@ -73,6 +73,7 @@ return [
             'withdrawals'         => env('DISCORD_WEBHOOK_WITHDRAWALS_URL', env('DISCORD_WEBHOOK_WITHDRAWAL_URL', env('DISCORD_WEBHOOK_PENARIKAN_URL'))),
             'refunds'             => env('DISCORD_WEBHOOK_REFUNDS_URL'),
             'reports'             => env('DISCORD_WEBHOOK_REPORTS_URL'),
+            'otp'                 => env('DISCORD_WEBHOOK_OTP_URL') ?: env('DISCORD_WEBHOOK_URL'),
             'stock'               => env('DISCORD_WEBHOOK_STOCK_URL'),
             'system'              => env('DISCORD_WEBHOOK_SYSTEM_URL', env('DISCORD_WEBHOOK_SYSTEMS_URL', env('DISCORD_WEBHOOK_ERRORS_URL'))),
         ],

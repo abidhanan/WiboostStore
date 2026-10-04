@@ -21,9 +21,15 @@ class EmailController extends Controller
     public function index(Request $request): View
     {
         $search = trim((string) $request->query('search', ''));
+        $category = (string) $request->query('category', 'all');
+
+        if (! in_array($category, array_merge(['all'], self::RECIPIENT_SCOPES), true)) {
+            $category = 'all';
+        }
 
         $campaigns = EmailCampaign::query()
             ->with('creator:id,name,email')
+            ->when($category !== 'all', fn (Builder $query) => $query->where('recipient_scope', $category))
             ->when($search !== '', function (Builder $query) use ($search): void {
                 $query->where(function (Builder $searchQuery) use ($search): void {
                     $searchQuery
@@ -41,7 +47,7 @@ class EmailController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('admin.emails.index', compact('campaigns', 'search'));
+        return view('admin.emails.index', compact('campaigns', 'search', 'category'));
     }
 
     public function create(): View

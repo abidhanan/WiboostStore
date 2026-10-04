@@ -20,6 +20,8 @@ class ProductCredential extends Model
         'notes',
         'tutorial_link',
         'needs_otp',
+        'otp_admin_whatsapp',
+        'otp_admin_name',
         'requires_login_proof',
         'requires_logout_proof',
         'max_usage',

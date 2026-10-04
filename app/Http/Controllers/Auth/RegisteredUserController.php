@@ -54,6 +54,7 @@ class RegisteredUserController extends Controller
             6 => 'Gudang',
             7 => 'Marketing',
             8 => 'Customer Service',
+            9 => 'Sales',
         ] as $roleId => $roleName) {
             Role::query()->updateOrCreate(['id' => $roleId], ['name' => $roleName]);
         }

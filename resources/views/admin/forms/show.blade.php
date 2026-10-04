@@ -3,9 +3,26 @@
 @section('admin_header_subtitle', 'Lihat data jawaban yang masuk dari link publik.')
 
 @section('content')
+<style>
+    body.wiboost-admin-shell main .wiboost-form-action-button--copy {
+        background: #eef3ff !important;
+        color: #5a76c8 !important;
+        box-shadow: 0 10px 22px rgba(90, 118, 200, .18) !important;
+        transition: none !important;
+    }
+    body.wiboost-admin-shell main .wiboost-form-action-button--copy [data-copy-success] { display: none; }
+    body.wiboost-admin-shell main .wiboost-form-action-button--copy.is-copied {
+        animation: wiboost-copy-pop .42s ease;
+        background: #e6fff7 !important;
+        color: #20a68f !important;
+    }
+    body.wiboost-admin-shell main .wiboost-form-action-button--copy.is-copied [data-copy-default] { display: none; }
+    body.wiboost-admin-shell main .wiboost-form-action-button--copy.is-copied [data-copy-success] { display: block; }
+    @keyframes wiboost-copy-pop { 0% { transform: scale(1); } 45% { transform: scale(1.14); } 100% { transform: scale(1); } }
+</style>
 <div class="wiboost-font pb-12 relative z-10 w-full min-w-0">
     @include('admin.partials.form-header', [
-        'backUrl' => route('admin.forms.index'),
+        'backUrl' => $returnTo,
         'badge' => 'Jawaban',
         'title' => $form->title,
         'description' => $form->description ?: 'Formulir publik tanpa login.',
@@ -22,11 +39,8 @@
         <section class="min-w-0 rounded-[2rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/25 sm:rounded-[2.5rem] sm:p-6">
             <p class="text-[10px] font-black uppercase tracking-[0.24em] text-[#8faaf3]">Tautan Publik</p>
             <div class="mt-3 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
-                <input type="text" readonly value="{{ $form->publicUrl() }}" class="min-w-0 flex-1 truncate rounded-[1rem] border-2 border-white bg-[#f4f9ff] px-4 py-3 text-xs font-black text-[#5a76c8] shadow-inner">
-                <button type="button" data-copy-form-link="{{ $form->publicUrl() }}" class="inline-flex w-[8.75rem] shrink-0 items-center justify-center gap-2 rounded-[1rem] border-2 border-white bg-[#5a76c8] px-4 py-3 text-xs font-black text-white shadow-md">
-                    @include('partials.wiboost-icon', ['name' => 'note', 'class' => 'h-4 w-4'])
-                    <span data-copy-label>Salin Tautan</span>
-                </button>
+                <input type="text" readonly value="{{ $form->publicUrl() }}" class="min-w-0 flex-1 rounded-[1rem] border-2 border-white bg-[#f4f9ff] px-3 py-3 text-sm font-black text-[#5a76c8] shadow-inner sm:px-4">
+                @include('admin.forms.partials.copy-link-button', ['url' => $form->publicUrl()])
             </div>
         </section>
 
@@ -87,8 +101,11 @@
                                 @foreach($chart['options'] as $option)
                                     <div>
                                         <div class="mb-1.5 flex items-center justify-between gap-3 text-xs font-black">
-                                            <span class="min-w-0 truncate text-[#5a76c8]" title="{{ $option['title'] ?? $option['label'] }}">{{ $option['label'] }}</span>
-                                            <span class="shrink-0 text-[#2b3a67]">{{ $option['count'] }} <span class="text-[#8faaf3]">({{ rtrim(rtrim(number_format((float) $option['percent'], 1), '0'), '.') }}%)</span></span>
+                                            <span class="flex min-w-0 items-center gap-2">
+                                                <span class="min-w-0 truncate text-[#5a76c8]" title="{{ $option['title'] ?? $option['label'] }}">{{ $option['label'] }}</span>
+                                                <span class="shrink-0 text-[#8faaf3]">({{ rtrim(rtrim(number_format((float) $option['percent'], 1), '0'), '.') }}%)</span>
+                                            </span>
+                                            <span class="shrink-0 text-[#2b3a67]">{{ $option['count'] }}</span>
                                         </div>
                                         <div class="h-3 overflow-hidden rounded-full border-2 border-white bg-white shadow-inner">
                                             <span class="block h-full rounded-full bg-gradient-to-r from-[#5a76c8] to-[#4bc6b9]" style="width: {{ max(0, min(100, (float) $option['percent'])) }}%"></span>
@@ -181,7 +198,8 @@
     </section>
 
     <div class="mb-8 rounded-[2rem] border-4 border-white bg-white/90 p-3 shadow-xl shadow-[#bde0fe]/25 backdrop-blur-sm sm:rounded-[2.5rem] sm:p-4">
-        <form action="{{ route('admin.forms.show', $form) }}" method="GET" class="flex w-full items-center gap-2 sm:gap-3">
+        <form action="{{ route('admin.forms.show', $form) }}" method="GET" class="flex w-full flex-wrap items-center gap-2 sm:gap-3">
+            <input type="hidden" name="return_to" value="{{ $returnTo }}">
             <input type="text" name="search" value="{{ $search ?? request('search') }}"
                 placeholder="Cari nama atau jawaban..."
                 class="min-w-0 flex-1 truncate rounded-[1.2rem] border-4 border-white bg-[#f4f9ff] px-5 py-3 text-xs font-black text-[#2b3a67] shadow-inner outline-none transition placeholder-[#a3bbfb] focus:border-[#bde0fe] sm:rounded-[1.5rem] sm:px-6 sm:py-4 sm:text-sm"
@@ -190,10 +208,14 @@
                 @include('partials.wiboost-icon', ['name' => 'search', 'class' => 'h-5 w-5'])
             </button>
             @if(request('search'))
-                <a href="{{ route('admin.forms.show', $form) }}" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform hover:bg-[#ffcccc] active:scale-95 sm:rounded-[1.2rem]" title="Reset Pencarian">
+                <a href="{{ route('admin.forms.show', ['form' => $form, 'return_to' => $returnTo]) }}" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-md shadow-[#ff6b6b]/20 transition-transform hover:bg-[#ffcccc] active:scale-95 sm:rounded-[1.2rem]" title="Reset Pencarian">
                     @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])
                 </a>
             @endif
+            <a href="{{ route('admin.forms.export_excel', array_filter(['form' => $form, 'search' => $search ?: null])) }}" class="flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-[1rem] border-4 border-white bg-[#4bc6b9] px-6 text-sm font-black text-white shadow-md shadow-[#4bc6b9]/25 transition-transform hover:bg-[#3ba398] active:scale-95 sm:w-auto sm:rounded-[1.2rem]" title="Cetak Laporan">
+                @include('partials.wiboost-icon', ['name' => 'chart', 'class' => 'h-5 w-5'])
+                <span class="whitespace-nowrap">Cetak Laporan</span>
+            </a>
         </form>
     </div>
 
@@ -260,34 +282,36 @@
             return copied;
         };
 
-        document.querySelectorAll('[data-copy-form-link]').forEach((button) => {
-            button.addEventListener('click', async (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                const value = button.dataset.copyFormLink || '';
-                const label = button.querySelector('[data-copy-label]');
-                let copied = false;
+        document.addEventListener('click', async (event) => {
+            const button = event.target.closest('[data-copy-form-link]');
+            if (!button) return;
 
-                try {
-                    if (navigator.clipboard && window.isSecureContext) {
-                        await navigator.clipboard.writeText(value);
-                        copied = true;
-                    } else {
-                        copied = fallbackCopy(value);
-                    }
-                } catch (error) {
+            event.preventDefault();
+            event.stopPropagation();
+            const value = button.dataset.copyFormLink || '';
+            let copied = false;
+
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(value);
+                    copied = true;
+                } else {
                     copied = fallbackCopy(value);
                 }
+            } catch (error) {
+                copied = fallbackCopy(value);
+            }
 
-                if (!copied) {
-                    window.prompt('Salin tautan formulir:', value);
-                    return;
-                }
+            if (!copied) {
+                window.prompt('Salin tautan formulir:', value);
+                return;
+            }
 
-                if (label) label.textContent = 'Tersalin';
-                window.setTimeout(() => { if (label) label.textContent = 'Salin Tautan'; }, 1400);
-            });
-        });
+            button.classList.remove('is-copied');
+            void button.offsetWidth;
+            button.classList.add('is-copied');
+            window.setTimeout(() => button.classList.remove('is-copied'), 1400);
+        }, true);
     })();
 </script>
 @endsection

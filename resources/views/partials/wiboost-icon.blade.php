@@ -45,6 +45,9 @@
     @case('search')
         <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.7" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path stroke-linecap="round" stroke-linejoin="round" d="m16 16 4 4"/></svg>
         @break
+    @case('eye')
+        <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.5 12s3.2-5.5 8.5-5.5 8.5 5.5 8.5 5.5-3.2 5.5-8.5 5.5S3.5 12 3.5 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+        @break
     @case('refresh')
         <svg class="{{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7v5h-5M4 17v-5h5"/><path stroke-linecap="round" stroke-linejoin="round" d="M18.5 10A7 7 0 0 0 6.2 6.2M5.5 14A7 7 0 0 0 17.8 17.8"/></svg>
         @break

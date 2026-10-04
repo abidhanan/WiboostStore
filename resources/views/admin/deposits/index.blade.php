@@ -260,7 +260,7 @@
                             <span class="admin-theme-select-arrow">v</span>
                         </button>
                         <div class="admin-theme-select-menu">
-                            @for($y = now()->year; $y >= now()->year - 3; $y--)
+                            @for($y = now()->year + 1; $y >= now()->year - 10; $y--)
                                 <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
                             @endfor
                         </div>

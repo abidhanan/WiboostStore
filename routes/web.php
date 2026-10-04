@@ -14,6 +14,8 @@ use App\Http\Controllers\Admin\ResellerController as AdminResellerController;
 use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogController;
 use App\Http\Controllers\Admin\DurationController as AdminDurationController;
 use App\Http\Controllers\Admin\EmailController as AdminEmailController;
+use App\Http\Controllers\Admin\OtpController as AdminOtpController;
+use App\Http\Controllers\Admin\SocialMediaController as AdminSocialMediaController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
 use App\Http\Controllers\Admin\TutorialController;
@@ -503,6 +505,7 @@ Route::middleware(['auth', 'role:buyer,reseller'])->prefix('user')->name('user.'
     Route::delete('/history/{transaction}/login-proof', [TransactionHistoryController::class, 'destroyLoginProof'])->name('history.login-proof.destroy');
     Route::post('/history/{transaction}/logout-proof', [TransactionHistoryController::class, 'storeLogoutProof'])->name('history.logout-proof');
     Route::delete('/history/{transaction}/logout-proof', [TransactionHistoryController::class, 'destroyLogoutProof'])->name('history.logout-proof.destroy');
+    Route::post('/history/{transaction}/request-otp', [TransactionHistoryController::class, 'requestOtp'])->name('history.request-otp');
     Route::get('/report-admin', [AdminReportController::class, 'create'])->name('report.admin');
     Route::post('/report-admin', [AdminReportController::class, 'store'])->name('report.admin.store');
 
@@ -545,6 +548,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/dashboard/export-excel', [AdminDashboardController::class, 'exportExcel'])->name('dashboard.export_excel')->middleware('admin.access:dashboard');
     Route::get('/dashboard/contact-numbers', fn () => redirect()->route('admin.reports.index'))->middleware('admin.access:reports');
     Route::post('/dashboard/contact-numbers', [AdminDashboardController::class, 'updateContactNumbers'])->name('dashboard.contact-numbers.update')->middleware('admin.access:reports');
+    Route::get('/otp', [AdminOtpController::class, 'index'])->name('otp.index')->middleware('admin.access:otp');
+    Route::get('/otp/export-excel', [AdminOtpController::class, 'exportExcel'])->name('otp.export_excel')->middleware('admin.access:otp');
+    Route::post('/otp/admins', [AdminOtpController::class, 'saveAdmins'])->name('otp.admins.save')->middleware('admin.access:otp');
+    Route::patch('/otp/requests/{otpRequest}', [AdminOtpController::class, 'updateRequest'])->name('otp.requests.update')->middleware('admin.access:otp');
 
     Route::resource('users', AdminUserController::class)->middleware('admin.access:users');
     Route::resource('categories', CategoryController::class)->middleware('admin.access:categories');
@@ -565,6 +572,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('products', ProductController::class)->middleware('admin.access:products');
     Route::get('/products/{product}/credentials', [CredentialController::class, 'index'])->name('credentials.index')->middleware('admin.access:products');
     Route::post('/products/{product}/credentials', [CredentialController::class, 'store'])->name('credentials.store')->middleware('admin.access:products');
+    Route::put('/credentials/{credential}', [CredentialController::class, 'update'])->name('credentials.update')->middleware('admin.access:products');
     Route::delete('/credentials/{credential}', [CredentialController::class, 'destroy'])->name('credentials.destroy')->middleware('admin.access:products');
     Route::get('/durations', [AdminDurationController::class, 'index'])->name('durations.index')->middleware('admin.access:products');
     Route::get('/durations/export-excel', [AdminDurationController::class, 'exportExcel'])->name('durations.export_excel')->middleware('admin.access:products');
@@ -572,10 +580,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Promos, Stocks, & TUTORIAL
     Route::resource('promos', PromoController::class)->middleware('admin.access:promos');
     Route::resource('displays', DisplayController::class)->except(['show'])->middleware('admin.access:displays');
+    Route::get('/forms/{form}/export-excel', [AdminFormController::class, 'exportExcel'])->name('forms.export_excel')->middleware('admin.access:forms');
     Route::resource('forms', AdminFormController::class)->middleware('admin.access:forms');
     Route::get('/emails', [AdminEmailController::class, 'index'])->name('emails.index')->middleware('admin.access:emails');
     Route::get('/emails/create', [AdminEmailController::class, 'create'])->name('emails.create')->middleware('admin.access:emails');
     Route::post('/emails', [AdminEmailController::class, 'store'])->name('emails.store')->middleware('admin.access:emails');
+    Route::get('/social-media', [AdminSocialMediaController::class, 'index'])->name('social-media.index')->middleware('admin.access:social_media');
+    Route::get('/social-media/export-excel', [AdminSocialMediaController::class, 'exportExcel'])->name('social-media.export_excel')->middleware('admin.access:social_media');
+    Route::get('/social-media/create', [AdminSocialMediaController::class, 'create'])->name('social-media.create')->middleware('admin.access:social_media');
+    Route::post('/social-media', [AdminSocialMediaController::class, 'store'])->name('social-media.store')->middleware('admin.access:social_media');
+    Route::get('/social-media/{socialMediaStat}/edit', [AdminSocialMediaController::class, 'edit'])->name('social-media.edit')->middleware('admin.access:social_media');
+    Route::put('/social-media/{socialMediaStat}', [AdminSocialMediaController::class, 'update'])->name('social-media.update')->middleware('admin.access:social_media');
+    Route::delete('/social-media/{socialMediaStat}', [AdminSocialMediaController::class, 'destroy'])->name('social-media.destroy')->middleware('admin.access:social_media');
     Route::resource('stocks', StockController::class)->middleware('admin.access:products');
     Route::resource('tutorials', TutorialController::class)->middleware('admin.access:tutorials');
 
@@ -603,6 +619,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/reports/{report}', [AdminAdminReportController::class, 'update'])->name('reports.update')->middleware('admin.access:reports');
 
     // Log Aktivitas (khusus Super Admin)
+    Route::get('/logs/export-excel', [AdminActivityLogController::class, 'exportExcel'])->name('logs.export_excel')->middleware('admin.access:logs');
     Route::get('/logs', [AdminActivityLogController::class, 'index'])->name('logs.index')->middleware('admin.access:logs');
 
 });

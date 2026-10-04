@@ -145,6 +145,32 @@ class AdminEmailControllerTest extends TestCase
         $this->assertSame(1, EmailCampaign::query()->count());
     }
 
+    public function test_email_history_can_be_filtered_by_recipient_category(): void
+    {
+        $admin = $this->userWithRole(User::ROLE_MARKETING, 'Marketing');
+
+        EmailCampaign::query()->create([
+            'created_by' => $admin->id,
+            'recipient_scope' => 'buyer',
+            'recipient_count' => 1,
+            'subject' => 'Informasi Buyer',
+            'body' => 'Khusus buyer.',
+        ]);
+        EmailCampaign::query()->create([
+            'created_by' => $admin->id,
+            'recipient_scope' => 'reseller',
+            'recipient_count' => 1,
+            'subject' => 'Informasi Reseller',
+            'body' => 'Khusus reseller.',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.emails.index', ['category' => 'buyer']))
+            ->assertOk()
+            ->assertSee('Informasi Buyer')
+            ->assertDontSee('Informasi Reseller');
+    }
+
     private function userWithRole(int $roleId, string $roleName): User
     {
         Role::query()->firstOrCreate(['id' => $roleId], ['name' => $roleName]);

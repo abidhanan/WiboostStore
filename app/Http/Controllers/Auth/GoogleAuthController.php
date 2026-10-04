@@ -220,6 +220,7 @@ class GoogleAuthController extends Controller
             User::ROLE_WAREHOUSE => 'Gudang',
             User::ROLE_MARKETING => 'Marketing',
             User::ROLE_CUSTOMER_SERVICE => 'Customer Service',
+            User::ROLE_SALES => 'Sales',
         ] as $roleId => $roleName) {
             Role::query()->updateOrCreate(['id' => $roleId], ['name' => $roleName]);
         }

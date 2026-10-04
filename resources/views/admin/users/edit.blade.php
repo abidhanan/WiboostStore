@@ -10,9 +10,57 @@
         50% { transform: translateY(-15px); }
         100% { transform: translateY(0px); }
     }
+    @media (max-width: 767px) {
+        body.wiboost-admin-shell .admin-user-edit-page {
+            padding-bottom: max(7rem, env(safe-area-inset-bottom)) !important;
+        }
+
+        .admin-user-edit-page,
+        .admin-user-edit-form {
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+            overscroll-behavior: auto;
+            touch-action: pan-y;
+        }
+
+        body.wiboost-admin-shell .admin-user-edit-page .admin-user-role-select {
+            position: relative !important;
+            z-index: 1 !important;
+        }
+
+        body.wiboost-admin-shell .admin-user-edit-page .admin-user-role-select.is-open {
+            z-index: 60 !important;
+        }
+
+        body.wiboost-admin-shell .admin-user-edit-page .admin-user-role-select-menu {
+            position: static !important;
+            inset: auto !important;
+            display: none !important;
+            width: 100% !important;
+            max-height: 46dvh !important;
+            margin-top: .75rem !important;
+            overflow-y: auto !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            transform: none !important;
+            touch-action: pan-y !important;
+        }
+
+        body.wiboost-admin-shell .admin-user-edit-page .admin-user-role-select.is-open .admin-user-role-select-menu {
+            display: grid !important;
+        }
+
+        body.wiboost-admin-shell .admin-user-edit-page input,
+        body.wiboost-admin-shell .admin-user-edit-page button,
+        body.wiboost-admin-shell .admin-user-edit-page .admin-user-role-select-label {
+            min-width: 0 !important;
+            max-width: 100% !important;
+        }
+    }
 </style>
 
-<div class="wiboost-font pb-12 max-w-4xl mx-auto relative z-10">
+<div class="admin-user-edit-page wiboost-font relative z-10 mx-auto w-full min-w-0 max-w-4xl pb-12">
     @include('admin.partials.form-header', [
         'backUrl' => route('admin.users.index'),
         'badge' => 'Mode Edit',
@@ -42,11 +90,12 @@
                 6 => 'background:#ccfbf1; color:#14b8a6;',
                 7 => 'background:#fff7d6; color:#f59e0b;',
                 8 => 'background:#e6fff7; color:#22c55e;',
+                9 => 'background:#ccfbf1; color:#0f766e;',
                 default => 'background:#e0fbfc; color:#5a76c8;',
             };
     @endphp
 
-    <form action="{{ route('admin.users.update', $user->id) }}" method="POST" class="bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl shadow-[#bde0fe]/30 border-4 border-white p-6 md:p-10 relative z-10 overflow-visible">
+    <form action="{{ route('admin.users.update', $user->id) }}" method="POST" class="admin-user-edit-form relative z-10 overflow-visible rounded-[2rem] border-4 border-white bg-white/95 p-5 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:rounded-[2.5rem] sm:p-6 md:p-10">
         @csrf @method('PUT')
 
         <div class="mb-8 flex flex-col items-center text-center">
@@ -74,7 +123,7 @@
                 <input type="text" value="Rp {{ number_format($user->balance, 0, ',', '.') }}" disabled class="w-full bg-[#f0f5ff] border-4 border-white rounded-[1.5rem] px-6 py-4 text-[#4bc6b9] font-black outline-none cursor-not-allowed shadow-inner opacity-80">
             </div>
             <div class="md:col-span-2">
-                <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2 flex items-center gap-2">Role Efektif</label>
+                <label class="block text-sm font-black text-[#5a76c8] mb-3 ml-2 flex items-center gap-2">Role</label>
                 <div class="rounded-[1.5rem] border-4 border-white px-6 py-4 font-black shadow-inner" style="{{ $effectiveRoleStyle }}">
                     {{ $effectiveRoleLabel }}
                 </div>

@@ -73,7 +73,8 @@
                 4 => ['dashboard', 'commissions', 'users', 'transactions', 'refunds', 'deposits', 'withdrawals'],
                 6 => ['dashboard', 'users', 'categories', 'products', 'tutorials', 'transactions'],
                 7 => ['dashboard', 'users', 'transactions', 'promos', 'displays'],
-                8 => ['dashboard', 'commissions', 'users', 'transactions', 'deposits', 'reports'],
+                8 => ['dashboard', 'commissions', 'users', 'transactions', 'deposits', 'reports', 'otp'],
+                9 => ['dashboard', 'users', 'transactions'],
             ];
 
             return in_array($area, $accessMap[$currentAdminRoleId] ?? [], true);
@@ -84,6 +85,7 @@
         $showDashboardResellers = $dashboardCanAccess('commissions') || $dashboardCanAccess('withdrawals');
         $showDashboardProducts = $dashboardCanAccess('products');
         $showDashboardReports = $dashboardCanAccess('reports');
+        $showDashboardOtp = $dashboardCanAccess('otp');
         $showDashboardDeposits = $dashboardCanAccess('deposits');
         $showDashboardCommissions = $dashboardCanAccess('commissions');
         $showDashboardWithdrawals = $dashboardCanAccess('withdrawals');
@@ -146,7 +148,19 @@
             flex: 1 1 0;
             width: auto;
         }
+        .wiboost-admin-dashboard .dashboard-view-all-desktop {
+            display: none !important;
+        }
+        .wiboost-admin-dashboard .dashboard-view-all-mobile {
+            display: flex !important;
+        }
         @media (min-width: 768px) {
+            .wiboost-admin-dashboard .dashboard-view-all-desktop {
+                display: inline-flex !important;
+            }
+            .wiboost-admin-dashboard .dashboard-view-all-mobile {
+                display: none !important;
+            }
             .wiboost-admin-dashboard .admin-theme-select-month {
                 width: 9rem;
                 flex: 0 0 9rem;
@@ -182,7 +196,7 @@
                             <span class="admin-theme-select-arrow">v</span>
                         </button>
                         <div class="admin-theme-select-menu">
-                            @for($y = now()->year; $y >= now()->year - 3; $y--)
+                            @for($y = now()->year + 1; $y >= now()->year - 10; $y--)
                                 <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
                             @endfor
                         </div>
@@ -341,14 +355,14 @@
                             <a href="{{ route('admin.products.index', ['search' => $summary['product']->name]) }}" class="mt-3 block line-clamp-3 text-lg font-black leading-tight text-[#2b3a67] transition-colors hover:text-[#5a76c8]">
                                 {{ $summary['product']->name }}
                             </a>
-                            <div class="mt-auto grid grid-cols-[4rem_minmax(8.75rem,1fr)] gap-2 pt-5">
-                                <div class="min-w-0 rounded-2xl border-2 border-white bg-white px-2.5 py-2 shadow-sm">
+                            <div class="mt-auto grid grid-cols-1 gap-2 pt-5">
+                                <div class="flex min-w-0 items-center justify-between gap-3 rounded-2xl border-2 border-white bg-white px-3 py-2.5 shadow-sm">
                                     <p class="text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">Terjual</p>
-                                    <p class="text-xl font-black text-[#5a76c8]">{{ number_format($summary['orders'], 0, ',', '.') }}</p>
+                                    <p class="shrink-0 text-xl font-black text-[#5a76c8]">{{ number_format($summary['orders'], 0, ',', '.') }}</p>
                                 </div>
-                                <div class="min-w-0 overflow-hidden rounded-2xl border-2 border-white bg-white px-2.5 py-2 shadow-sm">
+                                <div class="flex min-w-0 items-center justify-between gap-3 overflow-hidden rounded-2xl border-2 border-white bg-white px-3 py-2.5 shadow-sm">
                                     <p class="text-[9px] font-black uppercase tracking-widest text-[#8faaf3]">Omzet</p>
-                                    <p class="max-w-full truncate whitespace-nowrap text-xl font-black leading-tight tracking-tight text-[#4bc6b9]" title="Rp {{ number_format($summary['revenue'], 0, ',', '.') }}">Rp {{ number_format($summary['revenue'], 0, ',', '.') }}</p>
+                                    <p class="min-w-0 truncate whitespace-nowrap text-xl font-black leading-tight tracking-tight text-[#4bc6b9]" title="Rp {{ number_format($summary['revenue'], 0, ',', '.') }}">Rp {{ number_format($summary['revenue'], 0, ',', '.') }}</p>
                                 </div>
                             </div>
                         @else
@@ -460,7 +474,7 @@
                                     <p class="mt-1 truncate text-lg font-black text-[#2b3a67]">{{ $report->user?->name ?: '-' }}</p>
                                 </div>
                                 <span class="{{ $report->status === 'closed' ? 'bg-[#e6fff7] text-emerald-500' : 'bg-[#fff5eb] text-amber-500' }} shrink-0 rounded-full border-2 border-white px-3 py-1 text-[9px] font-black uppercase tracking-widest shadow-sm">
-                                    {{ $report->status === 'closed' ? 'Selesai' : 'Baru' }}
+                                    {{ $report->status === 'closed' ? 'Sudah Ditangani' : 'Belum Ditangani' }}
                                 </span>
                             </div>
                             <p class="mt-3 line-clamp-2 text-xs font-bold leading-relaxed text-[#8faaf3]">{{ $report->issue }}</p>
@@ -488,8 +502,8 @@
                         <p class="mb-1 truncate text-[10px] font-black uppercase tracking-[0.3em] text-amber-500">Ringkasan Stok</p>
                         <h2 class="truncate text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Produk Perlu Restock</h2>
                     </div>
-                    <a href="{{ route('admin.products.index') }}" class="inline-flex w-full shrink-0 items-center justify-center rounded-full border-2 border-white bg-amber-500 px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-amber-500/20 transition-transform hover:scale-105 active:scale-95 md:w-auto">
-                        Kelola Produk
+                    <a href="{{ route('admin.products.index') }}" class="dashboard-view-all-desktop shrink-0 items-center justify-center rounded-full border-2 border-white bg-amber-500 px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-amber-500/20 transition-transform hover:scale-105 active:scale-95">
+                        Lihat Semua
                     </a>
                 </div>
                 <div class="w-full min-w-0 p-4 sm:p-6 md:p-8">
@@ -499,7 +513,6 @@
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
                                         <p class="truncate text-sm font-black text-[#2b3a67]">{{ $product->name }}</p>
-                                        <p class="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-[#8faaf3]">Batas {{ $product->stock_reminder }}</p>
                                     </div>
                                     <span class="shrink-0 rounded-full border border-white bg-[#ffe5e5] px-3 py-1 text-[9px] font-black uppercase tracking-widest text-[#ff6b6b] shadow-sm">Sisa {{ $product->available_stock }}</span>
                                 </div>
@@ -516,9 +529,8 @@
                         <table class="w-full table-fixed text-left">
                             <thead>
                                 <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">
-                                    <th class="w-[60%] px-3 py-3">Produk</th>
-                                    <th class="w-[20%] px-3 py-3 text-center">Sisa</th>
-                                    <th class="w-[20%] px-3 py-3 text-center">Batas</th>
+                                    <th class="w-[75%] px-3 py-3">Produk</th>
+                                    <th class="w-[25%] px-3 py-3 text-center">Sisa</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
@@ -530,11 +542,10 @@
                                         <td class="px-3 py-3 text-center">
                                             <span class="inline-flex rounded-full border-2 border-white bg-[#ffe5e5] px-3 py-1 text-[9px] font-black uppercase tracking-widest text-[#ff6b6b] shadow-sm">{{ $product->available_stock }}</span>
                                         </td>
-                                        <td class="px-3 py-3 text-center text-xs font-black text-[#8faaf3] xl:text-sm">{{ $product->stock_reminder }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="3" class="px-4 py-10 text-center">
+                                        <td colspan="2" class="px-4 py-10 text-center">
                                             <p class="text-sm font-black text-emerald-500">Stok aman.</p>
                                             <p class="mt-2 text-xs font-bold text-emerald-600">Belum ada produk inventory yang menyentuh batas minimum.</p>
                                         </td>
@@ -543,6 +554,7 @@
                             </tbody>
                         </table>
                     </div>
+                    <a href="{{ route('admin.products.index') }}" class="dashboard-view-all-mobile mt-4 w-full items-center justify-center rounded-full border-2 border-white bg-amber-500 px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-amber-500/20 transition-transform active:scale-95">Lihat Semua</a>
                 </div>
             </article>
             @endif
@@ -554,7 +566,7 @@
                         <p class="mb-1 truncate text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Ringkasan Laporan</p>
                         <h2 class="truncate text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Laporan Terbaru</h2>
                     </div>
-                    <a href="{{ route('admin.reports.index') }}" class="inline-flex w-full shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform hover:scale-105 active:scale-95 md:w-auto">
+                    <a href="{{ route('admin.reports.index') }}" class="dashboard-view-all-desktop shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform hover:scale-105 active:scale-95">
                         Lihat Semua
                     </a>
                 </div>
@@ -582,7 +594,7 @@
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#8faaf3]">{{ $report->category_label ?: '-' }}</td>
                                         <td class="px-3 py-3 text-center">
                                             <span class="{{ $report->status === 'closed' ? 'bg-[#e6fff7] text-emerald-500' : 'bg-[#fff5eb] text-amber-500' }} inline-flex whitespace-nowrap rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm">
-                                                {{ $report->status === 'closed' ? 'Selesai' : 'Baru' }}
+                                                {{ $report->status === 'closed' ? 'Sudah Ditangani' : 'Belum Ditangani' }}
                                             </span>
                                         </td>
                                     </tr>
@@ -620,7 +632,7 @@
                                         <td class="whitespace-nowrap px-3 py-3 text-xs font-black text-[#8faaf3] xl:text-sm">{{ $report->category_label ?: '-' }}</td>
                                         <td class="px-3 py-3 text-center">
                                             <span class="{{ $report->status === 'closed' ? 'bg-[#e6fff7] text-emerald-500' : 'bg-[#fff5eb] text-amber-500' }} inline-flex whitespace-nowrap rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm xl:text-[9px]">
-                                                {{ $report->status === 'closed' ? 'Selesai' : 'Baru' }}
+                                                {{ $report->status === 'closed' ? 'Sudah Ditangani' : 'Belum Ditangani' }}
                                             </span>
                                         </td>
                                     </tr>
@@ -634,6 +646,7 @@
                             </tbody>
                         </table>
                     </div>
+                    <a href="{{ route('admin.reports.index') }}" class="dashboard-view-all-mobile mt-4 w-full items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform active:scale-95">Lihat Semua</a>
                 </div>
             </article>
             @endif
@@ -650,7 +663,7 @@
                         <p class="mt-3 text-xs sm:text-sm font-bold text-amber-700 bg-amber-50 p-3 sm:p-4 rounded-2xl border-2 border-white shadow-inner">Beberapa produk akun premium sudah menyentuh batas pengingat stok. Segera restock supaya order dari pengguna tetap lancar.</p>
                     </div>
                     <a href="{{ route('admin.products.index') }}" class="w-full sm:w-auto text-center inline-flex items-center justify-center gap-2 rounded-full border-4 border-white bg-amber-500 px-6 py-3 sm:py-4 text-sm font-black text-white shadow-lg shadow-amber-500/30 transition-transform active:scale-95 hover:bg-amber-600 mt-2 shrink-0">
-                        Kelola Produk
+                        Lihat Semua
                     </a>
                 </div>
                 <div class="mt-6 flex flex-col sm:flex-row sm:flex-wrap gap-3 relative z-10">
@@ -711,7 +724,7 @@
                         <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3] mb-1 truncate">Ringkasan Transaksi</p>
                         <h2 class="text-xl sm:text-2xl font-black tracking-tight text-[#2b3a67] truncate">Transaksi Terbaru</h2>
                     </div>
-                    <a href="{{ route('admin.transactions.index') }}" class="shrink-0 text-center w-full md:w-auto inline-flex items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform hover:scale-105 active:scale-95">
+                    <a href="{{ route('admin.transactions.index') }}" class="dashboard-view-all-desktop shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform hover:scale-105 active:scale-95">
                         Lihat Semua
                     </a>
                 </div>
@@ -799,6 +812,7 @@
                             </tbody>
                         </table>
                     </div>
+                    <a href="{{ route('admin.transactions.index') }}" class="dashboard-view-all-mobile mt-4 w-full items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform active:scale-95">Lihat Semua</a>
                 </div>
             </article>
             @endif
@@ -811,7 +825,7 @@
                         <p class="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 mb-1 truncate">Ringkasan Saldo</p>
                         <h2 class="text-xl sm:text-2xl font-black tracking-tight text-[#2b3a67] truncate">Mutasi Saldo</h2>
                     </div>
-                    <a href="{{ route('admin.deposits.index') }}" class="shrink-0 text-center w-full md:w-auto inline-flex items-center justify-center rounded-full border-2 border-white bg-amber-500 px-5 py-2.5 text-xs font-black text-white shadow-md shadow-amber-500/30 transition-transform hover:scale-105 active:scale-95">
+                    <a href="{{ route('admin.deposits.index') }}" class="dashboard-view-all-desktop shrink-0 items-center justify-center rounded-full border-2 border-white bg-amber-500 px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-amber-500/30 transition-transform hover:scale-105 active:scale-95">
                         Lihat Semua
                     </a>
                 </div>
@@ -897,6 +911,7 @@
                             </tbody>
                         </table>
                     </div>
+                    <a href="{{ route('admin.deposits.index') }}" class="dashboard-view-all-mobile mt-4 w-full items-center justify-center rounded-full border-2 border-white bg-amber-500 px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-amber-500/30 transition-transform active:scale-95">Lihat Semua</a>
                 </div>
             </article>
             @endif
@@ -912,7 +927,7 @@
                         <p class="mb-1 truncate text-[10px] font-black uppercase tracking-[0.3em] text-[#ff6b6b]">Ringkasan Refund</p>
                         <h2 class="truncate text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Refund Terbaru</h2>
                     </div>
-                    <a href="{{ route('admin.refunds.index') }}" class="inline-flex w-full shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#ff6b6b] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#ff6b6b]/20 transition-transform hover:scale-105 active:scale-95 md:w-auto">
+                    <a href="{{ route('admin.refunds.index') }}" class="dashboard-view-all-desktop shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#ff6b6b] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#ff6b6b]/20 transition-transform hover:scale-105 active:scale-95">
                         Lihat Semua
                     </a>
                 </div>
@@ -957,6 +972,7 @@
                             </tbody>
                         </table>
                     </div>
+                    <a href="{{ route('admin.refunds.index') }}" class="dashboard-view-all-mobile mt-4 w-full items-center justify-center rounded-full border-2 border-white bg-[#ff6b6b] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#ff6b6b]/20 transition-transform active:scale-95">Lihat Semua</a>
                 </div>
             </article>
             @endif
@@ -968,7 +984,7 @@
                         <p class="mb-1 truncate text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Ringkasan Durasi</p>
                         <h2 class="truncate text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Durasi Habis</h2>
                     </div>
-                    <a href="{{ route('admin.durations.index') }}" class="inline-flex w-full shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform hover:scale-105 active:scale-95 md:w-auto">
+                    <a href="{{ route('admin.durations.index') }}" class="dashboard-view-all-desktop shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform hover:scale-105 active:scale-95">
                         Lihat Semua
                     </a>
                 </div>
@@ -978,7 +994,7 @@
                             <thead>
                                 <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">
                                     <th class="w-[25%] px-3 py-3">Invoice</th>
-                                    <th class="w-[18%] px-3 py-3">Waktu</th>
+                                    <th class="w-[18%] px-3 py-3">Habis</th>
                                     <th class="w-[20%] px-3 py-3">Nama</th>
                                     <th class="w-[23%] px-3 py-3">Produk</th>
                                     <th class="w-[14%] px-3 py-3 text-center">Status</th>
@@ -1012,9 +1028,11 @@
                             </tbody>
                         </table>
                     </div>
+                    <a href="{{ route('admin.durations.index') }}" class="dashboard-view-all-mobile mt-4 w-full items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform active:scale-95">Lihat Semua</a>
                 </div>
             </article>
             @endif
+
         </section>
         @endif
 
@@ -1027,7 +1045,7 @@
                         <p class="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500">Ringkasan Komisi</p>
                         <h2 class="mt-1 text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Komisi Reseller</h2>
                     </div>
-                    <a href="{{ route('admin.commissions.index') }}" class="inline-flex w-full shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform hover:scale-105 active:scale-95 md:w-auto">
+                    <a href="{{ route('admin.commissions.index') }}" class="dashboard-view-all-desktop shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform hover:scale-105 active:scale-95">
                         Lihat Semua
                     </a>
                 </div>
@@ -1068,6 +1086,9 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="dashboard-view-all-mobile px-4 pb-4 pt-2 sm:px-5 sm:pb-5">
+                    <a href="{{ route('admin.commissions.index') }}" class="inline-flex w-full items-center justify-center rounded-full border-2 border-white bg-[#5a76c8] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#5a76c8]/30 transition-transform active:scale-95">Lihat Semua</a>
+                </div>
             </article>
             @endif
 
@@ -1078,7 +1099,7 @@
                         <p class="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500">Ringkasan Penarikan</p>
                         <h2 class="mt-1 text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Penarikan Komisi</h2>
                     </div>
-                    <a href="{{ route('admin.withdrawals.index') }}" class="inline-flex w-full shrink-0 items-center justify-center rounded-full border-2 border-white bg-amber-500 px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-amber-500/20 transition-transform hover:scale-105 active:scale-95 md:w-auto">
+                    <a href="{{ route('admin.withdrawals.index') }}" class="dashboard-view-all-desktop shrink-0 items-center justify-center rounded-full border-2 border-white bg-amber-500 px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-amber-500/20 transition-transform hover:scale-105 active:scale-95">
                         Lihat Semua
                     </a>
                 </div>
@@ -1126,10 +1147,57 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="dashboard-view-all-mobile px-4 pb-4 pt-2 sm:px-5 sm:pb-5">
+                    <a href="{{ route('admin.withdrawals.index') }}" class="inline-flex w-full items-center justify-center rounded-full border-2 border-white bg-amber-500 px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-amber-500/20 transition-transform active:scale-95">Lihat Semua</a>
+                </div>
             </article>
             @endif
         </section>
         @endif
+
+        @if($showDashboardOtp)
+        <section class="grid w-full min-w-0 grid-cols-1 gap-6 sm:mt-8 sm:gap-8 xl:grid-cols-2">
+            <article class="flex w-full min-w-0 flex-col overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:rounded-[2.5rem]">
+                <div class="flex w-full flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f6fffb] px-5 py-5 sm:px-6 sm:py-6 md:flex-row md:items-center md:justify-between">
+                    <div class="min-w-0">
+                        <p class="mb-1 truncate text-[10px] font-black uppercase tracking-[0.3em] text-[#4bc6b9]">Ringkasan OTP</p>
+                        <h2 class="truncate text-xl font-black tracking-tight text-[#2b3a67] sm:text-2xl">Permintaan OTP</h2>
+                    </div>
+                    <a href="{{ route('admin.otp.index') }}" class="dashboard-view-all-desktop shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#4bc6b9] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#4bc6b9]/25 transition-transform hover:scale-105 active:scale-95">Lihat Semua</a>
+                </div>
+                <div class="w-full min-w-0 p-4 sm:p-6 md:p-8">
+                    <div class="table-scroll w-full overflow-x-auto pb-2">
+                        <table class="min-w-[1080px] w-full table-auto text-left">
+                            <thead>
+                                <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">
+                                    <th class="w-[20%] px-4 py-3">Invoice</th>
+                                    <th class="w-[17%] px-4 py-3">Waktu</th>
+                                    <th class="w-[20%] px-4 py-3">Nama</th>
+                                    <th class="w-[30%] px-4 py-3">Produk</th>
+                                    <th class="w-[13%] px-4 py-3 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
+                                @forelse(collect($latestOtpRequests ?? [])->take(5) as $otpRequest)
+                                    <tr class="transition hover:bg-[#f8faff]">
+                                        <td class="min-w-0 px-4 py-3"><p class="inline-block whitespace-nowrap rounded-md border border-white bg-[#f4f9ff] px-2 py-1 text-xs font-black text-[#5a76c8] sm:text-sm">{{ $otpRequest->invoice_number ?: '-' }}</p></td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-[9px] font-bold text-[#8faaf3] sm:text-[10px]">{{ $formatDashboardTime($otpRequest->requested_at) }}</td>
+                                        <td class="min-w-[13rem] whitespace-nowrap px-4 py-3 text-xs font-black text-[#2b3a67] xl:text-sm">{{ $otpRequest->user?->name ?: '-' }}</td>
+                                        <td class="min-w-[20rem] whitespace-nowrap px-4 py-3 text-xs font-black text-[#5a76c8] xl:text-sm">{{ $otpRequest->product_name ?: '-' }}</td>
+                                        <td class="px-4 py-3 text-center"><span class="{{ $otpRequest->status === 'handled' ? 'bg-[#e6fff7] text-emerald-500' : 'bg-[#fff5eb] text-amber-500' }} inline-flex whitespace-nowrap rounded-full border-2 border-white px-2.5 py-1 text-[8px] font-black uppercase tracking-widest shadow-sm xl:text-[9px]">{{ $otpRequest->status_label }}</span></td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="5" class="px-4 py-10 text-center"><p class="text-sm font-black text-[#2b3a67]">Belum ada permintaan OTP.</p></td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{{ route('admin.otp.index') }}" class="dashboard-view-all-mobile mt-4 w-full items-center justify-center rounded-full border-2 border-white bg-[#4bc6b9] px-5 py-2.5 text-center text-xs font-black text-white shadow-md shadow-[#4bc6b9]/25 transition-transform active:scale-95">Lihat Semua</a>
+                </div>
+            </article>
+        </section>
+        @endif
+
     </div>
     <script>
         (function () {

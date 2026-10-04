@@ -2,6 +2,7 @@
     $form = $form ?? null;
     $method = strtoupper($method ?? 'POST');
     $submitLabel = $submitLabel ?? 'Simpan Formulir';
+    $returnTo = trim((string) ($returnTo ?? request('return_to', '')));
     $formEditorId = 'wiboost-marketing-form-editor-' . ($form?->id ?? 'create');
     $defaultFields = [
         ['key' => 'nama_lengkap', 'label' => 'Nama Lengkap', 'type' => 'text', 'help' => '', 'options' => [], 'option_images' => [], 'option_image_names' => [], 'required' => true],
@@ -199,14 +200,20 @@
         text-align: left;
         font-size: .82rem;
         font-weight: 900;
+        background: #ffffff;
         color: #5a76c8;
         transition: background-color .16s ease, color .16s ease, transform .16s ease;
     }
 
-    .wiboost-answer-type-option:hover,
-    .wiboost-answer-type-option.is-selected {
+    .wiboost-answer-type-option:hover {
         background: #eef5ff;
         color: #2b3a67;
+    }
+
+    .wiboost-answer-type-option.is-selected {
+        background: #5a76c8;
+        color: #ffffff;
+        box-shadow: 0 7px 16px rgba(90, 118, 200, .2);
     }
 
     .wiboost-answer-type-option:active {
@@ -261,6 +268,9 @@
 
 <form id="{{ $formEditorId }}" action="{{ $action }}" method="POST" enctype="multipart/form-data" class="relative z-10">
     @csrf
+    @if($returnTo !== '')
+        <input type="hidden" name="return_to" value="{{ $returnTo }}">
+    @endif
     @if($method !== 'POST')
         @method($method)
     @endif

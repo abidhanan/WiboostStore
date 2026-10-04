@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\User;
+use App\Models\SiteSetting;
 use App\Support\WiboostAdminContact;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -35,12 +36,10 @@ class WiboostAdminContactTest extends TestCase
             'wiboost.admin_contact.report_intro' => 'Halo Admin',
         ]);
 
-        DB::table('roles')->insert([
-            'id' => 1,
-            'name' => 'Admin',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        DB::table('roles')->updateOrInsert(
+            ['id' => 1],
+            ['name' => 'Admin', 'created_at' => now(), 'updated_at' => now()]
+        );
 
         User::factory()->create([
             'role_id' => 1,
@@ -53,5 +52,23 @@ class WiboostAdminContactTest extends TestCase
 
         $this->assertNotNull($url);
         $this->assertStringStartsWith('https://wa.me/6281234567890?text=', $url);
+    }
+
+    public function test_otp_numbers_are_normalized_unique_and_specific_number_can_be_used(): void
+    {
+        SiteSetting::setValue('admin_otp_whatsapps', json_encode([
+            '081111111111',
+            '628222222222',
+            '081111111111',
+        ]));
+
+        $this->assertSame([
+            '6281111111111',
+            '628222222222',
+        ], WiboostAdminContact::otpWhatsappNumbers());
+
+        $url = WiboostAdminContact::otpWhatsappUrlForNumber('628222222222', 'Tes OTP');
+
+        $this->assertSame('https://wa.me/628222222222?text=Tes%20OTP', $url);
     }
 }

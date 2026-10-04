@@ -114,7 +114,7 @@
                             <span class="admin-theme-select-arrow">v</span>
                         </button>
                         <div class="admin-theme-select-menu">
-                            @for($y = now()->year + 1; $y >= now()->year - 3; $y--)
+                            @for($y = now()->year + 1; $y >= now()->year - 10; $y--)
                                 <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
                             @endfor
                         </div>
@@ -277,8 +277,10 @@
                             </div>
                             @if($detailCredentials !== [])
                                 <div class="admin-detail-panel admin-detail-panel-soft md:col-span-2">
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Kredensial</p>
-                                    <div class="admin-detail-subgrid mt-3">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Data Terkait</p>
+                                    <div class="mt-3 rounded-[1rem] border-2 border-white bg-white/70 p-3 shadow-sm">
+                                        <p class="text-[10px] font-black uppercase tracking-widest text-[#5a76c8]">Detail Akun</p>
+                                        <div class="admin-detail-subgrid mt-3">
                                         @foreach($detailCredentials as $key => $value)
                                             @if(filled($value) && ! is_array($value))
                                                 @php
@@ -315,6 +317,8 @@
                                                         'customer_id' => 'ID Pelanggan',
                                                         'customer_no' => 'Nomor Pelanggan',
                                                         'needs_otp' => 'Butuh OTP',
+                                                        'otp_admin_whatsapp' => 'Nomor Admin OTP',
+                                                        'otp_admin_name' => 'Nama Admin OTP',
                                                         'requires_otp' => 'Butuh OTP',
                                                         'requires_login_proof' => 'Wajib Bukti Masuk',
                                                         'requires_logout_proof' => 'Wajib Bukti Keluar',
@@ -360,10 +364,11 @@
                                                 @endphp
                                                 <div class="admin-detail-subfield">
                                                     <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">{{ $credentialLabel }}</p>
-                                                    <p class="mt-1 break-words text-sm font-bold text-[#2b3a67]">{{ $credentialValue }}</p>
+                                                    <p class="mt-1 whitespace-pre-line break-words text-sm font-bold leading-relaxed text-[#2b3a67]">{{ $credentialValue }}</p>
                                                 </div>
                                             @endif
                                         @endforeach
+                                        </div>
                                     </div>
                                 </div>
                             @endif

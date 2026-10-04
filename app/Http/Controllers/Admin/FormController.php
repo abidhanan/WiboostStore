@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\MarketingForm;
 use App\Models\MarketingFormSubmission;
+use App\Support\SimpleXlsx;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -56,9 +57,11 @@ class FormController extends Controller
         return view('admin.forms.index', compact('forms', 'search', 'formFilter'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('admin.forms.create');
+        $returnTo = $this->formsIndexReturnTo($request);
+
+        return view('admin.forms.create', compact('returnTo'));
     }
 
     public function store(Request $request)
@@ -73,14 +76,21 @@ class FormController extends Controller
             'created_by' => Auth::id(),
         ]);
 
+        $returnTo = $this->formsIndexReturnTo($request);
+        $showParameters = ['form' => $form];
+        if ($request->filled('return_to')) {
+            $showParameters['return_to'] = $returnTo;
+        }
+
         return redirect()
-            ->route('admin.forms.show', $form)
+            ->route('admin.forms.show', $showParameters)
             ->with('success', 'Formulir berhasil dibuat dan siap dibagikan.');
     }
 
     public function show(Request $request, MarketingForm $form)
     {
         $search = trim((string) $request->query('search', ''));
+        $returnTo = $this->formsIndexReturnTo($request);
 
         $submissionQuery = MarketingFormSubmission::query()
             ->where('marketing_form_id', $form->id)
@@ -101,12 +111,14 @@ class FormController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('admin.forms.show', compact('form', 'submissions', 'search', 'answerCharts'));
+        return view('admin.forms.show', compact('form', 'submissions', 'search', 'answerCharts', 'returnTo'));
     }
 
-    public function edit(MarketingForm $form)
+    public function edit(Request $request, MarketingForm $form)
     {
-        return view('admin.forms.edit', compact('form'));
+        $returnTo = $this->formsIndexReturnTo($request);
+
+        return view('admin.forms.edit', compact('form', 'returnTo'));
     }
 
     public function update(Request $request, MarketingForm $form)
@@ -131,7 +143,7 @@ class FormController extends Controller
             ->with('success', 'Formulir berhasil diperbarui.');
     }
 
-    public function destroy(MarketingForm $form)
+    public function destroy(Request $request, MarketingForm $form)
     {
         foreach ($this->optionImagePaths($form->fields ?? []) as $optionImage) {
             Storage::disk('public')->delete($optionImage);
@@ -145,7 +157,65 @@ class FormController extends Controller
 
         $form->delete();
 
-        return redirect()->route('admin.forms.index')->with('success', 'Formulir berhasil dihapus.');
+        return $this->redirectToReturnTo($request, 'admin.forms.index')
+            ->with('success', 'Formulir berhasil dihapus.');
+    }
+
+    public function exportExcel(Request $request, MarketingForm $form)
+    {
+        $search = trim((string) $request->query('search', ''));
+        $fields = collect($form->fields ?? [])
+            ->filter(fn ($field) => trim((string) ($field['key'] ?? '')) !== '')
+            ->values();
+
+        $submissions = MarketingFormSubmission::query()
+            ->where('marketing_form_id', $form->id)
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($innerQuery) use ($search) {
+                    $innerQuery->where('answers', 'like', "%{$search}%")
+                        ->orWhere('ip_address', 'like', "%{$search}%");
+                });
+            })
+            ->latest('created_at')
+            ->get();
+
+        $headers = ['No', 'Waktu Masuk', 'Alamat IP'];
+        foreach ($fields as $field) {
+            $headers[] = (string) ($field['label'] ?? 'Jawaban');
+        }
+
+        $rows = $submissions->values()->map(function (MarketingFormSubmission $submission, int $index) use ($fields) {
+            $answers = is_array($submission->answers) ? $submission->answers : [];
+            $row = [
+                $index + 1,
+                $submission->created_at?->timezone(config('app.timezone'))->format('d/m/Y H:i') ?? '-',
+                $submission->ip_address ?: '-',
+            ];
+
+            foreach ($fields as $field) {
+                $key = (string) ($field['key'] ?? '');
+                $answer = $answers[$key] ?? collect($answers)->firstWhere('key', $key);
+                $row[] = $this->formatSubmissionAnswerForExport(is_array($answer) ? ($answer['value'] ?? null) : null);
+            }
+
+            return $row;
+        })->all();
+
+        $subtitle = 'Formulir: '.$form->title.' | Total jawaban: '.count($rows);
+        if ($search !== '') {
+            $subtitle .= ' | Pencarian: '.$search;
+        }
+
+        return SimpleXlsx::download(
+            'Wiboost Store - Laporan Jawaban Formulir',
+            'Jawaban Formulir',
+            'laporan-formulir-'.$form->slug.'-'.now()->format('Ymd-His').'.xlsx',
+            $subtitle,
+            $headers,
+            $rows,
+            array_merge([8, 20, 20], array_fill(0, $fields->count(), 34)),
+            [1]
+        );
     }
 
     protected function rules(?MarketingForm $form = null): array
@@ -629,5 +699,42 @@ class FormController extends Controller
                 Storage::disk('public')->delete((string) $value['path']);
             }
         }
+    }
+
+    protected function formsIndexReturnTo(Request $request): string
+    {
+        $returnTo = trim((string) $request->input('return_to', ''));
+        $appFormsUrl = route('admin.forms.index');
+        $currentFormsUrl = rtrim($request->getSchemeAndHttpHost(), '/').'/admin/forms';
+
+        if ($returnTo !== '' && Str::startsWith($returnTo, [$appFormsUrl, $currentFormsUrl, '/admin/forms'])) {
+            return $returnTo;
+        }
+
+        return $appFormsUrl;
+    }
+
+    protected function formatSubmissionAnswerForExport(mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return '-';
+        }
+
+        if (! is_array($value)) {
+            return (string) $value;
+        }
+
+        if (isset($value['name']) || isset($value['url'])) {
+            $name = trim((string) ($value['name'] ?? 'File jawaban'));
+            $url = trim((string) ($value['url'] ?? ''));
+
+            return $url === '' ? $name : $name.' - '.$url;
+        }
+
+        return collect($value)
+            ->map(fn ($item) => is_array($item) ? ($item['value'] ?? $item['label'] ?? $item['name'] ?? '') : $item)
+            ->map(fn ($item) => trim((string) $item))
+            ->filter()
+            ->implode(', ') ?: '-';
     }
 }

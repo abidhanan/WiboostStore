@@ -208,14 +208,18 @@
         text-align: left;
         font-size: .72rem;
         font-weight: 900;
+        background: #f4f9ff;
         color: #2b3a67;
         white-space: nowrap;
         transition: background .16s ease, color .16s ease;
     }
-    .admin-theme-select-option:hover,
-    .admin-theme-select-option.is-selected {
+    .admin-theme-select-option:hover {
         background: #e0fbfc;
-        color: #5a76c8;
+        color: #4760a9;
+    }
+    .admin-theme-select-option.is-selected {
+        background: #5a76c8;
+        color: #ffffff;
     }
     .admin-theme-select-month,
     .admin-theme-select-year {
@@ -296,7 +300,7 @@
                                 <span class="admin-theme-select-arrow">⌄</span>
                             </button>
                             <div class="admin-theme-select-menu">
-                            @for($y = now()->year; $y >= now()->year - 3; $y--)
+                            @for($y = now()->year + 1; $y >= now()->year - 10; $y--)
                                 <button type="button" class="admin-theme-select-option {{ (string) $selectedYear === (string) $y ? 'is-selected' : '' }}" data-value="{{ $y }}" data-label="{{ $y }}">{{ $y }}</button>
                             @endfor
                             </div>
@@ -635,7 +639,7 @@
                         </div>
                         <div class="admin-detail-panel md:col-span-2">
                             <p class="text-[10px] font-black uppercase tracking-widest text-[#8faaf3]">Catatan</p>
-                            <p class="mt-1 text-sm font-bold text-[#2b3a67]">{{ $commission->notes ?: '-' }}</p>
+                            <p class="mt-1 whitespace-pre-line break-words text-left text-sm font-bold leading-relaxed text-[#2b3a67]">{{ $commission->notes ?: '-' }}</p>
                         </div>
                     </div>
                 </div>
@@ -793,8 +797,11 @@
                         label.textContent = option.dataset.label || option.textContent.trim();
                     }
 
-                    dropdown.querySelectorAll('[data-value]').forEach((item) => item.classList.remove('is-selected'));
-                    option.classList.add('is-selected');
+                    dropdown.querySelectorAll('[data-value]').forEach((item) => {
+                        const isSelected = item === option;
+                        item.classList.toggle('is-selected', isSelected);
+                        item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                    });
                     dropdown.classList.remove('is-open');
                     resetFloatingMenu(dropdown);
 

@@ -12,6 +12,11 @@
         'reseller' => 'Reseller',
         'specific' => 'Email Tertentu',
     ];
+    $activeCategory = $category ?? request('category', 'all');
+    $categoryFilters = collect($scopeLabels)
+        ->map(fn ($label) => ['label' => $label])
+        ->all();
+    $categoryFilters = ['all' => ['label' => 'Semua']] + $categoryFilters;
     $statusLabels = [
         'queued' => 'Dalam Antrean',
         'processing' => 'Sedang Dikirim',
@@ -46,6 +51,9 @@
     <div class="relative z-10 mb-8 w-full min-w-0 rounded-[2rem] border-4 border-white bg-white/90 p-4 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:rounded-[2.5rem] sm:p-5">
         <form action="{{ route('admin.emails.index') }}" method="GET" class="flex w-full flex-col gap-3 md:flex-row">
             <div class="flex w-full min-w-0 flex-1 gap-2">
+                @if($activeCategory !== 'all')
+                    <input type="hidden" name="category" value="{{ $activeCategory }}">
+                @endif
                 <input
                     type="text"
                     name="search"
@@ -57,7 +65,7 @@
                     @include('partials.wiboost-icon', ['name' => 'search', 'class' => 'h-5 w-5'])
                 </button>
                 @if($search !== '')
-                    <a href="{{ route('admin.emails.index') }}" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-md transition-transform active:scale-95 sm:rounded-[1.2rem]" title="Reset">
+                    <a href="{{ route('admin.emails.index', array_filter(['category' => $activeCategory === 'all' ? null : $activeCategory])) }}" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border-4 border-white bg-[#ffe5e5] text-[#ff6b6b] shadow-md transition-transform active:scale-95 sm:rounded-[1.2rem]" title="Reset">
                         @include('partials.wiboost-icon', ['name' => 'x', 'class' => 'h-5 w-5'])
                     </a>
                 @endif
@@ -69,6 +77,14 @@
             </a>
         </form>
     </div>
+
+    @include('admin.partials.filter-tabs', [
+        'filters' => $categoryFilters,
+        'activeFilter' => $activeCategory,
+        'filterParam' => 'category',
+        'filterRoute' => 'admin.emails.index',
+        'filterQuery' => ['search' => $search],
+    ])
 
     <div class="overflow-visible rounded-[2rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem]">
         <div class="email-table-scroll w-full overflow-x-auto pb-2">
@@ -121,7 +137,7 @@
                                     <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-[1.5rem] border-4 border-white bg-[#f0f5ff] text-[#8faaf3] shadow-md">
                                         @include('partials.wiboost-icon', ['name' => 'mail', 'class' => 'h-8 w-8'])
                                     </div>
-                                    <p class="mt-5 text-lg font-black text-[#2b3a67]">{{ $search !== '' ? 'Email tidak ditemukan.' : 'Belum ada riwayat email.' }}</p>
+                                    <p class="mt-5 text-lg font-black text-[#2b3a67]">{{ ($search !== '' || $activeCategory !== 'all') ? 'Email tidak ditemukan.' : 'Belum ada riwayat email.' }}</p>
                                 </td>
                             </tr>
                         @endforelse

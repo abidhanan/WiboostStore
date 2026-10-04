@@ -31,11 +31,48 @@
             --wiboost-admin-profile-border: #22c55e;
         }
         
-        /* Custom Scrollbar Global */
+        /* Satu model scrollbar untuk seluruh halaman admin, mengikuti halaman Transaksi. */
+        * {
+            scrollbar-color: #bde0fe #f0f5ff;
+            scrollbar-width: thin;
+        }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f4f9ff; }
-        ::-webkit-scrollbar-thumb { background: #bde0fe; border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: #f0f5ff; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #bde0fe; border: 2px solid #f0f5ff; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
+        body.wiboost-admin-shell main .wiboost-table-scroll-bottom {
+            overflow-x: auto !important;
+            padding-bottom: 0 !important;
+            scrollbar-width: none;
+        }
+        body.wiboost-admin-shell main .wiboost-table-scroll-bottom::-webkit-scrollbar {
+            display: none;
+            height: 0;
+        }
+        body.wiboost-admin-shell main .wiboost-table-bottom-bar {
+            display: block;
+            height: 12px;
+            margin: 0 1rem .85rem;
+            overflow: hidden;
+            position: relative;
+            background: #f0f5ff;
+            border-radius: 999px;
+            cursor: ew-resize;
+            touch-action: none;
+        }
+        body.wiboost-admin-shell main .wiboost-table-bottom-thumb {
+            position: absolute;
+            inset: 2px auto 2px 0;
+            min-width: 48px;
+            background: #bde0fe;
+            border-radius: 999px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9);
+            transition: background .16s ease;
+            will-change: transform, width;
+        }
+        body.wiboost-admin-shell main .wiboost-table-bottom-bar:hover .wiboost-table-bottom-thumb {
+            background: #8faaf3;
+        }
         
         /* Hide Scrollbar khusus untuk Sidebar Navigasi agar lebih bersih */
         .hide-scroll::-webkit-scrollbar { display: none; }
@@ -473,19 +510,37 @@
             text-align: left;
             font-size: .72rem;
             font-weight: 900;
-            color: #2b3a67;
+            border: 2px solid transparent;
+            background: #f4f9ff;
+            color: #6f8bd8;
             white-space: nowrap;
-            transition: background .16s ease, color .16s ease;
+            transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
         }
 
         body.wiboost-admin-shell .admin-theme-select-option + .admin-theme-select-option {
             margin-top: .45rem;
         }
 
-        body.wiboost-admin-shell .admin-theme-select-option:hover,
-        body.wiboost-admin-shell .admin-theme-select-option.is-selected {
+        body.wiboost-admin-shell .admin-theme-select-option:not(.is-selected) {
+            border-color: transparent;
+            background: #f4f9ff;
+            color: #6f8bd8;
+            box-shadow: none;
+            transform: none;
+        }
+
+        body.wiboost-admin-shell .admin-theme-select-option:hover {
+            border-color: #bde0fe;
             background: #e0fbfc;
-            color: #5a76c8;
+            color: #4760a9;
+            transform: translateX(2px);
+        }
+
+        body.wiboost-admin-shell .admin-theme-select-option.is-selected {
+            border-color: #ffffff;
+            background: #5a76c8;
+            color: #ffffff;
+            box-shadow: 0 7px 16px rgba(90, 118, 200, .2);
         }
 
         body.wiboost-admin-shell .table-scroll tr:has(.admin-theme-select.is-open) {
@@ -636,6 +691,7 @@
             6 => 'Gudang',
             7 => 'Marketing',
             8 => 'Customer Service',
+            9 => 'Sales',
         ];
         $adminRoleLabel = $adminRoleLabels[$currentAdminRoleId] ?? 'Admin';
         $adminProfileBorderColors = [
@@ -644,6 +700,7 @@
             6 => '#111827',
             7 => '#991b1b',
             8 => '#ec4899',
+            9 => '#0f766e',
         ];
         $adminProfileBorderColor = $adminProfileBorderColors[$currentAdminRoleId] ?? '#22c55e';
         $adminCanAccessArea = function (string $area) use ($currentAdminRoleId): bool {
@@ -667,6 +724,7 @@
             ['access' => 'transactions', 'route' => 'admin.transactions.index', 'pattern' => 'admin.transactions.*', 'label' => 'Transaksi', 'title' => 'Manajemen Transaksi', 'description' => 'Pantau transaksi dan pesanan pelanggan.', 'icon' => 'transaction'],
             ['access' => 'refunds', 'route' => 'admin.refunds.index', 'pattern' => 'admin.refunds.*', 'label' => 'Refund', 'title' => 'Manajemen Refund', 'description' => 'Catat refund transaksi ke saldo user.', 'icon' => 'refund'],
             ['access' => 'reports', 'route' => 'admin.reports.index', 'pattern' => 'admin.reports.*', 'label' => 'Laporan', 'title' => 'Manajemen Laporan', 'description' => 'Pantau laporan kendala pelanggan.', 'icon' => 'report'],
+            ['access' => 'otp', 'route' => 'admin.otp.index', 'pattern' => 'admin.otp.*', 'label' => 'OTP', 'title' => 'Manajemen OTP', 'description' => 'Kelola admin penerima permintaan OTP pelanggan.', 'icon' => 'otp'],
             ['access' => 'deposits', 'route' => 'admin.deposits.index', 'pattern' => 'admin.deposits.*', 'label' => 'Deposit', 'title' => 'Manajemen Deposit', 'description' => 'Pantau top-up dan refund saldo pengguna.', 'icon' => 'deposit'],
             ['access' => 'commissions', 'route' => 'admin.commissions.index', 'pattern' => 'admin.commissions.*', 'label' => 'Komisi', 'title' => 'Manajemen Komisi', 'description' => 'Pantau komisi masuk reseller.', 'icon' => 'commission'],
             ['access' => 'withdrawals', 'route' => 'admin.withdrawals.index', 'pattern' => 'admin.withdrawals.*', 'label' => 'Penarikan', 'title' => 'Manajemen Penarikan', 'description' => 'Konfirmasi penarikan reseller setelah transfer.', 'icon' => 'withdrawal'],
@@ -674,6 +732,7 @@
             ['access' => 'displays', 'route' => 'admin.displays.index', 'pattern' => 'admin.displays.*', 'label' => 'Display', 'title' => 'Manajemen Display', 'description' => 'Kelola display popup user.', 'icon' => 'display'],
             ['access' => 'forms', 'route' => 'admin.forms.index', 'pattern' => 'admin.forms.*', 'label' => 'Formulir', 'title' => 'Manajemen Formulir', 'description' => 'Kelola form publik dan benefit aplikasi premium.', 'icon' => 'forms'],
             ['access' => 'emails', 'route' => 'admin.emails.index', 'pattern' => 'admin.emails.*', 'label' => 'Email', 'title' => 'Manajemen Email', 'description' => 'Kirim informasi kepada pengguna.', 'icon' => 'email'],
+            ['access' => 'social_media', 'route' => 'admin.social-media.index', 'pattern' => 'admin.social-media.*', 'label' => 'Media Sosial', 'title' => 'Manajemen Media Sosial', 'description' => 'Pantau performa Instagram dan TikTok.', 'icon' => 'social_media'],
             ['access' => 'tutorials', 'route' => 'admin.tutorials.index', 'pattern' => 'admin.tutorials.*', 'label' => 'Tutorial', 'title' => 'Manajemen Tutorial', 'description' => 'Kelola panduan dan tutorial pelanggan.', 'icon' => 'tutorial'],
             ['access' => 'logs', 'route' => 'admin.logs.index', 'pattern' => 'admin.logs.*', 'label' => 'Log Aktivitas', 'title' => 'Log Aktivitas', 'description' => 'Aktivitas & lokasi (IP) seluruh pengunjung situs.', 'icon' => 'log'],
         ];
@@ -682,10 +741,10 @@
         $adminNavByAccess = collect($adminNav)->keyBy('access');
         $adminNavGroups = collect([
             ['label' => 'Utama', 'items' => ['dashboard']],
-            ['label' => 'Operasional', 'items' => ['transactions', 'reports', 'refunds', 'deposits']],
+            ['label' => 'Operasional', 'items' => ['transactions', 'reports', 'otp', 'refunds', 'deposits']],
             ['label' => 'Produk & Gudang', 'items' => ['categories', 'products', 'durations', 'tutorials']],
             ['label' => 'Akun & Reseller', 'items' => ['users', 'commissions', 'withdrawals']],
-            ['label' => 'Konten', 'items' => ['promos', 'displays', 'forms', 'emails']],
+            ['label' => 'Konten', 'items' => ['promos', 'displays', 'forms', 'emails', 'social_media']],
             ['label' => 'Sistem', 'items' => ['logs']],
         ])->map(function (array $group) use ($adminNavByAccess) {
             $group['items'] = collect($group['items'])
@@ -712,11 +771,13 @@
             'display' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.5h15v10h-15v-10Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M8 19h8M10 16.5 9.5 19M14 16.5l.5 2.5" />',
             'forms' => '<path stroke-linecap="round" stroke-linejoin="round" d="M6 3.5h9l3 3v14H6v-17Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 3.5v3h3M9 9.5h6M9 13h6M9 16.5h4" />',
             'email' => '<path stroke-linecap="round" stroke-linejoin="round" d="M3.5 6.5h17v12h-17v-12Z" /><path stroke-linecap="round" stroke-linejoin="round" d="m4 7 8 6 8-6" />',
+            'social_media' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 19.5h16M7 16V10M12 16V5M17 16v-3" /><path stroke-linecap="round" stroke-linejoin="round" d="m5 7 4-3 4 3 6-4" />',
             'tutorial' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 5.5A2.5 2.5 0 0 1 7 3h11.5v16H7a2.5 2.5 0 0 0-2.5 2.5v-16Zm0 0v16M8.25 7.25h6.5M8.25 10.75h5M8.25 14.25h4" />',
             'transaction' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5h16v11H4v-11Zm0 3.5h16M8 15h4" />',
             'refund' => '<path stroke-linecap="round" stroke-linejoin="round" d="M7.2 7.1A7.2 7.2 0 0 1 18.5 9.2" /><path stroke-linecap="round" stroke-linejoin="round" d="M18.5 5.6v3.6h-3.6" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.8 16.9A7.2 7.2 0 0 1 5.5 14.8" /><path stroke-linecap="round" stroke-linejoin="round" d="M5.5 18.4v-3.6h3.6" />',
             'deposit' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 7.5h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-10a2 2 0 0 1 2-2Zm0 0 12-3v3M17 13.5h.01" />',
             'report' => '<path stroke-linecap="round" stroke-linejoin="round" d="M5 4.5h14v15H5v-15Zm3.5 4h7M8.5 12h7M8.5 15.5h4" />',
+            'otp' => '<path stroke-linecap="round" stroke-linejoin="round" d="M8.5 11.5a3.5 3.5 0 1 1 3.3 3.5H10l-1.5 1.5H6.5v2H4v-3l4.5-4.5v.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 8.5h.01" />',
             'log' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 4.5h6a2 2 0 0 1 2 2V19a1.5 1.5 0 0 1-1.5 1.5H8.5A1.5 1.5 0 0 1 7 19V6.5a2 2 0 0 1 2-2Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9.5 8.5h5M9.5 12h5M9.5 15.5h3" />',
             'profile' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0" />',
             'logout' => '<path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1" />',
@@ -1218,6 +1279,58 @@
                 });
             };
 
+            const adminDropdownOptionSelector = [
+                '.admin-theme-select-option',
+                '.admin-category-theme-select-option',
+                '.admin-product-theme-select-option',
+                '.admin-promo-theme-select-option',
+                '.admin-user-role-select-option',
+                '.wiboost-answer-type-option',
+            ].join(',');
+            const adminDropdownMenuSelector = [
+                '.admin-theme-select-menu',
+                '.admin-category-theme-select-menu',
+                '.admin-product-theme-select-menu',
+                '.admin-promo-theme-select-menu',
+                '.admin-user-role-select-menu',
+                '.wiboost-answer-type-menu',
+            ].join(',');
+            const setAdminDropdownOptionState = (item, isSelected) => {
+                item.classList.toggle('is-selected', isSelected);
+                item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                item.style.setProperty('background', isSelected ? '#5a76c8' : '#ffffff', 'important');
+                item.style.setProperty('color', isSelected ? '#ffffff' : '#6f8bd8', 'important');
+                item.style.setProperty('border-color', isSelected ? '#ffffff' : '#dbe8ff', 'important');
+                item.style.setProperty('box-shadow', isSelected ? '0 7px 16px rgba(90, 118, 200, .24)' : 'none', 'important');
+            };
+            const syncAdminDropdownMenu = (menu) => {
+                menu.querySelectorAll(adminDropdownOptionSelector).forEach((item) => {
+                    const isSelected = item.classList.contains('is-selected') || item.getAttribute('aria-selected') === 'true';
+                    setAdminDropdownOptionState(item, isSelected);
+                });
+            };
+
+            document.querySelectorAll(adminDropdownMenuSelector).forEach(syncAdminDropdownMenu);
+            document.addEventListener('click', (event) => {
+                const option = event.target.closest(adminDropdownOptionSelector);
+
+                if (!option) {
+                    return;
+                }
+
+                const menu = option.closest(adminDropdownMenuSelector);
+
+                if (!menu) {
+                    return;
+                }
+
+                menu.querySelectorAll(adminDropdownOptionSelector).forEach((item) => {
+                    setAdminDropdownOptionState(item, item === option);
+                });
+            }, true);
+
+            window.wiboostSetAdminDropdownOptionState = setAdminDropdownOptionState;
+
             document.querySelectorAll('[data-admin-theme-select]').forEach((dropdown) => {
                 if (!dropdown.dataset.inputName) {
                     return;
@@ -1233,6 +1346,14 @@
                 const inputName = dropdown.dataset.inputName;
                 const form = dropdown.closest('form');
                 const input = form?.querySelector(`input[type="hidden"][name="${inputName}"]`);
+
+                if (input) {
+                    const selectedValue = String(input.value ?? '');
+                    dropdown.querySelectorAll('[data-value]').forEach((item) => {
+                        const isSelected = String(item.dataset.value ?? '') === selectedValue;
+                        setAdminDropdownOptionState(item, isSelected);
+                    });
+                }
 
                 button?.addEventListener('click', (event) => {
                     event.preventDefault();
@@ -1260,8 +1381,10 @@
                             label.textContent = option.dataset.label || option.textContent.trim();
                         }
 
-                        dropdown.querySelectorAll('[data-value]').forEach((item) => item.classList.remove('is-selected'));
-                        option.classList.add('is-selected');
+                        dropdown.querySelectorAll('[data-value]').forEach((item) => {
+                            const isSelected = item === option;
+                            setAdminDropdownOptionState(item, isSelected);
+                        });
                         dropdown.classList.remove('is-open');
                         resetThemeMenu(dropdown);
 
@@ -1284,6 +1407,21 @@
                 document.querySelectorAll('[data-admin-theme-select][data-input-name].is-open').forEach(positionThemeMenu);
             }, true);
         });
+
+        const resetAdminSubmitLocks = () => {
+            document.querySelectorAll('form[data-submitting="true"]').forEach((form) => {
+                delete form.dataset.submitting;
+            });
+
+            document.querySelectorAll('[data-wiboost-submit-locked="true"]').forEach((button) => {
+                button.disabled = false;
+                button.classList.remove('cursor-wait', 'opacity-75');
+                delete button.dataset.wiboostSubmitLocked;
+            });
+        };
+
+        window.addEventListener('pageshow', resetAdminSubmitLocks);
+        window.addEventListener('focus', resetAdminSubmitLocks);
 
         document.addEventListener('submit', function (event) {
             const form = event.target;
@@ -1324,9 +1462,196 @@
             }
 
             button.disabled = true;
+            button.dataset.wiboostSubmitLocked = 'true';
             button.classList.add('cursor-wait', 'opacity-75');
         });
     </script>
+    <script>
+        (function () {
+            const resizeObservers = new WeakMap();
+
+	            const syncBottomBar = (scroller, bar, thumb) => {
+	                const scrollerStyle = window.getComputedStyle(scroller);
+	                const isVisible = scrollerStyle.display !== 'none'
+	                    && scroller.getClientRects().length > 0;
+
+	                const maxScroll = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+	                const shouldShow = isVisible && maxScroll > 1;
+
+	                bar.style.display = shouldShow ? 'block' : 'none';
+	                bar.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+	                if (!shouldShow) return;
+                const trackWidth = Math.max(1, bar.clientWidth);
+                const proportionalWidth = scroller.scrollWidth > 0
+                    ? (scroller.clientWidth / scroller.scrollWidth) * trackWidth
+                    : trackWidth;
+                const thumbWidth = maxScroll > 0
+                    ? Math.min(trackWidth, Math.max(48, proportionalWidth))
+                    : trackWidth;
+                const available = Math.max(0, trackWidth - thumbWidth);
+                const left = maxScroll > 0 ? (scroller.scrollLeft / maxScroll) * available : 0;
+
+                thumb.style.width = `${thumbWidth}px`;
+                thumb.style.transform = `translateX(${left}px)`;
+                bar.setAttribute('aria-valuemin', '0');
+                bar.setAttribute('aria-valuemax', String(Math.round(maxScroll)));
+                bar.setAttribute('aria-valuenow', String(Math.round(scroller.scrollLeft)));
+            };
+
+            const attachBottomBar = (scroller) => {
+                if (scroller.dataset.wiboostBottomScrollbar === 'true') {
+                    const existingBar = scroller.nextElementSibling;
+                    const existingThumb = existingBar?.querySelector('.wiboost-table-bottom-thumb');
+                    if (existingBar?.classList.contains('wiboost-table-bottom-bar') && existingThumb) {
+                        syncBottomBar(scroller, existingBar, existingThumb);
+                    }
+                    return;
+                }
+
+                scroller.dataset.wiboostBottomScrollbar = 'true';
+                scroller.classList.add('wiboost-table-scroll-bottom');
+
+                const bar = document.createElement('div');
+                bar.className = 'wiboost-table-bottom-bar';
+                bar.setAttribute('aria-label', 'Geser tabel secara horizontal');
+                bar.setAttribute('role', 'scrollbar');
+                bar.tabIndex = 0;
+
+                const thumb = document.createElement('div');
+                thumb.className = 'wiboost-table-bottom-thumb';
+                thumb.setAttribute('aria-hidden', 'true');
+                bar.appendChild(thumb);
+                scroller.insertAdjacentElement('afterend', bar);
+
+                scroller.addEventListener('scroll', () => {
+                    syncBottomBar(scroller, bar, thumb);
+                }, { passive: true });
+
+                let activePointer = null;
+                let pointerOffset = 0;
+                const moveFromPointer = (clientX) => {
+                    const rect = bar.getBoundingClientRect();
+                    const maxScroll = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+                    const available = Math.max(0, rect.width - thumb.offsetWidth);
+                    const left = Math.min(available, Math.max(0, clientX - rect.left - pointerOffset));
+                    scroller.scrollLeft = available > 0 ? (left / available) * maxScroll : 0;
+                };
+
+                bar.addEventListener('pointerdown', (event) => {
+                    activePointer = event.pointerId;
+                    const thumbRect = thumb.getBoundingClientRect();
+                    pointerOffset = event.target === thumb
+                        ? event.clientX - thumbRect.left
+                        : thumbRect.width / 2;
+                    bar.setPointerCapture?.(event.pointerId);
+                    moveFromPointer(event.clientX);
+                    event.preventDefault();
+                });
+                bar.addEventListener('pointermove', (event) => {
+                    if (event.pointerId !== activePointer) return;
+                    moveFromPointer(event.clientX);
+                });
+                const stopPointer = (event) => {
+                    if (event.pointerId !== activePointer) return;
+                    activePointer = null;
+                    bar.releasePointerCapture?.(event.pointerId);
+                };
+                bar.addEventListener('pointerup', stopPointer);
+                bar.addEventListener('pointercancel', stopPointer);
+                bar.addEventListener('wheel', (event) => {
+                    scroller.scrollLeft += event.deltaX || event.deltaY;
+                    event.preventDefault();
+                }, { passive: false });
+                bar.addEventListener('keydown', (event) => {
+                    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                    const step = Math.max(80, scroller.clientWidth * .2);
+                    if (event.key === 'ArrowLeft') scroller.scrollLeft -= step;
+                    if (event.key === 'ArrowRight') scroller.scrollLeft += step;
+                    if (event.key === 'Home') scroller.scrollLeft = 0;
+                    if (event.key === 'End') scroller.scrollLeft = scroller.scrollWidth;
+                    event.preventDefault();
+                });
+
+                syncBottomBar(scroller, bar, thumb);
+                if (window.ResizeObserver) {
+                    const observer = new ResizeObserver(() => syncBottomBar(scroller, bar, thumb));
+                    observer.observe(scroller);
+                    const table = scroller.querySelector('table');
+                    if (table) observer.observe(table);
+                    resizeObservers.set(scroller, observer);
+                }
+            };
+
+            const markTableScrollers = (root = document) => {
+                root.querySelectorAll?.('main table').forEach((table) => {
+                    let wrapper = table.parentElement;
+                    while (wrapper && wrapper.tagName !== 'MAIN') {
+                        const style = window.getComputedStyle(wrapper);
+                        const canScroll = ['auto', 'scroll'].includes(style.overflowX)
+                            || wrapper.classList.contains('table-scroll')
+                            || wrapper.classList.contains('email-table-scroll')
+                            || wrapper.classList.contains('forms-table-scroll')
+                            || wrapper.classList.contains('duration-table-scroll');
+                        if (canScroll) {
+                            attachBottomBar(wrapper);
+                            break;
+                        }
+                        wrapper = wrapper.parentElement;
+                    }
+                });
+            };
+
+            document.addEventListener('DOMContentLoaded', () => markTableScrollers());
+            document.addEventListener('wiboost:content-ready', () => markTableScrollers());
+            window.addEventListener('load', () => markTableScrollers(), { once: true });
+            window.addEventListener('resize', () => markTableScrollers(), { passive: true });
+            markTableScrollers();
+        })();
+    </script>
+    <style id="wiboost-dropdown-option-contrast">
+        body.wiboost-admin-shell .admin-theme-select-menu .admin-theme-select-option:not(.is-selected):not([aria-selected="true"]),
+        body.wiboost-admin-shell .admin-category-theme-select-menu .admin-category-theme-select-option:not(.is-selected):not([aria-selected="true"]),
+        body.wiboost-admin-shell .admin-product-theme-select-menu .admin-product-theme-select-option:not(.is-selected):not([aria-selected="true"]),
+        body.wiboost-admin-shell .admin-promo-theme-select-menu .admin-promo-theme-select-option:not(.is-selected):not([aria-selected="true"]),
+        body.wiboost-admin-shell .admin-user-role-select-menu .admin-user-role-select-option:not(.is-selected):not([aria-selected="true"]),
+        body.wiboost-admin-shell .wiboost-answer-type-menu .wiboost-answer-type-option:not(.is-selected):not([aria-selected="true"]) {
+            border-color: #dbe8ff !important;
+            background: #ffffff !important;
+            color: #6f8bd8 !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        body.wiboost-admin-shell .admin-theme-select-menu .admin-theme-select-option:not(.is-selected):not([aria-selected="true"]):hover,
+        body.wiboost-admin-shell .admin-category-theme-select-menu .admin-category-theme-select-option:not(.is-selected):not([aria-selected="true"]):hover,
+        body.wiboost-admin-shell .admin-product-theme-select-menu .admin-product-theme-select-option:not(.is-selected):not([aria-selected="true"]):hover,
+        body.wiboost-admin-shell .admin-promo-theme-select-menu .admin-promo-theme-select-option:not(.is-selected):not([aria-selected="true"]):hover,
+        body.wiboost-admin-shell .admin-user-role-select-menu .admin-user-role-select-option:not(.is-selected):not([aria-selected="true"]):hover,
+        body.wiboost-admin-shell .wiboost-answer-type-menu .wiboost-answer-type-option:not(.is-selected):not([aria-selected="true"]):hover {
+            border-color: #bde0fe !important;
+            background: #e0fbfc !important;
+            color: #4760a9 !important;
+        }
+
+        body.wiboost-admin-shell .admin-theme-select-menu .admin-theme-select-option.is-selected,
+        body.wiboost-admin-shell .admin-theme-select-menu .admin-theme-select-option[aria-selected="true"],
+        body.wiboost-admin-shell .admin-category-theme-select-menu .admin-category-theme-select-option.is-selected,
+        body.wiboost-admin-shell .admin-category-theme-select-menu .admin-category-theme-select-option[aria-selected="true"],
+        body.wiboost-admin-shell .admin-product-theme-select-menu .admin-product-theme-select-option.is-selected,
+        body.wiboost-admin-shell .admin-product-theme-select-menu .admin-product-theme-select-option[aria-selected="true"],
+        body.wiboost-admin-shell .admin-promo-theme-select-menu .admin-promo-theme-select-option.is-selected,
+        body.wiboost-admin-shell .admin-promo-theme-select-menu .admin-promo-theme-select-option[aria-selected="true"],
+        body.wiboost-admin-shell .admin-user-role-select-menu .admin-user-role-select-option.is-selected,
+        body.wiboost-admin-shell .admin-user-role-select-menu .admin-user-role-select-option[aria-selected="true"],
+        body.wiboost-admin-shell .wiboost-answer-type-menu .wiboost-answer-type-option.is-selected,
+        body.wiboost-admin-shell .wiboost-answer-type-menu .wiboost-answer-type-option[aria-selected="true"] {
+            border-color: #ffffff !important;
+            background: #5a76c8 !important;
+            color: #ffffff !important;
+            box-shadow: 0 7px 16px rgba(90, 118, 200, .24) !important;
+            transform: none !important;
+        }
+    </style>
     @include('admin.partials.detail-modal-assets')
     @include('partials.wiboost-input-guards')
     @include('partials.page-loading')

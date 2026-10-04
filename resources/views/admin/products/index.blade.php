@@ -108,7 +108,7 @@
 
                     <div class="w-full overflow-x-auto table-scroll pb-2">
                         <div class="inline-block min-w-full align-middle p-4 sm:p-6">
-                            <table class="w-full text-left" style="min-width: 1370px; table-layout: fixed;">
+                            <table class="w-full text-left" style="min-width: 1700px; table-layout: fixed;">
                                 <thead>
                                     <tr>
                                         <th style="font-size: 10px; width: 90px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Visual</th>
@@ -117,7 +117,8 @@
                                         <th style="font-size: 10px; width: 150px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga Pembeli</th>
                                         <th style="font-size: 10px; width: 160px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Harga Member</th>
                                         <th style="font-size: 10px; width: 135px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] border-b-4 border-dashed border-[#f4f9ff]">Modal</th>
-                                        <th style="font-size: 10px; width: 210px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Penyedia</th>
+                                        <th style="font-size: 10px; width: 170px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Penyedia</th>
+                                        <th style="font-size: 10px; width: 230px;" class="whitespace-nowrap px-5 py-4 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">ID Produk Penyedia</th>
                                         <th style="font-size: 10px; width: 115px;" class="whitespace-nowrap px-5 py-4 pr-8 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Stok</th>
                                         <th style="font-size: 10px; width: 145px;" class="whitespace-nowrap px-5 py-4 pl-8 font-black uppercase tracking-widest text-[#8faaf3] text-center border-b-4 border-dashed border-[#f4f9ff]">Aksi</th>
                                     </tr>
@@ -134,6 +135,14 @@
                                                 ])->filter()->implode(' / ');
                                                 $productStock = (int) ($product->available_stock ?? 0);
                                                 $productReminder = (int) ($product->stock_reminder ?? 0);
+                                                $providerSource = strtolower(trim((string) ($product->provider_source ?? '')));
+                                                $providerDisplayName = match ($providerSource) {
+                                                    'digiflazz' => 'DigiFlazz',
+                                                    'ordersosmed' => 'Order Sosmed',
+                                                    default => $providerSource !== ''
+                                                        ? \Illuminate\Support\Str::headline(str_replace(['_', '-'], ' ', $providerSource))
+                                                        : '-',
+                                                };
                                                 $productRootCategory = $product->category;
                                                 while($productRootCategory?->parent) {
                                                     $productRootCategory = $productRootCategory->parent;
@@ -208,23 +217,21 @@
                                                 </td>
 
                                                 <td class="px-5 py-4 sm:py-5 align-middle">
-                                                    <p style="font-size: 9px;" class="whitespace-nowrap font-black uppercase tracking-widest text-[#8faaf3]">
+                                                    <p class="whitespace-nowrap text-xs font-black text-[#8faaf3] drop-shadow-sm sm:text-sm">
                                                         {{ $product->uses_api_selling_markup ? 'Rp ' . number_format($product->price ?? 0, 0, ',', '.') : '-' }}
                                                     </p>
                                                 </td>
 
-                                                <td class="px-5 py-4 pl-8 sm:py-5 align-middle text-center">
-                                                    <div class="space-y-1">
-                                                        <span style="font-size: 10px;" class="inline-block rounded-lg border-2 border-white bg-[#f0f5ff] px-2 py-1 font-mono font-black text-[#8faaf3] shadow-inner max-w-[120px] truncate">
-                                                            {{ $product->provider_product_id ?? '-' }}
-                                                        </span>
-                                                        <div style="font-size: 9px;" class="whitespace-nowrap font-black uppercase tracking-widest text-[#5a76c8]">
-                                                            {{ $product->provider_source ?? '-' }}
-                                                            @if(($product->provider_source ?? '') === 'ordersosmed')
-                                                                <span class="ml-1 text-[#8faaf3]">x{{ $product->provider_quantity ?? 1 }}</span>
-                                                            @endif
-                                                        </div>
+                                                <td class="px-5 py-4 sm:py-5 align-middle text-center">
+                                                    <div style="font-size: 10px; overflow-wrap: anywhere;" class="flex max-w-full flex-wrap items-center justify-center gap-x-1 rounded-lg border-2 border-white bg-[#e0fbfc] px-3 py-2 font-black leading-tight text-[#5a76c8] shadow-sm">
+                                                        {{ $providerDisplayName }}{{ $providerSource === 'ordersosmed' ? ' x' . ($product->provider_quantity ?? 1) : '' }}
                                                     </div>
+                                                </td>
+
+                                                <td class="px-5 py-4 sm:py-5 align-middle text-center">
+                                                    <span style="font-size: 10px;" class="block max-w-full break-all rounded-lg border-2 border-white bg-[#f0f5ff] px-2 py-1.5 font-mono font-black text-[#8faaf3] shadow-inner" title="{{ $product->provider_product_id ?? '-' }}">
+                                                        {{ $product->provider_product_id ?? '-' }}
+                                                    </span>
                                                 </td>
 
                                                 <td class="px-5 py-4 sm:py-5 align-middle text-center">
@@ -349,6 +356,11 @@
                                             <a href="{{ route('admin.credentials.index', $product->id) }}" class="rounded-full border-2 border-white bg-[#ffeef2] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#e1306c] shadow-sm">Gudang Akun</a>
                                         @endif
                                         <a href="{{ route('admin.products.edit', $product->id) }}" class="rounded-full border-2 border-white bg-[#5a76c8] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-sm">Edit Produk</a>
+                                        <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus produk ini? Semua data gudang terkait juga akan hilang!');" class="m-0">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="rounded-full border-2 border-white bg-[#ff6b6b] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-sm">Hapus Produk</button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>

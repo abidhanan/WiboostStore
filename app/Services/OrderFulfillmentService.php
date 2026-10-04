@@ -158,7 +158,7 @@ class OrderFulfillmentService
             $lockedTransaction->update(array_merge([
                 'order_status' => 'success',
                 'target_notes' => $lockedCredential->needs_otp
-                    ? 'Pesanan ini membutuhkan bantuan admin atau link tutorial tambahan untuk OTP / akses login.'
+                    ? 'Pesanan ini membutuhkan bantuan admin untuk OTP akses login.'
                     : 'Data pesanan berhasil dikirim ke akun kamu.',
             ], $this->credentialAssignmentData($lockedCredential, $product)));
 
@@ -1201,6 +1201,8 @@ class OrderFulfillmentService
             'notes' => $credential->notes,
             'tutorial_link' => $credential->tutorial_link,
             'needs_otp' => $credential->needs_otp,
+            'otp_admin_whatsapp' => $credential->otp_admin_whatsapp,
+            'otp_admin_name' => $credential->otp_admin_name,
             'requires_login_proof' => $credential->requires_login_proof,
             'requires_logout_proof' => $credential->requires_logout_proof,
             'duration_value' => $durationValue > 0 ? $durationValue : null,

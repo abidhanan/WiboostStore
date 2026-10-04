@@ -11,14 +11,14 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    private const ROLE_SELECTION_RULE = 'required|in:1,2,3,4,6,7,8,member';
+    private const ROLE_SELECTION_RULE = 'required|in:1,2,3,4,6,7,8,9,member';
 
     public function index(Request $request)
     {
         $search = trim((string) $request->query('search', ''));
         $roleFilter = (string) $request->query('role_filter', 'all');
         $roleFilter = $roleFilter === 'admin' ? 'super_admin' : $roleFilter;
-        $allowedRoleFilters = ['all', 'buyer', 'reseller', 'member', 'super_admin', 'keuangan', 'gudang', 'marketing', 'customer_service'];
+        $allowedRoleFilters = ['all', 'buyer', 'reseller', 'member', 'super_admin', 'keuangan', 'gudang', 'marketing', 'customer_service', 'sales'];
 
         if (! in_array($roleFilter, $allowedRoleFilters, true)) {
             $roleFilter = 'all';
@@ -32,6 +32,7 @@ class UserController extends Controller
             ->when($roleFilter === 'gudang', fn ($query) => $query->where('role_id', User::ROLE_WAREHOUSE))
             ->when($roleFilter === 'marketing', fn ($query) => $query->where('role_id', User::ROLE_MARKETING))
             ->when($roleFilter === 'customer_service', fn ($query) => $query->where('role_id', User::ROLE_CUSTOMER_SERVICE))
+            ->when($roleFilter === 'sales', fn ($query) => $query->where('role_id', User::ROLE_SALES))
             ->when($roleFilter === 'member', fn ($query) => $query->where('membership_expires_at', '>', now()))
             ->when($roleFilter === 'reseller', function ($query) {
                 $query->where(function ($innerQuery) {
@@ -66,6 +67,10 @@ class UserController extends Controller
 
                     if (str_contains(strtolower($search), 'customer service') || str_contains(strtolower($search), 'cs')) {
                         $innerQuery->orWhere('role_id', User::ROLE_CUSTOMER_SERVICE);
+                    }
+
+                    if (str_contains(strtolower($search), 'sales')) {
+                        $innerQuery->orWhere('role_id', User::ROLE_SALES);
                     }
 
                     if (str_contains(strtolower($search), 'buyer') || str_contains(strtolower($search), 'pelanggan')) {

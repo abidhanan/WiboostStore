@@ -119,12 +119,18 @@
             margin-top: 0.45rem;
         }
 
-        .admin-theme-select-option:hover,
-        .admin-theme-select-option.is-selected {
+        .admin-theme-select-option:hover {
             border-color: #bde0fe;
             background: #e0fbfc;
-            color: #4bc6b9;
+            color: #4760a9;
             transform: translateX(2px);
+        }
+
+        .admin-theme-select-option.is-selected {
+            border-color: #ffffff;
+            background: #5a76c8;
+            color: #ffffff;
+            box-shadow: 0 7px 16px rgba(90, 118, 200, .2);
         }
     </style>
 
@@ -163,8 +169,11 @@
                     option.addEventListener('click', () => {
                         input.value = option.dataset.value ?? '';
                         label.textContent = option.textContent.trim();
-                        dropdown.querySelectorAll('[data-admin-theme-select-option]').forEach((item) => item.classList.remove('is-selected'));
-                        option.classList.add('is-selected');
+                        dropdown.querySelectorAll('[data-admin-theme-select-option]').forEach((item) => {
+                            const isSelected = item === option;
+                            item.classList.toggle('is-selected', isSelected);
+                            item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                        });
                         dropdown.classList.remove('is-open');
                         button.setAttribute('aria-expanded', 'false');
                         input.dispatchEvent(new Event('change', { bubbles: true }));

@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class TransactionController extends Controller
@@ -365,16 +366,28 @@ class TransactionController extends Controller
             $monthName = Carbon::createFromDate($year, $month, 1)->translatedFormat('F Y');
             $fileName = 'laporan-transaksi-' . str_replace(' ', '-', strtolower($monthName)) . '.xlsx';
             $rows = $transactions->map(function ($trx, $index) {
+                $target = $trx->isMembershipPayment()
+                    ? '-'
+                    : ($trx->order_input_text
+                        ?: (filled($trx->target_data) && $trx->target_data !== '- (Tidak membutuhkan target tambahan)'
+                            ? $trx->target_data
+                            : '-'));
+                $loginProof = filled($trx->login_proof_path)
+                    ? url(Storage::url($trx->login_proof_path))
+                    : '-';
+
                 return [
                     $index + 1,
-                    $trx->created_at?->timezone(config('app.timezone'))->format('d/m/Y H:i') ?? '-',
                     $trx->invoice_number ?? '-',
+                    $trx->created_at?->timezone(config('app.timezone'))->format('d/m/Y H:i') ?? '-',
                     $trx->user->name ?? 'Guest',
                     $trx->user->email ?? '-',
                     $trx->display_product_name,
-                    $trx->payment_status ?? '-',
-                    $trx->order_status ?? '-',
                     (float) ($trx->display_total_payable ?? 0),
+                    $target,
+                    $trx->display_payment_method,
+                    $loginProof,
+                    $trx->display_status,
                 ];
             })->all();
 
@@ -383,12 +396,12 @@ class TransactionController extends Controller
                 'Transaksi',
                 $fileName,
                 'Periode: ' . $monthName,
-                ['No', 'Waktu Transaksi', 'Invoice', 'Nama Pelanggan', 'Email', 'Produk', 'Status Bayar', 'Status Pesanan', 'Total'],
+                ['No', 'Invoice', 'Waktu Transaksi', 'Nama Pelanggan', 'Email', 'Produk', 'Harga', 'Target', 'Metode', 'Bukti Masuk', 'Status'],
                 $rows,
-                [8, 20, 24, 28, 34, 58, 18, 18, 18],
+                [8, 24, 20, 28, 34, 58, 18, 54, 18, 48, 18],
                 [1],
-                [9],
-                ['', '', '', '', '', '', '', 'TOTAL', (float) $totalRevenue]
+                [7],
+                ['', '', '', '', '', 'TOTAL', (float) $totalRevenue, '', '', '', '']
             );
         } catch (Exception $e) {
             dd('HALO ADMIN, ADA ERROR CETAK EXCEL: ' . $e->getMessage() . ' | DI BARIS: ' . $e->getLine());

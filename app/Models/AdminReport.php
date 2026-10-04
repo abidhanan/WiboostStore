@@ -34,11 +34,7 @@ class AdminReport extends Model
 
     public function getStatusLabelAttribute(): string
     {
-        return match ($this->status) {
-            'read' => 'Dibaca',
-            'closed' => 'Selesai',
-            default => 'Baru',
-        };
+        return $this->status === 'closed' ? 'Sudah Ditangani' : 'Belum Ditangani';
     }
 
     public function getProofUrlAttribute(): ?string

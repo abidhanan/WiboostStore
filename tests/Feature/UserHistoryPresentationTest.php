@@ -25,6 +25,8 @@ class UserHistoryPresentationTest extends TestCase
         $this->assertStringContainsString('history-credential-value min-w-0', $view);
         $this->assertStringContainsString("{{ \$key === 'email' ? 'history-credential-value--email' : 'break-all' }}", $view);
         $this->assertStringContainsString('Minta OTP', $view);
+        $this->assertStringContainsString('data-no-submit-lock="true"', $view);
+        $this->assertStringContainsString('data-keep-enabled="true"', $view);
         $this->assertStringNotContainsString('Minta OTP via WhatsApp', $view);
         $this->assertStringNotContainsString('Silahkan cek tutorial untuk login atau minta bantuan OTP ke admin.', $view);
     }
@@ -40,7 +42,8 @@ class UserHistoryPresentationTest extends TestCase
         $this->assertStringContainsString('history-transaction-meta-status', $historyView);
         $this->assertStringContainsString('.warehouse-email-value {', $warehouseView);
         $this->assertStringContainsString('white-space: nowrap;', $warehouseView);
-        $this->assertStringContainsString('name="data_1" class="warehouse-email-value', $warehouseView);
+        $this->assertStringContainsString('name="data_1"', $warehouseView);
+        $this->assertStringContainsString('class="warehouse-email-value', $warehouseView);
         $this->assertStringContainsString('warehouse-email-value mt-1', $warehouseView);
         $this->assertStringNotContainsString('mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $cred->data_1 }}', $warehouseView);
     }
