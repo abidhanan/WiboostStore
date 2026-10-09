@@ -21,6 +21,7 @@
         @include('partials.ui-performance-tuning')
         @include('partials.microsoft-clarity')
         @include('partials.google-analytics')
+        @include('partials.skeuomorphism-ui')
 
         <style>
             body { font-family: 'Nunito', sans-serif; }
@@ -34,7 +35,7 @@
             }
         </style>
     </head>
-    <body class="wiboost-compact-ui font-sans antialiased text-slate-800 selection:bg-[#7b9eed] selection:text-white bg-wiboost-sky min-h-screen relative overflow-x-hidden">
+    <body class="wiboost-compact-ui wiboost-skeu font-sans antialiased text-slate-800 selection:bg-[#7b9eed] selection:text-white bg-wiboost-sky min-h-screen relative overflow-x-hidden">
         
         <div class="min-h-screen relative z-10 flex flex-col">
             @include('layouts.navigation')
@@ -52,6 +53,8 @@
                     {{ $slot }}
                 </div>
             </main>
+
+            @include('partials.site-footer')
         </div>
         @include('partials.page-loading')
         @include('partials.hut-ri-decoration')

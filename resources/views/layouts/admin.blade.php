@@ -40,38 +40,37 @@
         ::-webkit-scrollbar-track { background: #f0f5ff; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #bde0fe; border: 2px solid #f0f5ff; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #8faaf3; }
-        body.wiboost-admin-shell main .wiboost-table-scroll-bottom {
-            overflow-x: auto !important;
+        body.wiboost-admin-shell main :is(
+            [class*="overflow-x-auto"],
+            .table-scroll,
+            .email-table-scroll,
+            .forms-table-scroll,
+            .duration-table-scroll
+        ) {
+            scrollbar-color: #bde0fe #f0f5ff;
+            scrollbar-width: thin;
+        }
+        body.wiboost-admin-shell main .wiboost-admin-table-scroll {
+            flex: 0 1 auto !important;
             padding-bottom: 0 !important;
-            scrollbar-width: none;
         }
-        body.wiboost-admin-shell main .wiboost-table-scroll-bottom::-webkit-scrollbar {
-            display: none;
-            height: 0;
+        body.wiboost-admin-shell main .wiboost-admin-table-scroll > div:has(> table) {
+            padding-bottom: 0 !important;
         }
-        body.wiboost-admin-shell main .wiboost-table-bottom-bar {
-            display: block;
-            height: 12px;
-            margin: 0 1rem .85rem;
-            overflow: hidden;
-            position: relative;
-            background: #f0f5ff;
-            border-radius: 999px;
-            cursor: ew-resize;
-            touch-action: none;
-        }
-        body.wiboost-admin-shell main .wiboost-table-bottom-thumb {
-            position: absolute;
-            inset: 2px auto 2px 0;
-            min-width: 48px;
-            background: #bde0fe;
-            border-radius: 999px;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9);
-            transition: background .16s ease;
-            will-change: transform, width;
-        }
-        body.wiboost-admin-shell main .wiboost-table-bottom-bar:hover .wiboost-table-bottom-thumb {
-            background: #8faaf3;
+
+        /* Panel alat/list bersifat statis. Efek interaksi hanya untuk kontrol di dalamnya. */
+        body.wiboost-admin-shell main .wiboost-admin-toolbar-static,
+        body.wiboost-admin-shell main .wiboost-admin-toolbar-static:hover,
+        body.wiboost-admin-shell main .wiboost-admin-toolbar-static:active,
+        body.wiboost-admin-shell main .wiboost-admin-toolbar-static:focus-within {
+            animation: none !important;
+            transition: none !important;
+            transform: none !important;
+            filter: none !important;
+            border-color: #ffffff !important;
+            background-color: rgba(255, 255, 255, .94) !important;
+            background-image: linear-gradient(180deg, rgba(255, 255, 255, .98) 0%, rgba(238, 244, 255, .96) 100%) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .98), inset 0 -3px 7px rgba(143, 170, 243, .20), 0 16px 32px -14px rgba(90, 118, 200, .34) !important;
         }
         
         /* Hide Scrollbar khusus untuk Sidebar Navigasi agar lebih bersih */
@@ -281,8 +280,26 @@
             }
 
             body.wiboost-admin-shell.wiboost-admin-sidebar-collapsed .wiboost-admin-sidebar-footer {
+                flex-direction: column !important;
+                justify-content: center !important;
+                gap: 0.5rem !important;
                 padding-left: 0.75rem !important;
                 padding-right: 0.75rem !important;
+            }
+
+            body.wiboost-admin-shell.wiboost-admin-sidebar-collapsed .wiboost-admin-sidebar-footer form {
+                display: flex;
+                justify-content: center;
+            }
+
+            /* Footer halaman admin selebar footer user (container ikut lebar sidebar). */
+            body.wiboost-admin-shell .wiboost-admin-footer > div {
+                max-width: min(1280px, calc(100vw - 20rem)) !important;
+                transition: max-width 0.28s ease;
+            }
+
+            body.wiboost-admin-shell.wiboost-admin-sidebar-collapsed .wiboost-admin-footer > div {
+                max-width: min(1280px, calc(100vw - 7.5rem)) !important;
             }
 
             body.wiboost-admin-shell.wiboost-admin-sidebar-collapsed .wiboost-admin-sidebar-footer a,
@@ -336,7 +353,7 @@
                 max-height: none !important;
                 overflow: visible !important;
                 padding-top: 6rem !important;
-                padding-bottom: max(2rem, env(safe-area-inset-bottom)) !important;
+                padding-bottom: 0 !important;
             }
 
             body.wiboost-admin-shell main {
@@ -362,6 +379,10 @@
                 height: 100% !important;
                 min-height: 0 !important;
                 row-gap: 0.75rem !important;
+            }
+
+            body.wiboost-admin-shell .wiboost-admin-mobile-sidebar-header {
+                min-height: 4.75rem !important;
             }
 
             body.wiboost-admin-shell .wiboost-admin-mobile-sidebar-nav {
@@ -602,6 +623,7 @@
             }
         }
     </style>
+    @include('partials.skeuomorphism-ui')
 </head>
 <body
     x-data="{
@@ -614,6 +636,11 @@
                 return true;
             }
         })(),
+        persistDesktopSidebar(value) {
+            try {
+                localStorage.setItem('wiboost_admin_desktop_sidebar_open', value ? '1' : '0');
+            } catch (error) {}
+        },
         restoreSidebarScroll() {
             this.$nextTick(() => {
                 try {
@@ -665,14 +692,9 @@
             } catch (error) {}
         }
     }"
-    x-init="
-        try {
-            $watch('desktopSidebarOpen', value => localStorage.setItem('wiboost_admin_desktop_sidebar_open', value ? '1' : '0'));
-        } catch (error) {}
-        restoreSidebarScroll();
-    "
+    x-init="$watch('desktopSidebarOpen', value => persistDesktopSidebar(value)); restoreSidebarScroll()"
     :class="{ 'wiboost-admin-sidebar-collapsed': !desktopSidebarOpen }"
-    class="wiboost-compact-ui wiboost-admin-shell min-h-screen w-full max-w-full overflow-x-hidden bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white relative flex flex-col"
+    class="wiboost-compact-ui wiboost-skeu wiboost-admin-shell min-h-screen w-full max-w-full overflow-x-hidden bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white relative flex flex-col"
 >
     <script>
         try {
@@ -807,7 +829,7 @@
                 <a href="{{ route('admin.dashboard') }}" class="group flex items-center gap-3">
                     <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm transition-transform group-hover:scale-110">
                     <div class="wiboost-sidebar-brand-text min-w-0">
-                        <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></p>
+                        <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost Store</p>
                     </div>
                 </a>
             </div>
@@ -822,7 +844,7 @@
                             @foreach($group['items'] as $item)
                                 <?php $isActiveAdminNav = $adminNavMatches($item); ?>
                                 <?php $adminIconStyle = $item['icon'] === 'commission' ? 'transform: scaleX(-1); transform-origin: center;' : ''; ?>
-                                <a href="{{ route($item['route']) }}" data-admin-sidebar-link @click="saveSidebarScroll()" class="flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-black transition-all duration-300 {{ $isActiveAdminNav ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 scale-[1.02]' : 'border-2 border-transparent text-[#5a76c8] hover:border-white hover:bg-[#f4f9ff] hover:scale-[1.02]' }}">
+                                <a href="{{ route($item['route']) }}" data-admin-sidebar-link @click="saveSidebarScroll()" class="flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-black transition-all duration-300 {{ $isActiveAdminNav ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 scale-[1.02]' : 'border-2 border-white bg-[#f8fbff] text-[#5a76c8] shadow-sm hover:bg-[#e0fbfc] hover:scale-[1.02]' }}">
                                     <span class="flex h-8 w-8 items-center justify-center rounded-xl {{ $isActiveAdminNav ? 'bg-white/20 text-white' : 'bg-white text-[#5a76c8] shadow-sm' }}">
                                         <svg class="h-5 w-5" style="{{ $adminIconStyle }}" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">
                                             {!! $adminNavIconPaths[$item['icon']] ?? $adminNavIconPaths['dashboard'] !!}
@@ -837,7 +859,7 @@
             </nav>
 
             <div class="wiboost-admin-sidebar-footer flex shrink-0 items-center gap-3 border-t-4 border-dashed border-[#f4f9ff] p-4">
-                <a href="{{ route('profile.edit') }}" class="flex min-w-0 flex-1 items-center gap-3 rounded-[1.5rem] border-2 border-white bg-[#f4f9ff] px-4 py-3 text-[#2b3a67] shadow-sm transition hover:bg-[#e0fbfc]">
+                <a href="{{ route('profile.edit') }}" class="wiboost-sidebar-profile-link flex min-w-0 flex-1 items-center gap-3 rounded-[1.5rem] border-2 border-white bg-[#f4f9ff] px-4 py-3 text-[#2b3a67] shadow-sm transition hover:bg-[#e0fbfc]">
                     <span class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white ring-2 ring-white" style="border-color: {{ $adminProfileBorderColor }};">
                         <img src="{{ $adminPhotoUrl }}" onerror="this.onerror=null;this.src='{{ $adminDefaultPhotoUrl }}';" alt="Foto profil {{ $adminShortName }}" class="h-full w-full object-cover">
                     </span>
@@ -861,7 +883,7 @@
 
                 <button
                     type="button"
-                    @click="desktopSidebarOpen = !desktopSidebarOpen; try { localStorage.setItem('wiboost_admin_desktop_sidebar_open', desktopSidebarOpen ? '1' : '0') } catch (error) {}"
+                    @click="desktopSidebarOpen = !desktopSidebarOpen; persistDesktopSidebar(desktopSidebarOpen)"
                     :aria-expanded="desktopSidebarOpen.toString()"
                     aria-label="Buka tutup sidebar"
                     class="wiboost-admin-navbar-toggle h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition hover:bg-[#e0fbfc] active:scale-95"
@@ -899,16 +921,16 @@
                          x-transition:leave-start="translate-y-0 opacity-100"
                          x-transition:leave-end="translate-y-1 opacity-0"
                          class="absolute right-0 top-full z-[80] mt-3 w-max min-w-56 rounded-[1.5rem] border-4 border-white bg-white p-2 shadow-2xl shadow-[#bde0fe]/50">
-                        <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 whitespace-nowrap rounded-[1.1rem] px-4 py-3 text-sm font-black text-[#5a76c8] transition hover:bg-[#f4f9ff]">
-                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f4f9ff]">
+                        <a href="{{ route('profile.edit') }}" class="wiboost-dropdown-item flex items-center gap-3 whitespace-nowrap rounded-[1.1rem] px-4 py-3 text-sm font-black transition {{ request()->routeIs('profile.*') ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30' : 'border-2 border-white bg-[#f8fbff] text-[#5a76c8] hover:bg-[#e0fbfc]' }}">
+                            <span class="wiboost-profile-menu-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl {{ request()->routeIs('profile.*') ? 'bg-white/20 text-white' : 'bg-[#f4f9ff]' }}">
                                 <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">{!! $adminNavIconPaths['profile'] !!}</svg>
                             </span>
                             <span class="whitespace-nowrap">Profil</span>
                         </a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="flex w-full items-center gap-3 whitespace-nowrap rounded-[1.1rem] px-4 py-3 text-left text-sm font-black text-[#ff6b6b] transition hover:bg-[#fff3f3]">
-                                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#ffe5e5]">
+                            <button type="submit" class="wiboost-dropdown-item flex w-full items-center gap-3 whitespace-nowrap rounded-[1.1rem] px-4 py-3 text-left text-sm font-black text-[#ff6b6b] border-2 border-white bg-[#fff3f3] transition hover:bg-[#ffe5e5]">
+                                <span class="wiboost-profile-menu-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#ffe5e5]">
                                     <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">{!! $adminNavIconPaths['logout'] !!}</svg>
                                 </span>
                                 <span class="whitespace-nowrap">Keluar</span>
@@ -920,14 +942,14 @@
         </div>
     </div>
 
-    <div class="wiboost-admin-content flex min-h-screen min-w-0 flex-1 flex-col px-4 pb-8 sm:px-6 lg:px-8 z-10">
+    <div class="wiboost-admin-content flex min-h-screen min-w-0 flex-1 flex-col px-4 pb-0 sm:px-6 lg:px-8 z-10">
         @hasSection('admin_header_actions')
             <div class="mb-4 flex flex-col gap-2 lg:hidden">
                 @yield('admin_header_actions')
             </div>
         @endif
 
-        <main class="flex-1 min-w-0 w-full overflow-hidden">
+        <main class="flex-1 min-w-0 w-full overflow-hidden pb-16">
             @auth
                 @if(! \App\Support\WiboostInputRules::validName(auth()->user()?->name))
                     <div class="mb-6 rounded-[1.5rem] border-4 border-white bg-[#fff5eb] px-5 py-4 text-sm font-black text-amber-600 shadow-lg shadow-amber-100/60">
@@ -946,6 +968,8 @@
 
             @yield('content')
         </main>
+
+        @include('partials.site-footer', ['class' => 'wiboost-admin-footer -mx-4 sm:-mx-6 lg:-mx-8'])
     </div>
 
     <div x-cloak x-show="mobileNavOpen" class="fixed inset-0 z-[70] lg:hidden" aria-modal="true" role="dialog">
@@ -961,9 +985,9 @@
              class="wiboost-admin-mobile-menu-panel absolute inset-y-0 left-0 flex w-[min(82vw,20rem)] flex-col border-r-4 border-white bg-white/95 px-5 py-5 shadow-2xl shadow-[#2b3a67]/30 backdrop-blur-xl">
             
             <div class="wiboost-admin-mobile-sidebar-stack min-h-0 flex-1">
-                <div class="flex shrink-0 items-center gap-3 border-b-4 border-dashed border-[#d7ecff] pb-4">
+                <div class="wiboost-mobile-sidebar-header wiboost-admin-mobile-sidebar-header flex shrink-0 items-center gap-3 border-b-4 border-dashed border-[#f4f9ff] pb-4">
                     <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" loading="eager" decoding="async" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm">
-                    <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></p>
+                    <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost Store</p>
                 </div>
                 
                 <nav id="wiboost-admin-mobile-sidebar-nav" @scroll.debounce.100ms="saveSidebarScroll($event)" class="wiboost-admin-mobile-sidebar-nav hide-scroll flex min-h-0 flex-col overflow-y-auto py-4">
@@ -976,7 +1000,7 @@
                                 @foreach($group['items'] as $item)
                                     <?php $isActiveAdminNav = $adminNavMatches($item); ?>
                                     <?php $adminIconStyle = $item['icon'] === 'commission' ? 'transform: scaleX(-1); transform-origin: center;' : ''; ?>
-                                    <a href="{{ route($item['route']) }}" data-admin-sidebar-link @click="saveSidebarScroll($event)" class="flex items-center rounded-[1.5rem] border-2 {{ $isActiveAdminNav ? 'border-white bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/30' : 'border-transparent bg-[#f8fbff] text-[#5a76c8] hover:border-white hover:bg-[#e0fbfc]' }} px-5 py-3 font-black transition-all">
+                                    <a href="{{ route($item['route']) }}" data-admin-sidebar-link @click="saveSidebarScroll($event)" class="flex items-center rounded-[1.5rem] border-2 {{ $isActiveAdminNav ? 'border-white bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/30' : 'border-white bg-[#f8fbff] text-[#5a76c8] shadow-sm hover:bg-[#e0fbfc]' }} px-5 py-3 font-black transition-all">
                                         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl {{ $isActiveAdminNav ? 'bg-white/20 shadow-inner' : 'bg-white shadow-sm border border-[#f0f5ff]' }}">
                                             <svg class="h-5 w-5" style="{{ $adminIconStyle }}" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">
                                                 {!! $adminNavIconPaths[$item['icon']] ?? $adminNavIconPaths['dashboard'] !!}
@@ -990,12 +1014,12 @@
                     @endforeach
                 </nav>
 
-                <div class="wiboost-admin-mobile-sidebar-footer flex shrink-0 items-center gap-3 border-t-4 border-dashed border-[#d7ecff] pt-4">
-                    <a href="{{ route('profile.edit') }}" class="flex min-w-0 flex-1 items-center gap-3 rounded-[1.5rem] border-2 border-white bg-[#f4f9ff] px-4 py-3 text-[#2b3a67] shadow-sm transition hover:bg-[#e0fbfc]">
+                <div class="wiboost-mobile-sidebar-footer wiboost-admin-mobile-sidebar-footer flex shrink-0 items-center gap-3 border-t-4 border-dashed border-[#f4f9ff] p-4">
+                    <a href="{{ route('profile.edit') }}" class="wiboost-sidebar-profile-link flex min-w-0 flex-1 items-center gap-3 rounded-[1.5rem] border-2 border-white bg-[#f4f9ff] px-4 py-3 text-[#2b3a67] shadow-sm transition hover:bg-[#e0fbfc]">
                         <span class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white ring-2 ring-white" style="border-color: {{ $adminProfileBorderColor }};">
                             <img src="{{ $adminPhotoUrl }}" onerror="this.onerror=null;this.src='{{ $adminDefaultPhotoUrl }}';" alt="Foto profil {{ $adminShortName }}" class="h-full w-full object-cover">
                         </span>
-                        <span class="min-w-0">
+                        <span class="wiboost-sidebar-profile-text min-w-0">
                             <span class="block truncate text-sm font-black text-[#2b3a67]">{{ $adminShortName }}</span>
                             <span class="block text-[10px] font-black uppercase tracking-widest" style="color: {{ $adminProfileBorderColor }};">{{ $adminRoleLabel }}</span>
                         </span>
@@ -1298,10 +1322,8 @@
             const setAdminDropdownOptionState = (item, isSelected) => {
                 item.classList.toggle('is-selected', isSelected);
                 item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
-                item.style.setProperty('background', isSelected ? '#5a76c8' : '#ffffff', 'important');
-                item.style.setProperty('color', isSelected ? '#ffffff' : '#6f8bd8', 'important');
-                item.style.setProperty('border-color', isSelected ? '#ffffff' : '#dbe8ff', 'important');
-                item.style.setProperty('box-shadow', isSelected ? '0 7px 16px rgba(90, 118, 200, .24)' : 'none', 'important');
+                // Tampilan opsi (gradasi + relief skeu) diatur lewat stylesheet, jangan ditimpa inline.
+                ['background', 'color', 'border-color', 'box-shadow'].forEach((prop) => item.style.removeProperty(prop));
             };
             const syncAdminDropdownMenu = (menu) => {
                 menu.querySelectorAll(adminDropdownOptionSelector).forEach((item) => {
@@ -1468,144 +1490,42 @@
     </script>
     <script>
         (function () {
-            const resizeObservers = new WeakMap();
-
-	            const syncBottomBar = (scroller, bar, thumb) => {
-	                const scrollerStyle = window.getComputedStyle(scroller);
-	                const isVisible = scrollerStyle.display !== 'none'
-	                    && scroller.getClientRects().length > 0;
-
-	                const maxScroll = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
-	                const shouldShow = isVisible && maxScroll > 1;
-
-	                bar.style.display = shouldShow ? 'block' : 'none';
-	                bar.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
-	                if (!shouldShow) return;
-                const trackWidth = Math.max(1, bar.clientWidth);
-                const proportionalWidth = scroller.scrollWidth > 0
-                    ? (scroller.clientWidth / scroller.scrollWidth) * trackWidth
-                    : trackWidth;
-                const thumbWidth = maxScroll > 0
-                    ? Math.min(trackWidth, Math.max(48, proportionalWidth))
-                    : trackWidth;
-                const available = Math.max(0, trackWidth - thumbWidth);
-                const left = maxScroll > 0 ? (scroller.scrollLeft / maxScroll) * available : 0;
-
-                thumb.style.width = `${thumbWidth}px`;
-                thumb.style.transform = `translateX(${left}px)`;
-                bar.setAttribute('aria-valuemin', '0');
-                bar.setAttribute('aria-valuemax', String(Math.round(maxScroll)));
-                bar.setAttribute('aria-valuenow', String(Math.round(scroller.scrollLeft)));
-            };
-
-            const attachBottomBar = (scroller) => {
-                if (scroller.dataset.wiboostBottomScrollbar === 'true') {
-                    const existingBar = scroller.nextElementSibling;
-                    const existingThumb = existingBar?.querySelector('.wiboost-table-bottom-thumb');
-                    if (existingBar?.classList.contains('wiboost-table-bottom-bar') && existingThumb) {
-                        syncBottomBar(scroller, existingBar, existingThumb);
-                    }
-                    return;
-                }
-
-                scroller.dataset.wiboostBottomScrollbar = 'true';
-                scroller.classList.add('wiboost-table-scroll-bottom');
-
-                const bar = document.createElement('div');
-                bar.className = 'wiboost-table-bottom-bar';
-                bar.setAttribute('aria-label', 'Geser tabel secara horizontal');
-                bar.setAttribute('role', 'scrollbar');
-                bar.tabIndex = 0;
-
-                const thumb = document.createElement('div');
-                thumb.className = 'wiboost-table-bottom-thumb';
-                thumb.setAttribute('aria-hidden', 'true');
-                bar.appendChild(thumb);
-                scroller.insertAdjacentElement('afterend', bar);
-
-                scroller.addEventListener('scroll', () => {
-                    syncBottomBar(scroller, bar, thumb);
-                }, { passive: true });
-
-                let activePointer = null;
-                let pointerOffset = 0;
-                const moveFromPointer = (clientX) => {
-                    const rect = bar.getBoundingClientRect();
-                    const maxScroll = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
-                    const available = Math.max(0, rect.width - thumb.offsetWidth);
-                    const left = Math.min(available, Math.max(0, clientX - rect.left - pointerOffset));
-                    scroller.scrollLeft = available > 0 ? (left / available) * maxScroll : 0;
-                };
-
-                bar.addEventListener('pointerdown', (event) => {
-                    activePointer = event.pointerId;
-                    const thumbRect = thumb.getBoundingClientRect();
-                    pointerOffset = event.target === thumb
-                        ? event.clientX - thumbRect.left
-                        : thumbRect.width / 2;
-                    bar.setPointerCapture?.(event.pointerId);
-                    moveFromPointer(event.clientX);
-                    event.preventDefault();
-                });
-                bar.addEventListener('pointermove', (event) => {
-                    if (event.pointerId !== activePointer) return;
-                    moveFromPointer(event.clientX);
-                });
-                const stopPointer = (event) => {
-                    if (event.pointerId !== activePointer) return;
-                    activePointer = null;
-                    bar.releasePointerCapture?.(event.pointerId);
-                };
-                bar.addEventListener('pointerup', stopPointer);
-                bar.addEventListener('pointercancel', stopPointer);
-                bar.addEventListener('wheel', (event) => {
-                    scroller.scrollLeft += event.deltaX || event.deltaY;
-                    event.preventDefault();
-                }, { passive: false });
-                bar.addEventListener('keydown', (event) => {
-                    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-                    const step = Math.max(80, scroller.clientWidth * .2);
-                    if (event.key === 'ArrowLeft') scroller.scrollLeft -= step;
-                    if (event.key === 'ArrowRight') scroller.scrollLeft += step;
-                    if (event.key === 'Home') scroller.scrollLeft = 0;
-                    if (event.key === 'End') scroller.scrollLeft = scroller.scrollWidth;
-                    event.preventDefault();
-                });
-
-                syncBottomBar(scroller, bar, thumb);
-                if (window.ResizeObserver) {
-                    const observer = new ResizeObserver(() => syncBottomBar(scroller, bar, thumb));
-                    observer.observe(scroller);
-                    const table = scroller.querySelector('table');
-                    if (table) observer.observe(table);
-                    resizeObservers.set(scroller, observer);
-                }
-            };
-
-            const markTableScrollers = (root = document) => {
+            const markTableFooters = (root = document) => {
                 root.querySelectorAll?.('main table').forEach((table) => {
-                    let wrapper = table.parentElement;
-                    while (wrapper && wrapper.tagName !== 'MAIN') {
-                        const style = window.getComputedStyle(wrapper);
-                        const canScroll = ['auto', 'scroll'].includes(style.overflowX)
-                            || wrapper.classList.contains('table-scroll')
-                            || wrapper.classList.contains('email-table-scroll')
-                            || wrapper.classList.contains('forms-table-scroll')
-                            || wrapper.classList.contains('duration-table-scroll');
-                        if (canScroll) {
-                            attachBottomBar(wrapper);
-                            break;
-                        }
-                        wrapper = wrapper.parentElement;
+                    const scroller = table.closest('[class~="overflow-x-auto"], .table-scroll, .email-table-scroll, .forms-table-scroll, .duration-table-scroll, [data-warehouse-table-scroll], [data-admin-table-scroll]');
+                    scroller?.classList.add('wiboost-admin-table-scroll');
+                });
+
+                root.querySelectorAll?.('main .wiboost-pagination-wrap').forEach((pagination) => {
+                    const footer = pagination.parentElement;
+                    if (footer instanceof HTMLElement) {
+                        footer.classList.add('wiboost-table-pagination-footer');
                     }
                 });
             };
 
-            document.addEventListener('DOMContentLoaded', () => markTableScrollers());
-            document.addEventListener('wiboost:content-ready', () => markTableScrollers());
-            window.addEventListener('load', () => markTableScrollers(), { once: true });
-            window.addEventListener('resize', () => markTableScrollers(), { passive: true });
-            markTableScrollers();
+            const markStaticToolbars = (root = document) => {
+                root.querySelectorAll?.('main input[name="search"]:not([type="hidden"])').forEach((input) => {
+                    const form = input.closest('form');
+                    if (!form) return;
+
+                    const panel = form.matches('[class*="rounded-"]')
+                        ? form
+                        : form.parentElement?.closest('div[class*="rounded-"], section[class*="rounded-"], article[class*="rounded-"]');
+
+                    panel?.classList.add('wiboost-admin-toolbar-static');
+                });
+            };
+
+            const markSharedSurfaces = (root = document) => {
+                markTableFooters(root);
+                markStaticToolbars(root);
+            };
+
+            document.addEventListener('DOMContentLoaded', () => markSharedSurfaces());
+            document.addEventListener('wiboost:content-ready', (event) => markSharedSurfaces(event.target || document));
+            window.addEventListener('load', () => markSharedSurfaces(), { once: true });
+            markSharedSurfaces();
         })();
     </script>
     <style id="wiboost-dropdown-option-contrast">
@@ -1615,10 +1535,10 @@
         body.wiboost-admin-shell .admin-promo-theme-select-menu .admin-promo-theme-select-option:not(.is-selected):not([aria-selected="true"]),
         body.wiboost-admin-shell .admin-user-role-select-menu .admin-user-role-select-option:not(.is-selected):not([aria-selected="true"]),
         body.wiboost-admin-shell .wiboost-answer-type-menu .wiboost-answer-type-option:not(.is-selected):not([aria-selected="true"]) {
-            border-color: #dbe8ff !important;
-            background: #ffffff !important;
+            border-color: #ffffff !important;
+            background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%) !important;
             color: #6f8bd8 !important;
-            box-shadow: none !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .98), inset 0 -2px 4px rgba(143, 170, 243, .20), 0 5px 12px -6px rgba(90, 118, 200, .30) !important;
             transform: none !important;
         }
 
@@ -1629,8 +1549,9 @@
         body.wiboost-admin-shell .admin-user-role-select-menu .admin-user-role-select-option:not(.is-selected):not([aria-selected="true"]):hover,
         body.wiboost-admin-shell .wiboost-answer-type-menu .wiboost-answer-type-option:not(.is-selected):not([aria-selected="true"]):hover {
             border-color: #bde0fe !important;
-            background: #e0fbfc !important;
+            background: linear-gradient(180deg, #f8ffff 0%, #d4f7f4 100%) !important;
             color: #4760a9 !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .98), inset 0 -2px 4px rgba(75, 198, 185, .22), 0 7px 14px -6px rgba(59, 163, 152, .32) !important;
         }
 
         body.wiboost-admin-shell .admin-theme-select-menu .admin-theme-select-option.is-selected,
@@ -1646,9 +1567,9 @@
         body.wiboost-admin-shell .wiboost-answer-type-menu .wiboost-answer-type-option.is-selected,
         body.wiboost-admin-shell .wiboost-answer-type-menu .wiboost-answer-type-option[aria-selected="true"] {
             border-color: #ffffff !important;
-            background: #5a76c8 !important;
+            background: linear-gradient(180deg, #7b9eed 0%, #5a76c8 52%, #4760a9 100%) !important;
             color: #ffffff !important;
-            box-shadow: 0 7px 16px rgba(90, 118, 200, .24) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .58), inset 0 -4px 7px rgba(43, 58, 103, .42), 0 8px 18px rgba(43, 58, 103, .30) !important;
             transform: none !important;
         }
     </style>

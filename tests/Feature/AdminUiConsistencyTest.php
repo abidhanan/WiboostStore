@@ -9,6 +9,39 @@ use Tests\TestCase;
 
 class AdminUiConsistencyTest extends TestCase
 {
+    public function test_admin_search_toolbars_are_static_skeu_surfaces(): void
+    {
+        $layout = file_get_contents(resource_path('views/layouts/admin.blade.php'));
+        $reports = file_get_contents(resource_path('views/admin/reports/index.blade.php'));
+
+        $this->assertStringContainsString('.wiboost-admin-toolbar-static:focus-within', $layout);
+        $this->assertStringContainsString('animation: none !important;', $layout);
+        $this->assertStringContainsString('input[name="search"]:not([type="hidden"])', $layout);
+        $this->assertStringContainsString("panel?.classList.add('wiboost-admin-toolbar-static')", $layout);
+        $this->assertStringContainsString('wiboost-admin-toolbar-static relative z-10', $reports);
+        $this->assertStringNotContainsString('transition-transform duration-300 hover:border-[#bde0fe]', $reports);
+    }
+
+    public function test_details_pagination_and_sidebars_keep_their_connected_surfaces(): void
+    {
+        $detailAssets = file_get_contents(resource_path('views/admin/partials/detail-modal-assets.blade.php'));
+        $skeu = file_get_contents(resource_path('views/partials/skeuomorphism-ui.blade.php'));
+        $pagination = file_get_contents(resource_path('views/vendor/pagination/tailwind.blade.php'));
+
+        $this->assertStringContainsString('overflow: hidden !important;', $detailAssets);
+        $this->assertStringContainsString('padding: 0 !important;', $detailAssets);
+        $this->assertStringContainsString('border-radius: 1.75rem !important;', $detailAssets);
+        $this->assertStringContainsString('border-bottom: 2px solid #ffffff !important;', $detailAssets);
+        $this->assertStringNotContainsString('Pagination berdiri sendiri tanpa panel/footer besar', $skeu);
+        $this->assertStringNotContainsString('Sidebar: shell hanya struktur', $skeu);
+        $this->assertStringContainsString('Detail admin tetap satu kartu', $skeu);
+        $this->assertStringContainsString('.admin-detail-modal.admin-detail-modal > .admin-detail-card.admin-detail-card > .admin-detail-header', $skeu);
+        $this->assertStringNotContainsString('Detail user: header, isi, dan footer tidak lagi disatukan', $skeu);
+        $this->assertStringNotContainsString('background: transparent;', $pagination);
+        $this->assertStringNotContainsString('box-shadow: none;', $pagination);
+    }
+
+
     public function test_every_admin_paginator_uses_the_shared_transaction_pagination_view(): void
     {
         $pagination = file_get_contents(resource_path('views/vendor/pagination/tailwind.blade.php'));
@@ -151,19 +184,24 @@ class AdminUiConsistencyTest extends TestCase
         $this->assertStringContainsString('>Role</p>', $users);
         $this->assertStringContainsString('>Role</label>', $userEdit);
         $this->assertStringContainsString("'9' => 'Sales'", $roleSelect);
-        $this->assertStringContainsString('.wiboost-table-scroll-bottom', $adminLayout);
-        $this->assertStringContainsString('.wiboost-table-bottom-bar', $adminLayout);
-        $this->assertStringContainsString('attachBottomBar(wrapper)', $adminLayout);
-        $this->assertStringContainsString('const shouldShow = isVisible && maxScroll > 1;', $adminLayout);
-        $this->assertStringContainsString("bar.style.display = shouldShow ? 'block' : 'none'", $adminLayout);
+        $this->assertStringContainsString('scrollbar-color: #bde0fe #f0f5ff;', $adminLayout);
+        $this->assertStringNotContainsString('.wiboost-table-bottom-bar', $adminLayout);
+        $this->assertStringNotContainsString('.wiboost-table-scroll-footer', $adminLayout);
+        $this->assertStringContainsString("footer.classList.add('wiboost-table-pagination-footer')", $adminLayout);
+        $this->assertStringContainsString('const markTableFooters = (root = document)', $adminLayout);
+        $this->assertStringContainsString("scroller?.classList.add('wiboost-admin-table-scroll')", $adminLayout);
+        $this->assertStringContainsString('.wiboost-admin-table-scroll > div:has(> table)', $adminLayout);
         $this->assertStringContainsString('body.wiboost-admin-shell .admin-theme-select-option.is-selected', $adminLayout);
         $this->assertStringContainsString('body.wiboost-admin-shell .admin-theme-select-option:not(.is-selected)', $adminLayout);
         $this->assertMatchesRegularExpression('/admin-theme-select-option\.is-selected\s*\{[^}]*background:\s*#5a76c8;[^}]*color:\s*#ffffff;/s', $adminLayout);
         $this->assertStringContainsString("item.setAttribute('aria-selected', isSelected ? 'true' : 'false')", $adminLayout);
         $this->assertStringContainsString('id="wiboost-dropdown-option-contrast"', $adminLayout);
-        $this->assertStringContainsString('background: #ffffff !important;', $adminLayout);
+        $this->assertStringContainsString('background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%) !important;', $adminLayout);
         $this->assertStringContainsString("const selectedValue = String(input.value ?? '')", $adminLayout);
         $this->assertStringContainsString('.admin-theme-select-option[aria-selected="true"]', $adminLayout);
+        $this->assertSame(1, substr_count($adminLayout, "action=\"{{ route('logout') }}\""));
+        $this->assertStringNotContainsString('wiboost-sidebar-logout-link', $adminLayout);
+        $this->assertGreaterThanOrEqual(7, substr_count($dashboard, 'data-dashboard-summary-full'));
         $this->assertSame(9, User::ROLE_SALES);
         $this->assertContains(User::ROLE_SALES, User::ADMIN_ROLE_IDS);
 
@@ -172,12 +210,25 @@ class AdminUiConsistencyTest extends TestCase
         $this->assertStringContainsString("document.addEventListener('pointerdown'", $detailAssets);
         $this->assertStringContainsString("new CustomEvent('admin-detail-closed'", $detailAssets);
         $this->assertStringContainsString('[data-admin-fit-link]', $detailAssets);
+        $this->assertStringContainsString('inset: 0 !important;', $detailAssets);
+        $this->assertStringContainsString('width: 100vw !important;', $detailAssets);
+        $this->assertStringContainsString('height: auto !important;', $detailAssets);
+        $this->assertStringContainsString('max-height: calc(100dvh - 2rem) !important;', $detailAssets);
+        $this->assertStringNotContainsString('window.visualViewport', $detailAssets);
+        $this->assertStringContainsString('clip-path: inset(0);', $detailAssets);
+        $this->assertStringNotContainsString('--admin-detail-sidebar-offset', $detailAssets);
+        $this->assertStringNotContainsString('navbarRect', $detailAssets);
+
+        $skeu = file_get_contents(resource_path('views/partials/skeuomorphism-ui.blade.php'));
+        $this->assertStringContainsString('Kartu/kontainer adalah permukaan statis', $skeu);
+        $this->assertStringContainsString('Detail admin tetap satu kartu', $skeu);
 
         $products = file_get_contents(resource_path('views/admin/products/index.blade.php'));
         $forms = file_get_contents(resource_path('views/admin/forms/index.blade.php'));
         $formShow = file_get_contents(resource_path('views/admin/forms/show.blade.php'));
         $logs = file_get_contents(resource_path('views/admin/logs/index.blade.php'));
         $warehouse = file_get_contents(resource_path('views/admin/credentials/index.blade.php'));
+        $transactionController = file_get_contents(app_path('Http/Controllers/Admin/TransactionController.php'));
 
         $this->assertStringContainsString('>Hapus Produk</button>', $products);
         $this->assertStringContainsString('>Penyedia</th>', $products);
@@ -197,10 +248,14 @@ class AdminUiConsistencyTest extends TestCase
         $this->assertStringContainsString('Batal Edit', $warehouse);
         $this->assertStringNotContainsString('title="Batal Edit"', $warehouse);
         $this->assertStringNotContainsString('inline-edit-form', $warehouse);
+        $this->assertStringNotContainsString('@forelse($credentials as $cred)', $warehouse);
+        $this->assertStringContainsString('@if($credentials->isEmpty())', $warehouse);
+        $this->assertStringContainsString('@foreach($credentials as $cred)', $warehouse);
         $this->assertStringContainsString('lg:sticky lg:top-6', $warehouse);
         $this->assertStringNotContainsString('$cred->otp_admin_name', $warehouse);
         $this->assertStringContainsString('setAdminDropdownOptionState', $adminLayout);
-        $this->assertStringContainsString("item.style.setProperty('background', isSelected ? '#5a76c8' : '#ffffff', 'important')", $adminLayout);
+        $this->assertStringNotContainsString("item.style.setProperty('background', isSelected ? '#5a76c8' : '#ffffff', 'important')", $adminLayout);
+        $this->assertStringContainsString("['background', 'color', 'border-color', 'box-shadow'].forEach((prop) => item.style.removeProperty(prop))", $adminLayout);
         $this->assertStringContainsString('data-input-name="month"', $logs);
         $this->assertStringContainsString('data-input-name="year"', $logs);
         $this->assertStringContainsString("route('admin.logs.export_excel'", $logs);
@@ -211,6 +266,15 @@ class AdminUiConsistencyTest extends TestCase
         $this->assertStringContainsString('overflow-x-auto whitespace-nowrap text-sm font-black', $forms);
         $this->assertStringContainsString("\$form->benefit_enabled ? 'Ada' : 'Tidak Ada'", $forms);
         $this->assertStringContainsString('admin-detail-link-no-scrollbar', $forms);
+        $this->assertStringContainsString('data-admin-table-card', $forms);
+        $this->assertStringContainsString('data-admin-table-scroll', $forms);
+        $this->assertStringContainsString('wiboost-table-pagination-footer', $forms);
+        $this->assertStringNotContainsString('window.visualViewport', $transactions);
+        $this->assertStringContainsString('window.openAdminUniversalDetail?.(id)', $transactions);
+        $this->assertStringContainsString('providerStatusRefreshMessage', $transactionController);
+        $this->assertStringNotContainsString("Artisan::call('wiboost:check-provider-orders'", $transactionController);
+        $this->assertStringNotContainsString('app()->terminating(', $transactionController);
+        $this->assertStringNotContainsString('await fetch(refreshUrl', $transactions);
         $this->assertStringContainsString("['No', 'Invoice', 'Waktu Transaksi', 'Nama Pelanggan', 'Email', 'Produk', 'Harga', 'Target', 'Metode', 'Bukti Masuk', 'Status']", file_get_contents(app_path('Http/Controllers/Admin/TransactionController.php')));
         $this->assertStringContainsString("['Operasional', 'Permintaan OTP'", file_get_contents(app_path('Http/Controllers/Admin/DashboardController.php')));
     }

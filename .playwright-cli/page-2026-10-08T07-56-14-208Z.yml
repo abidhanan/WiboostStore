@@ -1,0 +1,87 @@
+- generic [active] [ref=f4e1]:
+  - generic [ref=f4e3]:
+    - button "Buka menu" [ref=f4e4] [cursor=pointer]
+    - generic [ref=f4e7]:
+      - heading "Manajemen Komisi" [level=1] [ref=f4e8]
+      - paragraph [ref=f4e9]: Pantau komisi masuk reseller.
+    - button "Menu profil admin" [ref=f4e11] [cursor=pointer]:
+      - img "Foto profil Preview Admin" [ref=f4e12]
+  - generic [ref=f4e13]:
+    - main [ref=f4e14]:
+      - generic [ref=f4e15]:
+        - generic [ref=f4e18]:
+          - generic [ref=f4e19]:
+            - generic [ref=f4e20]:
+              - textbox "Cari Komisi" [ref=f4e21]
+              - button "Cari Komisi" [ref=f4e22] [cursor=pointer]
+            - link "Segarkan" [ref=f4e26] [cursor=pointer]:
+              - /url: http://127.0.0.1:8014/admin/commissions?month=10&year=2026
+          - generic [ref=f4e31]:
+            - generic [ref=f4e32]:
+              - button "Oktober ⌄" [ref=f4e34] [cursor=pointer]:
+                - generic [ref=f4e35]: Oktober
+                - generic [ref=f4e36]: ⌄
+              - button "2026 ⌄" [ref=f4e38] [cursor=pointer]:
+                - generic [ref=f4e39]: "2026"
+                - generic [ref=f4e40]: ⌄
+            - link "Cetak Laporan" [ref=f4e41] [cursor=pointer]:
+              - /url: http://127.0.0.1:8014/admin/commissions/export?month=10&year=2026
+        - generic [ref=f4e46]:
+          - link "Semua" [ref=f4e47] [cursor=pointer]:
+            - /url: http://127.0.0.1:8014/admin/commissions?month=10&year=2026
+          - link "Suntik Sosmed" [ref=f4e48] [cursor=pointer]:
+            - /url: http://127.0.0.1:8014/admin/commissions?month=10&year=2026&commission_filter=suntik-sosmed
+          - link "Top Up Game" [ref=f4e49] [cursor=pointer]:
+            - /url: http://127.0.0.1:8014/admin/commissions?month=10&year=2026&commission_filter=top-up-game
+          - link "Paket Data" [ref=f4e50] [cursor=pointer]:
+            - /url: http://127.0.0.1:8014/admin/commissions?month=10&year=2026&commission_filter=paket-data
+          - link "Aplikasi Premium" [ref=f4e51] [cursor=pointer]:
+            - /url: http://127.0.0.1:8014/admin/commissions?month=10&year=2026&commission_filter=aplikasi-premium
+        - table [ref=f4e55]:
+          - rowgroup [ref=f4e56]:
+            - row [ref=f4e57]:
+              - columnheader "Invoice" [ref=f4e58]
+              - columnheader "Waktu" [ref=f4e59]
+              - columnheader "Reseller" [ref=f4e60]
+              - columnheader "Email" [ref=f4e61]
+              - columnheader "Produk" [ref=f4e62]
+              - columnheader "Kategori" [ref=f4e63]
+              - columnheader "Harga" [ref=f4e64]
+              - columnheader "Komisi" [ref=f4e65]
+              - columnheader "Status" [ref=f4e66]
+          - rowgroup [ref=f4e67]:
+            - row [ref=f4e68]:
+              - cell [ref=f4e69]:
+                - paragraph [ref=f4e74]: Belum ada komisi masuk.
+    - contentinfo [ref=f4e75]:
+      - generic [ref=f4e76]:
+        - generic [ref=f4e77]:
+          - generic [ref=f4e78]:
+            - generic [ref=f4e79]:
+              - img "Logo Wiboost Store" [ref=f4e80]
+              - generic [ref=f4e81]: Wiboost Store
+            - paragraph [ref=f4e82]: Platform penyedia layanan suntik sosmed, top up game, paket data operator, dan aplikasi premium dengan proses cepat, aman, dan praktis.
+          - generic [ref=f4e83]:
+            - paragraph [ref=f4e84]: Ikuti Kami
+            - generic [ref=f4e85]:
+              - link "Instagram Wiboost Store" [ref=f4e86] [cursor=pointer]:
+                - /url: https://www.instagram.com/wiboost.store?igsh=MXJzdWM3ZzBjdnNnZQ==
+              - link "TikTok Wiboost Store" [ref=f4e89] [cursor=pointer]:
+                - /url: https://www.tiktok.com/@wiboostore?_r=1&_t=ZS-98IS1s3zWa7
+              - link "YouTube Wiboost Store" [ref=f4e92] [cursor=pointer]:
+                - /url: https://youtube.com/@wiboostore?si=rDBRNJjvs5HSZYwC
+        - generic [ref=f4e95]:
+          - generic [ref=f4e96]:
+            - link "Syarat & Ketentuan" [ref=f4e97] [cursor=pointer]:
+              - /url: http://127.0.0.1:8014/legal/terms
+            - link "Privasi" [ref=f4e98] [cursor=pointer]:
+              - /url: http://127.0.0.1:8014/legal/privacy-policy
+            - link "Refund" [ref=f4e99] [cursor=pointer]:
+              - /url: http://127.0.0.1:8014/legal/refund-policy
+            - link "Kontak Admin" [ref=f4e100] [cursor=pointer]:
+              - /url: http://127.0.0.1:8014/legal/contact
+          - paragraph [ref=f4e101]:
+            - text: © 2026 Wiboost Store - Dibuat oleh
+            - link "Abid Hanan Wicaksono" [ref=f4e102] [cursor=pointer]:
+              - /url: https://www.abidhanan.my.id/
+            - text: .

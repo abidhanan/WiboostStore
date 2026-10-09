@@ -140,7 +140,7 @@
                     </button>
                     <div x-cloak x-show="payoutOpen" x-transition class="absolute left-0 right-0 top-full z-[90] mt-2 overflow-visible rounded-[1.5rem] border-4 border-white bg-white p-2 shadow-2xl shadow-[#8faaf3]/30">
                         <template x-for="method in methods" :key="method">
-                            <button type="button" @click="payoutMethod = method; payoutOpen = false" class="block w-full rounded-[1rem] px-4 py-3 text-left text-sm font-black text-[#2b3a67] transition hover:bg-[#e0fbfc]">
+                            <button type="button" @click="payoutMethod = method; payoutOpen = false" class="wiboost-dropdown-item block w-full rounded-[1rem] border-2 border-white bg-[#f8fbff] px-4 py-3 text-left text-sm font-black text-[#2b3a67] transition hover:bg-[#e0fbfc]">
                                 <span x-text="method"></span>
                             </button>
                         </template>
@@ -222,7 +222,7 @@
                     @csrf
                     @method('PATCH')
 
-                    <div class="relative z-30" @click.outside="payoutOpen = false">
+                    <div class="relative z-30 min-w-0" @click.outside="payoutOpen = false">
                         <label class="block text-sm font-black text-[#5a76c8]">Metode</label>
                         <input type="hidden" name="reseller_payout_method" :value="payoutMethod">
                         <button type="button" @click="payoutOpen = !payoutOpen" class="mt-2 flex w-full items-center justify-between rounded-[1.5rem] border-4 border-white bg-white px-4 py-3 text-left text-sm font-black text-[#2b3a67] shadow-inner outline-none ring-2 ring-transparent transition focus:ring-[#bde0fe]">
@@ -233,19 +233,19 @@
                         </button>
                         <div x-cloak x-show="payoutOpen" x-transition class="absolute left-0 right-0 top-full z-[100] mt-2 rounded-[1.25rem] border-4 border-white bg-white p-2 shadow-2xl shadow-[#8faaf3]/30">
                             <template x-for="method in methods" :key="method">
-                                <button type="button" @click="payoutMethod = method; payoutOpen = false" class="block w-full rounded-[1rem] px-4 py-3 text-left text-sm font-black text-[#2b3a67] transition hover:bg-[#e0fbfc]">
+                                <button type="button" @click="payoutMethod = method; payoutOpen = false" class="wiboost-dropdown-item block w-full rounded-[1rem] border-2 border-white bg-[#f8fbff] px-4 py-3 text-left text-sm font-black text-[#2b3a67] transition hover:bg-[#e0fbfc]">
                                     <span x-text="method"></span>
                                 </button>
                             </template>
                         </div>
                     </div>
 
-                    <div>
+                    <div class="min-w-0">
                         <label class="block text-sm font-black text-[#5a76c8]">Nomor E-wallet</label>
                         <input name="reseller_payout_account" x-model="payoutAccount" inputmode="numeric" pattern="[0-9]*" data-wiboost-number-only class="mt-2 w-full rounded-[1.5rem] border-4 border-white bg-white px-4 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]" required>
                     </div>
 
-                    <div>
+                    <div class="min-w-0">
                         <label class="block text-sm font-black text-[#5a76c8]">Nama Pemilik</label>
                         <input name="reseller_payout_name" x-model="payoutName" data-wiboost-name-only class="mt-2 w-full rounded-[1.5rem] border-4 border-white bg-white px-4 py-3 text-sm font-black text-[#2b3a67] shadow-inner outline-none transition focus:border-[#bde0fe]" required>
                     </div>

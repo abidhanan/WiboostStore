@@ -1,0 +1,65 @@
+- generic [ref=e2]:
+  - navigation:
+    - generic [ref=e3]:
+      - link [ref=e4] [cursor=pointer]:
+        - /url: http://127.0.0.1:8016
+        - img "Logo Wiboost Store" [ref=e5]
+        - paragraph [ref=e6]: Wiboost Store
+      - generic [ref=e7]:
+        - link "Daftar" [ref=e8] [cursor=pointer]:
+          - /url: http://127.0.0.1:8016/register
+        - link "Masuk" [ref=e9] [cursor=pointer]:
+          - /url: http://127.0.0.1:8016/login
+  - main [ref=e11]:
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - heading "Kuisioner Feedback" [level=1] [ref=e15]
+        - paragraph [ref=e16]: Halo pelanggan Wiboost Store! Tolong isi kuisioner feedback berikut ya! Terima kasih!
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - generic [ref=e19]: Nama Lengkap *
+          - paragraph [ref=e20]: Tulis nama asli dengan lengkap
+          - textbox [ref=e21]
+        - generic [ref=e22]:
+          - generic [ref=e23]: Email Google *
+          - paragraph [ref=e24]: Email yang akan digunakan untuk menerima benefit
+          - textbox [ref=e25]
+        - generic [ref=e26]:
+          - generic [ref=e27]: Pengalaman Kamu
+          - paragraph [ref=e28]: Ceritakan pengalaman menggunakan layanan Wiboost Store
+          - textbox [ref=e29]
+        - button "Kirim Formulir" [ref=e30] [cursor=pointer]
+  - contentinfo [ref=e31]:
+    - generic [ref=e32]:
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - generic [ref=e35]:
+            - img "Logo Wiboost Store" [ref=e36]
+            - generic [ref=e37]: Wiboost Store
+          - paragraph [ref=e38]:
+            - generic [ref=e39]: Platform penyedia layanan suntik sosmed, top up game,
+            - generic [ref=e40]: paket data operator, dan aplikasi premium dengan proses cepat, aman, dan praktis.
+        - generic [ref=e41]:
+          - paragraph [ref=e42]: Ikuti Kami
+          - generic [ref=e43]:
+            - link "Instagram Wiboost Store" [ref=e44] [cursor=pointer]:
+              - /url: https://www.instagram.com/wiboost.store?igsh=MXJzdWM3ZzBjdnNnZQ==
+            - link "TikTok Wiboost Store" [ref=e47] [cursor=pointer]:
+              - /url: https://www.tiktok.com/@wiboostore?_r=1&_t=ZS-98IS1s3zWa7
+            - link "YouTube Wiboost Store" [ref=e50] [cursor=pointer]:
+              - /url: https://youtube.com/@wiboostore?si=rDBRNJjvs5HSZYwC
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - link "Syarat & Ketentuan" [ref=e55] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016/legal/terms
+          - link "Privasi" [ref=e56] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016/legal/privacy-policy
+          - link "Refund" [ref=e57] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016/legal/refund-policy
+          - link "Kontak Admin" [ref=e58] [cursor=pointer]:
+            - /url: http://127.0.0.1:8016/legal/contact
+        - paragraph [ref=e59]:
+          - text: © 2026 Wiboost Store - Dibuat oleh
+          - link "Abid Hanan Wicaksono" [ref=e60] [cursor=pointer]:
+            - /url: https://www.abidhanan.my.id/
+          - text: .

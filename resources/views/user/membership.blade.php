@@ -50,6 +50,23 @@
         animation-play-state: paused;
     }
 
+    .membership-panel {
+        background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .98), inset 0 -4px 8px rgba(139, 92, 246, .12), 0 18px 34px -12px rgba(90, 118, 200, .34);
+    }
+
+    .membership-panel-header {
+        background: linear-gradient(180deg, #ffffff 0%, #e9e5ff 100%);
+        border-bottom: 4px solid #ffffff;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .98), inset 0 -3px 6px rgba(139, 92, 246, .16), 0 8px 16px -12px rgba(90, 118, 200, .38);
+    }
+
+    .membership-benefit-item {
+        border: 4px solid #ffffff;
+        background: linear-gradient(180deg, #ffffff 0%, #e9f1ff 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .98), inset 0 -3px 6px rgba(143, 170, 243, .24), 0 8px 18px -10px rgba(90, 118, 200, .34);
+    }
+
     @keyframes membershipPriceTicker {
         from { transform: translateX(0); }
         to { transform: translateX(-50%); }
@@ -118,12 +135,16 @@
             </div>
         @endif
 
-        <div class="rounded-[2rem] border-4 border-white bg-[#f8fbff] p-6 shadow-xl shadow-[#bde0fe]/20 sm:p-8">
-            <p class="text-sm font-black uppercase tracking-[0.2em]" style="color: #8b5cf6;">Durasi Membership</p>
-            <h2 class="mt-3 text-3xl font-black text-[#2b3a67]" data-membership-countdown data-expires-at="{{ $membershipExpiresAtTimestamp }}">{{ $remainingDays }} hari {{ $remainingHours }} jam {{ $remainingMinutes }} menit {{ $remainingSeconds }} detik</h2>
-            <p class="mt-3 text-sm font-bold leading-relaxed text-[#5a76c8]">
-                Aktif sampai {{ $membershipExpiresAt?->translatedFormat('d F Y H:i') ?? '-' }}.
-            </p>
+        <div class="membership-panel overflow-hidden rounded-[2rem] border-4 border-white">
+            <div class="membership-panel-header px-6 py-4 sm:px-8 sm:py-5">
+                <p class="text-sm font-black uppercase tracking-[0.2em]" style="color: #8b5cf6;">Durasi Membership</p>
+            </div>
+            <div class="p-6 sm:p-8">
+                <h2 class="text-3xl font-black text-[#2b3a67]" data-membership-countdown data-expires-at="{{ $membershipExpiresAtTimestamp }}">{{ $remainingDays }} hari {{ $remainingHours }} jam {{ $remainingMinutes }} menit {{ $remainingSeconds }} detik</h2>
+                <p class="mt-3 text-sm font-bold leading-relaxed text-[#5a76c8]">
+                    Aktif sampai {{ $membershipExpiresAt?->translatedFormat('d F Y H:i') ?? '-' }}.
+                </p>
+            </div>
         </div>
     @else
         <header class="relative mb-8 flex flex-col items-start gap-6 overflow-hidden rounded-[2.5rem] border-4 border-white p-8 shadow-xl md:p-10" style="background: linear-gradient(135deg, #ddd6fe 0%, #ede9fe 48%, #fff7ff 100%); box-shadow: 0 18px 35px rgba(139, 92, 246, 0.24);">
@@ -162,20 +183,26 @@
             </div>
         @endif
 
-        <div class="rounded-[2rem] border-4 border-white bg-[#f8fbff] p-6 shadow-xl shadow-[#bde0fe]/20 sm:p-8">
-            <p class="text-sm font-black uppercase tracking-[0.2em]" style="color: #8b5cf6;">Biaya Membership</p>
-            <p class="mt-3 text-lg font-black text-[#8faaf3]" style="text-decoration: line-through;">Rp 50.000</p>
-            <h2 class="mt-1 text-3xl font-black text-[#2b3a67]">Rp {{ number_format($membershipPrice, 0, ',', '.') }} / bulan.</h2>
+        <div class="membership-panel overflow-hidden rounded-[2rem] border-4 border-white">
+            <div class="membership-panel-header px-6 py-4 sm:px-8 sm:py-5">
+                <p class="text-sm font-black uppercase tracking-[0.2em]" style="color: #8b5cf6;">Biaya Membership</p>
+            </div>
+            <div class="p-6 sm:p-8">
+                <p class="text-lg font-black text-[#8faaf3]" style="text-decoration: line-through;">Rp 50.000</p>
+                <h2 class="mt-1 text-3xl font-black text-[#2b3a67]">Rp {{ number_format($membershipPrice, 0, ',', '.') }} / bulan.</h2>
+            </div>
         </div>
     @endif
 
     <div class="grid gap-6">
-        <div class="rounded-[2rem] border-4 border-white bg-white p-6 shadow-xl shadow-[#bde0fe]/20 sm:p-8">
-            <p class="text-sm font-black uppercase tracking-[0.2em]" style="color: #8b5cf6;">Benefit</p>
-            <div class="mt-5 grid gap-3 text-sm font-bold text-[#5a76c8]">
-                <p class="rounded-[1.25rem] bg-[#f4f9ff] px-5 py-4">Banyak potongan harga.</p>
-                <p class="rounded-[1.25rem] bg-[#f4f9ff] px-5 py-4">Harga produk dan layanan jauh lebih murah.</p>
-                <p class="rounded-[1.25rem] bg-[#f4f9ff] px-5 py-4">Bebas biaya admin untuk semua transaksi.</p>
+        <div class="membership-panel overflow-hidden rounded-[2rem] border-4 border-white">
+            <div class="membership-panel-header px-6 py-4 sm:px-8 sm:py-5">
+                <p class="text-sm font-black uppercase tracking-[0.2em]" style="color: #8b5cf6;">Benefit</p>
+            </div>
+            <div class="grid gap-3 p-6 text-sm font-bold text-[#5a76c8] sm:p-8">
+                <p class="membership-benefit-item rounded-[1.25rem] px-5 py-4">Banyak potongan harga.</p>
+                <p class="membership-benefit-item rounded-[1.25rem] px-5 py-4">Harga produk dan layanan jauh lebih murah.</p>
+                <p class="membership-benefit-item rounded-[1.25rem] px-5 py-4">Bebas biaya admin untuk semua transaksi.</p>
             </div>
         </div>
     </div>

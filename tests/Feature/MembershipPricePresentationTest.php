@@ -18,5 +18,7 @@ class MembershipPricePresentationTest extends TestCase
         $this->assertSame(10000, $price->getValue());
         $this->assertStringContainsString("number_format(\$membershipPrice, 0, ',', '.')", $view);
         $this->assertStringNotContainsString('Rp 30.000 / bulan.', $view);
+        $this->assertStringContainsString('membership-panel-header', $view);
+        $this->assertSame(3, substr_count($view, 'membership-benefit-item rounded'));
     }
 }

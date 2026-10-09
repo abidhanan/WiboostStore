@@ -155,7 +155,7 @@
         </div>
     @endif
 
-    <div class="relative z-10 mb-5 w-full min-w-0 rounded-[2rem] border-4 border-white bg-white/90 p-4 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm transition-transform duration-300 hover:border-[#bde0fe] sm:mb-6 sm:rounded-[2.5rem] sm:p-5">
+    <div class="wiboost-admin-toolbar-static relative z-10 mb-5 w-full min-w-0 rounded-[2rem] border-4 border-white bg-white/90 p-4 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:mb-6 sm:rounded-[2.5rem] sm:p-5">
         <form action="{{ route('admin.withdrawals.index') }}" method="GET" class="flex w-full flex-col gap-3">
             <div class="flex w-full flex-col gap-3 md:flex-row">
             <div class="flex w-full min-w-0 flex-1 gap-2">
@@ -313,13 +313,12 @@
                 </table>
             </div>
         </div>
+        @if(method_exists($withdrawals, 'links') && $withdrawals->hasPages())
+            <div class="wiboost-table-pagination-footer p-5 sm:p-8 w-full min-w-0">
+                {{ $withdrawals->links() }}
+            </div>
+        @endif
     </div>
-
-    @if(method_exists($withdrawals, 'links') && $withdrawals->hasPages())
-        <div class="p-5 sm:p-8 w-full min-w-0">
-            {{ $withdrawals->links() }}
-        </div>
-    @endif
 
     @foreach($withdrawals ?? [] as $withdrawal)
         @php

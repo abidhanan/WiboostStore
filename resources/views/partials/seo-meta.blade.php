@@ -1,5 +1,5 @@
 @php
-    $seoDefaultDescription = 'Platform penyedia layanan suntik sosmed, top up game, paket data, dan aplikasi premium dengan proses cepat, aman, dan praktis.';
+    $seoDefaultDescription = 'Platform penyedia layanan suntik sosmed, top up game, paket data operator, dan aplikasi premium dengan proses cepat, aman, dan praktis.';
     $seoTitle = trim(strip_tags((string) ($title ?? 'Wiboost Store')));
     $seoDescription = \Illuminate\Support\Str::limit(
         \Illuminate\Support\Str::squish(strip_tags((string) ($description ?? $seoDefaultDescription))),
@@ -10,11 +10,12 @@
     $seoBaseUrl = rtrim((string) config('app.url', url('/')), '/');
     $seoPath = '/'.ltrim(request()->path(), '/');
     $seoCanonical = (string) ($canonical ?? ($seoBaseUrl.$seoPath));
-    $seoImage = (string) ($image ?? asset('images/wiboost-metadata-logo.webp').'?v=20260921-metadata');
-    $seoImageType = (string) ($imageType ?? 'image/webp');
-    $seoImageWidth = (int) ($imageWidth ?? 1280);
-    $seoImageHeight = (int) ($imageHeight ?? 1280);
+    $seoImage = (string) ($image ?? url('/wiboost-share-preview-20261009-v5.jpg'));
+    $seoImageType = (string) ($imageType ?? 'image/jpeg');
+    $seoImageWidth = (int) ($imageWidth ?? 1200);
+    $seoImageHeight = (int) ($imageHeight ?? 630);
     $seoImageAlt = trim(strip_tags((string) ($imageAlt ?? 'Logo Wiboost Store')));
+    $seoLogo = url('/wiboost-store-circle-20261007-v4-512.png');
     $seoNoIndex = str_contains(strtolower($seoRobots), 'noindex');
     $seoOrganizationId = $seoBaseUrl.'/#organization';
     $seoWebsiteId = $seoBaseUrl.'/#website';
@@ -29,9 +30,9 @@
                 'url' => $seoBaseUrl.'/',
                 'logo' => [
                     '@type' => 'ImageObject',
-                    'url' => $seoImage,
-                    'width' => $seoImageWidth,
-                    'height' => $seoImageHeight,
+                    'url' => $seoLogo,
+                    'width' => 512,
+                    'height' => 512,
                 ],
                 'sameAs' => [
                     'https://www.instagram.com/wiboost.store',

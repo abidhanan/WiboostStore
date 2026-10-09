@@ -793,7 +793,7 @@
                                 </div>
                             @endif
                         @else
-                            <button onclick="closeModal('modal-{{ $trx->id }}')" class="w-full bg-[#f4f9ff] hover:bg-[#5a76c8] hover:text-white text-[#5a76c8] py-4 rounded-full font-black transition-all duration-300 border-4 border-white shadow-md text-base active:scale-95">Tutup Detail</button>
+                            <button onclick="closeModal('modal-{{ $trx->id }}')" class="w-full bg-[#5a76c8] text-white py-4 rounded-full font-black transition-all duration-300 border-4 border-white shadow-md text-base active:scale-95">Tutup Detail</button>
                         @endif
                     </div>
                 </div>

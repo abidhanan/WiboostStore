@@ -67,7 +67,7 @@
         ];
     @endphp
 
-    <div class="relative z-10 mb-6 w-full min-w-0 rounded-[2rem] border-4 border-white bg-white/90 p-4 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm transition-transform duration-300 hover:border-[#bde0fe] sm:mb-8 sm:rounded-[2.5rem] sm:p-5">
+    <div class="wiboost-admin-toolbar-static relative z-10 mb-6 w-full min-w-0 rounded-[2rem] border-4 border-white bg-white/90 p-4 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:mb-8 sm:rounded-[2.5rem] sm:p-5">
         <form action="{{ route('admin.durations.index') }}" method="GET" class="flex w-full flex-col gap-3">
             <div class="flex w-full flex-col gap-3 md:flex-row">
                 <div class="flex w-full min-w-0 flex-1 gap-2">

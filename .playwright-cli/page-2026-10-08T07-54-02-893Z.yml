@@ -1,0 +1,103 @@
+- generic [active] [ref=f1e1]:
+  - complementary [ref=f1e2]:
+    - generic [ref=f1e3]:
+      - link [ref=f1e5] [cursor=pointer]:
+        - /url: http://127.0.0.1:8014/user/dashboard
+        - img "Logo Wiboost Store" [ref=f1e6]
+        - paragraph [ref=f1e8]: Wiboost Store
+      - navigation [ref=f1e9]:
+        - link "Home" [ref=f1e10] [cursor=pointer]:
+          - /url: http://127.0.0.1:8014/user/dashboard
+        - link "Riwayat" [ref=f1e15] [cursor=pointer]:
+          - /url: http://127.0.0.1:8014/user/history
+        - link "Saldo" [ref=f1e20] [cursor=pointer]:
+          - /url: http://127.0.0.1:8014/user/wallet
+        - link "Poin" [ref=f1e25] [cursor=pointer]:
+          - /url: http://127.0.0.1:8014/user/points
+        - link "Reseller" [ref=f1e30] [cursor=pointer]:
+          - /url: http://127.0.0.1:8014/user/reseller
+        - link "Tutorial" [ref=f1e35] [cursor=pointer]:
+          - /url: http://127.0.0.1:8014/user/tutorial
+      - generic [ref=f1e40]:
+        - link "Foto profil Preview User Preview User Buyer" [ref=f1e41] [cursor=pointer]:
+          - /url: http://127.0.0.1:8014/profile
+          - img "Foto profil Preview User" [ref=f1e43]
+          - generic [ref=f1e44]:
+            - generic [ref=f1e45]: Preview User
+            - generic [ref=f1e46]: Buyer
+        - link "Membership" [ref=f1e47] [cursor=pointer]:
+          - /url: http://127.0.0.1:8014/user/membership
+  - generic [ref=f1e51]:
+    - button "Buka tutup sidebar" [expanded] [ref=f1e52] [cursor=pointer]
+    - generic [ref=f1e55]:
+      - link "Saldo" [ref=f1e56] [cursor=pointer]:
+        - /url: http://127.0.0.1:8014/user/wallet
+        - generic [ref=f1e60]: Rp 0
+      - link "Poin" [ref=f1e61] [cursor=pointer]:
+        - /url: http://127.0.0.1:8014/user/points
+        - generic [ref=f1e65]: "0"
+      - button "Menu profil" [ref=f1e67] [cursor=pointer]:
+        - img "Foto profil Preview User" [ref=f1e68]
+  - main [ref=f1e69]:
+    - generic [ref=f1e70]:
+      - generic [ref=f1e72]:
+        - generic [ref=f1e73]: Dashboard User
+        - heading [level=1] [ref=f1e74]
+        - paragraph [ref=f1e78]: Mau beli apa hari ini?
+      - generic [ref=f1e79]:
+        - generic [ref=f1e84]:
+          - paragraph [ref=f1e85]: Pesanan Bulan Ini
+          - paragraph [ref=f1e86]: "2"
+        - generic [ref=f1e92]:
+          - paragraph [ref=f1e93]: Pengeluaran Bulan Ini
+          - paragraph [ref=f1e94]: Rp 90.000
+      - generic [ref=f1e98]:
+        - heading "Belum Ada Promo" [level=2] [ref=f1e102]
+        - paragraph [ref=f1e103]: Nantikan penawaran menarik dari Wiboost.
+      - generic [ref=f1e104]:
+        - generic [ref=f1e105]: Katalog Utama
+        - heading "Pilih Kategori" [level=2] [ref=f1e106]
+      - generic [ref=f1e107]:
+        - link "Suntik Sosmed" [ref=f1e108] [cursor=pointer]:
+          - /url: http://127.0.0.1:8014/user/order/suntik-sosmed
+        - link "Top Up Game" [ref=f1e117] [cursor=pointer]:
+          - /url: http://127.0.0.1:8014/user/order/top-up-game
+        - link "Kuota Murah" [ref=f1e123] [cursor=pointer]:
+          - /url: http://127.0.0.1:8014/user/order/kuota-murah
+        - link "Aplikasi Premium" [ref=f1e130] [cursor=pointer]:
+          - /url: http://127.0.0.1:8014/user/order/aplikasi-premium
+  - contentinfo [ref=f1e137]:
+    - generic [ref=f1e138]:
+      - generic [ref=f1e139]:
+        - generic [ref=f1e140]:
+          - generic [ref=f1e141]:
+            - img "Logo Wiboost Store" [ref=f1e142]
+            - generic [ref=f1e143]: Wiboost Store
+          - paragraph [ref=f1e144]:
+            - generic [ref=f1e145]: Platform penyedia layanan suntik sosmed, top up game,
+            - generic [ref=f1e146]: paket data operator, dan aplikasi premium dengan proses cepat, aman, dan praktis.
+        - generic [ref=f1e147]:
+          - paragraph [ref=f1e148]: Ikuti Kami
+          - generic [ref=f1e149]:
+            - link "Instagram Wiboost Store" [ref=f1e150] [cursor=pointer]:
+              - /url: https://www.instagram.com/wiboost.store?igsh=MXJzdWM3ZzBjdnNnZQ==
+            - link "TikTok Wiboost Store" [ref=f1e153] [cursor=pointer]:
+              - /url: https://www.tiktok.com/@wiboostore?_r=1&_t=ZS-98IS1s3zWa7
+            - link "YouTube Wiboost Store" [ref=f1e156] [cursor=pointer]:
+              - /url: https://youtube.com/@wiboostore?si=rDBRNJjvs5HSZYwC
+      - generic [ref=f1e159]:
+        - generic [ref=f1e160]:
+          - link "Syarat & Ketentuan" [ref=f1e161] [cursor=pointer]:
+            - /url: http://127.0.0.1:8014/legal/terms
+          - link "Privasi" [ref=f1e162] [cursor=pointer]:
+            - /url: http://127.0.0.1:8014/legal/privacy-policy
+          - link "Refund" [ref=f1e163] [cursor=pointer]:
+            - /url: http://127.0.0.1:8014/legal/refund-policy
+          - link "Kontak Admin" [ref=f1e164] [cursor=pointer]:
+            - /url: http://127.0.0.1:8014/legal/contact
+        - paragraph [ref=f1e165]:
+          - text: © 2026 Wiboost Store - Dibuat oleh
+          - link "Abid Hanan Wicaksono" [ref=f1e166] [cursor=pointer]:
+            - /url: https://www.abidhanan.my.id/
+          - text: .
+  - button "Buka bantuan customer service" [ref=f1e167]

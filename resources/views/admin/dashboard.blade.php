@@ -154,7 +154,31 @@
         .wiboost-admin-dashboard .dashboard-view-all-mobile {
             display: flex !important;
         }
+        .wiboost-admin-dashboard [data-dashboard-summary-full] > div:last-child > div[class*="overflow"] {
+            width: calc(100% + 2rem);
+            max-width: none;
+            margin-left: -1rem;
+            margin-right: -1rem;
+        }
+        .wiboost-admin-dashboard [data-dashboard-summary-full] > div:last-child {
+            padding-top: 0 !important;
+        }
+        @media (min-width: 640px) {
+            .wiboost-admin-dashboard [data-dashboard-summary-full] > div:last-child > div[class*="overflow"] {
+                width: calc(100% + 3rem);
+                margin-left: -1.5rem;
+                margin-right: -1.5rem;
+            }
+        }
         @media (min-width: 768px) {
+            .wiboost-admin-dashboard [data-dashboard-summary-full] > div:last-child {
+                padding-bottom: 0 !important;
+            }
+            .wiboost-admin-dashboard [data-dashboard-summary-full] > div:last-child > div[class*="overflow"] {
+                width: calc(100% + 4rem);
+                margin-left: -2rem;
+                margin-right: -2rem;
+            }
             .wiboost-admin-dashboard .dashboard-view-all-desktop {
                 display: inline-flex !important;
             }
@@ -496,7 +520,7 @@
         @if($showDashboardProducts || $showDashboardReports)
         <section class="grid grid-cols-1 gap-6 sm:gap-8 {{ ($showDashboardProducts && $showDashboardReports) ? 'xl:grid-cols-2' : 'xl:grid-cols-1' }} w-full min-w-0">
             @if($showDashboardProducts)
-            <article class="flex flex-col overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
+            <article data-dashboard-summary-full class="flex flex-col overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
                 <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#fffdf7] px-5 py-5 sm:px-6 sm:py-6 md:flex-row md:items-center md:justify-between">
                     <div class="min-w-0">
                         <p class="mb-1 truncate text-[10px] font-black uppercase tracking-[0.3em] text-amber-500">Ringkasan Stok</p>
@@ -525,7 +549,7 @@
                         @endforelse
                     </div>
 
-                    <div class="hidden w-full overflow-hidden pb-2 md:block">
+                    <div class="table-scroll hidden w-full overflow-x-auto pb-2 md:block">
                         <table class="w-full table-fixed text-left">
                             <thead>
                                 <tr class="border-b-4 border-dashed border-[#f4f9ff] text-[10px] font-black uppercase tracking-[0.25em] text-[#8faaf3]">
@@ -560,7 +584,7 @@
             @endif
 
             @if($showDashboardReports)
-            <article class="flex flex-col overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
+            <article data-dashboard-summary-full class="flex flex-col overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
                 <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-6 sm:py-6 md:flex-row md:items-center md:justify-between">
                     <div class="min-w-0">
                         <p class="mb-1 truncate text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Ringkasan Laporan</p>
@@ -718,7 +742,7 @@
             
             <!-- Realtime Order -->
             @if($showDashboardTransactions)
-            <article class="flex flex-col overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
+            <article data-dashboard-summary-full class="flex flex-col overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
                 <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 sm:px-6 py-5 sm:py-6 md:flex-row md:items-center md:justify-between w-full">
                     <div class="min-w-0">
                         <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3] mb-1 truncate">Ringkasan Transaksi</p>
@@ -819,7 +843,7 @@
 
             <!-- Arus Saldo -->
             @if($showDashboardDeposits)
-            <article class="flex flex-col overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
+            <article data-dashboard-summary-full class="flex flex-col overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 w-full min-w-0">
                 <div class="flex flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#fffcf0] px-5 sm:px-6 py-5 sm:py-6 md:flex-row md:items-center md:justify-between w-full">
                     <div class="min-w-0">
                         <p class="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 mb-1 truncate">Ringkasan Saldo</p>
@@ -921,7 +945,7 @@
         @if($showDashboardRefunds || $showDashboardProducts)
         <section class="grid grid-cols-1 gap-6 sm:gap-8 {{ ($showDashboardRefunds && $showDashboardProducts) ? 'xl:grid-cols-2' : 'xl:grid-cols-1' }} w-full min-w-0">
             @if($showDashboardRefunds)
-            <article class="flex w-full min-w-0 flex-col overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:rounded-[2.5rem]">
+            <article data-dashboard-summary-full class="flex w-full min-w-0 flex-col overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:rounded-[2.5rem]">
                 <div class="flex w-full flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#fff5f5] px-5 py-5 sm:px-6 sm:py-6 md:flex-row md:items-center md:justify-between">
                     <div class="min-w-0">
                         <p class="mb-1 truncate text-[10px] font-black uppercase tracking-[0.3em] text-[#ff6b6b]">Ringkasan Refund</p>
@@ -978,7 +1002,7 @@
             @endif
 
             @if($showDashboardProducts)
-            <article class="flex w-full min-w-0 flex-col overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:rounded-[2.5rem]">
+            <article data-dashboard-summary-full class="flex w-full min-w-0 flex-col overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:rounded-[2.5rem]">
                 <div class="flex w-full flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f8faff] px-5 py-5 sm:px-6 sm:py-6 md:flex-row md:items-center md:justify-between">
                     <div class="min-w-0">
                         <p class="mb-1 truncate text-[10px] font-black uppercase tracking-[0.3em] text-[#8faaf3]">Ringkasan Durasi</p>
@@ -1157,7 +1181,7 @@
 
         @if($showDashboardOtp)
         <section class="grid w-full min-w-0 grid-cols-1 gap-6 sm:mt-8 sm:gap-8 xl:grid-cols-2">
-            <article class="flex w-full min-w-0 flex-col overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:rounded-[2.5rem]">
+            <article data-dashboard-summary-full class="flex w-full min-w-0 flex-col overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl shadow-[#bde0fe]/20 sm:rounded-[2.5rem]">
                 <div class="flex w-full flex-col gap-3 border-b-4 border-dashed border-[#f4f9ff] bg-[#f6fffb] px-5 py-5 sm:px-6 sm:py-6 md:flex-row md:items-center md:justify-between">
                     <div class="min-w-0">
                         <p class="mb-1 truncate text-[10px] font-black uppercase tracking-[0.3em] text-[#4bc6b9]">Ringkasan OTP</p>

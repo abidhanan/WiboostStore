@@ -46,5 +46,11 @@ class UserHistoryPresentationTest extends TestCase
         $this->assertStringContainsString('class="warehouse-email-value', $warehouseView);
         $this->assertStringContainsString('warehouse-email-value mt-1', $warehouseView);
         $this->assertStringNotContainsString('mt-1 break-all text-sm font-black text-[#2b3a67]">{{ $cred->data_1 }}', $warehouseView);
+
+        $skeu = file_get_contents(resource_path('views/partials/skeuomorphism-ui.blade.php'));
+        $this->assertStringContainsString('Sambungan header dan footer modal riwayat', $skeu);
+        $this->assertStringContainsString('margin-bottom: 0 !important;', $skeu);
+        $this->assertStringContainsString('margin-top: 0 !important;', $skeu);
+        $this->assertStringContainsString('box-shadow: none !important;', $skeu);
     }
 }

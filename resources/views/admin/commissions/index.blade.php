@@ -245,7 +245,7 @@
 
 <div class="wiboost-font relative z-10 w-full min-w-0 pb-12">
     <div class="relative z-30 mb-6 flex w-full min-w-0 flex-col gap-3 overflow-visible sm:mb-8 sm:gap-4">
-        <div class="min-w-0 rounded-[2rem] border-4 border-white bg-white/90 p-3 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm transition-transform duration-300 hover:border-[#bde0fe] sm:rounded-[2.5rem] sm:p-4">
+        <div class="wiboost-admin-toolbar-static min-w-0 rounded-[2rem] border-4 border-white bg-white/90 p-3 shadow-xl shadow-[#bde0fe]/30 backdrop-blur-sm sm:rounded-[2.5rem] sm:p-4">
             <form action="{{ route('admin.commissions.index') }}" method="GET" class="flex w-full flex-col gap-3 overflow-visible">
                 @if($activeCommissionFilter !== 'all')
                     <input type="hidden" name="commission_filter" value="{{ $activeCommissionFilter }}">

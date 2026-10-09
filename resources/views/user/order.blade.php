@@ -162,10 +162,11 @@
 
     .wiboost-service-trigger {
         align-items: center;
-        background: #f4f9ff;
+        background-color: #f4f9ff;
+        background-image: linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
         border: 4px solid #ffffff;
         border-radius: 1.5rem;
-        box-shadow: inset 0 2px 8px rgba(90, 118, 200, 0.08), 0 12px 28px rgba(189, 224, 254, 0.22);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -3px 6px rgba(163, 187, 251, 0.22), 0 10px 22px -6px rgba(90, 118, 200, 0.24);
         color: #2b3a67;
         display: flex;
         font-weight: 900;
@@ -180,14 +181,14 @@
 
     .wiboost-service-trigger:hover,
     .wiboost-service-trigger:focus {
-        background: #f8faff;
         border-color: #bde0fe;
-        box-shadow: inset 0 2px 8px rgba(90, 118, 200, 0.08), 0 16px 34px rgba(189, 224, 254, 0.34);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -3px 6px rgba(163, 187, 251, 0.22), 0 14px 30px -8px rgba(90, 118, 200, 0.30);
+        filter: brightness(1.02);
         outline: 0;
     }
 
     .wiboost-service-select-wrap.is-open .wiboost-service-trigger {
-        background: #ffffff;
+        background-image: linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
         border-color: #8faaf3;
     }
 
@@ -218,10 +219,11 @@
     }
 
     .wiboost-service-dropdown {
-        background: rgba(255, 255, 255, 0.98);
+        background-color: rgba(255, 255, 255, 0.98);
+        background-image: linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
         border: 4px solid #ffffff;
         border-radius: 1.75rem;
-        box-shadow: 0 24px 60px rgba(90, 118, 200, 0.22);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 24px 60px -12px rgba(90, 118, 200, 0.30);
         contain: layout paint;
         display: none;
         left: 0;
@@ -265,26 +267,27 @@
     }
 
     .wiboost-service-option:not(.is-selected):not([aria-selected="true"]) {
-        background: #ffffff !important;
-        border-color: #dbe8ff !important;
+        background-color: #ffffff !important;
+        background-image: linear-gradient(180deg, #ffffff 0%, #eef4ff 100%) !important;
+        border-color: #ffffff !important;
         color: #2b3a67 !important;
-        box-shadow: none !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 4px 10px -4px rgba(90, 118, 200, 0.20) !important;
     }
 
     .wiboost-service-option:hover,
     .wiboost-service-option:focus {
-        background: #f4f9ff;
-        border-color: #e0ebff;
+        filter: brightness(1.04);
         outline: 0;
     }
 
     .wiboost-service-option.is-selected,
     .wiboost-service-option[aria-selected="true"] {
-        background: #5a76c8 !important;
+        background-color: #5a76c8 !important;
+        background-image: linear-gradient(180deg, #7b9eed 0%, #5a76c8 52%, #4760a9 100%) !important;
         border-color: #ffffff !important;
         color: #ffffff !important;
         font-weight: 900;
-        box-shadow: 0 7px 16px rgba(90, 118, 200, .24) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -3px 5px rgba(43, 58, 103, 0.40), 0 8px 18px -4px rgba(43, 58, 103, 0.32) !important;
     }
 
     .wiboost-service-option-label {
@@ -626,7 +629,7 @@
             </div>
 
             <div class="relative z-10 col-start-2 row-start-2 min-w-0 self-center text-left">
-                <h1 class="wiboost-order-header-title mb-2 font-black tracking-tight text-[#2b3a67] drop-shadow-sm">{{ $category->name }}</h1>
+                <h1 data-fit-single-line class="wiboost-order-header-title mb-2 font-black tracking-tight text-[#2b3a67] drop-shadow-sm">{{ $category->name }}</h1>
                 <p class="wiboost-order-header-description w-full text-left font-bold text-[#4a5f96] md:w-auto">
                     Pilih kategori di bawah ini untuk lanjut.
                 </p>
@@ -639,7 +642,7 @@
                 <input type="hidden" name="checkout_nonce" value="{{ $checkoutNonce }}">
                 <input type="hidden" name="product_id" id="social_product_id" value="{{ old('product_id') }}">
 
-                <div class="flex items-center gap-3 mb-6 border-b-4 border-dashed border-[#f4f9ff] pb-4">
+                <div class="wiboost-order-detail-divider flex items-center gap-3 mb-6 border-b-4 border-dashed border-[#f4f9ff] pb-4">
                     <h2 class="text-2xl font-black text-[#2b3a67]">Detail Pesanan</h2>
                 </div>
 
@@ -847,7 +850,7 @@
                         @endif
                     </div>
 
-                    <div class="flex items-center justify-center w-full border-t-2 border-dashed border-[#f4f9ff] {{ $showCompactServiceCards ? 'wiboost-compact-price-zone shrink-0 flex-col gap-1 py-2 sm:py-3' : 'mt-auto pt-4' }}">
+                    <div class="wiboost-price-zone flex items-center justify-center w-full border-t-2 border-dashed border-[#f4f9ff] {{ $showCompactServiceCards ? 'wiboost-compact-price-zone shrink-0 flex-col gap-1 py-2 sm:py-3' : 'mt-auto pt-4' }}">
                         @if($product->has_active_discount)
                             <div class="w-full text-center">
                                 <span class="discount-old-price block text-xs font-black text-[#111827] line-through decoration-[#111827] decoration-2 sm:text-base">Rp {{ number_format($product->original_selling_price, 0, ',', '.') }}</span>

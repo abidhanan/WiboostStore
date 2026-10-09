@@ -277,7 +277,7 @@ class OrderSosmedService
                 ['order' => $providerOrderId],
                 ['id' => $providerOrderId],
                 ['order_id' => $providerOrderId],
-            ], 'status', false, fn (array $body) => $this->extractProviderStatusText($body) !== null || $this->resolveProviderOrderId($body) !== null);
+            ], 'status', false, fn (array $body) => $this->extractProviderStatusText($body) !== null || $this->resolveProviderOrderId($body) !== null, 3, 4);
 
             return $this->normalizeStatusResponse($attempt['body'] ?? [], $providerOrderId);
         } catch (Throwable $e) {
@@ -295,20 +295,32 @@ class OrderSosmedService
         array $payloadVariants,
         ?string $resource = null,
         bool $stopOnOrderAccepted = false,
-        ?callable $acceptanceResolver = null
+        ?callable $acceptanceResolver = null,
+        ?int $maxAttempts = null,
+        int $timeoutSeconds = 30
     ): array
     {
         $lastResponse = null;
         $lastBody = [];
         $lastServices = [];
         $lastException = null;
+        $attemptCount = 0;
+        $attemptLimit = $maxAttempts === null ? PHP_INT_MAX : max(1, $maxAttempts);
+        $requestTimeout = max(2, min(30, $timeoutSeconds));
 
         foreach ($this->resolveApiUrls($resource) as $url) {
             foreach ($payloadVariants as $payloadVariant) {
                 foreach ($this->buildAuthPayloads($payloadVariant) as $payload) {
+                    if ($attemptCount >= $attemptLimit) {
+                        break 3;
+                    }
+
+                    $attemptCount++;
+
                     try {
                         $response = Http::asForm()
-                            ->timeout(30)
+                            ->connectTimeout(min(3, $requestTimeout))
+                            ->timeout($requestTimeout)
                             ->acceptJson()
                             ->post($url, $payload);
                     } catch (Throwable $exception) {

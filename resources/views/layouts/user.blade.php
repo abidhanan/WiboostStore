@@ -42,6 +42,7 @@
     @include('partials.microsoft-clarity')
     @include('partials.google-analytics')
     @include('partials.responsive-qa-guards')
+    @include('partials.skeuomorphism-ui')
     <style>
         /* Kritis: sidebar desktop tidak boleh muncul di mobile, walau CSS build telat/gagal load
            (mencegah "tampilan desktop" di HP setelah login Google). */
@@ -712,15 +713,16 @@
             } catch (error) {
                 return true;
             }
-        })()
+        })(),
+        persistDesktopSidebar(value) {
+            try {
+                localStorage.setItem('wiboost_desktop_sidebar_open', value ? '1' : '0');
+            } catch (error) {}
+        }
     }"
-    x-init="
-        try {
-            $watch('desktopSidebarOpen', value => localStorage.setItem('wiboost_desktop_sidebar_open', value ? '1' : '0'));
-        } catch (error) {}
-    "
+    x-init="$watch('desktopSidebarOpen', value => persistDesktopSidebar(value))"
     :class="{ 'wiboost-user-sidebar-collapsed': !desktopSidebarOpen }"
-    class="wiboost-compact-ui wiboost-user-shell @yield('body_class') min-h-screen w-full max-w-full overflow-x-hidden bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white relative flex flex-col"
+    class="wiboost-compact-ui wiboost-skeu wiboost-user-shell @yield('body_class') min-h-screen w-full max-w-full overflow-x-hidden bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white relative flex flex-col"
 >
     <script>
         try {
@@ -781,7 +783,7 @@
                 <a href="{{ route('user.dashboard') }}" class="group flex items-center gap-3">
                     <img src="{{ $brandLogoUrl }}" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm transition-transform group-hover:scale-110">
                     <div class="wiboost-sidebar-brand-text min-w-0">
-                        <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></p>
+                        <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost Store</p>
                     </div>
                 </a>
             </div>
@@ -789,7 +791,7 @@
             <nav class="hide-scroll flex-1 space-y-2 overflow-y-auto overscroll-contain px-5 py-4">
                 @foreach($mobileUserNav as $item)
                     <?php $isActiveUserNav = request()->routeIs($item['pattern']); ?>
-                    <a href="{{ route($item['route']) }}" class="flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-black transition-all duration-300 {{ $isActiveUserNav ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 scale-[1.02]' : 'border-2 border-transparent text-[#5a76c8] hover:border-white hover:bg-[#f4f9ff] hover:scale-[1.02]' }}">
+                    <a href="{{ route($item['route']) }}" class="flex items-center gap-3 rounded-full px-6 py-3.5 text-sm font-black transition-all duration-300 {{ $isActiveUserNav ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30 scale-[1.02]' : 'border-2 border-white bg-[#f8fbff] text-[#5a76c8] shadow-sm hover:bg-[#e0fbfc] hover:scale-[1.02]' }}">
                         <span class="flex h-8 w-8 items-center justify-center rounded-xl {{ $isActiveUserNav ? 'bg-white/20 text-white' : 'bg-white text-[#5a76c8] shadow-sm' }}">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
                                 {!! $userNavIconPaths[$item['icon']] ?? $userNavIconPaths['home'] !!}
@@ -830,7 +832,7 @@
 
                 <button
                     type="button"
-                    @click="desktopSidebarOpen = !desktopSidebarOpen; try { localStorage.setItem('wiboost_desktop_sidebar_open', desktopSidebarOpen ? '1' : '0') } catch (error) {}"
+                    @click="desktopSidebarOpen = !desktopSidebarOpen; persistDesktopSidebar(desktopSidebarOpen)"
                     :aria-expanded="desktopSidebarOpen.toString()"
                     aria-label="Buka tutup sidebar"
                     class="wiboost-navbar-sidebar-toggle h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-white bg-[#f4f9ff] text-[#5a76c8] shadow-sm transition hover:bg-[#e0fbfc] active:scale-95"
@@ -872,15 +874,15 @@
                              x-transition:leave-start="translate-y-0 opacity-100"
                              x-transition:leave-end="translate-y-1 opacity-0"
                              class="absolute right-0 top-full z-[80] mt-3 w-max min-w-56 rounded-[1.5rem] border-4 border-white bg-white p-2 shadow-2xl shadow-[#bde0fe]/50">
-                            <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 whitespace-nowrap rounded-[1.1rem] px-4 py-3 text-sm font-black text-[#5a76c8] transition hover:bg-[#f4f9ff]">
-                                <span class="wiboost-profile-menu-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f4f9ff]">
+                            <a href="{{ route('profile.edit') }}" class="wiboost-dropdown-item flex items-center gap-3 whitespace-nowrap rounded-[1.1rem] px-4 py-3 text-sm font-black transition {{ request()->routeIs('profile.*') ? 'border-2 border-white bg-[#5a76c8] text-white shadow-lg shadow-[#5a76c8]/30' : 'border-2 border-white bg-[#f8fbff] text-[#5a76c8] hover:bg-[#e0fbfc]' }}">
+                                <span class="wiboost-profile-menu-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl {{ request()->routeIs('profile.*') ? 'bg-white/20 text-white' : 'bg-[#f4f9ff]' }}">
                                     <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">{!! $userNavIconPaths['profile'] !!}</svg>
                                 </span>
                                 <span class="whitespace-nowrap">Profil</span>
                             </a>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="flex w-full items-center gap-3 whitespace-nowrap rounded-[1.1rem] px-4 py-3 text-left text-sm font-black text-[#ff6b6b] transition hover:bg-[#fff3f3]">
+                                <button type="submit" class="wiboost-dropdown-item flex w-full items-center gap-3 whitespace-nowrap rounded-[1.1rem] px-4 py-3 text-left text-sm font-black text-[#ff6b6b] border-2 border-white bg-[#fff3f3] transition hover:bg-[#ffe5e5]">
                                     <span class="wiboost-profile-menu-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#ffe5e5]">
                                         <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24" aria-hidden="true">{!! $userNavIconPaths['logout'] !!}</svg>
                                     </span>
@@ -910,13 +912,13 @@
             <div class="wiboost-mobile-sidebar-stack flex min-h-0 flex-1 flex-col">
                 <div class="wiboost-mobile-sidebar-header flex shrink-0 items-center gap-3 border-b-4 border-dashed border-[#f4f9ff] pb-4">
                     <img src="{{ $brandLogoUrl }}" alt="Logo Wiboost Store" width="192" height="192" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm">
-                    <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></p>
+                    <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost Store</p>
                 </div>
                 
                 {{-- List Vertical Minimalis --}}
                 <div class="wiboost-mobile-sidebar-nav hide-scroll flex min-h-0 flex-1 flex-col gap-2 py-1">
                     @foreach($mobileUserNav as $item)
-                        <a href="{{ route($item['route']) }}" class="flex items-center rounded-[1.5rem] border-2 {{ request()->routeIs($item['pattern']) ? 'border-white bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/30' : 'border-transparent bg-[#f8fbff] text-[#5a76c8] hover:border-white hover:bg-[#e0fbfc]' }} px-5 py-3 font-black transition-all">
+                        <a href="{{ route($item['route']) }}" class="flex items-center rounded-[1.5rem] border-2 {{ request()->routeIs($item['pattern']) ? 'border-white bg-[#5a76c8] text-white shadow-md shadow-[#5a76c8]/30' : 'border-white bg-[#f8fbff] text-[#5a76c8] shadow-sm hover:bg-[#e0fbfc]' }} px-5 py-3 font-black transition-all">
                             <div class="flex items-center gap-4">
                                 <div class="flex h-10 w-10 items-center justify-center rounded-2xl {{ request()->routeIs($item['pattern']) ? 'bg-white/20 shadow-inner' : 'bg-white shadow-sm border border-[#f0f5ff]' }}">
                                     <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
@@ -1113,45 +1115,7 @@
     @endif
 
     {{-- Footer User --}}
-    <footer class="bg-white pt-12 pb-8 relative overflow-hidden mt-auto">
-        <div class="max-w-6xl mx-auto px-6 sm:px-8 relative z-10">
-            <div class="flex flex-col items-center gap-6 text-center md:flex-row md:justify-between md:gap-8 md:text-left mb-10">
-                
-                <div class="min-w-0 text-center md:text-left">
-                    <div class="flex items-center justify-center gap-2 mb-3 md:justify-start">
-                        <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" loading="lazy" decoding="async" class="h-10 w-10 shrink-0 object-contain drop-shadow-sm md:h-12 md:w-12">
-                        <span class="whitespace-nowrap font-black text-lg text-[#2b3a67] sm:text-xl md:text-2xl">Wiboost <span class="text-[#5a76c8]">Store</span></span>
-                    </div>
-                    <p class="mx-auto max-w-xs text-[10px] font-bold text-[#8faaf3] sm:text-xs md:mx-0 md:min-w-max md:max-w-none md:whitespace-nowrap md:text-sm">Pusat Layanan dan Produk Digital dalam Satu Platform.</p>
-                </div>
-
-                <div class="flex shrink-0 flex-col items-center gap-3 md:items-end">
-                    <p class="mb-1 text-xs font-black text-[#2b3a67] md:text-sm">Ikuti Kami</p>
-                    <div class="flex items-center gap-2 sm:gap-4">
-                        <a href="https://www.instagram.com/wiboost.store?igsh=MXJzdWM3ZzBjdnNnZQ==" target="_blank" rel="noopener noreferrer" class="w-10 h-10 sm:w-12 sm:h-12 bg-[#f4f9ff] text-[#e1306c] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all md:h-14 md:w-14">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                        </a>
-                        <a href="https://www.tiktok.com/@wiboostore?_r=1&_t=ZS-98IS1s3zWa7" target="_blank" rel="noopener noreferrer" class="w-10 h-10 sm:w-12 sm:h-12 bg-[#f4f9ff] text-[#2b3a67] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all md:h-14 md:w-14">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>
-                        </a>
-                        <a href="https://youtube.com/@wiboostore?si=rDBRNJjvs5HSZYwC" target="_blank" rel="noopener noreferrer" class="w-10 h-10 sm:w-12 sm:h-12 bg-[#f4f9ff] text-[#FF0000] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all md:h-14 md:w-14">
-                            <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="border-t-2 border-[#f0f5ff] pt-8 text-center">
-                <div class="mb-5 flex w-full flex-nowrap items-center justify-between gap-0.5 px-0 sm:justify-center sm:gap-2 sm:px-2">
-                    <a href="{{ route('legal.show', 'terms') }}" class="flex min-w-0 flex-1 items-center justify-center rounded-full bg-[#f4f9ff] px-0.5 py-1 text-center text-[6px] font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] min-[380px]:text-[7px] sm:flex-none sm:px-3 sm:py-1.5 sm:text-[10px] md:px-3 md:text-xs whitespace-nowrap">Syarat & Ketentuan</a>
-                    <a href="{{ route('legal.show', 'privacy-policy') }}" class="flex min-w-0 flex-1 items-center justify-center rounded-full bg-[#f4f9ff] px-0.5 py-1 text-center text-[6px] font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] min-[380px]:text-[7px] sm:flex-none sm:px-3 sm:py-1.5 sm:text-[10px] md:px-3 md:text-xs whitespace-nowrap">Privasi</a>
-                    <a href="{{ route('legal.show', 'refund-policy') }}" class="flex min-w-0 flex-1 items-center justify-center rounded-full bg-[#f4f9ff] px-0.5 py-1 text-center text-[6px] font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] min-[380px]:text-[7px] sm:flex-none sm:px-3 sm:py-1.5 sm:text-[10px] md:px-3 md:text-xs whitespace-nowrap">Refund</a>
-                    <a href="{{ route('legal.show', 'contact') }}" class="flex min-w-0 flex-1 items-center justify-center rounded-full bg-[#f4f9ff] px-0.5 py-1 text-center text-[6px] font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] min-[380px]:text-[7px] sm:flex-none sm:px-3 sm:py-1.5 sm:text-[10px] md:px-3 md:text-xs whitespace-nowrap">Kontak Admin</a>
-                </div>
-                <p class="text-[10px] font-black text-[#a3bbfb] md:text-sm lg:text-base">&copy; {{ date('Y') }} Wiboost Store - Dibuat oleh <a href="https://www.abidhanan.my.id/" target="_blank" rel="noopener noreferrer" style="color: #5a76c8;" onmouseover="this.style.color='#4bc6b9'" onmouseout="this.style.color='#5a76c8'" class="transition">Abid Hanan Wicaksono</a>.</p>
-            </div>
-        </div>
-    </footer>
+    @include('partials.site-footer')
 
     {{-- Widget Lapor Admin --}}
     @include('partials.floating-admin-report')

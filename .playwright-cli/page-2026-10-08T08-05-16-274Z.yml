@@ -1,0 +1,23 @@
+- main [ref=e3]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - heading "Selamat Datang Admin!" [level=1] [ref=e7]
+      - paragraph [ref=e8]: Portal masuk khusus admin Wiboost Store.
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e11]: Email Admin
+        - textbox "Email Admin" [ref=e12]:
+          - /placeholder: admin@email.com
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - generic [ref=e15]: Kata Sandi
+          - link "Lupa sandi?" [ref=e16] [cursor=pointer]:
+            - /url: http://127.0.0.1:8015/forgot-password
+        - generic [ref=e17]:
+          - textbox "Kata Sandi" [ref=e18]:
+            - /placeholder: Masukkan kata sandi admin
+          - button "Lihat password" [ref=e19] [cursor=pointer]
+      - generic [ref=e23] [cursor=pointer]:
+        - checkbox "Tetap masuk di perangkat ini" [ref=e24]
+        - generic [ref=e25]: Tetap masuk di perangkat ini
+      - button "Masuk Sekarang" [ref=e26] [cursor=pointer]

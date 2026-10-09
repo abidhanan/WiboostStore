@@ -24,17 +24,18 @@
             width: 100%;
             height: 100%;
             margin: 0;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
             overscroll-behavior: none;
         }
         body {
             display: grid;
-            place-items: center;
+            place-items: safe center;
             padding: 12px;
             box-sizing: border-box;
             font-family: 'Nunito', sans-serif; 
             background-color: #f4f9ff; 
-            touch-action: none;
+            touch-action: pan-y;
         }
         button,
         a {
@@ -65,16 +66,17 @@
                 inset: 0;
                 min-height: 100%;
                 height: 100%;
-                overflow: hidden;
+                overflow-x: hidden;
+                overflow-y: auto;
                 overscroll-behavior: none;
             }
 
             body {
                 display: flex;
-                align-items: center;
+                align-items: safe center;
                 justify-content: center;
                 padding: 20px 36px;
-                touch-action: none;
+                touch-action: pan-y;
             }
 
             .checkout-shell {

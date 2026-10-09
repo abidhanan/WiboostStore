@@ -16,8 +16,16 @@ class SeoMetadataTest extends TestCase
             ->assertSee('<meta name="description"', false)
             ->assertSee('<meta property="og:title"', false)
             ->assertSee('<meta property="og:description"', false)
-            ->assertSee('images/wiboost-metadata-logo.webp?v=20260921-metadata', false)
-            ->assertSee('<meta property="og:image:type" content="image/webp">', false)
+            ->assertSee('Platform penyedia layanan suntik sosmed, top up game, paket data operator, dan aplikasi premium dengan proses cepat, aman, dan praktis.', false)
+            ->assertSee('Mulai dari SMM Panel, Top Up Game, Paket Data Operator, hingga Aplikasi Premium tersedia lengkap dalam satu platform.', false)
+            ->assertDontSee('Pusat Kebutuhan Digitalmu!', false)
+            ->assertSee('class="welcome-hero-logo"', false)
+            ->assertSee('wiboost-share-preview-20261009-v5.jpg', false)
+            ->assertSee('<meta property="og:image:type" content="image/jpeg">', false)
+            ->assertSee('<meta property="og:image:width" content="1200">', false)
+            ->assertSee('<meta property="og:image:height" content="630">', false)
+            ->assertSee('wiboost-store-circle-20261007-v4-512.png', false)
+            ->assertSee('wiboost-store-circle-20261007-v4-64.png', false)
             ->assertSee('<meta name="twitter:card" content="summary_large_image">', false)
             ->assertSee('<link rel="canonical" href="'.route('home').'">', false)
             ->assertSee('"@type":"Organization"', false)
@@ -28,7 +36,16 @@ class SeoMetadataTest extends TestCase
         $this->assertSame(1, substr_count($html, '<meta name="description"'));
         $this->assertSame(1, substr_count($html, '<link rel="canonical"'));
         $this->assertStringContainsString('index,follow', $html);
-        $this->assertFileExists(public_path('images/wiboost-metadata-logo.webp'));
+        $this->assertFileExists(public_path('images/wiboost-metadata-landscape-1200x630.jpg'));
+        $imageSize = getimagesize(public_path('images/wiboost-metadata-landscape-1200x630.jpg'));
+        $this->assertSame(1200, $imageSize[0]);
+        $this->assertSame(630, $imageSize[1]);
+        $this->assertSame('image/jpeg', $imageSize['mime']);
+        $this->assertFileExists(public_path('wiboost-store-circle-20261007-v4-512.png'));
+
+        $this->get('/wiboost-share-preview-20261009-v5.jpg')
+            ->assertOk()
+            ->assertHeader('content-type', 'image/jpeg');
     }
 
     public function test_private_auth_page_is_not_indexed_or_given_public_schema(): void
@@ -58,6 +75,8 @@ class SeoMetadataTest extends TestCase
         $this->assertIsArray($manifest);
         $this->assertSame('Wiboost Store', $manifest['name']);
         $this->assertNotEmpty($manifest['icons']);
+        $this->assertSame('/wiboost-store-circle-20261007-v4-192.png', $manifest['icons'][0]['src']);
+        $this->assertSame('/wiboost-store-circle-20261007-v4-512.png', $manifest['icons'][1]['src']);
 
         $robots = (string) file_get_contents(public_path('robots.txt'));
         $this->assertStringContainsString('Disallow: /admin', $robots);

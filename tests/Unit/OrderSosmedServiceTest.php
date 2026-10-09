@@ -46,4 +46,27 @@ class OrderSosmedServiceTest extends TestCase
         $this->assertSame('OS-12345', $result['provider_order_id']);
         $this->assertSame('processing', $result['order_status']);
     }
+
+    public function test_status_check_stops_after_three_connection_failures(): void
+    {
+        config([
+            'services.ordersosmed.api_url' => 'https://ordersosmed.id/api-1',
+            'services.ordersosmed.api_id' => 'demo-id',
+            'services.ordersosmed.api_key' => 'demo-key',
+            'services.ordersosmed.secret_key' => 'demo-secret',
+        ]);
+
+        $attempts = 0;
+        Http::fake(function () use (&$attempts) {
+            $attempts++;
+
+            throw new ConnectionException('Provider tidak merespons');
+        });
+
+        $result = app(OrderSosmedService::class)->checkOrderStatus('OS-STATUS-1');
+
+        $this->assertSame(3, $attempts);
+        $this->assertFalse($result['success']);
+        $this->assertSame('processing', $result['order_status']);
+    }
 }

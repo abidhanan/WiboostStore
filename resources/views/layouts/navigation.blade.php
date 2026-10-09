@@ -4,7 +4,7 @@
             <div class="flex items-center gap-4">
                 <a href="{{ route('dashboard') }}" class="shrink-0 flex items-center gap-3 group hover:scale-105 transition-transform">
                     <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" width="192" height="192" loading="eager" decoding="async" class="block h-12 w-12 drop-shadow-sm" alt="Logo" />
-                    <span class="text-2xl font-black tracking-tight text-[#2b3a67] hidden sm:block">Wiboost <span class="text-[#5a76c8]">Store</span></span>
+                    <span class="text-2xl font-black tracking-tight text-[#2b3a67] hidden sm:block">Wiboost Store</span>
                 </a>
 
                 <div class="hidden space-x-2 sm:ml-8 sm:flex">

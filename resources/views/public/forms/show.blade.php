@@ -139,14 +139,27 @@
         font-family: 'Nunito', sans-serif;
     }
 
+    body.wiboost-skeu .wiboost-public-guest-shell main.wiboost-public-guest-main > section.wiboost-public-guest-card.wiboost-public-guest-card--unframed {
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        overflow: visible !important;
+    }
+
     .wiboost-public-form-heading {
         margin-bottom: 2rem;
         border: 4px solid #fff;
         border-radius: 2rem;
-        background: rgba(255, 255, 255, .95);
+        background-color: #f5f8ff;
+        background-image: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
         padding: 1.5rem;
         text-align: center;
-        box-shadow: 0 22px 52px rgba(189, 224, 254, .38);
+        box-shadow: inset 0 2px 0 rgba(255, 255, 255, .98), inset 0 -5px 10px rgba(143, 170, 243, .20), 0 20px 42px -16px rgba(90, 118, 200, .42);
         backdrop-filter: blur(8px);
     }
 
@@ -184,8 +197,9 @@
     .wiboost-public-form {
         display: flex;
         flex-direction: column;
-        gap: 1.25rem;
+        gap: 1.75rem;
         margin: 0;
+        background: transparent;
     }
 
     .wiboost-public-field {
@@ -193,9 +207,10 @@
         width: 100%;
         border: 4px solid #fff;
         border-radius: 1.7rem;
-        background: #f8fbff;
+        background-color: #f5f8ff;
+        background-image: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
         padding: 1rem;
-        box-shadow: inset 0 2px 14px rgba(189, 224, 254, .32);
+        box-shadow: inset 0 2px 0 rgba(255, 255, 255, .98), inset 0 -4px 9px rgba(143, 170, 243, .18), 0 16px 30px -15px rgba(90, 118, 200, .44);
     }
 
     .wiboost-public-label {
@@ -270,7 +285,9 @@
     .wiboost-public-option-image {
         width: 7rem;
         height: 7rem;
-        flex: 0 0 7rem;
+        max-width: 40%;
+        flex: 0 1 7rem;
+        min-width: 0;
         overflow: hidden;
         border: 3px solid #fff;
         border-radius: 1rem;
@@ -433,7 +450,7 @@
         </div>
     @endif
 
-    <form action="{{ route('public.forms.store', ['form' => $form->slug]) }}" method="POST" enctype="multipart/form-data" class="wiboost-public-form space-y-5">
+    <form action="{{ route('public.forms.store', ['form' => $form->slug]) }}" method="POST" enctype="multipart/form-data" class="wiboost-public-form">
         @csrf
 
         @foreach(($form->fields ?? []) as $field)

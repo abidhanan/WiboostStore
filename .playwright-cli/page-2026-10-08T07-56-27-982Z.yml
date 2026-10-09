@@ -1,0 +1,75 @@
+- generic [active] [ref=f6e1]:
+  - generic [ref=f6e3]:
+    - button "Buka menu" [ref=f6e4] [cursor=pointer]
+    - generic [ref=f6e7]:
+      - heading "Manajemen Formulir" [level=1] [ref=f6e8]
+      - paragraph [ref=f6e9]: Kelola form publik dan benefit aplikasi premium.
+    - button "Menu profil admin" [ref=f6e11] [cursor=pointer]:
+      - img "Foto profil Preview Admin" [ref=f6e12]
+  - generic [ref=f6e13]:
+    - main [ref=f6e14]:
+      - generic [ref=f6e15]:
+        - generic [ref=f6e18]:
+          - generic [ref=f6e19]:
+            - textbox "Cari judul, slug, atau deskripsi..." [ref=f6e20]
+            - button "Cari Formulir" [ref=f6e21] [cursor=pointer]
+          - link "Tambah Formulir" [ref=f6e25] [cursor=pointer]:
+            - /url: http://127.0.0.1:8014/admin/forms/create?return_to=http%3A%2F%2F127.0.0.1%3A8014%2Fadmin%2Fforms
+        - generic [ref=f6e29]:
+          - link "Semua" [ref=f6e30] [cursor=pointer]:
+            - /url: http://127.0.0.1:8014/admin/forms
+          - link "Aktif" [ref=f6e31] [cursor=pointer]:
+            - /url: http://127.0.0.1:8014/admin/forms?form_filter=active
+          - link "Nonaktif" [ref=f6e32] [cursor=pointer]:
+            - /url: http://127.0.0.1:8014/admin/forms?form_filter=inactive
+        - table [ref=f6e36]:
+          - rowgroup [ref=f6e37]:
+            - row [ref=f6e38]:
+              - columnheader "Waktu Dibuat" [ref=f6e39]
+              - columnheader "Judul" [ref=f6e40]
+              - columnheader "Slug" [ref=f6e41]
+              - columnheader "Deskripsi" [ref=f6e42]
+              - columnheader "Dibuat Oleh" [ref=f6e43]
+              - columnheader "Pertanyaan" [ref=f6e44]
+              - columnheader "Jawaban" [ref=f6e45]
+              - columnheader "Status" [ref=f6e46]
+              - columnheader "Benefit" [ref=f6e47]
+              - columnheader "Tautan" [ref=f6e48]
+              - columnheader "Aksi" [ref=f6e49]
+          - rowgroup [ref=f6e50]:
+            - row [ref=f6e51]:
+              - cell [ref=f6e52]:
+                - paragraph [ref=f6e55]: Belum ada formulir.
+                - paragraph [ref=f6e56]: Tambah formulir pertama untuk dibagikan tanpa login.
+    - contentinfo [ref=f6e57]:
+      - generic [ref=f6e58]:
+        - generic [ref=f6e59]:
+          - generic [ref=f6e60]:
+            - generic [ref=f6e61]:
+              - img "Logo Wiboost Store" [ref=f6e62]
+              - generic [ref=f6e63]: Wiboost Store
+            - paragraph [ref=f6e64]: Platform penyedia layanan suntik sosmed, top up game, paket data operator, dan aplikasi premium dengan proses cepat, aman, dan praktis.
+          - generic [ref=f6e65]:
+            - paragraph [ref=f6e66]: Ikuti Kami
+            - generic [ref=f6e67]:
+              - link "Instagram Wiboost Store" [ref=f6e68] [cursor=pointer]:
+                - /url: https://www.instagram.com/wiboost.store?igsh=MXJzdWM3ZzBjdnNnZQ==
+              - link "TikTok Wiboost Store" [ref=f6e71] [cursor=pointer]:
+                - /url: https://www.tiktok.com/@wiboostore?_r=1&_t=ZS-98IS1s3zWa7
+              - link "YouTube Wiboost Store" [ref=f6e74] [cursor=pointer]:
+                - /url: https://youtube.com/@wiboostore?si=rDBRNJjvs5HSZYwC
+        - generic [ref=f6e77]:
+          - generic [ref=f6e78]:
+            - link "Syarat & Ketentuan" [ref=f6e79] [cursor=pointer]:
+              - /url: http://127.0.0.1:8014/legal/terms
+            - link "Privasi" [ref=f6e80] [cursor=pointer]:
+              - /url: http://127.0.0.1:8014/legal/privacy-policy
+            - link "Refund" [ref=f6e81] [cursor=pointer]:
+              - /url: http://127.0.0.1:8014/legal/refund-policy
+            - link "Kontak Admin" [ref=f6e82] [cursor=pointer]:
+              - /url: http://127.0.0.1:8014/legal/contact
+          - paragraph [ref=f6e83]:
+            - text: © 2026 Wiboost Store - Dibuat oleh
+            - link "Abid Hanan Wicaksono" [ref=f6e84] [cursor=pointer]:
+              - /url: https://www.abidhanan.my.id/
+            - text: .

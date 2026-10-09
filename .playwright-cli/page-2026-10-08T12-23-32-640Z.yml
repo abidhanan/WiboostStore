@@ -1,0 +1,31 @@
+- main [ref=e3]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - heading "Selamat Datang Kembali!" [level=1] [ref=e7]
+      - paragraph [ref=e8]: Silakan masuk untuk melakukan transaksi!
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e11]: Alamat Email
+        - textbox "Alamat Email" [active] [ref=e12]:
+          - /placeholder: nama@email.com
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - generic [ref=e15]: Kata Sandi
+          - link "Lupa sandi?" [ref=e16] [cursor=pointer]:
+            - /url: http://127.0.0.1:8017/forgot-password
+        - generic [ref=e17]:
+          - textbox "Kata Sandi" [ref=e18]:
+            - /placeholder: Masukkan kata sandi
+          - button "Lihat password" [ref=e19] [cursor=pointer]
+      - generic [ref=e23] [cursor=pointer]:
+        - checkbox "Tetap masuk di perangkat ini" [ref=e24]
+        - generic [ref=e25]: Tetap masuk di perangkat ini
+      - button "Masuk Sekarang" [ref=e26] [cursor=pointer]
+      - generic [ref=e27]:
+        - generic [ref=e28]: atau
+        - link "Masuk dengan Google" [ref=e32] [cursor=pointer]:
+          - /url: http://127.0.0.1:8017/auth/google
+    - paragraph [ref=e40]:
+      - text: Belum punya akun?
+      - link "Daftar di sini" [ref=e41] [cursor=pointer]:
+        - /url: http://127.0.0.1:8017/register

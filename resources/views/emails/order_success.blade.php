@@ -88,7 +88,7 @@
                             <tr>
                                 <td align="center" style="text-align:center;">
                                     <img src="{{ $logoUrl }}" alt="Logo Wiboost Store" width="72" height="72" style="display:block;width:72px;height:72px;margin:0 auto 12px;border:0;border-radius:999px;object-fit:contain;">
-                                    <p style="margin:0;font-size:24px;line-height:1.15;font-weight:900;color:#2b3a67;text-align:center;">Wiboost <span style="color:#5a76c8;">Store</span></p>
+                                    <p style="margin:0;font-size:24px;line-height:1.15;font-weight:900;color:#2b3a67;text-align:center;">Wiboost Store</p>
                                 </td>
                             </tr>
                         </table>

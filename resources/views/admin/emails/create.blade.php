@@ -163,7 +163,7 @@
                 <div class="rounded-[2rem] border-4 border-[#dbeafe] bg-[#f8fbff] shadow-inner">
                     <div class="border-b-4 border-dashed border-white bg-[#dbeafe] px-6 py-6 text-center">
                         <img src="{{ asset('images/wiboost-logo-nav.png') }}" alt="Logo Wiboost Store" class="mx-auto h-16 w-16 rounded-full object-contain">
-                        <p class="mt-3 text-xl font-black text-[#2b3a67]">Wiboost <span class="text-[#5a76c8]">Store</span></p>
+                        <p class="mt-3 text-xl font-black text-[#2b3a67]">Wiboost Store</p>
                     </div>
                     <div class="p-6">
                         <h3 class="break-words text-2xl font-black text-[#2b3a67]" x-text="subject || 'Subjek Email'"></h3>

@@ -1,0 +1,690 @@
+- generic [active] [ref=f4e1]:
+  - complementary [ref=f4e2]:
+    - generic [ref=f4e3]:
+      - link [ref=f4e5] [cursor=pointer]:
+        - /url: http://127.0.0.1:8017/admin/dashboard
+        - img "Logo Wiboost Store" [ref=f4e6]
+        - paragraph [ref=f4e8]: Wiboost Store
+      - navigation [ref=f4e9]:
+        - generic [ref=f4e10]:
+          - paragraph [ref=f4e12]: Utama
+          - link "Dashboard" [ref=f4e14] [cursor=pointer]:
+            - /url: http://127.0.0.1:8017/admin/dashboard
+        - generic [ref=f4e19]:
+          - paragraph [ref=f4e21]: Operasional
+          - generic [ref=f4e22]:
+            - link "Transaksi" [ref=f4e23] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/transactions
+            - link "Laporan" [ref=f4e28] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/reports
+            - link "OTP" [ref=f4e33] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/otp
+            - link "Refund" [ref=f4e38] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/refunds
+            - link "Deposit" [ref=f4e46] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/deposits
+        - generic [ref=f4e51]:
+          - paragraph [ref=f4e53]: Produk & Gudang
+          - generic [ref=f4e54]:
+            - link "Kategori" [ref=f4e55] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/categories
+            - link "Produk" [ref=f4e60] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/products
+            - link "Durasi" [ref=f4e65] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/durations
+            - link "Tutorial" [ref=f4e71] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/tutorials
+        - generic [ref=f4e76]:
+          - paragraph [ref=f4e78]: Akun & Reseller
+          - generic [ref=f4e79]:
+            - link "Pengguna" [ref=f4e80] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/users
+            - link "Komisi" [ref=f4e85] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/commissions
+            - link "Penarikan" [ref=f4e90] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/withdrawals
+        - generic [ref=f4e97]:
+          - paragraph [ref=f4e99]: Konten
+          - generic [ref=f4e100]:
+            - link "Banner" [ref=f4e101] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/promos
+            - link "Display" [ref=f4e106] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/displays
+            - link "Formulir" [ref=f4e112] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/forms
+            - link "Email" [ref=f4e118] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/emails
+            - link "Media Sosial" [ref=f4e124] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/social-media
+        - generic [ref=f4e130]:
+          - paragraph [ref=f4e132]: Sistem
+          - link "Log Aktivitas" [ref=f4e134] [cursor=pointer]:
+            - /url: http://127.0.0.1:8017/admin/logs
+      - link "Foto profil Preview Admin Preview Admin Super Admin" [ref=f4e141] [cursor=pointer]:
+        - /url: http://127.0.0.1:8017/profile
+        - img "Foto profil Preview Admin" [ref=f4e143]
+        - generic [ref=f4e144]:
+          - generic [ref=f4e145]: Preview Admin
+          - generic [ref=f4e146]: Super Admin
+  - generic [ref=f4e148]:
+    - button "Buka tutup sidebar" [expanded] [ref=f4e149] [cursor=pointer]
+    - generic [ref=f4e152]:
+      - heading "Manajemen Formulir" [level=1] [ref=f4e153]
+      - paragraph [ref=f4e154]: Kelola form publik dan benefit aplikasi premium.
+    - button "Menu profil admin" [ref=f4e156] [cursor=pointer]:
+      - img "Foto profil Preview Admin" [ref=f4e157]
+  - generic [ref=f4e158]:
+    - main [ref=f4e159]:
+      - generic [ref=f4e160]:
+        - generic [ref=f4e163]:
+          - generic [ref=f4e164]:
+            - textbox "Cari judul, slug, atau deskripsi..." [ref=f4e165]
+            - button "Cari Formulir" [ref=f4e166] [cursor=pointer]
+          - link "Tambah Formulir" [ref=f4e170] [cursor=pointer]:
+            - /url: http://127.0.0.1:8017/admin/forms/create?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+        - generic [ref=f4e174]:
+          - link "Semua" [ref=f4e175] [cursor=pointer]:
+            - /url: http://127.0.0.1:8017/admin/forms
+          - link "Aktif" [ref=f4e176] [cursor=pointer]:
+            - /url: http://127.0.0.1:8017/admin/forms?form_filter=active
+          - link "Nonaktif" [ref=f4e177] [cursor=pointer]:
+            - /url: http://127.0.0.1:8017/admin/forms?form_filter=inactive
+        - generic [ref=f4e178]:
+          - table [ref=f4e181]:
+            - rowgroup [ref=f4e182]:
+              - row [ref=f4e183]:
+                - columnheader "Waktu Dibuat" [ref=f4e184]
+                - columnheader "Judul" [ref=f4e185]
+                - columnheader "Slug" [ref=f4e186]
+                - columnheader "Deskripsi" [ref=f4e187]
+                - columnheader "Dibuat Oleh" [ref=f4e188]
+                - columnheader "Pertanyaan" [ref=f4e189]
+                - columnheader "Jawaban" [ref=f4e190]
+                - columnheader "Status" [ref=f4e191]
+                - columnheader "Benefit" [ref=f4e192]
+                - columnheader "Tautan" [ref=f4e193]
+                - columnheader "Aksi" [ref=f4e194]
+            - rowgroup [ref=f4e195]:
+              - row [ref=f4e196] [cursor=pointer]:
+                - cell [ref=f4e197]:
+                  - paragraph [ref=f4e198]: 08 Oct 2026, 15:41
+                - cell [ref=f4e199]:
+                  - paragraph [ref=f4e200]: Formulir Preview 25
+                - cell [ref=f4e201]:
+                  - paragraph [ref=f4e202]: preview-pagination-25
+                - cell [ref=f4e203]:
+                  - paragraph [ref=f4e204]: Data pratinjau pagination.
+                - cell [ref=f4e205]:
+                  - paragraph [ref=f4e206]: Preview Admin
+                - cell "1" [ref=f4e207]
+                - cell "0" [ref=f4e208]
+                - cell "Aktif" [ref=f4e209]
+                - cell "Tidak Ada" [ref=f4e211]
+                - cell [ref=f4e213]:
+                  - generic [ref=f4e214]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-25" [ref=f4e215]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-25
+                    - button "Salin Tautan" [ref=f4e216]
+                - cell [ref=f4e221]:
+                  - generic [ref=f4e222]:
+                    - link "Lihat Formulir" [ref=f4e223]:
+                      - /url: http://127.0.0.1:8017/admin/forms/26?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e227]:
+                      - /url: http://127.0.0.1:8017/admin/forms/26/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e232]
+              - row [ref=f4e235] [cursor=pointer]:
+                - cell [ref=f4e236]:
+                  - paragraph [ref=f4e237]: 08 Oct 2026, 15:41
+                - cell [ref=f4e238]:
+                  - paragraph [ref=f4e239]: Formulir Preview 24
+                - cell [ref=f4e240]:
+                  - paragraph [ref=f4e241]: preview-pagination-24
+                - cell [ref=f4e242]:
+                  - paragraph [ref=f4e243]: Data pratinjau pagination.
+                - cell [ref=f4e244]:
+                  - paragraph [ref=f4e245]: Preview Admin
+                - cell "1" [ref=f4e246]
+                - cell "0" [ref=f4e247]
+                - cell "Aktif" [ref=f4e248]
+                - cell "Tidak Ada" [ref=f4e250]
+                - cell [ref=f4e252]:
+                  - generic [ref=f4e253]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-24" [ref=f4e254]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-24
+                    - button "Salin Tautan" [ref=f4e255]
+                - cell [ref=f4e260]:
+                  - generic [ref=f4e261]:
+                    - link "Lihat Formulir" [ref=f4e262]:
+                      - /url: http://127.0.0.1:8017/admin/forms/25?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e266]:
+                      - /url: http://127.0.0.1:8017/admin/forms/25/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e271]
+              - row [ref=f4e274] [cursor=pointer]:
+                - cell [ref=f4e275]:
+                  - paragraph [ref=f4e276]: 08 Oct 2026, 15:41
+                - cell [ref=f4e277]:
+                  - paragraph [ref=f4e278]: Formulir Preview 23
+                - cell [ref=f4e279]:
+                  - paragraph [ref=f4e280]: preview-pagination-23
+                - cell [ref=f4e281]:
+                  - paragraph [ref=f4e282]: Data pratinjau pagination.
+                - cell [ref=f4e283]:
+                  - paragraph [ref=f4e284]: Preview Admin
+                - cell "1" [ref=f4e285]
+                - cell "0" [ref=f4e286]
+                - cell "Aktif" [ref=f4e287]
+                - cell "Tidak Ada" [ref=f4e289]
+                - cell [ref=f4e291]:
+                  - generic [ref=f4e292]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-23" [ref=f4e293]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-23
+                    - button "Salin Tautan" [ref=f4e294]
+                - cell [ref=f4e299]:
+                  - generic [ref=f4e300]:
+                    - link "Lihat Formulir" [ref=f4e301]:
+                      - /url: http://127.0.0.1:8017/admin/forms/24?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e305]:
+                      - /url: http://127.0.0.1:8017/admin/forms/24/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e310]
+              - row [ref=f4e313] [cursor=pointer]:
+                - cell [ref=f4e314]:
+                  - paragraph [ref=f4e315]: 08 Oct 2026, 15:41
+                - cell [ref=f4e316]:
+                  - paragraph [ref=f4e317]: Formulir Preview 22
+                - cell [ref=f4e318]:
+                  - paragraph [ref=f4e319]: preview-pagination-22
+                - cell [ref=f4e320]:
+                  - paragraph [ref=f4e321]: Data pratinjau pagination.
+                - cell [ref=f4e322]:
+                  - paragraph [ref=f4e323]: Preview Admin
+                - cell "1" [ref=f4e324]
+                - cell "0" [ref=f4e325]
+                - cell "Aktif" [ref=f4e326]
+                - cell "Tidak Ada" [ref=f4e328]
+                - cell [ref=f4e330]:
+                  - generic [ref=f4e331]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-22" [ref=f4e332]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-22
+                    - button "Salin Tautan" [ref=f4e333]
+                - cell [ref=f4e338]:
+                  - generic [ref=f4e339]:
+                    - link "Lihat Formulir" [ref=f4e340]:
+                      - /url: http://127.0.0.1:8017/admin/forms/23?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e344]:
+                      - /url: http://127.0.0.1:8017/admin/forms/23/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e349]
+              - row [ref=f4e352] [cursor=pointer]:
+                - cell [ref=f4e353]:
+                  - paragraph [ref=f4e354]: 08 Oct 2026, 15:41
+                - cell [ref=f4e355]:
+                  - paragraph [ref=f4e356]: Formulir Preview 21
+                - cell [ref=f4e357]:
+                  - paragraph [ref=f4e358]: preview-pagination-21
+                - cell [ref=f4e359]:
+                  - paragraph [ref=f4e360]: Data pratinjau pagination.
+                - cell [ref=f4e361]:
+                  - paragraph [ref=f4e362]: Preview Admin
+                - cell "1" [ref=f4e363]
+                - cell "0" [ref=f4e364]
+                - cell "Aktif" [ref=f4e365]
+                - cell "Tidak Ada" [ref=f4e367]
+                - cell [ref=f4e369]:
+                  - generic [ref=f4e370]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-21" [ref=f4e371]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-21
+                    - button "Salin Tautan" [ref=f4e372]
+                - cell [ref=f4e377]:
+                  - generic [ref=f4e378]:
+                    - link "Lihat Formulir" [ref=f4e379]:
+                      - /url: http://127.0.0.1:8017/admin/forms/22?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e383]:
+                      - /url: http://127.0.0.1:8017/admin/forms/22/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e388]
+              - row [ref=f4e391] [cursor=pointer]:
+                - cell [ref=f4e392]:
+                  - paragraph [ref=f4e393]: 08 Oct 2026, 15:41
+                - cell [ref=f4e394]:
+                  - paragraph [ref=f4e395]: Formulir Preview 20
+                - cell [ref=f4e396]:
+                  - paragraph [ref=f4e397]: preview-pagination-20
+                - cell [ref=f4e398]:
+                  - paragraph [ref=f4e399]: Data pratinjau pagination.
+                - cell [ref=f4e400]:
+                  - paragraph [ref=f4e401]: Preview Admin
+                - cell "1" [ref=f4e402]
+                - cell "0" [ref=f4e403]
+                - cell "Aktif" [ref=f4e404]
+                - cell "Tidak Ada" [ref=f4e406]
+                - cell [ref=f4e408]:
+                  - generic [ref=f4e409]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-20" [ref=f4e410]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-20
+                    - button "Salin Tautan" [ref=f4e411]
+                - cell [ref=f4e416]:
+                  - generic [ref=f4e417]:
+                    - link "Lihat Formulir" [ref=f4e418]:
+                      - /url: http://127.0.0.1:8017/admin/forms/21?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e422]:
+                      - /url: http://127.0.0.1:8017/admin/forms/21/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e427]
+              - row [ref=f4e430] [cursor=pointer]:
+                - cell [ref=f4e431]:
+                  - paragraph [ref=f4e432]: 08 Oct 2026, 15:41
+                - cell [ref=f4e433]:
+                  - paragraph [ref=f4e434]: Formulir Preview 19
+                - cell [ref=f4e435]:
+                  - paragraph [ref=f4e436]: preview-pagination-19
+                - cell [ref=f4e437]:
+                  - paragraph [ref=f4e438]: Data pratinjau pagination.
+                - cell [ref=f4e439]:
+                  - paragraph [ref=f4e440]: Preview Admin
+                - cell "1" [ref=f4e441]
+                - cell "0" [ref=f4e442]
+                - cell "Aktif" [ref=f4e443]
+                - cell "Tidak Ada" [ref=f4e445]
+                - cell [ref=f4e447]:
+                  - generic [ref=f4e448]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-19" [ref=f4e449]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-19
+                    - button "Salin Tautan" [ref=f4e450]
+                - cell [ref=f4e455]:
+                  - generic [ref=f4e456]:
+                    - link "Lihat Formulir" [ref=f4e457]:
+                      - /url: http://127.0.0.1:8017/admin/forms/20?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e461]:
+                      - /url: http://127.0.0.1:8017/admin/forms/20/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e466]
+              - row [ref=f4e469] [cursor=pointer]:
+                - cell [ref=f4e470]:
+                  - paragraph [ref=f4e471]: 08 Oct 2026, 15:41
+                - cell [ref=f4e472]:
+                  - paragraph [ref=f4e473]: Formulir Preview 18
+                - cell [ref=f4e474]:
+                  - paragraph [ref=f4e475]: preview-pagination-18
+                - cell [ref=f4e476]:
+                  - paragraph [ref=f4e477]: Data pratinjau pagination.
+                - cell [ref=f4e478]:
+                  - paragraph [ref=f4e479]: Preview Admin
+                - cell "1" [ref=f4e480]
+                - cell "0" [ref=f4e481]
+                - cell "Aktif" [ref=f4e482]
+                - cell "Tidak Ada" [ref=f4e484]
+                - cell [ref=f4e486]:
+                  - generic [ref=f4e487]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-18" [ref=f4e488]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-18
+                    - button "Salin Tautan" [ref=f4e489]
+                - cell [ref=f4e494]:
+                  - generic [ref=f4e495]:
+                    - link "Lihat Formulir" [ref=f4e496]:
+                      - /url: http://127.0.0.1:8017/admin/forms/19?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e500]:
+                      - /url: http://127.0.0.1:8017/admin/forms/19/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e505]
+              - row [ref=f4e508] [cursor=pointer]:
+                - cell [ref=f4e509]:
+                  - paragraph [ref=f4e510]: 08 Oct 2026, 15:41
+                - cell [ref=f4e511]:
+                  - paragraph [ref=f4e512]: Formulir Preview 17
+                - cell [ref=f4e513]:
+                  - paragraph [ref=f4e514]: preview-pagination-17
+                - cell [ref=f4e515]:
+                  - paragraph [ref=f4e516]: Data pratinjau pagination.
+                - cell [ref=f4e517]:
+                  - paragraph [ref=f4e518]: Preview Admin
+                - cell "1" [ref=f4e519]
+                - cell "0" [ref=f4e520]
+                - cell "Aktif" [ref=f4e521]
+                - cell "Tidak Ada" [ref=f4e523]
+                - cell [ref=f4e525]:
+                  - generic [ref=f4e526]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-17" [ref=f4e527]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-17
+                    - button "Salin Tautan" [ref=f4e528]
+                - cell [ref=f4e533]:
+                  - generic [ref=f4e534]:
+                    - link "Lihat Formulir" [ref=f4e535]:
+                      - /url: http://127.0.0.1:8017/admin/forms/18?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e539]:
+                      - /url: http://127.0.0.1:8017/admin/forms/18/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e544]
+              - row [ref=f4e547] [cursor=pointer]:
+                - cell [ref=f4e548]:
+                  - paragraph [ref=f4e549]: 08 Oct 2026, 15:41
+                - cell [ref=f4e550]:
+                  - paragraph [ref=f4e551]: Formulir Preview 16
+                - cell [ref=f4e552]:
+                  - paragraph [ref=f4e553]: preview-pagination-16
+                - cell [ref=f4e554]:
+                  - paragraph [ref=f4e555]: Data pratinjau pagination.
+                - cell [ref=f4e556]:
+                  - paragraph [ref=f4e557]: Preview Admin
+                - cell "1" [ref=f4e558]
+                - cell "0" [ref=f4e559]
+                - cell "Aktif" [ref=f4e560]
+                - cell "Tidak Ada" [ref=f4e562]
+                - cell [ref=f4e564]:
+                  - generic [ref=f4e565]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-16" [ref=f4e566]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-16
+                    - button "Salin Tautan" [ref=f4e567]
+                - cell [ref=f4e572]:
+                  - generic [ref=f4e573]:
+                    - link "Lihat Formulir" [ref=f4e574]:
+                      - /url: http://127.0.0.1:8017/admin/forms/17?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e578]:
+                      - /url: http://127.0.0.1:8017/admin/forms/17/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e583]
+              - row [ref=f4e586] [cursor=pointer]:
+                - cell [ref=f4e587]:
+                  - paragraph [ref=f4e588]: 08 Oct 2026, 15:41
+                - cell [ref=f4e589]:
+                  - paragraph [ref=f4e590]: Formulir Preview 15
+                - cell [ref=f4e591]:
+                  - paragraph [ref=f4e592]: preview-pagination-15
+                - cell [ref=f4e593]:
+                  - paragraph [ref=f4e594]: Data pratinjau pagination.
+                - cell [ref=f4e595]:
+                  - paragraph [ref=f4e596]: Preview Admin
+                - cell "1" [ref=f4e597]
+                - cell "0" [ref=f4e598]
+                - cell "Aktif" [ref=f4e599]
+                - cell "Tidak Ada" [ref=f4e601]
+                - cell [ref=f4e603]:
+                  - generic [ref=f4e604]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-15" [ref=f4e605]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-15
+                    - button "Salin Tautan" [ref=f4e606]
+                - cell [ref=f4e611]:
+                  - generic [ref=f4e612]:
+                    - link "Lihat Formulir" [ref=f4e613]:
+                      - /url: http://127.0.0.1:8017/admin/forms/16?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e617]:
+                      - /url: http://127.0.0.1:8017/admin/forms/16/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e622]
+              - row [ref=f4e625] [cursor=pointer]:
+                - cell [ref=f4e626]:
+                  - paragraph [ref=f4e627]: 08 Oct 2026, 15:41
+                - cell [ref=f4e628]:
+                  - paragraph [ref=f4e629]: Formulir Preview 14
+                - cell [ref=f4e630]:
+                  - paragraph [ref=f4e631]: preview-pagination-14
+                - cell [ref=f4e632]:
+                  - paragraph [ref=f4e633]: Data pratinjau pagination.
+                - cell [ref=f4e634]:
+                  - paragraph [ref=f4e635]: Preview Admin
+                - cell "1" [ref=f4e636]
+                - cell "0" [ref=f4e637]
+                - cell "Aktif" [ref=f4e638]
+                - cell "Tidak Ada" [ref=f4e640]
+                - cell [ref=f4e642]:
+                  - generic [ref=f4e643]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-14" [ref=f4e644]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-14
+                    - button "Salin Tautan" [ref=f4e645]
+                - cell [ref=f4e650]:
+                  - generic [ref=f4e651]:
+                    - link "Lihat Formulir" [ref=f4e652]:
+                      - /url: http://127.0.0.1:8017/admin/forms/15?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e656]:
+                      - /url: http://127.0.0.1:8017/admin/forms/15/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e661]
+              - row [ref=f4e664] [cursor=pointer]:
+                - cell [ref=f4e665]:
+                  - paragraph [ref=f4e666]: 08 Oct 2026, 15:41
+                - cell [ref=f4e667]:
+                  - paragraph [ref=f4e668]: Formulir Preview 13
+                - cell [ref=f4e669]:
+                  - paragraph [ref=f4e670]: preview-pagination-13
+                - cell [ref=f4e671]:
+                  - paragraph [ref=f4e672]: Data pratinjau pagination.
+                - cell [ref=f4e673]:
+                  - paragraph [ref=f4e674]: Preview Admin
+                - cell "1" [ref=f4e675]
+                - cell "0" [ref=f4e676]
+                - cell "Aktif" [ref=f4e677]
+                - cell "Tidak Ada" [ref=f4e679]
+                - cell [ref=f4e681]:
+                  - generic [ref=f4e682]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-13" [ref=f4e683]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-13
+                    - button "Salin Tautan" [ref=f4e684]
+                - cell [ref=f4e689]:
+                  - generic [ref=f4e690]:
+                    - link "Lihat Formulir" [ref=f4e691]:
+                      - /url: http://127.0.0.1:8017/admin/forms/14?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e695]:
+                      - /url: http://127.0.0.1:8017/admin/forms/14/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e700]
+              - row [ref=f4e703] [cursor=pointer]:
+                - cell [ref=f4e704]:
+                  - paragraph [ref=f4e705]: 08 Oct 2026, 15:41
+                - cell [ref=f4e706]:
+                  - paragraph [ref=f4e707]: Formulir Preview 12
+                - cell [ref=f4e708]:
+                  - paragraph [ref=f4e709]: preview-pagination-12
+                - cell [ref=f4e710]:
+                  - paragraph [ref=f4e711]: Data pratinjau pagination.
+                - cell [ref=f4e712]:
+                  - paragraph [ref=f4e713]: Preview Admin
+                - cell "1" [ref=f4e714]
+                - cell "0" [ref=f4e715]
+                - cell "Aktif" [ref=f4e716]
+                - cell "Tidak Ada" [ref=f4e718]
+                - cell [ref=f4e720]:
+                  - generic [ref=f4e721]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-12" [ref=f4e722]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-12
+                    - button "Salin Tautan" [ref=f4e723]
+                - cell [ref=f4e728]:
+                  - generic [ref=f4e729]:
+                    - link "Lihat Formulir" [ref=f4e730]:
+                      - /url: http://127.0.0.1:8017/admin/forms/13?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e734]:
+                      - /url: http://127.0.0.1:8017/admin/forms/13/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e739]
+              - row [ref=f4e742] [cursor=pointer]:
+                - cell [ref=f4e743]:
+                  - paragraph [ref=f4e744]: 08 Oct 2026, 15:41
+                - cell [ref=f4e745]:
+                  - paragraph [ref=f4e746]: Formulir Preview 11
+                - cell [ref=f4e747]:
+                  - paragraph [ref=f4e748]: preview-pagination-11
+                - cell [ref=f4e749]:
+                  - paragraph [ref=f4e750]: Data pratinjau pagination.
+                - cell [ref=f4e751]:
+                  - paragraph [ref=f4e752]: Preview Admin
+                - cell "1" [ref=f4e753]
+                - cell "0" [ref=f4e754]
+                - cell "Aktif" [ref=f4e755]
+                - cell "Tidak Ada" [ref=f4e757]
+                - cell [ref=f4e759]:
+                  - generic [ref=f4e760]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-11" [ref=f4e761]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-11
+                    - button "Salin Tautan" [ref=f4e762]
+                - cell [ref=f4e767]:
+                  - generic [ref=f4e768]:
+                    - link "Lihat Formulir" [ref=f4e769]:
+                      - /url: http://127.0.0.1:8017/admin/forms/12?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e773]:
+                      - /url: http://127.0.0.1:8017/admin/forms/12/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e778]
+              - row [ref=f4e781] [cursor=pointer]:
+                - cell [ref=f4e782]:
+                  - paragraph [ref=f4e783]: 08 Oct 2026, 15:41
+                - cell [ref=f4e784]:
+                  - paragraph [ref=f4e785]: Formulir Preview 10
+                - cell [ref=f4e786]:
+                  - paragraph [ref=f4e787]: preview-pagination-10
+                - cell [ref=f4e788]:
+                  - paragraph [ref=f4e789]: Data pratinjau pagination.
+                - cell [ref=f4e790]:
+                  - paragraph [ref=f4e791]: Preview Admin
+                - cell "1" [ref=f4e792]
+                - cell "0" [ref=f4e793]
+                - cell "Aktif" [ref=f4e794]
+                - cell "Tidak Ada" [ref=f4e796]
+                - cell [ref=f4e798]:
+                  - generic [ref=f4e799]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-10" [ref=f4e800]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-10
+                    - button "Salin Tautan" [ref=f4e801]
+                - cell [ref=f4e806]:
+                  - generic [ref=f4e807]:
+                    - link "Lihat Formulir" [ref=f4e808]:
+                      - /url: http://127.0.0.1:8017/admin/forms/11?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e812]:
+                      - /url: http://127.0.0.1:8017/admin/forms/11/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e817]
+              - row [ref=f4e820] [cursor=pointer]:
+                - cell [ref=f4e821]:
+                  - paragraph [ref=f4e822]: 08 Oct 2026, 15:41
+                - cell [ref=f4e823]:
+                  - paragraph [ref=f4e824]: Formulir Preview 9
+                - cell [ref=f4e825]:
+                  - paragraph [ref=f4e826]: preview-pagination-9
+                - cell [ref=f4e827]:
+                  - paragraph [ref=f4e828]: Data pratinjau pagination.
+                - cell [ref=f4e829]:
+                  - paragraph [ref=f4e830]: Preview Admin
+                - cell "1" [ref=f4e831]
+                - cell "0" [ref=f4e832]
+                - cell "Aktif" [ref=f4e833]
+                - cell "Tidak Ada" [ref=f4e835]
+                - cell [ref=f4e837]:
+                  - generic [ref=f4e838]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-9" [ref=f4e839]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-9
+                    - button "Salin Tautan" [ref=f4e840]
+                - cell [ref=f4e845]:
+                  - generic [ref=f4e846]:
+                    - link "Lihat Formulir" [ref=f4e847]:
+                      - /url: http://127.0.0.1:8017/admin/forms/10?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e851]:
+                      - /url: http://127.0.0.1:8017/admin/forms/10/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e856]
+              - row [ref=f4e859] [cursor=pointer]:
+                - cell [ref=f4e860]:
+                  - paragraph [ref=f4e861]: 08 Oct 2026, 15:41
+                - cell [ref=f4e862]:
+                  - paragraph [ref=f4e863]: Formulir Preview 8
+                - cell [ref=f4e864]:
+                  - paragraph [ref=f4e865]: preview-pagination-8
+                - cell [ref=f4e866]:
+                  - paragraph [ref=f4e867]: Data pratinjau pagination.
+                - cell [ref=f4e868]:
+                  - paragraph [ref=f4e869]: Preview Admin
+                - cell "1" [ref=f4e870]
+                - cell "0" [ref=f4e871]
+                - cell "Aktif" [ref=f4e872]
+                - cell "Tidak Ada" [ref=f4e874]
+                - cell [ref=f4e876]:
+                  - generic [ref=f4e877]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-8" [ref=f4e878]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-8
+                    - button "Salin Tautan" [ref=f4e879]
+                - cell [ref=f4e884]:
+                  - generic [ref=f4e885]:
+                    - link "Lihat Formulir" [ref=f4e886]:
+                      - /url: http://127.0.0.1:8017/admin/forms/9?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e890]:
+                      - /url: http://127.0.0.1:8017/admin/forms/9/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e895]
+              - row [ref=f4e898] [cursor=pointer]:
+                - cell [ref=f4e899]:
+                  - paragraph [ref=f4e900]: 08 Oct 2026, 15:41
+                - cell [ref=f4e901]:
+                  - paragraph [ref=f4e902]: Formulir Preview 7
+                - cell [ref=f4e903]:
+                  - paragraph [ref=f4e904]: preview-pagination-7
+                - cell [ref=f4e905]:
+                  - paragraph [ref=f4e906]: Data pratinjau pagination.
+                - cell [ref=f4e907]:
+                  - paragraph [ref=f4e908]: Preview Admin
+                - cell "1" [ref=f4e909]
+                - cell "0" [ref=f4e910]
+                - cell "Aktif" [ref=f4e911]
+                - cell "Tidak Ada" [ref=f4e913]
+                - cell [ref=f4e915]:
+                  - generic [ref=f4e916]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-7" [ref=f4e917]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-7
+                    - button "Salin Tautan" [ref=f4e918]
+                - cell [ref=f4e923]:
+                  - generic [ref=f4e924]:
+                    - link "Lihat Formulir" [ref=f4e925]:
+                      - /url: http://127.0.0.1:8017/admin/forms/8?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e929]:
+                      - /url: http://127.0.0.1:8017/admin/forms/8/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e934]
+              - row [ref=f4e937] [cursor=pointer]:
+                - cell [ref=f4e938]:
+                  - paragraph [ref=f4e939]: 08 Oct 2026, 15:41
+                - cell [ref=f4e940]:
+                  - paragraph [ref=f4e941]: Formulir Preview 6
+                - cell [ref=f4e942]:
+                  - paragraph [ref=f4e943]: preview-pagination-6
+                - cell [ref=f4e944]:
+                  - paragraph [ref=f4e945]: Data pratinjau pagination.
+                - cell [ref=f4e946]:
+                  - paragraph [ref=f4e947]: Preview Admin
+                - cell "1" [ref=f4e948]
+                - cell "0" [ref=f4e949]
+                - cell "Aktif" [ref=f4e950]
+                - cell "Tidak Ada" [ref=f4e952]
+                - cell [ref=f4e954]:
+                  - generic [ref=f4e955]:
+                    - link "http://127.0.0.1:8017/formulir/preview-pagination-6" [ref=f4e956]:
+                      - /url: http://127.0.0.1:8017/formulir/preview-pagination-6
+                    - button "Salin Tautan" [ref=f4e957]
+                - cell [ref=f4e962]:
+                  - generic [ref=f4e963]:
+                    - link "Lihat Formulir" [ref=f4e964]:
+                      - /url: http://127.0.0.1:8017/admin/forms/7?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - link "Edit Formulir" [ref=f4e968]:
+                      - /url: http://127.0.0.1:8017/admin/forms/7/edit?return_to=http%3A%2F%2F127.0.0.1%3A8017%2Fadmin%2Fforms
+                    - button "Hapus Formulir" [ref=f4e973]
+          - generic [ref=f4e977]:
+            - paragraph [ref=f4e978]: Menampilkan 1-20 dari 26 data
+            - navigation "Pagination" [ref=f4e979]:
+              - generic "« Previous" [ref=f4e980]
+              - generic [ref=f4e983]: "1"
+              - link "2" [ref=f4e984] [cursor=pointer]:
+                - /url: http://127.0.0.1:8017/admin/forms?page=2
+              - link "Next »" [ref=f4e985] [cursor=pointer]:
+                - /url: http://127.0.0.1:8017/admin/forms?page=2
+    - contentinfo [ref=f4e988]:
+      - generic [ref=f4e989]:
+        - generic [ref=f4e990]:
+          - generic [ref=f4e991]:
+            - generic [ref=f4e992]:
+              - img "Logo Wiboost Store" [ref=f4e993]
+              - generic [ref=f4e994]: Wiboost Store
+            - paragraph [ref=f4e995]:
+              - generic [ref=f4e996]: Platform penyedia layanan suntik sosmed, top up game,
+              - generic [ref=f4e997]: paket data operator, dan aplikasi premium dengan proses cepat, aman, dan praktis.
+          - generic [ref=f4e998]:
+            - paragraph [ref=f4e999]: Ikuti Kami
+            - generic [ref=f4e1000]:
+              - link "Instagram Wiboost Store" [ref=f4e1001] [cursor=pointer]:
+                - /url: https://www.instagram.com/wiboost.store?igsh=MXJzdWM3ZzBjdnNnZQ==
+              - link "TikTok Wiboost Store" [ref=f4e1004] [cursor=pointer]:
+                - /url: https://www.tiktok.com/@wiboostore?_r=1&_t=ZS-98IS1s3zWa7
+              - link "YouTube Wiboost Store" [ref=f4e1007] [cursor=pointer]:
+                - /url: https://youtube.com/@wiboostore?si=rDBRNJjvs5HSZYwC
+        - generic [ref=f4e1010]:
+          - generic [ref=f4e1011]:
+            - link "Syarat & Ketentuan" [ref=f4e1012] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/legal/terms
+            - link "Privasi" [ref=f4e1013] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/legal/privacy-policy
+            - link "Refund" [ref=f4e1014] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/legal/refund-policy
+            - link "Kontak Admin" [ref=f4e1015] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/legal/contact
+          - paragraph [ref=f4e1016]:
+            - text: © 2026 Wiboost Store - Dibuat oleh
+            - link "Abid Hanan Wicaksono" [ref=f4e1017] [cursor=pointer]:
+              - /url: https://www.abidhanan.my.id/
+            - text: .

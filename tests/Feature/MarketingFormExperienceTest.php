@@ -356,9 +356,12 @@ class MarketingFormExperienceTest extends TestCase
             ->assertSee('wiboost-public-guest-card--unframed', false)
             ->assertSee('wiboost-public-form-heading', false)
             ->assertSee('border-radius: 2rem', false)
-            ->assertSee('background: rgba(255, 255, 255, .95)', false)
-            ->assertSee('box-shadow: 0 22px 52px', false)
+            ->assertSee('background-image: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%)', false)
+            ->assertSee('0 20px 42px -16px rgba(90, 118, 200, .42)', false)
             ->assertSee('background: transparent !important', false)
+            ->assertSee('background-image: none !important', false)
+            ->assertSee('gap: 1.75rem', false)
+            ->assertDontSee('class="wiboost-public-form space-y-5"', false)
             ->assertDontSee('wiboost-public-form-badge', false)
             ->assertDontSee('Formulir Wiboost Store');
     }

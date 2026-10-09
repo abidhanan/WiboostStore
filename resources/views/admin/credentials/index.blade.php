@@ -303,7 +303,18 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y-4 divide-dashed divide-[#f4f9ff]">
-                    @forelse($credentials as $cred)
+                    @if($credentials->isEmpty())
+                        <tr>
+                            <td colspan="3" class="px-5 py-24 text-center">
+                                <div class="inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-[#f0f5ff] border-4 border-white mb-4 text-[#5a76c8] shadow-inner animate-float">
+                                    @include('partials.wiboost-icon', ['name' => 'package', 'class' => 'h-9 w-9'])
+                                </div>
+                                <p class="text-[#5a76c8] font-black text-xl">Belum ada stok data.</p>
+                                <p class="text-[#8faaf3] font-bold mt-1">Silakan tambahkan melalui form di samping kiri.</p>
+                            </td>
+                        </tr>
+                    @else
+                    @foreach($credentials as $cred)
                         <tr class="hover:bg-[#f8faff] transition-colors group">
                             <td class="px-5 py-5 align-top">
                                 <div class="space-y-2 bg-white p-4 rounded-2xl border-2 border-[#f0f5ff] shadow-sm w-full min-w-[220px] max-w-[360px]">
@@ -387,17 +398,8 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="3" class="px-5 py-24 text-center">
-                                <div class="inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-[#f0f5ff] border-4 border-white mb-4 text-[#5a76c8] shadow-inner animate-float">
-                                    @include('partials.wiboost-icon', ['name' => 'package', 'class' => 'h-9 w-9'])
-                                </div>
-                                <p class="text-[#5a76c8] font-black text-xl">Belum ada stok data.</p>
-                                <p class="text-[#8faaf3] font-bold mt-1">Silakan tambahkan melalui form di samping kiri.</p>
-                            </td>
-                        </tr>
-                    @endforelse
+                    @endforeach
+                    @endif
                     </tbody>
                 </table>
             </div>

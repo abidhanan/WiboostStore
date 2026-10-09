@@ -443,7 +443,7 @@
     @endif
 
     <!-- Toolbar Utama: Pencarian, Segarkan, Filter & Cetak -->
-    <div class="mb-6 sm:mb-8 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/90 backdrop-blur-sm p-4 sm:p-5 shadow-xl shadow-[#bde0fe]/30 relative z-30 w-full min-w-0 transition-transform duration-300 hover:border-[#bde0fe]">
+    <div class="wiboost-admin-toolbar-static mb-6 sm:mb-8 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/90 backdrop-blur-sm p-4 sm:p-5 shadow-xl shadow-[#bde0fe]/30 relative z-30 w-full min-w-0">
         <form action="{{ route('admin.transactions.index') }}" method="GET" class="flex flex-col gap-4 w-full">
             
             <!-- Baris Atas: Input Cari + Tombol Cari + Reset + Segarkan -->
@@ -1002,41 +1002,13 @@
     </div>
 </div>
 <script>
-    function syncAdminDetailModalFrame(modal) {
-        if (!modal) return;
-
-        const viewportHeight = window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight || 0;
-        const navbar = document.querySelector('.wiboost-admin-navbar');
-        const navbarRect = navbar?.getBoundingClientRect();
-        const top = Math.max(0, Math.ceil(navbarRect?.bottom || 0));
-        const height = Math.max(240, Math.floor(viewportHeight - top));
-
-        modal.style.setProperty('--admin-detail-modal-top', `${top}px`);
-        modal.style.setProperty('--admin-detail-modal-height', `${height}px`);
-    }
-
     function openAdminDetailModal(id) {
-        const modal = document.getElementById(id);
-        if (!modal) return;
-        if (modal.parentElement !== document.body) {
-            document.body.appendChild(modal);
-        }
-        syncAdminDetailModalFrame(modal);
-        modal.classList.add('modal-active');
-        document.body.classList.add('admin-detail-open');
-        requestAnimationFrame(() => syncAdminDetailModalFrame(modal));
+        window.openAdminUniversalDetail?.(id);
     }
 
     function closeAdminDetailModal(id) {
-        const modal = document.getElementById(id);
-        if (!modal) return;
-        modal.classList.remove('modal-active');
-        document.body.classList.remove('admin-detail-open');
+        window.closeAdminUniversalDetail?.(id);
     }
-
-    window.addEventListener('resize', () => {
-        document.querySelectorAll('.admin-detail-modal.modal-active').forEach(syncAdminDetailModalFrame);
-    }, { passive: true });
 
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') return;
@@ -1195,9 +1167,6 @@
     })();
 
     (() => {
-        const refreshUrl = @json(route('admin.transactions.refresh-provider-statuses'));
-        const csrfToken = @json(csrf_token());
-
         const shouldDelayRefresh = () => {
             const active = document.activeElement;
 
@@ -1207,29 +1176,12 @@
                 || (active && ['INPUT', 'SELECT', 'TEXTAREA'].includes(active.tagName));
         };
 
-        window.setInterval(async () => {
+        window.setInterval(() => {
             if (shouldDelayRefresh()) {
                 return;
             }
 
-            try {
-                await fetch(refreshUrl, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Accept': 'text/html',
-                    },
-                    credentials: 'same-origin',
-                });
-
-                window.setTimeout(() => {
-                    if (! shouldDelayRefresh()) {
-                        window.location.reload();
-                    }
-                }, 2500);
-            } catch (error) {
-                window.location.reload();
-            }
+            window.location.reload();
         }, 60000);
     })();
 </script>

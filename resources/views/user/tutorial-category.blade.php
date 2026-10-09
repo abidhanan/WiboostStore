@@ -77,7 +77,7 @@
                 Tutorial
             </div>
             <div class="col-start-2 row-start-2 min-w-0 self-center text-left">
-                <h1 class="wiboost-order-header-title mb-2 font-black tracking-tight text-[#2b3a67] drop-shadow-sm">{{ $subCategory }}</h1>
+                <h1 data-fit-single-line class="wiboost-order-header-title mb-2 font-black tracking-tight text-[#2b3a67] drop-shadow-sm">{{ $subCategory }}</h1>
                 <p class="wiboost-order-header-description font-bold text-[#8faaf3]">Pilih tutorial di bawah ini untuk melihat panduan.</p>
             </div>
         </div>

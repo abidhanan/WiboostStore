@@ -1,0 +1,170 @@
+- generic [ref=f1e2]:
+  - generic [ref=f1e4]:
+    - generic [ref=f1e5]: Internal Server Error
+    - button "Copy as Markdown" [ref=f1e11] [cursor=pointer]
+  - generic [ref=f1e18]:
+    - generic [ref=f1e19]:
+      - heading "Illuminate\\Database\\QueryException" [level=1] [ref=f1e20]
+      - generic [ref=f1e21]: vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+      - paragraph [ref=f1e23]: "SQLSTATE[HY000]: General error: 1 no such table: transactions (Connection: sqlite, Database: C:\\laragon\\www\\WiboostStore\\database\\database.sqlite, SQL: select count(*) as aggregate from \"transactions\" where \"payment_status\" = paid)"
+    - generic [ref=f1e24]:
+      - generic [ref=f1e25]:
+        - generic [ref=f1e26]:
+          - generic [ref=f1e27]: LARAVEL
+          - generic [ref=f1e28]: 12.53.0
+        - generic [ref=f1e29]:
+          - generic [ref=f1e30]: PHP
+          - generic [ref=f1e31]: 8.3.16
+      - generic [ref=f1e32]: UNHANDLED
+      - generic [ref=f1e36]: CODE HY000
+    - generic [ref=f1e38]:
+      - generic [ref=f1e39]: "500"
+      - generic [ref=f1e43]: GET
+      - generic [ref=f1e47]: http://127.0.0.1:8017
+      - button [ref=f1e48] [cursor=pointer]
+  - generic [ref=f1e53]:
+    - generic [ref=f1e54]:
+      - heading "Exception trace" [level=3] [ref=f1e60]
+      - generic [ref=f1e61]:
+        - generic [ref=f1e63] [cursor=pointer]:
+          - generic [ref=f1e68]: 10 vendor frames
+          - button [ref=f1e69]
+        - generic [ref=f1e74]:
+          - generic [ref=f1e75] [cursor=pointer]:
+            - generic [ref=f1e78]:
+              - code [ref=f1e82]:
+                - generic [ref=f1e83]: Illuminate\Database\Eloquent\Builder->__call(string, array)
+              - generic [ref=f1e84]: app\Http\Controllers\FrontendController.php:32
+            - button [ref=f1e87]
+          - code [ref=f1e96]:
+            - generic [ref=f1e97]: 27 $catalogSlugs = WiboostCatalog::coreCategorySlugs();
+            - generic [ref=f1e98]: 28 $categoryOrderSql = WiboostCatalog::categoryOrderSql();
+            - generic [ref=f1e99]: "29"
+            - generic [ref=f1e100]: 30 // 1. Mengambil data untuk statistik metrik real-time
+            - generic [ref=f1e101]: 31 $totalUsers = User::count();
+            - generic [ref=f1e102]: 32 $totalTransactions = Transaction::where('payment_status', 'paid')->count();
+            - generic [ref=f1e103]: 33 $activeProducts = Product::where('is_active', true)
+            - generic [ref=f1e104]: 34 ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes())
+            - generic [ref=f1e105]: 35 ->count();
+            - generic [ref=f1e106]: "36"
+            - generic [ref=f1e107]: 37 // 2. Mengambil semua kategori beserta jumlah produk yang ada di dalamnya
+            - generic [ref=f1e108]: 38 $categories = Category::whereIn('slug', $catalogSlugs)
+            - generic [ref=f1e109]: "39 ->withCount(['products' => function ($query) {"
+            - generic [ref=f1e110]: 40 $query->where('is_active', true)
+            - generic [ref=f1e111]: 41 ->whereIn('process_type', WiboostCatalog::activeProductProcessTypes());
+            - generic [ref=f1e112]: "42 }])"
+            - generic [ref=f1e113]: 43 ->orderByRaw($categoryOrderSql)
+            - generic [ref=f1e114]: "44"
+        - generic [ref=f1e116] [cursor=pointer]:
+          - generic [ref=f1e121]: 3 vendor frames
+          - button [ref=f1e122]
+        - generic [ref=f1e128] [cursor=pointer]:
+          - generic [ref=f1e131]:
+            - code [ref=f1e135]:
+              - generic [ref=f1e136]: Illuminate\Support\Facades\Facade::__callStatic(string, array)
+            - generic [ref=f1e137]: app\Http\Controllers\FrontendController.php:26
+          - button [ref=f1e140]
+        - generic [ref=f1e146] [cursor=pointer]:
+          - generic [ref=f1e151]: 5 vendor frames
+          - button [ref=f1e152]
+        - generic [ref=f1e158] [cursor=pointer]:
+          - generic [ref=f1e161]:
+            - code [ref=f1e165]:
+              - generic [ref=f1e166]: "Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(object(Illuminate\\Http\\Request))"
+            - generic [ref=f1e167]: app\Http\Middleware\LogActivity.php:18
+          - button [ref=f1e170]
+        - generic [ref=f1e176] [cursor=pointer]:
+          - generic [ref=f1e181]: 1 vendor frame
+          - button [ref=f1e182]
+        - generic [ref=f1e188] [cursor=pointer]:
+          - generic [ref=f1e191]:
+            - code [ref=f1e195]:
+              - generic [ref=f1e196]: "Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(object(Illuminate\\Http\\Request))"
+            - generic [ref=f1e197]: app\Http\Middleware\CompressTextResponse.php:15
+          - button [ref=f1e200]
+        - generic [ref=f1e206] [cursor=pointer]:
+          - generic [ref=f1e211]: 43 vendor frames
+          - button [ref=f1e212]
+        - generic [ref=f1e218] [cursor=pointer]:
+          - generic [ref=f1e221]:
+            - code [ref=f1e225]:
+              - generic [ref=f1e226]: Illuminate\Foundation\Application->handleRequest(object(Illuminate\Http\Request))
+            - generic [ref=f1e227]: public\index.php:174
+          - button [ref=f1e230]
+        - generic [ref=f1e236] [cursor=pointer]:
+          - generic [ref=f1e241]: 1 vendor frame
+          - button [ref=f1e242]
+    - generic [ref=f1e247]:
+      - generic [ref=f1e248]:
+        - heading "Queries" [level=3] [ref=f1e253]
+        - generic [ref=f1e254]: 1-1 of 1
+      - generic [ref=f1e257]:
+        - generic [ref=f1e258]:
+          - generic [ref=f1e259]: sqlite
+          - code [ref=f1e266]:
+            - generic [ref=f1e267]: select count(*) as aggregate from "users"
+        - generic [ref=f1e268]: 17.45ms
+  - generic [ref=f1e270]:
+    - generic [ref=f1e271]:
+      - heading "Headers" [level=2] [ref=f1e272]
+      - generic [ref=f1e273]:
+        - generic [ref=f1e274]:
+          - generic [ref=f1e275]: host
+          - generic [ref=f1e277]: 127.0.0.1:8017
+        - generic [ref=f1e278]:
+          - generic [ref=f1e279]: connection
+          - generic [ref=f1e281]: keep-alive
+        - generic [ref=f1e282]:
+          - generic [ref=f1e283]: sec-ch-ua
+          - generic [ref=f1e285]: "\"Chromium\";v=\"154\", \"Google Chrome\";v=\"154\", \"Not A(Brand\";v=\"99\""
+        - generic [ref=f1e286]:
+          - generic [ref=f1e287]: sec-ch-ua-mobile
+          - generic [ref=f1e289]: "?0"
+        - generic [ref=f1e290]:
+          - generic [ref=f1e291]: sec-ch-ua-platform
+          - generic [ref=f1e293]: "\"Windows\""
+        - generic [ref=f1e294]:
+          - generic [ref=f1e295]: upgrade-insecure-requests
+          - generic [ref=f1e297]: "1"
+        - generic [ref=f1e298]:
+          - generic [ref=f1e299]: user-agent
+          - generic [ref=f1e301]: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36
+        - generic [ref=f1e302]:
+          - generic [ref=f1e303]: accept
+          - generic [ref=f1e305]: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+        - generic [ref=f1e306]:
+          - generic [ref=f1e307]: sec-fetch-site
+          - generic [ref=f1e309]: none
+        - generic [ref=f1e310]:
+          - generic [ref=f1e311]: sec-fetch-mode
+          - generic [ref=f1e313]: navigate
+        - generic [ref=f1e314]:
+          - generic [ref=f1e315]: sec-fetch-user
+          - generic [ref=f1e317]: "?1"
+        - generic [ref=f1e318]:
+          - generic [ref=f1e319]: sec-fetch-dest
+          - generic [ref=f1e321]: document
+        - generic [ref=f1e322]:
+          - generic [ref=f1e323]: accept-encoding
+          - generic [ref=f1e325]: gzip, deflate, br, zstd
+        - generic [ref=f1e326]:
+          - generic [ref=f1e327]: accept-language
+          - generic [ref=f1e329]: en-US,en;q=0.9
+    - generic [ref=f1e330]:
+      - heading "Body" [level=2] [ref=f1e331]
+      - generic [ref=f1e332]: // No request body
+    - generic [ref=f1e333]:
+      - heading "Routing" [level=2] [ref=f1e334]
+      - generic [ref=f1e335]:
+        - generic [ref=f1e336]:
+          - generic [ref=f1e337]: controller
+          - generic [ref=f1e339]: App\Http\Controllers\FrontendController@index
+        - generic [ref=f1e340]:
+          - generic [ref=f1e341]: route name
+          - generic [ref=f1e343]: home
+        - generic [ref=f1e344]:
+          - generic [ref=f1e345]: middleware
+          - generic [ref=f1e347]: web
+    - generic [ref=f1e348]:
+      - heading "Routing parameters" [level=2] [ref=f1e349]
+      - generic [ref=f1e350]: // No routing parameters

@@ -1,0 +1,123 @@
+- generic [active] [ref=f2e1]:
+  - navigation:
+    - generic [ref=f2e3]:
+      - link [ref=f2e4] [cursor=pointer]:
+        - /url: http://127.0.0.1:8017
+        - img "Logo Wiboost Store" [ref=f2e5]
+        - paragraph [ref=f2e6]: Wiboost Store
+      - generic [ref=f2e7]:
+        - link "Daftar" [ref=f2e8] [cursor=pointer]:
+          - /url: http://127.0.0.1:8017/register
+        - link "Masuk" [ref=f2e9] [cursor=pointer]:
+          - /url: http://127.0.0.1:8017/login
+  - main [ref=f2e10]:
+    - generic [ref=f2e11]:
+      - img "Logo Wiboost Store" [ref=f2e12]
+      - heading "Wiboost Store" [level=1] [ref=f2e14]
+      - paragraph [ref=f2e15]: Wiboost Store adalah platform layanan digital terintegrasi yang menyediakan katalog lengkap mencakup layanan Pemasaran Media Sosial (SMM) guna menunjang pertumbuhan metrik akun sosial media, top up game online secara instan, pembelian paket data operator, hingga penyediaan akses langganan aplikasi premium dengan harga kompetitif, di mana seluruh transaksi diproses secara otomatis dan didukung oleh pembayaran QRIS yang support semua metode pembayaran secara praktis dan aman.
+      - link "Beli Sekarang" [ref=f2e17] [cursor=pointer]:
+        - /url: http://127.0.0.1:8017
+      - generic [ref=f2e19]:
+        - generic [ref=f2e20]:
+          - paragraph [ref=f2e21]: Total Pengguna
+          - paragraph [ref=f2e22]: "0"
+        - generic [ref=f2e23]:
+          - paragraph [ref=f2e24]: Total Layanan
+          - paragraph [ref=f2e25]: "0"
+        - generic [ref=f2e26]:
+          - paragraph [ref=f2e27]: Total Transaksi
+          - paragraph [ref=f2e28]: "0"
+  - generic [ref=f2e30]:
+    - generic [ref=f2e31]:
+      - generic [ref=f2e32]: Katalog Utama
+      - heading "Pilih Kategori" [level=2] [ref=f2e33]
+    - paragraph [ref=f2e36]: Layanan sedang dipersiapkan...
+  - generic [ref=f2e38]:
+    - generic [ref=f2e39]:
+      - generic [ref=f2e40]: Keunggulan
+      - heading "Kenapa Harus Wiboost Store?" [level=2] [ref=f2e41]
+    - generic [ref=f2e42]:
+      - generic [ref=f2e43]:
+        - heading "Proses Otomatis" [level=3] [ref=f2e47]
+        - paragraph [ref=f2e48]: Sistem kami berjalan 24/7. Transaksi diproses seketika tanpa perlu konfirmasi manual dari admin.
+      - generic [ref=f2e49]:
+        - heading "Aman & Terpercaya" [level=3] [ref=f2e54]
+        - paragraph [ref=f2e55]: Pembayaran menggunakan QRIS resmi yang aman, serta privasi akun media sosial Anda terjamin 100%.
+      - generic [ref=f2e56]:
+        - heading "Layanan Terlengkap" [level=3] [ref=f2e61]
+        - paragraph [ref=f2e62]: Mulai dari SMM Panel, Top Up Game, Paket Data Operator, hingga Aplikasi Premium tersedia lengkap dalam satu platform.
+      - generic [ref=f2e63]:
+        - heading "Harga Kompetitif" [level=3] [ref=f2e67]
+        - paragraph [ref=f2e68]: Dapatkan layanan berkualitas dengan harga termurah. Sangat cocok untuk digunakan sendiri atau dijual kembali.
+  - generic [ref=f2e70]:
+    - generic [ref=f2e71]:
+      - generic [ref=f2e72]: Cara Kerja
+      - heading "Alur Pemesanan" [level=2] [ref=f2e73]
+    - generic [ref=f2e75]:
+      - generic [ref=f2e76]:
+        - generic [ref=f2e77]: "1"
+        - generic [ref=f2e78]:
+          - heading "Pilih Layanan" [level=3] [ref=f2e79]
+          - paragraph [ref=f2e80]: Telusuri katalog dan pilih layanan digital yang Anda butuhkan.
+      - generic [ref=f2e81]:
+        - generic [ref=f2e82]: "2"
+        - generic [ref=f2e83]:
+          - heading "Isi Data" [level=3] [ref=f2e84]
+          - paragraph [ref=f2e85]: Masukkan data yang diminta seperti User ID game atau Link Sosial Media.
+      - generic [ref=f2e86]:
+        - generic [ref=f2e87]: "3"
+        - generic [ref=f2e88]:
+          - heading "Pembayaran" [level=3] [ref=f2e89]
+          - paragraph [ref=f2e90]: Lakukan pembayaran dengan scan QRIS atau metode lainnya yang tersedia.
+      - generic [ref=f2e91]:
+        - generic [ref=f2e92]: "4"
+        - generic [ref=f2e93]:
+          - heading "Selesai!" [level=3] [ref=f2e94]
+          - paragraph [ref=f2e95]: Pesanan Anda akan langsung diproses secara instan oleh sistem kami.
+  - generic [ref=f2e97]:
+    - generic [ref=f2e98]:
+      - generic [ref=f2e99]: FAQ
+      - heading "Pertanyaan Umum" [level=2] [ref=f2e100]
+    - generic [ref=f2e101]:
+      - group [ref=f2e102] [cursor=pointer]:
+        - generic "Berapa lama waktu yang dibutuhkan untuk proses pesanan?" [ref=f2e103]
+      - group [ref=f2e108] [cursor=pointer]:
+        - generic "Apakah butuh password akun sosmed saya?" [ref=f2e109]
+      - group [ref=f2e114] [cursor=pointer]:
+        - generic "Metode pembayaran apa saja yang tersedia?" [ref=f2e115]
+      - group [ref=f2e120] [cursor=pointer]:
+        - generic "Bagaimana jika pesanan saya gagal?" [ref=f2e121]
+  - contentinfo [ref=f2e126]:
+    - generic [ref=f2e127]:
+      - generic [ref=f2e128]:
+        - generic [ref=f2e129]:
+          - generic [ref=f2e130]:
+            - img "Logo Wiboost Store" [ref=f2e131]
+            - generic [ref=f2e132]: Wiboost Store
+          - paragraph [ref=f2e133]:
+            - generic [ref=f2e134]: Platform penyedia layanan suntik sosmed, top up game,
+            - generic [ref=f2e135]: paket data operator, dan aplikasi premium dengan proses cepat, aman, dan praktis.
+        - generic [ref=f2e136]:
+          - paragraph [ref=f2e137]: Ikuti Kami
+          - generic [ref=f2e138]:
+            - link "Instagram Wiboost Store" [ref=f2e139] [cursor=pointer]:
+              - /url: https://www.instagram.com/wiboost.store?igsh=MXJzdWM3ZzBjdnNnZQ==
+            - link "TikTok Wiboost Store" [ref=f2e142] [cursor=pointer]:
+              - /url: https://www.tiktok.com/@wiboostore?_r=1&_t=ZS-98IS1s3zWa7
+            - link "YouTube Wiboost Store" [ref=f2e145] [cursor=pointer]:
+              - /url: https://youtube.com/@wiboostore?si=rDBRNJjvs5HSZYwC
+      - generic [ref=f2e148]:
+        - generic [ref=f2e149]:
+          - link "Syarat & Ketentuan" [ref=f2e150] [cursor=pointer]:
+            - /url: http://127.0.0.1:8017/legal/terms
+          - link "Privasi" [ref=f2e151] [cursor=pointer]:
+            - /url: http://127.0.0.1:8017/legal/privacy-policy
+          - link "Refund" [ref=f2e152] [cursor=pointer]:
+            - /url: http://127.0.0.1:8017/legal/refund-policy
+          - link "Kontak Admin" [ref=f2e153] [cursor=pointer]:
+            - /url: http://127.0.0.1:8017/legal/contact
+        - paragraph [ref=f2e154]:
+          - text: © 2026 Wiboost Store - Dibuat oleh
+          - link "Abid Hanan Wicaksono" [ref=f2e155] [cursor=pointer]:
+            - /url: https://www.abidhanan.my.id/
+          - text: .

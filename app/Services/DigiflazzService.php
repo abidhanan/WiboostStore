@@ -135,7 +135,7 @@ class DigiflazzService
         $sign = md5($this->username . $this->key . $refId);
 
         try {
-            $response = Http::timeout(30)->acceptJson()->post($this->baseUrl . '/transaction', [
+            $response = Http::connectTimeout(3)->timeout(8)->acceptJson()->post($this->baseUrl . '/transaction', [
                 'username' => $this->username,
                 'buyer_sku_code' => $sku,
                 'customer_no' => $target,

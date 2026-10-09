@@ -14,10 +14,8 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class TransactionController extends Controller
 {
@@ -198,13 +196,7 @@ class TransactionController extends Controller
 
     public function refreshProviderStatuses()
     {
-        try {
-            $message = $this->runProviderStatusRefresh(afterResponse: true);
-
-            return back()->with('success', $message);
-        } catch (Exception $e) {
-            return back()->with('error', 'Gagal refresh status pesanan API: ' . $e->getMessage());
-        }
+        return back()->with('success', $this->providerStatusRefreshMessage());
     }
 
     private function refreshProviderStatusesFromIndex(Request $request)
@@ -212,43 +204,14 @@ class TransactionController extends Controller
         $query = $request->query();
         unset($query['refresh_api']);
 
-        try {
-            $message = $this->runProviderStatusRefresh(afterResponse: true);
-
-            return redirect()
-                ->route('admin.transactions.index', $query)
-                ->with('success', $message);
-        } catch (Exception $e) {
-            return redirect()
-                ->route('admin.transactions.index', $query)
-                ->with('error', 'Gagal refresh status pesanan API: ' . $e->getMessage());
-        }
+        return redirect()
+            ->route('admin.transactions.index', $query)
+            ->with('success', $this->providerStatusRefreshMessage());
     }
 
-    private function runProviderStatusRefresh(bool $afterResponse = false): string
+    private function providerStatusRefreshMessage(): string
     {
-        if ($afterResponse) {
-            app()->terminating(function () {
-                Artisan::call('wiboost:check-provider-orders', [
-                    '--limit' => 200,
-                ]);
-            });
-
-            return 'Refresh status API sedang diproses. Silakan segarkan lagi sebentar lagi.';
-        }
-
-        Artisan::call('wiboost:check-provider-orders', [
-            '--limit' => 200,
-        ]);
-
-        $output = trim(Artisan::output());
-        $message = 'Status pesanan API berhasil dicek ulang.';
-
-        if ($output !== '') {
-            $message .= ' ' . Str::limit($output, 220);
-        }
-
-        return $message;
+        return 'Refresh status API dijadwalkan. Status terbaru akan tampil otomatis setelah pemeriksaan provider berikutnya.';
     }
 
     public function exportPdf(Request $request)

@@ -79,8 +79,8 @@
         </div>
     @endif
 
-    <div class="overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem]">
-        <div class="forms-table-scroll w-full overflow-x-auto pb-2">
+    <div data-admin-table-card class="overflow-hidden rounded-[2rem] border-4 border-white bg-white/95 shadow-2xl shadow-[#bde0fe]/30 sm:rounded-[2.5rem]">
+        <div data-admin-table-scroll class="forms-table-scroll w-full overflow-x-auto pb-2">
             <div class="inline-block min-w-full p-4 align-middle sm:p-6">
                 <table class="w-full text-left" style="min-width:2260px;table-layout:fixed;">
                     <thead>
@@ -148,7 +148,7 @@
             </div>
         </div>
         @if(isset($forms) && $forms->hasPages())
-            <div class="w-full min-w-0 p-5 sm:p-8">{{ $forms->links() }}</div>
+            <div class="wiboost-table-pagination-footer w-full min-w-0 p-5 sm:p-8">{{ $forms->links() }}</div>
         @endif
     </div>
 

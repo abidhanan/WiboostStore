@@ -1,0 +1,483 @@
+- generic [active] [ref=f4e1]:
+  - complementary [ref=f4e2]:
+    - generic [ref=f4e3]:
+      - link [ref=f4e5] [cursor=pointer]:
+        - /url: http://127.0.0.1:8017/admin/dashboard
+        - img "Logo Wiboost Store" [ref=f4e6]
+        - paragraph [ref=f4e8]: Wiboost Store
+      - navigation [ref=f4e9]:
+        - generic [ref=f4e10]:
+          - paragraph [ref=f4e12]: Utama
+          - link "Dashboard" [ref=f4e14] [cursor=pointer]:
+            - /url: http://127.0.0.1:8017/admin/dashboard
+        - generic [ref=f4e19]:
+          - paragraph [ref=f4e21]: Operasional
+          - generic [ref=f4e22]:
+            - link "Transaksi" [ref=f4e23] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/transactions
+            - link "Laporan" [ref=f4e28] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/reports
+            - link "OTP" [ref=f4e33] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/otp
+            - link "Refund" [ref=f4e38] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/refunds
+            - link "Deposit" [ref=f4e46] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/deposits
+        - generic [ref=f4e51]:
+          - paragraph [ref=f4e53]: Produk & Gudang
+          - generic [ref=f4e54]:
+            - link "Kategori" [ref=f4e55] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/categories
+            - link "Produk" [ref=f4e60] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/products
+            - link "Durasi" [ref=f4e65] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/durations
+            - link "Tutorial" [ref=f4e71] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/tutorials
+        - generic [ref=f4e76]:
+          - paragraph [ref=f4e78]: Akun & Reseller
+          - generic [ref=f4e79]:
+            - link "Pengguna" [ref=f4e80] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/users
+            - link "Komisi" [ref=f4e85] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/commissions
+            - link "Penarikan" [ref=f4e90] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/withdrawals
+        - generic [ref=f4e97]:
+          - paragraph [ref=f4e99]: Konten
+          - generic [ref=f4e100]:
+            - link "Banner" [ref=f4e101] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/promos
+            - link "Display" [ref=f4e106] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/displays
+            - link "Formulir" [ref=f4e112] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/forms
+            - link "Email" [ref=f4e118] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/emails
+            - link "Media Sosial" [ref=f4e124] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/social-media
+        - generic [ref=f4e130]:
+          - paragraph [ref=f4e132]: Sistem
+          - link "Log Aktivitas" [ref=f4e134] [cursor=pointer]:
+            - /url: http://127.0.0.1:8017/admin/logs
+      - link "Foto profil Preview Admin Preview Admin Super Admin" [ref=f4e141] [cursor=pointer]:
+        - /url: http://127.0.0.1:8017/profile
+        - img "Foto profil Preview Admin" [ref=f4e143]
+        - generic [ref=f4e144]:
+          - generic [ref=f4e145]: Preview Admin
+          - generic [ref=f4e146]: Super Admin
+  - generic [ref=f4e148]:
+    - button "Buka tutup sidebar" [expanded] [ref=f4e149] [cursor=pointer]
+    - generic [ref=f4e152]:
+      - heading "Dashboard" [level=1] [ref=f4e153]
+      - paragraph [ref=f4e154]: Ringkasan transaksi dan aktivitas toko.
+    - button "Menu profil admin" [ref=f4e156] [cursor=pointer]:
+      - img "Foto profil Preview Admin" [ref=f4e157]
+  - generic [ref=f4e158]:
+    - main [ref=f4e159]:
+      - generic [ref=f4e160]:
+        - generic [ref=f4e162]:
+          - generic [ref=f4e163]:
+            - button "Oktober v" [ref=f4e165] [cursor=pointer]:
+              - generic [ref=f4e166]: Oktober
+              - generic [ref=f4e167]: v
+            - button "2026 v" [ref=f4e169] [cursor=pointer]:
+              - generic [ref=f4e170]: "2026"
+              - generic [ref=f4e171]: v
+          - link "Cetak Laporan" [ref=f4e172] [cursor=pointer]:
+            - /url: http://127.0.0.1:8017/admin/dashboard/export-excel?month=10&year=2026
+        - generic [ref=f4e176]:
+          - article [ref=f4e177]:
+            - paragraph [ref=f4e178]: Pendapatan Bulan Ini
+            - paragraph [ref=f4e179]: Rp 90.000
+          - article [ref=f4e180]:
+            - paragraph [ref=f4e181]: Komisi Bulan Ini
+            - paragraph [ref=f4e182]: Rp 0
+          - article [ref=f4e183]:
+            - paragraph [ref=f4e184]: Penarikan Bulan Ini
+            - paragraph [ref=f4e185]: Rp 0
+          - article [ref=f4e186]:
+            - paragraph [ref=f4e187]: Refund Bulan Ini
+            - paragraph [ref=f4e188]: Rp 0
+          - article [ref=f4e189]:
+            - paragraph [ref=f4e190]: Transaksi Bulan Ini
+            - paragraph [ref=f4e191]: "4"
+          - article [ref=f4e192]:
+            - paragraph [ref=f4e193]: Total Pengguna
+            - paragraph [ref=f4e194]: "2"
+          - article [ref=f4e195]:
+            - paragraph [ref=f4e196]: Total Admin
+            - paragraph [ref=f4e197]: "1"
+          - article [ref=f4e198]:
+            - paragraph [ref=f4e199]: Total Member
+            - paragraph [ref=f4e200]: "0"
+          - article [ref=f4e201]:
+            - paragraph [ref=f4e202]: Total Reseller
+            - paragraph [ref=f4e203]: "0"
+          - article [ref=f4e204]:
+            - paragraph [ref=f4e205]: Total Buyer
+            - paragraph [ref=f4e206]: "1"
+        - generic [ref=f4e207]:
+          - generic [ref=f4e208]:
+            - generic [ref=f4e209]:
+              - paragraph [ref=f4e210]: Grafik
+              - heading "Grafik Mingguan" [level=2] [ref=f4e212]
+              - paragraph [ref=f4e213]: 02 Okt 2026 - 08 Okt 2026
+            - generic [ref=f4e214]:
+              - link "<" [ref=f4e215] [cursor=pointer]:
+                - /url: http://127.0.0.1:8017/admin/dashboard?month=10&year=2026&chart_week=2026-09-25#dashboard-weekly-chart
+              - link ">" [ref=f4e217] [cursor=pointer]:
+                - /url: http://127.0.0.1:8017/admin/dashboard?month=10&year=2026&chart_week=2026-10-09#dashboard-weekly-chart
+          - generic [ref=f4e219]:
+            - article [ref=f4e220]:
+              - paragraph [ref=f4e221]: Transaksi
+              - img "Transaksi 7 hari terakhir" [ref=f4e222]:
+                - 'generic "02/10: 0 transaksi" [ref=f4e225]'
+                - 'generic "03/10: 0 transaksi" [ref=f4e226]'
+                - 'generic "04/10: 0 transaksi" [ref=f4e227]'
+                - 'generic "05/10: 0 transaksi" [ref=f4e228]'
+                - 'generic "06/10: 0 transaksi" [ref=f4e229]'
+                - 'generic "07/10: 2 transaksi" [ref=f4e230]'
+                - 'generic "08/10: 0 transaksi" [ref=f4e231]'
+              - generic [ref=f4e232]:
+                - generic [ref=f4e233]: 02/10
+                - generic [ref=f4e234]: 03/10
+                - generic [ref=f4e235]: 04/10
+                - generic [ref=f4e236]: 05/10
+                - generic [ref=f4e237]: 06/10
+                - generic [ref=f4e238]: 07/10
+                - generic [ref=f4e239]: 08/10
+            - article [ref=f4e240]:
+              - paragraph [ref=f4e241]: Pendapatan
+              - img "Pendapatan 7 hari terakhir" [ref=f4e242]:
+                - 'generic "02/10: Rp 0" [ref=f4e245]'
+                - 'generic "03/10: Rp 0" [ref=f4e246]'
+                - 'generic "04/10: Rp 0" [ref=f4e247]'
+                - 'generic "05/10: Rp 0" [ref=f4e248]'
+                - 'generic "06/10: Rp 0" [ref=f4e249]'
+                - 'generic "07/10: Rp 90.000" [ref=f4e250]'
+                - 'generic "08/10: Rp 0" [ref=f4e251]'
+              - generic [ref=f4e252]:
+                - generic [ref=f4e253]: 02/10
+                - generic [ref=f4e254]: 03/10
+                - generic [ref=f4e255]: 04/10
+                - generic [ref=f4e256]: 05/10
+                - generic [ref=f4e257]: 06/10
+                - generic [ref=f4e258]: 07/10
+                - generic [ref=f4e259]: 08/10
+            - article [ref=f4e260]:
+              - paragraph [ref=f4e261]: Pengguna Baru
+              - img "Pengguna Baru 7 hari terakhir" [ref=f4e262]:
+                - 'generic "02/10: 0 user" [ref=f4e265]'
+                - 'generic "03/10: 0 user" [ref=f4e266]'
+                - 'generic "04/10: 0 user" [ref=f4e267]'
+                - 'generic "05/10: 0 user" [ref=f4e268]'
+                - 'generic "06/10: 0 user" [ref=f4e269]'
+                - 'generic "07/10: 1 user" [ref=f4e270]'
+                - 'generic "08/10: 0 user" [ref=f4e271]'
+              - generic [ref=f4e272]:
+                - generic [ref=f4e273]: 02/10
+                - generic [ref=f4e274]: 03/10
+                - generic [ref=f4e275]: 04/10
+                - generic [ref=f4e276]: 05/10
+                - generic [ref=f4e277]: 06/10
+                - generic [ref=f4e278]: 07/10
+                - generic [ref=f4e279]: 08/10
+        - generic [ref=f4e280]:
+          - generic [ref=f4e281]:
+            - paragraph [ref=f4e282]: Produk Terlaris
+            - heading "Paling Sering Dibeli" [level=2] [ref=f4e283]
+          - generic [ref=f4e284]:
+            - article [ref=f4e285]:
+              - paragraph [ref=f4e286]: Suntik Sosmed
+              - link "1000 Followers Instagram (Mix)" [ref=f4e287] [cursor=pointer]:
+                - /url: http://127.0.0.1:8017/admin/products?search=1000%20Followers%20Instagram%20%28Mix%29
+              - generic [ref=f4e288]:
+                - generic [ref=f4e289]:
+                  - paragraph [ref=f4e290]: Terjual
+                  - paragraph [ref=f4e291]: "2"
+                - generic [ref=f4e292]:
+                  - paragraph [ref=f4e293]: Omzet
+                  - paragraph [ref=f4e294]: Rp 90.000
+            - article [ref=f4e295]:
+              - paragraph [ref=f4e296]: Top Up Game
+              - paragraph [ref=f4e298]: Belum ada pembelian.
+            - article [ref=f4e299]:
+              - paragraph [ref=f4e300]: Kuota Murah
+              - paragraph [ref=f4e302]: Belum ada pembelian.
+            - article [ref=f4e303]:
+              - paragraph [ref=f4e304]: Aplikasi Premium
+              - paragraph [ref=f4e306]: Belum ada pembelian.
+        - generic [ref=f4e307]:
+          - article [ref=f4e308]:
+            - generic [ref=f4e309]:
+              - generic [ref=f4e310]:
+                - paragraph [ref=f4e311]: Ringkasan Stok
+                - heading "Produk Perlu Restock" [level=2] [ref=f4e312]
+              - link "Lihat Semua" [ref=f4e313] [cursor=pointer]:
+                - /url: http://127.0.0.1:8017/admin/products
+            - table [ref=f4e316]:
+              - rowgroup [ref=f4e317]:
+                - row [ref=f4e318]:
+                  - columnheader "Produk" [ref=f4e319]
+                  - columnheader "Sisa" [ref=f4e320]
+              - rowgroup [ref=f4e321]:
+                - row [ref=f4e322]:
+                  - cell [ref=f4e323]:
+                    - paragraph [ref=f4e324]: Stok aman.
+                    - paragraph [ref=f4e325]: Belum ada produk inventory yang menyentuh batas minimum.
+          - article [ref=f4e326]:
+            - generic [ref=f4e327]:
+              - generic [ref=f4e328]:
+                - paragraph [ref=f4e329]: Ringkasan Laporan
+                - heading "Laporan Terbaru" [level=2] [ref=f4e330]
+              - link "Lihat Semua" [ref=f4e331] [cursor=pointer]:
+                - /url: http://127.0.0.1:8017/admin/reports
+            - table [ref=f4e334]:
+              - rowgroup [ref=f4e335]:
+                - row [ref=f4e336]:
+                  - columnheader "Invoice" [ref=f4e337]
+                  - columnheader "Waktu" [ref=f4e338]
+                  - columnheader "Pengguna" [ref=f4e339]
+                  - columnheader "Jenis" [ref=f4e340]
+                  - columnheader "Status" [ref=f4e341]
+              - rowgroup [ref=f4e342]:
+                - row [ref=f4e343]:
+                  - cell [ref=f4e344]:
+                    - paragraph [ref=f4e345]: Belum ada laporan.
+        - generic [ref=f4e346]:
+          - article [ref=f4e347]:
+            - generic [ref=f4e348]:
+              - generic [ref=f4e349]:
+                - paragraph [ref=f4e350]: Ringkasan Transaksi
+                - heading "Transaksi Terbaru" [level=2] [ref=f4e351]
+              - link "Lihat Semua" [ref=f4e352] [cursor=pointer]:
+                - /url: http://127.0.0.1:8017/admin/transactions
+            - table [ref=f4e355]:
+              - rowgroup [ref=f4e356]:
+                - row [ref=f4e357]:
+                  - columnheader "Invoice" [ref=f4e358]
+                  - columnheader "Waktu" [ref=f4e359]
+                  - columnheader "Pengguna" [ref=f4e360]
+                  - columnheader "Nominal" [ref=f4e361]
+                  - columnheader "Status" [ref=f4e362]
+                  - columnheader "Metode" [ref=f4e363]
+              - rowgroup [ref=f4e364]:
+                - row [ref=f4e365]:
+                  - cell [ref=f4e366]:
+                    - paragraph [ref=f4e367]: INV-PREV-1
+                  - cell "07 Oct 2026, 17:21" [ref=f4e368]
+                  - cell "Preview User" [ref=f4e369]
+                  - cell "Rp 10.000" [ref=f4e370]
+                  - cell "Batal" [ref=f4e371]
+                  - cell "QRIS" [ref=f4e373]
+                - row [ref=f4e375]:
+                  - cell [ref=f4e376]:
+                    - paragraph [ref=f4e377]: INV-PREV-2
+                  - cell "07 Oct 2026, 17:21" [ref=f4e378]
+                  - cell "Preview User" [ref=f4e379]
+                  - cell "Rp 20.000" [ref=f4e380]
+                  - cell "Menunggu" [ref=f4e381]
+                  - cell "QRIS" [ref=f4e383]
+                - row [ref=f4e385]:
+                  - cell [ref=f4e386]:
+                    - paragraph [ref=f4e387]: INV-PREV-3
+                  - cell "07 Oct 2026, 17:21" [ref=f4e388]
+                  - cell "Preview User" [ref=f4e389]
+                  - cell "Rp 30.000" [ref=f4e390]
+                  - cell "Sukses" [ref=f4e391]
+                  - cell "QRIS" [ref=f4e393]
+                - row [ref=f4e395]:
+                  - cell [ref=f4e396]:
+                    - paragraph [ref=f4e397]: INV-PREV-4
+                  - cell "07 Oct 2026, 17:21" [ref=f4e398]
+                  - cell "Preview User" [ref=f4e399]
+                  - cell "Rp 40.000" [ref=f4e400]
+                  - cell "Batal" [ref=f4e401]
+                  - cell "QRIS" [ref=f4e403]
+                - row [ref=f4e405]:
+                  - cell [ref=f4e406]:
+                    - paragraph [ref=f4e407]: INV-PREV-5
+                  - cell "07 Oct 2026, 17:21" [ref=f4e408]
+                  - cell "Preview User" [ref=f4e409]
+                  - cell "Rp 50.000" [ref=f4e410]
+                  - cell "Menunggu" [ref=f4e411]
+                  - cell "QRIS" [ref=f4e413]
+          - article [ref=f4e415]:
+            - generic [ref=f4e416]:
+              - generic [ref=f4e417]:
+                - paragraph [ref=f4e418]: Ringkasan Saldo
+                - heading "Mutasi Saldo" [level=2] [ref=f4e419]
+              - link "Lihat Semua" [ref=f4e420] [cursor=pointer]:
+                - /url: http://127.0.0.1:8017/admin/deposits
+            - table [ref=f4e423]:
+              - rowgroup [ref=f4e424]:
+                - row [ref=f4e425]:
+                  - columnheader "Invoice" [ref=f4e426]
+                  - columnheader "Waktu" [ref=f4e427]
+                  - columnheader "Pengguna" [ref=f4e428]
+                  - columnheader "Nominal" [ref=f4e429]
+                  - columnheader "Tipe" [ref=f4e430]
+              - rowgroup [ref=f4e431]:
+                - row [ref=f4e432]:
+                  - cell [ref=f4e433]:
+                    - paragraph [ref=f4e434]: DEP-PREV-1
+                  - cell "07 Oct 2026, 17:21" [ref=f4e435]
+                  - cell "Preview User" [ref=f4e436]
+                  - cell "- Rp 15.000" [ref=f4e437]
+                  - cell "Belanja" [ref=f4e438]:
+                    - generic "Mutasi contoh 1" [ref=f4e439]: Belanja
+                - row [ref=f4e440]:
+                  - cell [ref=f4e441]:
+                    - paragraph [ref=f4e442]: DEP-PREV-2
+                  - cell "07 Oct 2026, 17:21" [ref=f4e443]
+                  - cell "Preview User" [ref=f4e444]
+                  - cell "+ Rp 30.000" [ref=f4e445]
+                  - cell "Top Up" [ref=f4e446]:
+                    - generic "Mutasi contoh 2" [ref=f4e447]: Top Up
+                - row [ref=f4e448]:
+                  - cell [ref=f4e449]:
+                    - paragraph [ref=f4e450]: DEP-PREV-3
+                  - cell "07 Oct 2026, 17:21" [ref=f4e451]
+                  - cell "Preview User" [ref=f4e452]
+                  - cell "- Rp 45.000" [ref=f4e453]
+                  - cell "Belanja" [ref=f4e454]:
+                    - generic "Mutasi contoh 3" [ref=f4e455]: Belanja
+                - row [ref=f4e456]:
+                  - cell [ref=f4e457]:
+                    - paragraph [ref=f4e458]: DEP-PREV-4
+                  - cell "07 Oct 2026, 17:21" [ref=f4e459]
+                  - cell "Preview User" [ref=f4e460]
+                  - cell "+ Rp 60.000" [ref=f4e461]
+                  - cell "Top Up" [ref=f4e462]:
+                    - generic "Mutasi contoh 4" [ref=f4e463]: Top Up
+        - generic [ref=f4e464]:
+          - article [ref=f4e465]:
+            - generic [ref=f4e466]:
+              - generic [ref=f4e467]:
+                - paragraph [ref=f4e468]: Ringkasan Refund
+                - heading "Refund Terbaru" [level=2] [ref=f4e469]
+              - link "Lihat Semua" [ref=f4e470] [cursor=pointer]:
+                - /url: http://127.0.0.1:8017/admin/refunds
+            - table [ref=f4e473]:
+              - rowgroup [ref=f4e474]:
+                - row [ref=f4e475]:
+                  - columnheader "Invoice" [ref=f4e476]
+                  - columnheader "Waktu" [ref=f4e477]
+                  - columnheader "Pengguna" [ref=f4e478]
+                  - columnheader "Refund" [ref=f4e479]
+                  - columnheader "Persen" [ref=f4e480]
+              - rowgroup [ref=f4e481]:
+                - row [ref=f4e482]:
+                  - cell [ref=f4e483]:
+                    - paragraph [ref=f4e484]: Belum ada refund.
+          - article [ref=f4e485]:
+            - generic [ref=f4e486]:
+              - generic [ref=f4e487]:
+                - paragraph [ref=f4e488]: Ringkasan Durasi
+                - heading "Durasi Habis" [level=2] [ref=f4e489]
+              - link "Lihat Semua" [ref=f4e490] [cursor=pointer]:
+                - /url: http://127.0.0.1:8017/admin/durations
+            - table [ref=f4e493]:
+              - rowgroup [ref=f4e494]:
+                - row [ref=f4e495]:
+                  - columnheader "Invoice" [ref=f4e496]
+                  - columnheader "Habis" [ref=f4e497]
+                  - columnheader "Nama" [ref=f4e498]
+                  - columnheader "Produk" [ref=f4e499]
+                  - columnheader "Status" [ref=f4e500]
+              - rowgroup [ref=f4e501]:
+                - row [ref=f4e502]:
+                  - cell [ref=f4e503]:
+                    - paragraph [ref=f4e504]: Belum ada durasi habis.
+        - generic [ref=f4e505]:
+          - article [ref=f4e506]:
+            - generic [ref=f4e507]:
+              - generic [ref=f4e508]:
+                - paragraph [ref=f4e509]: Ringkasan Komisi
+                - heading "Komisi Reseller" [level=2] [ref=f4e510]
+              - link "Lihat Semua" [ref=f4e511] [cursor=pointer]:
+                - /url: http://127.0.0.1:8017/admin/commissions
+            - table [ref=f4e513]:
+              - rowgroup [ref=f4e514]:
+                - row [ref=f4e515]:
+                  - columnheader "Invoice" [ref=f4e516]
+                  - columnheader "Waktu" [ref=f4e517]
+                  - columnheader "Reseller" [ref=f4e518]
+                  - columnheader "Komisi" [ref=f4e519]
+              - rowgroup [ref=f4e520]:
+                - row [ref=f4e521]:
+                  - cell [ref=f4e522]:
+                    - paragraph [ref=f4e526]: Belum ada komisi masuk.
+          - article [ref=f4e527]:
+            - generic [ref=f4e528]:
+              - generic [ref=f4e529]:
+                - paragraph [ref=f4e530]: Ringkasan Penarikan
+                - heading "Penarikan Komisi" [level=2] [ref=f4e531]
+              - link "Lihat Semua" [ref=f4e532] [cursor=pointer]:
+                - /url: http://127.0.0.1:8017/admin/withdrawals
+            - table [ref=f4e534]:
+              - rowgroup [ref=f4e535]:
+                - row [ref=f4e536]:
+                  - columnheader "Invoice" [ref=f4e537]
+                  - columnheader "Waktu" [ref=f4e538]
+                  - columnheader "Reseller" [ref=f4e539]
+                  - columnheader "Nominal" [ref=f4e540]
+                  - columnheader "Status" [ref=f4e541]
+              - rowgroup [ref=f4e542]:
+                - row [ref=f4e543]:
+                  - cell [ref=f4e544]:
+                    - paragraph [ref=f4e545]: Belum ada pengajuan penarikan.
+        - article [ref=f4e547]:
+          - generic [ref=f4e548]:
+            - generic [ref=f4e549]:
+              - paragraph [ref=f4e550]: Ringkasan OTP
+              - heading "Permintaan OTP" [level=2] [ref=f4e551]
+            - link "Lihat Semua" [ref=f4e552] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/admin/otp
+          - table [ref=f4e555]:
+            - rowgroup [ref=f4e556]:
+              - row [ref=f4e557]:
+                - columnheader "Invoice" [ref=f4e558]
+                - columnheader "Waktu" [ref=f4e559]
+                - columnheader "Nama" [ref=f4e560]
+                - columnheader "Produk" [ref=f4e561]
+                - columnheader "Status" [ref=f4e562]
+            - rowgroup [ref=f4e563]:
+              - row [ref=f4e564]:
+                - cell [ref=f4e565]:
+                  - paragraph [ref=f4e566]: Belum ada permintaan OTP.
+    - contentinfo [ref=f4e567]:
+      - generic [ref=f4e568]:
+        - generic [ref=f4e569]:
+          - generic [ref=f4e570]:
+            - generic [ref=f4e571]:
+              - img "Logo Wiboost Store" [ref=f4e572]
+              - generic [ref=f4e573]: Wiboost Store
+            - paragraph [ref=f4e574]:
+              - generic [ref=f4e575]: Platform penyedia layanan suntik sosmed, top up game,
+              - generic [ref=f4e576]: paket data operator, dan aplikasi premium dengan proses cepat, aman, dan praktis.
+          - generic [ref=f4e577]:
+            - paragraph [ref=f4e578]: Ikuti Kami
+            - generic [ref=f4e579]:
+              - link "Instagram Wiboost Store" [ref=f4e580] [cursor=pointer]:
+                - /url: https://www.instagram.com/wiboost.store?igsh=MXJzdWM3ZzBjdnNnZQ==
+              - link "TikTok Wiboost Store" [ref=f4e583] [cursor=pointer]:
+                - /url: https://www.tiktok.com/@wiboostore?_r=1&_t=ZS-98IS1s3zWa7
+              - link "YouTube Wiboost Store" [ref=f4e586] [cursor=pointer]:
+                - /url: https://youtube.com/@wiboostore?si=rDBRNJjvs5HSZYwC
+        - generic [ref=f4e589]:
+          - generic [ref=f4e590]:
+            - link "Syarat & Ketentuan" [ref=f4e591] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/legal/terms
+            - link "Privasi" [ref=f4e592] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/legal/privacy-policy
+            - link "Refund" [ref=f4e593] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/legal/refund-policy
+            - link "Kontak Admin" [ref=f4e594] [cursor=pointer]:
+              - /url: http://127.0.0.1:8017/legal/contact
+          - paragraph [ref=f4e595]:
+            - text: © 2026 Wiboost Store - Dibuat oleh
+            - link "Abid Hanan Wicaksono" [ref=f4e596] [cursor=pointer]:
+              - /url: https://www.abidhanan.my.id/
+            - text: .

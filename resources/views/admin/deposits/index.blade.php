@@ -208,7 +208,7 @@
     @endif
 
     <!-- Toolbar: Pencarian & Segarkan -->
-    <div class="mb-6 sm:mb-8 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/90 backdrop-blur-sm p-4 sm:p-5 shadow-xl shadow-[#bde0fe]/30 relative z-10 w-full min-w-0 transition-transform duration-300 hover:border-[#bde0fe]">
+    <div class="wiboost-admin-toolbar-static mb-6 sm:mb-8 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-white bg-white/90 backdrop-blur-sm p-4 sm:p-5 shadow-xl shadow-[#bde0fe]/30 relative z-10 w-full min-w-0">
         <form action="{{ route('admin.deposits.index') }}" method="GET" class="flex w-full flex-col gap-3">
             <div class="flex w-full flex-col gap-3 md:flex-row">
             

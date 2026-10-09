@@ -6,7 +6,7 @@
     <title>Wiboost Store</title>
     @include('partials.seo-meta', [
         'title' => 'Wiboost Store',
-        'description' => 'Platform penyedia layanan suntik sosmed, top up game, paket data, dan aplikasi premium dengan proses cepat, aman, dan praktis.',
+        'description' => 'Platform penyedia layanan suntik sosmed, top up game, paket data operator, dan aplikasi premium dengan proses cepat, aman, dan praktis.',
         'canonical' => route('home'),
     ])
     @include('partials.site-icons')
@@ -63,6 +63,9 @@
              padding-top: clamp(8.25rem, 15vh, 10.75rem);
              padding-bottom: clamp(3.25rem, 5.5vh, 4.75rem);
          }
+         .welcome-hero-section > .welcome-section-inner {
+             transform: translateY(-2.5rem);
+         }
          @supports not (height: 100svh) {
              .welcome-hero-section {
                  min-height: 100vh;
@@ -73,6 +76,13 @@
              line-height: 0.98;
              letter-spacing: 0;
              white-space: nowrap;
+         }
+         .welcome-hero-logo {
+             width: 6rem;
+             height: 6rem;
+             margin-bottom: 1.25rem;
+             object-fit: contain;
+             filter: drop-shadow(0 10px 16px rgba(90, 118, 200, 0.24));
          }
          .welcome-live-stats {
              width: min(100%, 64rem);
@@ -205,10 +215,18 @@
              text-transform: uppercase;
              box-shadow: 0 12px 26px rgba(90, 118, 200, 0.28);
          }
+         /* Pita diskon welcome -> banner SKEU mengilap (selaras partial global aturan 29) */
+         body.wiboost-welcome-page .discount-corner-ribbon__text {
+             background-image: linear-gradient(180deg, #7b9eed 0%, #5a76c8 52%, #4760a9 100%) !important;
+             box-shadow:
+                 inset 0 1px 0 rgba(255, 255, 255, 0.55),
+                 inset 0 -3px 5px rgba(43, 58, 103, 0.40),
+                 0 10px 22px rgba(43, 58, 103, 0.30) !important;
+         }
 
          @media (pointer: coarse) {
              .welcome-hero-section {
-                 min-height: auto;
+                 min-height: 100svh;
                  padding-top: clamp(7.5rem, 14vh, 9rem);
                  padding-bottom: clamp(3.5rem, 7vh, 5rem);
              }
@@ -230,6 +248,11 @@
              }
          }
          @media (min-width: 640px) {
+             .welcome-hero-logo {
+                 width: 8rem;
+                 height: 8rem;
+                 margin-bottom: 1.5rem;
+             }
              .welcome-hero-title {
                  font-size: 4.5rem;
              }
@@ -259,18 +282,64 @@
                  padding-bottom: clamp(4.5rem, 9vw, 7.5rem);
              }
 
+             .welcome-hero-section > .welcome-section-inner {
+                 transform: translateY(-4rem);
+             }
+
+             .welcome-hero-logo {
+                 width: 9rem;
+                 height: 9rem;
+             }
+
              .welcome-hero-title {
-                 font-size: 8rem;
+                 font-size: clamp(5rem, 10vw, 8rem);
              }
          }
          @media (pointer: coarse) {
              .welcome-hero-section {
-                 min-height: auto;
+                 min-height: 100svh;
                  padding-top: clamp(7.5rem, 14vh, 9rem);
                  padding-bottom: clamp(3.5rem, 7vh, 5rem);
              }
          }
-         .welcome-feature-icon-wrap {
+        @media (pointer: coarse) and (min-width: 768px) {
+            .welcome-hero-section {
+                min-height: min(100svh, 56rem);
+                padding-top: 8rem;
+                padding-bottom: 5rem;
+             }
+             .welcome-hero-section > .welcome-section-inner {
+                transform: none;
+            }
+        }
+        @media (pointer: coarse) and (max-width: 767px) {
+            .welcome-hero-section > .welcome-section-inner {
+                transform: translateY(-1.5rem);
+            }
+        }
+        @media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+            .welcome-hero-section {
+                --welcome-desktop-navbar-height: 5.25rem;
+                --welcome-desktop-logo-gap: 3rem;
+                min-height: auto;
+                align-items: flex-start;
+                padding-top: calc(var(--welcome-desktop-navbar-height) + var(--welcome-desktop-logo-gap));
+                padding-bottom: 3rem;
+            }
+
+            .welcome-hero-section > .welcome-section-inner {
+                transform: none;
+            }
+
+            .welcome-hero-logo {
+                margin-bottom: calc(var(--welcome-desktop-logo-gap) - 2rem);
+            }
+
+            .welcome-cta-gap {
+                margin-bottom: 3rem;
+            }
+        }
+        .welcome-feature-icon-wrap {
              width: 6rem;
              height: 6rem;
              flex: 0 0 6rem;
@@ -447,6 +516,261 @@
                  scroll-margin-top: 6.5rem;
              }
          }
+
+         /* ===================== SKEUOMORPHISM (tema warna tetap) ===================== */
+         /* Permukaan mengilap (gradasi), tepi bevel (highlight atas + bayangan dalam bawah),
+            pantulan cahaya, dan bayangan jatuh berlapis. Warna dari tema. */
+
+         body.wiboost-welcome-page .skeu {
+             background-image: linear-gradient(180deg, #ffffff 0%, #eaf2ff 100%) !important;
+             box-shadow:
+                 inset 0 1px 0 rgba(255, 255, 255, 0.95),
+                 inset 0 -3px 6px rgba(163, 187, 251, 0.28),
+                 0 2px 3px rgba(90, 118, 200, 0.14),
+                 0 12px 24px -6px rgba(90, 118, 200, 0.30) !important;
+             transition: transform 0.25s ease, box-shadow 0.25s ease;
+         }
+         body.wiboost-welcome-page .skeu-hover:hover {
+             box-shadow:
+                 inset 0 1px 0 rgba(255, 255, 255, 0.95),
+                 inset 0 -3px 6px rgba(163, 187, 251, 0.30),
+                 0 4px 6px rgba(90, 118, 200, 0.16),
+                 0 20px 34px -8px rgba(90, 118, 200, 0.36) !important;
+         }
+
+         body.wiboost-welcome-page .skeu-pill {
+             position: relative;
+             overflow: hidden;
+             box-shadow:
+                 inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                 inset 0 -2px 4px rgba(163, 187, 251, 0.30),
+                 0 4px 10px rgba(90, 118, 200, 0.22) !important;
+         }
+         body.wiboost-welcome-page .skeu-pill::before {
+             content: "";
+             position: absolute;
+             left: 0; right: 0; top: 0;
+             height: 52%;
+             border-radius: inherit;
+             background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 100%);
+             pointer-events: none;
+         }
+
+         body.wiboost-welcome-page .skeu-primary {
+             position: relative;
+             overflow: hidden;
+             background-image: linear-gradient(180deg, #7b9eed 0%, #5a76c8 52%, #4760a9 100%) !important;
+             box-shadow:
+                 inset 0 1px 0 rgba(255, 255, 255, 0.60),
+                 inset 0 -4px 7px rgba(43, 58, 103, 0.45),
+                 0 8px 18px rgba(43, 58, 103, 0.35) !important;
+             transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+         }
+         body.wiboost-welcome-page .skeu-primary::before {
+             content: "";
+             position: absolute;
+             left: 0; right: 0; top: 0;
+             height: 50%;
+             border-radius: inherit;
+             background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.05) 100%);
+             pointer-events: none;
+         }
+         body.wiboost-welcome-page .skeu-primary:hover { filter: brightness(1.04); }
+         body.wiboost-welcome-page .skeu-primary:active {
+             transform: translateY(1px);
+             box-shadow:
+                 inset 0 2px 6px rgba(43, 58, 103, 0.50),
+                 inset 0 1px 0 rgba(255, 255, 255, 0.25),
+                 0 3px 7px rgba(43, 58, 103, 0.30) !important;
+         }
+
+         body.wiboost-welcome-page .welcome-category-card {
+             border-radius: 1.9rem;
+             background-image: linear-gradient(180deg, #ffffff 0%, #e8f0ff 100%) !important;
+             box-shadow:
+                 inset 0 1px 0 rgba(255, 255, 255, 0.95),
+                 inset 0 -3px 6px rgba(163, 187, 251, 0.30),
+                 0 2px 3px rgba(90, 118, 200, 0.14),
+                 0 14px 26px -6px rgba(90, 118, 200, 0.30) !important;
+             transition: transform 0.25s ease, box-shadow 0.25s ease;
+         }
+         body.wiboost-welcome-page .welcome-category-card:hover {
+             transform: translateY(-4px);
+             box-shadow:
+                 inset 0 1px 0 rgba(255, 255, 255, 0.95),
+                 inset 0 -3px 6px rgba(163, 187, 251, 0.32),
+                 0 4px 6px rgba(90, 118, 200, 0.16),
+                 0 24px 40px -8px rgba(90, 118, 200, 0.36) !important;
+         }
+
+         body.wiboost-welcome-page .welcome-category-icon,
+         body.wiboost-welcome-page .welcome-feature-icon-wrap {
+             position: relative;
+             overflow: hidden;
+             background-image: linear-gradient(160deg, #ffffff 0%, #dbe7ff 100%) !important;
+             box-shadow:
+                 inset 0 2px 1px rgba(255, 255, 255, 0.95),
+                 inset 0 -4px 7px rgba(163, 187, 251, 0.40),
+                 0 8px 16px rgba(90, 118, 200, 0.28) !important;
+         }
+
+         body.wiboost-welcome-page .order-step-node {
+             position: relative;
+             overflow: hidden;
+             background-image: linear-gradient(180deg, #7b9eed 0%, #5a76c8 52%, #4760a9 100%) !important;
+             box-shadow:
+                 inset 0 1px 0 rgba(255, 255, 255, 0.60),
+                 inset 0 -4px 7px rgba(43, 58, 103, 0.45),
+                 0 8px 16px rgba(43, 58, 103, 0.30) !important;
+         }
+         body.wiboost-welcome-page .order-step-node::before {
+             content: "";
+             position: absolute;
+             left: 0; right: 0; top: 0;
+             height: 50%;
+             border-radius: inherit;
+             background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.05) 100%);
+             pointer-events: none;
+         }
+
+         body.wiboost-welcome-page .nav-skeu {
+             background-image: linear-gradient(180deg, #ffffff 0%, #eaf2ff 100%) !important;
+             box-shadow:
+                 inset 0 1px 0 rgba(255, 255, 255, 0.95),
+                 0 6px 16px rgba(90, 118, 200, 0.25) !important;
+         }
+
+         /* Garis footer dibuat sederhana agar pemisahnya tetap bersih. */
+         body.wiboost-welcome-page .footer-top-skeu {
+             border-top: 0 !important;
+             background-image: linear-gradient(180deg, #ffffff 0%, #eaf2ff 100%) !important;
+             box-shadow: none !important;
+         }
+
+         body.wiboost-welcome-page .footer-skeu-divider {
+             border-top: 2px solid #dce7f8 !important;
+             box-shadow: none !important;
+         }
+
+         body.wiboost-welcome-page .footer-description {
+             width: auto;
+             max-width: 22rem;
+             font-size: 12px;
+             line-height: 1.5;
+             transform: none;
+         }
+         @media (min-width: 380px) {
+             body.wiboost-welcome-page .footer-description {
+                 max-width: 22rem;
+             }
+         }
+         @media (min-width: 640px) {
+             body.wiboost-welcome-page .footer-description {
+                 max-width: 36rem;
+                 font-size: 12px;
+             }
+         }
+         @media (min-width: 1024px) {
+             body.wiboost-welcome-page .footer-description {
+                 width: max-content;
+                 max-width: none;
+                 font-size: 14px;
+                 white-space: nowrap;
+             }
+         }
+         @media (max-width: 639px) {
+             body.wiboost-welcome-page .footer-top-skeu > div {
+                 padding-left: 0.5rem !important;
+                 padding-right: 0.5rem !important;
+             }
+             body.wiboost-welcome-page .footer-legal-links {
+                 display: flex !important;
+                 flex-wrap: nowrap !important;
+                 justify-content: center !important;
+                 gap: 0.25rem !important;
+             }
+             body.wiboost-welcome-page .footer-legal-link {
+                 flex: 0 0 auto !important;
+                 width: auto !important;
+                 min-height: 0;
+                 padding: 0.375rem 0.75rem !important;
+                 font-size: 9px !important;
+             }
+         }
+
+         /* Ikon sosial footer mengilap (khusus ikon, bukan link kredit Abid) */
+         body.wiboost-welcome-page footer a.footer-social {
+             position: relative;
+             overflow: hidden;
+             box-shadow:
+                 inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                 inset 0 -3px 5px rgba(163, 187, 251, 0.30),
+                 0 6px 13px rgba(90, 118, 200, 0.24) !important;
+             transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+         }
+
+         /* Label legal footer: efek mengilap TANPA border & TANPA menambah padding,
+            jadi ukuran label tetap ringkas dan tulisannya tetap terlihat besar seperti semula */
+         body.wiboost-welcome-page .footer-legal-link {
+             background-image: linear-gradient(180deg, #ffffff 0%, #e8f0ff 100%) !important;
+             box-shadow:
+                 inset 0 1px 0 rgba(255, 255, 255, 0.95),
+                 inset 0 -2px 4px rgba(163, 187, 251, 0.30),
+                 0 4px 9px -2px rgba(90, 118, 200, 0.22) !important;
+             transition: transform 0.18s ease, box-shadow 0.18s ease;
+         }
+         body.wiboost-welcome-page .footer-legal-link:hover {
+             box-shadow:
+                 inset 0 1px 0 rgba(255, 255, 255, 0.95),
+                 inset 0 -2px 4px rgba(163, 187, 251, 0.32),
+                 0 7px 14px -3px rgba(90, 118, 200, 0.28) !important;
+         }
+
+         /* Sisa garis putus-putus -> garis skeu putih rapi (selaras partial global aturan 27) */
+         body.wiboost-welcome-page [class*="border-dashed"] {
+             border-style: solid !important;
+             border-color: #ffffff !important;
+             box-shadow:
+                 0 1px 0 rgba(189, 224, 254, 0.55),
+                 0 -1px 0 rgba(189, 224, 254, 0.55) !important;
+         }
+
+         @media (max-width: 767px) {
+             body.wiboost-welcome-page .welcome-stat-card {
+                 background-image: linear-gradient(180deg, #ffffff 0%, #eaf2ff 100%) !important;
+                 box-shadow:
+                     inset 0 1px 0 rgba(255, 255, 255, 0.95),
+                     inset 0 -3px 6px rgba(163, 187, 251, 0.28),
+                     0 12px 24px -6px rgba(90, 118, 200, 0.30) !important;
+             }
+             body.wiboost-welcome-page .order-step-content {
+                 box-shadow:
+                     inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                     0 8px 16px rgba(189, 224, 254, 0.40) !important;
+             }
+         }
+         @media (min-width: 768px) {
+             body.wiboost-welcome-page .welcome-stats-grid {
+                 background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, #eaf2ff 100%) !important;
+                 box-shadow:
+                     inset 0 1px 0 rgba(255, 255, 255, 0.95),
+                     inset 0 -3px 6px rgba(163, 187, 251, 0.28),
+                     0 16px 30px -6px rgba(90, 118, 200, 0.32) !important;
+             }
+             body.wiboost-welcome-page .order-step-card {
+                 background-image: linear-gradient(180deg, #ffffff 0%, #eaf2ff 100%) !important;
+                 box-shadow:
+                     inset 0 1px 0 rgba(255, 255, 255, 0.95),
+                     inset 0 -3px 6px rgba(163, 187, 251, 0.28),
+                     0 14px 26px -6px rgba(90, 118, 200, 0.30) !important;
+             }
+             body.wiboost-welcome-page .order-step-card:hover {
+                 transform: translateY(-6px);
+                 box-shadow:
+                     inset 0 1px 0 rgba(255, 255, 255, 0.95),
+                     0 24px 40px -8px rgba(90, 118, 200, 0.36) !important;
+             }
+         }
     </style>
     @include('partials.ios-layout-fixes')
 </head>
@@ -456,21 +780,21 @@
 <body class="wiboost-compact-ui wiboost-welcome-page bg-[#f4f9ff] text-slate-800 antialiased selection:bg-[#7b9eed] selection:text-white flex flex-col min-h-screen">
     <nav class="fixed inset-x-0 top-0 z-50 px-0 pointer-events-none">
         <div class="w-full max-w-none pointer-events-auto">
-            <div class="flex items-center justify-between rounded-none border-0 border-b-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-6 lg:px-8">
+            <div class="nav-skeu flex items-center justify-between rounded-none border-0 border-b-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-6 lg:px-8">
                 <a href="{{ Auth::check() ? (Auth::user()->isAdmin() ? route('admin.dashboard') : route('user.dashboard')) : route('home') }}" class="flex items-center gap-3 group">
                     <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 rounded-full object-contain drop-shadow-sm transition-transform group-hover:scale-105 sm:h-14 sm:w-14">
-                    <p class="text-lg font-black leading-none text-[#2b3a67] drop-shadow-sm sm:text-2xl">Wiboost <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Store</span></p>
+                    <p class="text-lg font-black leading-none text-[#2b3a67] drop-shadow-sm sm:text-2xl">Wiboost Store</p>
                 </a>
                 <div class="flex items-center gap-3">
                     @auth
                         @if(Auth::user()->isAdmin())
-                            <a href="{{ route('admin.dashboard') }}" class="text-sm font-extrabold text-white bg-[#5a76c8] hover:bg-[#4760a9] px-6 py-2.5 rounded-full transition-transform active:scale-95 shadow-md">Panel Admin</a>
+                            <a href="{{ route('admin.dashboard') }}" class="skeu-primary text-sm font-extrabold text-white bg-[#5a76c8] hover:bg-[#4760a9] px-6 py-2.5 rounded-full transition-transform active:scale-95 shadow-md">Panel Admin</a>
                         @else
-                            <a href="{{ route('user.dashboard') }}" class="text-sm font-extrabold text-white bg-[#5a76c8] hover:bg-[#4760a9] px-6 py-2.5 rounded-full transition-transform active:scale-95 shadow-md">Dashboard</a>
+                            <a href="{{ route('user.dashboard') }}" class="skeu-primary text-sm font-extrabold text-white bg-[#5a76c8] hover:bg-[#4760a9] px-6 py-2.5 rounded-full transition-transform active:scale-95 shadow-md">Dashboard</a>
                         @endif
                     @else
-                        <a href="{{ route('register') }}" class="hidden rounded-full border-2 border-white bg-[#f0f5ff] px-6 py-2.5 text-sm font-extrabold text-[#5a76c8] shadow-md shadow-[#bde0fe]/30 transition-transform hover:-translate-y-0.5 hover:bg-white active:scale-95 sm:block">Daftar</a>
-                        <a href="{{ route('login') }}" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white text-sm font-extrabold px-7 py-2.5 rounded-full transition-transform active:scale-95 shadow-lg shadow-[#8faaf3]/40 border-2 border-white">Masuk</a>
+                        <a href="{{ route('register') }}" class="skeu-pill hidden rounded-full border-2 border-white bg-[#f0f5ff] px-6 py-2.5 text-sm font-extrabold text-[#5a76c8] shadow-md shadow-[#bde0fe]/30 transition-transform hover:-translate-y-0.5 hover:bg-white active:scale-95 sm:block">Daftar</a>
+                        <a href="{{ route('login') }}" class="skeu-primary bg-[#5a76c8] hover:bg-[#4760a9] text-white text-sm font-extrabold px-7 py-2.5 rounded-full transition-transform active:scale-95 shadow-lg shadow-[#8faaf3]/40 border-2 border-white">Masuk</a>
                     @endauth
                 </div>
             </div>
@@ -480,13 +804,10 @@
     <!-- SECTION HERO & DATA REAL-TIME -->
     <main class="welcome-hero-section relative flex items-center justify-center bg-wiboost-sky overflow-hidden border-b-[6px] border-[#f0f5ff]">
         <div class="welcome-section-inner max-w-7xl px-6 sm:px-8 lg:px-8 relative z-10">
-            <div class="inline-block bg-white/80 backdrop-blur-sm text-[#5a76c8] font-black text-sm px-5 py-2 rounded-full mb-6 border-2 border-white shadow-sm">
-                Pusat Kebutuhan Digitalmu!
-            </div>
-            
+            <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="welcome-hero-logo">
             <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
                 <h1 class="welcome-hero-title font-black text-[#2b3a67] drop-shadow-sm">
-                    Wiboost <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#5a76c8] to-[#9a8ce5]">Store</span>
+                    Wiboost Store
                 </h1>
             </div>
 
@@ -495,7 +816,7 @@
             </p>
             
             <div class="welcome-cta-gap mt-12 flex flex-col sm:flex-row justify-center gap-4">
-                <a href="{{ route('home') }}" onclick="event.preventDefault(); window.scrollToWiboostCatalog ? window.scrollToWiboostCatalog('smooth') : document.getElementById('kategori-heading').scrollIntoView({behavior: 'smooth', block: 'start'});" class="bg-[#5a76c8] hover:bg-[#4760a9] text-white font-extrabold text-lg px-10 py-4 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex items-center justify-center gap-3">
+                <a href="{{ route('home') }}" onclick="event.preventDefault(); window.scrollToWiboostCatalog ? window.scrollToWiboostCatalog('smooth') : document.getElementById('kategori-heading').scrollIntoView({behavior: 'smooth', block: 'start'});" class="skeu-primary bg-[#5a76c8] hover:bg-[#4760a9] text-white font-extrabold text-lg px-10 py-4 rounded-full transition-transform active:scale-95 shadow-xl shadow-[#5a76c8]/30 border-4 border-white flex items-center justify-center gap-3">
                     Beli Sekarang
                 </a>
             </div>
@@ -523,7 +844,7 @@
     <section id="kategori" class="py-24 lg:py-32 bg-white relative flex-1 z-10 border-b-[6px] border-[#f0f5ff]">
         <div class="welcome-section-inner max-w-7xl px-4 sm:px-6 lg:px-8">
             <div id="kategori-heading" class="text-center mb-12">
-                <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-6 text-xs border-2 border-white">Katalog Utama</div>
+                <div class="skeu-pill inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-6 text-xs border-2 border-white">Katalog Utama</div>
                 <h2 class="text-3xl md:text-5xl font-black text-[#2b3a67] tracking-tight">Pilih Kategori</h2>
             </div>
 
@@ -561,33 +882,33 @@
     <section id="fitur" class="py-24 lg:py-32 bg-[#f4f9ff] border-b-[6px] border-white relative z-10">
         <div class="welcome-section-inner max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
-                <div class="inline-block px-4 py-1 bg-white text-[#4bc6b9] font-black rounded-full mb-6 text-xs shadow-sm">Keunggulan</div>
+                <div class="skeu-pill inline-block px-4 py-1 bg-white text-[#4bc6b9] font-black rounded-full mb-6 text-xs shadow-sm">Keunggulan</div>
                 <h2 class="welcome-why-heading text-3xl md:text-5xl font-black text-[#2b3a67] tracking-tight">Kenapa Harus Wiboost Store?</h2>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-                <div class="bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
+                <div class="skeu skeu-hover bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
                     <div class="welcome-feature-icon-wrap mb-5 mx-auto">
                         @include('partials.wiboost-icon', ['name' => 'zap', 'class' => 'welcome-feature-icon'])
                     </div>
                     <h3 class="font-black text-[#2b3a67] text-lg mb-3">Proses Otomatis</h3>
                     <p class="text-sm text-[#4a5f96] font-bold leading-relaxed">Sistem kami berjalan 24/7. Transaksi diproses seketika tanpa perlu konfirmasi manual dari admin.</p>
                 </div>
-                <div class="bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
+                <div class="skeu skeu-hover bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
                     <div class="welcome-feature-icon-wrap mb-5 mx-auto">
                         @include('partials.wiboost-icon', ['name' => 'shield', 'class' => 'welcome-feature-icon'])
                     </div>
                     <h3 class="font-black text-[#2b3a67] text-lg mb-3">Aman & Terpercaya</h3>
                     <p class="text-sm text-[#4a5f96] font-bold leading-relaxed">Pembayaran menggunakan QRIS resmi yang aman, serta privasi akun media sosial Anda terjamin 100%.</p>
                 </div>
-                <div class="bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
+                <div class="skeu skeu-hover bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
                     <div class="welcome-feature-icon-wrap mb-5 mx-auto">
                         @include('partials.wiboost-icon', ['name' => 'package', 'class' => 'welcome-feature-icon'])
                     </div>
                     <h3 class="font-black text-[#2b3a67] text-lg mb-3">Layanan Terlengkap</h3>
-                    <p class="text-sm text-[#4a5f96] font-bold leading-relaxed">Mulai dari Top Up Game, SMM Panel, hingga Aplikasi Premium tersedia lengkap dalam satu platform.</p>
+                    <p class="text-sm text-[#4a5f96] font-bold leading-relaxed">Mulai dari SMM Panel, Top Up Game, Paket Data Operator, hingga Aplikasi Premium tersedia lengkap dalam satu platform.</p>
                 </div>
-                <div class="bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
+                <div class="skeu skeu-hover bg-white rounded-[2rem] p-8 border-4 border-white shadow-xl shadow-[#bde0fe]/20 hover:-translate-y-2 transition-transform duration-300 text-center">
                     <div class="welcome-feature-icon-wrap mb-5 mx-auto">
                         @include('partials.wiboost-icon', ['name' => 'wallet', 'class' => 'welcome-feature-icon'])
                     </div>
@@ -602,7 +923,7 @@
     <section id="alur-pemesanan" class="py-24 lg:py-32 bg-white relative z-10 border-b-[6px] border-[#f0f5ff]">
         <div class="welcome-section-inner max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
-                <div class="inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-6 text-xs border-2 border-white">Cara Kerja</div>
+                <div class="skeu-pill inline-block px-4 py-1 bg-[#e0fbfc] text-[#4bc6b9] font-black rounded-full mb-6 text-xs border-2 border-white">Cara Kerja</div>
                 <h2 class="text-3xl md:text-5xl font-black text-[#2b3a67] tracking-tight">Alur Pemesanan</h2>
             </div>
 
@@ -645,55 +966,55 @@
     <section id="faq" class="py-24 lg:py-32 bg-[#f4f9ff] border-b-[6px] border-white relative z-10">
         <div class="welcome-section-inner max-w-6xl px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
-                <div class="inline-block px-4 py-1 bg-white text-[#4bc6b9] font-black rounded-full mb-6 text-xs shadow-sm">FAQ</div>
+                <div class="skeu-pill inline-block px-4 py-1 bg-white text-[#4bc6b9] font-black rounded-full mb-6 text-xs shadow-sm">FAQ</div>
                 <h2 class="text-3xl md:text-5xl font-black text-[#2b3a67] tracking-tight">Pertanyaan Umum</h2>
             </div>
 
             <div class="welcome-faq-list flex flex-col gap-4">
-                <details class="w-full bg-white rounded-[1.5rem] border-4 border-white shadow-lg shadow-[#bde0fe]/20 overflow-hidden cursor-pointer">
+                <details class="skeu w-full bg-white rounded-[1.5rem] border-4 border-white shadow-lg shadow-[#bde0fe]/20 overflow-hidden cursor-pointer">
                     <summary class="flex justify-between items-center p-6 font-black text-[#2b3a67] text-base md:text-lg focus:outline-none text-left">
                         <span>Berapa lama waktu yang dibutuhkan untuk proses pesanan?</span>
                         <span class="text-[#5a76c8]">
                             <svg class="faq-icon w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
                         </span>
                     </summary>
-                    <div class="px-6 pb-6 text-sm text-[#5a76c8] font-bold leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white text-left">
+                    <div class="px-6 pb-6 text-sm text-[#5a76c8] font-normal leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white text-left">
                         Sebagian besar layanan kami diproses secara otomatis dan instan dalam hitungan detik setelah pembayaran berhasil dikonfirmasi. Untuk layanan tertentu (seperti SMM dengan target tinggi), proses mungkin membutuhkan waktu yang sedikit lebih lama sesuai deskripsi produk.
                     </div>
                 </details>
 
-                <details class="w-full bg-white rounded-[1.5rem] border-4 border-white shadow-lg shadow-[#bde0fe]/20 overflow-hidden cursor-pointer">
+                <details class="skeu w-full bg-white rounded-[1.5rem] border-4 border-white shadow-lg shadow-[#bde0fe]/20 overflow-hidden cursor-pointer">
                     <summary class="flex justify-between items-center p-6 font-black text-[#2b3a67] text-base md:text-lg focus:outline-none text-left">
                         <span>Apakah butuh password akun sosmed saya?</span>
                         <span class="text-[#5a76c8]">
                             <svg class="faq-icon w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
                         </span>
                     </summary>
-                    <div class="px-6 pb-6 text-sm text-[#5a76c8] font-bold leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white text-left">
-                        Tidak! Layanan SMM (Social Media Marketing) kami 100% aman karena hanya membutuhkan <strong>Username</strong> atau <strong>Link/Tautan</strong> postingan Anda. Kami tidak akan pernah meminta password akun Anda.
+                    <div class="px-6 pb-6 text-sm text-[#5a76c8] font-normal leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white text-left">
+                        Tidak! Layanan SMM (Social Media Marketing) kami 100% aman karena hanya membutuhkan Username atau Link/Tautan postingan Anda. Kami tidak akan pernah meminta password akun Anda.
                     </div>
                 </details>
 
-                <details class="w-full bg-white rounded-[1.5rem] border-4 border-white shadow-lg shadow-[#bde0fe]/20 overflow-hidden cursor-pointer">
+                <details class="skeu w-full bg-white rounded-[1.5rem] border-4 border-white shadow-lg shadow-[#bde0fe]/20 overflow-hidden cursor-pointer">
                     <summary class="flex justify-between items-center p-6 font-black text-[#2b3a67] text-base md:text-lg focus:outline-none text-left">
                         <span>Metode pembayaran apa saja yang tersedia?</span>
                         <span class="text-[#5a76c8]">
                             <svg class="faq-icon w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
                         </span>
                     </summary>
-                    <div class="px-6 pb-6 text-sm text-[#5a76c8] font-bold leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white text-left">
-                        Kami mendukung pembayaran via <strong>QRIS</strong> yang dapat di-scan menggunakan seluruh aplikasi E-Wallet (Dana, Ovo, Gopay, LinkAja, ShopeePay) maupun Mobile Banking (BCA, Mandiri, BRI, BNI, dll). Pembayaran diproses otomatis tanpa perlu mengirim bukti transfer.
+                    <div class="px-6 pb-6 text-sm text-[#5a76c8] font-normal leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white text-left">
+                        Kami mendukung pembayaran via QRIS yang dapat di-scan menggunakan seluruh aplikasi E-Wallet (Dana, Ovo, Gopay, LinkAja, ShopeePay) maupun Mobile Banking (BCA, Mandiri, BRI, BNI, dll). Pembayaran diproses otomatis tanpa perlu mengirim bukti transfer.
                     </div>
                 </details>
 
-                <details class="w-full bg-white rounded-[1.5rem] border-4 border-white shadow-lg shadow-[#bde0fe]/20 overflow-hidden cursor-pointer">
+                <details class="skeu w-full bg-white rounded-[1.5rem] border-4 border-white shadow-lg shadow-[#bde0fe]/20 overflow-hidden cursor-pointer">
                     <summary class="flex justify-between items-center p-6 font-black text-[#2b3a67] text-base md:text-lg focus:outline-none text-left">
                         <span>Bagaimana jika pesanan saya gagal?</span>
                         <span class="text-[#5a76c8]">
                             <svg class="faq-icon w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
                         </span>
                     </summary>
-                    <div class="px-6 pb-6 text-sm text-[#5a76c8] font-bold leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white text-left">
+                    <div class="px-6 pb-6 text-sm text-[#5a76c8] font-normal leading-relaxed border-t-2 border-[#f0f5ff] pt-4 mt-1 bg-white text-left">
                         Jika terjadi gangguan teknis dari pusat yang menyebabkan pesanan Anda berstatus gagal (Error/Canceled), sistem kami akan secara otomatis mengembalikan dana Anda dalam bentuk saldo akun yang bisa Anda gunakan kembali untuk transaksi lainnya.
                     </div>
                 </details>
@@ -701,46 +1022,7 @@
         </div>
     </section>
     
-    <footer class="bg-white pt-12 pb-8 relative overflow-hidden mt-auto">
-        <div class="max-w-6xl mx-auto px-6 sm:px-8 relative z-10">
-            <div class="flex flex-col items-center gap-6 text-center md:flex-row md:justify-between md:gap-8 md:text-left mb-10">
-                
-                <div class="min-w-0 text-center md:text-left">
-                    <div class="flex items-center justify-center gap-2 mb-3 md:justify-start">
-                        <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" loading="lazy" decoding="async" class="h-10 w-10 shrink-0 object-contain drop-shadow-sm md:h-12 md:w-12">
-                        <span class="whitespace-nowrap font-black text-lg text-[#2b3a67] sm:text-xl md:text-2xl">Wiboost <span class="text-[#5a76c8]">Store</span></span>
-                    </div>
-                    <p class="mx-auto max-w-xs text-[10px] font-bold text-[#8faaf3] sm:text-xs md:mx-0 md:min-w-max md:max-w-none md:whitespace-nowrap md:text-sm">Pusat Layanan dan Produk Digital dalam Satu Platform.</p>
-                </div>
-
-                <div class="flex shrink-0 flex-col items-center gap-3 md:items-end">
-                    <p class="mb-1 text-xs font-black text-[#2b3a67] md:text-sm">Ikuti Kami</p>
-                    <div class="flex items-center gap-2 sm:gap-4">
-                        <a href="https://www.instagram.com/wiboost.store?igsh=MXJzdWM3ZzBjdnNnZQ==" target="_blank" rel="noopener noreferrer" class="w-10 h-10 sm:w-12 sm:h-12 bg-[#f4f9ff] text-[#e1306c] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all md:h-14 md:w-14">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                        </a>
-                        
-                        <a href="https://www.tiktok.com/@wiboostore?_r=1&_t=ZS-98IS1s3zWa7" target="_blank" rel="noopener noreferrer" class="w-10 h-10 sm:w-12 sm:h-12 bg-[#f4f9ff] text-[#2b3a67] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all md:h-14 md:w-14">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>
-                        </a>
-                        <a href="https://youtube.com/@wiboostore?si=rDBRNJjvs5HSZYwC" target="_blank" rel="noopener noreferrer" class="w-10 h-10 sm:w-12 sm:h-12 bg-[#f4f9ff] text-[#FF0000] rounded-2xl flex items-center justify-center border-2 border-white shadow-sm hover:bg-[#5a76c8] hover:text-white transition-all md:h-14 md:w-14">
-                            <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="border-t-2 border-[#f0f5ff] pt-8 text-center">
-                <div class="mb-5 flex w-full flex-nowrap items-center justify-between gap-0.5 px-0 sm:justify-center sm:gap-2 sm:px-2">
-                    <a href="{{ route('legal.show', 'terms') }}" class="flex min-w-0 flex-1 items-center justify-center rounded-full bg-[#f4f9ff] px-0.5 py-1 text-center text-[6px] font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] min-[380px]:text-[7px] sm:flex-none sm:px-3 sm:py-1.5 sm:text-[10px] md:px-3 md:text-xs whitespace-nowrap">Syarat & Ketentuan</a>
-                    <a href="{{ route('legal.show', 'privacy-policy') }}" class="flex min-w-0 flex-1 items-center justify-center rounded-full bg-[#f4f9ff] px-0.5 py-1 text-center text-[6px] font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] min-[380px]:text-[7px] sm:flex-none sm:px-3 sm:py-1.5 sm:text-[10px] md:px-3 md:text-xs whitespace-nowrap">Privasi</a>
-                    <a href="{{ route('legal.show', 'refund-policy') }}" class="flex min-w-0 flex-1 items-center justify-center rounded-full bg-[#f4f9ff] px-0.5 py-1 text-center text-[6px] font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] min-[380px]:text-[7px] sm:flex-none sm:px-3 sm:py-1.5 sm:text-[10px] md:px-3 md:text-xs whitespace-nowrap">Refund</a>
-                    <a href="{{ route('legal.show', 'contact') }}" class="flex min-w-0 flex-1 items-center justify-center rounded-full bg-[#f4f9ff] px-0.5 py-1 text-center text-[6px] font-black text-[#5a76c8] transition hover:bg-[#e0fbfc] min-[380px]:text-[7px] sm:flex-none sm:px-3 sm:py-1.5 sm:text-[10px] md:px-3 md:text-xs whitespace-nowrap">Kontak Admin</a>
-                </div>
-                <p class="text-[10px] font-black text-[#a3bbfb] md:text-sm lg:text-base">&copy; {{ date('Y') }} Wiboost Store - Dibuat oleh <a href="https://www.abidhanan.my.id/" target="_blank" rel="noopener noreferrer" style="color: #5a76c8;" onmouseover="this.style.color='#4bc6b9'" onmouseout="this.style.color='#5a76c8'" class="transition">Abid Hanan Wicaksono</a>.</p>
-            </div>
-        </div>
-    </footer>
+    @include('partials.site-footer')
 
     @include('partials.hut-ri-decoration')
     @include('partials.tv-safe')

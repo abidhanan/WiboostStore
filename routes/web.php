@@ -119,6 +119,17 @@ Route::get('/images/wiboost-logo-nav.png', function () {
     ]);
 });
 
+Route::get('/wiboost-share-preview-20261009-v5.jpg', function () {
+    $path = public_path('wiboost-share-preview-20261009-v5.jpg');
+
+    abort_unless(is_file($path), 404);
+
+    return Response::file($path, [
+        'Content-Type' => 'image/jpeg',
+        'Cache-Control' => 'public, max-age=604800, immutable',
+    ]);
+})->name('social.preview.image');
+
 Route::get('/this.onerror=null;this.src={fallback}', function () {
     return redirect(asset('images/wiboost-logo-nav.png') . '?v=20260613-nav2', 301);
 })->where('fallback', '.*')
@@ -226,13 +237,13 @@ Route::get('/site.webmanifest', function () {
         'lang' => 'id-ID',
         'icons' => [
             [
-                'src' => '/images/wiboost-icon-192.png',
+                'src' => '/wiboost-store-circle-20261007-v4-192.png',
                 'sizes' => '192x192',
                 'type' => 'image/png',
                 'purpose' => 'any maskable',
             ],
             [
-                'src' => '/images/wiboost-icon-512.png',
+                'src' => '/wiboost-store-circle-20261007-v4-512.png',
                 'sizes' => '512x512',
                 'type' => 'image/png',
                 'purpose' => 'any maskable',
