@@ -13,7 +13,7 @@
         'description' => trim($__env->yieldContent('meta_description', 'Temukan layanan dan produk digital yang tersedia di Wiboost Store.')),
     ])
     @include('partials.site-icons')
-    <link rel="preload" as="image" href="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" fetchpriority="high">
+    <link rel="preload" as="image" type="image/webp" href="{{ asset('images/wiboost-logo-nav.png.webp') }}?v=20260613-nav2" fetchpriority="high">
     @include('partials.font-nunito')
 
     @include('partials.vite-preload')
@@ -68,7 +68,7 @@
         <div class="w-full max-w-none pointer-events-auto">
             <div class="flex items-center justify-between rounded-none border-0 border-b-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-6 lg:px-8">
                 <a href="{{ route('home') }}" class="flex items-center gap-3 group">
-                    <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 rounded-full object-contain drop-shadow-sm transition-transform group-hover:scale-105 sm:h-14 sm:w-14">
+                    <img src="{{ asset('images/wiboost-logo-nav.png.webp') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 rounded-full object-contain drop-shadow-sm transition-transform group-hover:scale-105 sm:h-14 sm:w-14">
                     <p class="text-lg font-black leading-none text-[#2b3a67] drop-shadow-sm sm:text-2xl">Wiboost Store</p>
                 </a>
                 <div class="flex items-center gap-3">

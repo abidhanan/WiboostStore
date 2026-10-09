@@ -90,7 +90,7 @@
                                 <a href="{{ route('user.tutorials.category', ['main' => $group['name'], 'sub' => $sub['name']]) }}" class="tutorial-sub-filter wiboost-main-category-card group relative flex flex-col items-center justify-center overflow-hidden rounded-[1.5rem] border-4 border-white bg-white p-2 text-center shadow-xl shadow-[#bde0fe]/30 transition-all hover:-translate-y-2 hover:border-[#bde0fe] active:scale-95 sm:rounded-[2rem] sm:p-6 md:p-8">
                                     <span class="wiboost-logo-frame wiboost-main-category-logo flex shrink-0 items-center justify-center overflow-hidden rounded-[1.25rem] bg-[#f4f9ff] shadow-inner transition-transform duration-300 group-hover:scale-110 sm:rounded-[1.5rem]">
                                         @if($sub['image'])
-                                            <img src="{{ Storage::url($sub['image']) }}" alt="{{ $sub['name'] }}" class="wiboost-square-logo-img">
+                                            <img src="{{ \App\Support\WiboostImage::thumb($sub['image'], 192) }}" alt="" class="wiboost-square-logo-img">
                                         @else
                                             <span class="text-2xl font-black text-[#5a76c8]">{{ Str::upper(Str::substr($sub['name'], 0, 1)) }}</span>
                                         @endif

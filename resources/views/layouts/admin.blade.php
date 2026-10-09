@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     @php
+        $wiboostCssEntry = 'resources/css/admin.css';
         $adminPageTitle = trim($__env->yieldContent('title', 'Admin'));
         $adminDocumentTitle = str_contains($adminPageTitle, 'Wiboost Store') ? $adminPageTitle : $adminPageTitle.' - Wiboost Store';
     @endphp
@@ -14,10 +15,10 @@
         'robots' => 'noindex,nofollow,noarchive,nosnippet',
     ])
     @include('partials.site-icons')
-    <link rel="preload" as="image" href="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" fetchpriority="high">
+    <link rel="preload" as="image" type="image/webp" href="{{ asset('images/wiboost-logo-nav.png.webp') }}?v=20260613-nav2" fetchpriority="high">
     @include('partials.font-nunito')
     @include('partials.vite-preload')
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/admin.css', 'resources/js/app.js'])
     @include('partials.vite-fallback')
     @include('partials.ui-performance-tuning')
     @include('partials.microsoft-clarity')
@@ -827,7 +828,7 @@
         <div class="flex h-full flex-col rounded-none border-r-4 border-white bg-white/90 shadow-2xl shadow-[#bde0fe]/30 backdrop-blur-xl">
             <div class="shrink-0 border-b-4 border-dashed border-[#f4f9ff] px-6 py-5">
                 <a href="{{ route('admin.dashboard') }}" class="group flex items-center gap-3">
-                    <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm transition-transform group-hover:scale-110">
+                    <img src="{{ asset('images/wiboost-logo-nav.png.webp') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm transition-transform group-hover:scale-110">
                     <div class="wiboost-sidebar-brand-text min-w-0">
                         <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost Store</p>
                     </div>
@@ -986,7 +987,7 @@
             
             <div class="wiboost-admin-mobile-sidebar-stack min-h-0 flex-1">
                 <div class="wiboost-mobile-sidebar-header wiboost-admin-mobile-sidebar-header flex shrink-0 items-center gap-3 border-b-4 border-dashed border-[#f4f9ff] pb-4">
-                    <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" loading="eager" decoding="async" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm">
+                    <img src="{{ asset('images/wiboost-logo-nav.png.webp') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" loading="eager" decoding="async" class="h-12 w-12 shrink-0 object-contain drop-shadow-sm">
                     <p class="text-xl font-black leading-tight text-[#2b3a67]">Wiboost Store</p>
                 </div>
                 

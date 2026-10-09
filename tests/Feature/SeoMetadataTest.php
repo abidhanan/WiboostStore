@@ -48,14 +48,23 @@ class SeoMetadataTest extends TestCase
             ->assertHeader('content-type', 'image/jpeg');
     }
 
-    public function test_private_auth_page_is_not_indexed_or_given_public_schema(): void
+    public function test_login_and_register_are_indexable_but_other_auth_pages_stay_private(): void
     {
-        $html = $this->get(route('login'))
-            ->assertOk()
-            ->assertSee('<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">', false)
-            ->getContent();
+        foreach (['login', 'register'] as $route) {
+            $html = $this->get(route($route))->assertOk()->getContent();
 
-        $this->assertStringNotContainsString('application/ld+json', $html);
+            $this->assertStringContainsString('<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">', $html);
+            $this->assertStringNotContainsString('noindex', $html);
+        }
+
+        $this->get(route('password.request'))
+            ->assertOk()
+            ->assertSee('<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">', false);
+
+        $robots = (string) file_get_contents(public_path('robots.txt'));
+        $this->assertStringNotContainsString('Disallow: /login', $robots);
+        $this->assertStringNotContainsString('Disallow: /register', $robots);
+        $this->assertStringContainsString('Disallow: /forgot-password', $robots);
     }
 
     public function test_legal_page_has_its_own_description_and_canonical_url(): void

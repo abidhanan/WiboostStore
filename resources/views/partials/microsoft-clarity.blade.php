@@ -20,7 +20,7 @@
         });
 
         window.addEventListener('load', () => {
-            window.setTimeout(loadClarity, 4000);
+            window.setTimeout(loadClarity, 15000);
         }, { once: true });
     })();
 </script>

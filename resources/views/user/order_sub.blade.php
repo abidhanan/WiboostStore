@@ -214,7 +214,7 @@
                 @if($categoryUsesTargetEmoji)
                     <span class="wiboost-suborder-emote drop-shadow-sm">{{ \App\Support\WiboostEmoji::forCategory($category) }}</span>
                 @elseif($category->image)
-                    <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="wiboost-header-logo-img drop-shadow-sm">
+                    <img src="{{ \App\Support\WiboostImage::thumb($category->image, 192) }}" alt="" class="wiboost-header-logo-img drop-shadow-sm">
                 @else
                     <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['label' => $category->name, 'class' => 'h-10 w-10'])</span>
                 @endif
@@ -258,7 +258,7 @@
                     @if($childUsesTargetEmoji)
                         <span class="wiboost-suborder-emote-large drop-shadow-md">{{ $childEmote }}</span>
                     @elseif($child->image)
-                        <img src="{{ Storage::url($child->image) }}" alt="{{ $child->name }}" class="wiboost-square-logo-img wiboost-suborder-logo-content drop-shadow-sm">
+                        <img src="{{ \App\Support\WiboostImage::thumb($child->image, 192) }}" alt="" decoding="async" {{ $loop->index >= 6 ? 'loading=lazy' : ($loop->first ? 'fetchpriority=high' : '') }} class="wiboost-square-logo-img wiboost-suborder-logo-content drop-shadow-sm">
                     @else
                         <span class="drop-shadow-md">@include('partials.wiboost-icon', ['label' => $child->name, 'class' => 'h-12 w-12'])</span>
                     @endif

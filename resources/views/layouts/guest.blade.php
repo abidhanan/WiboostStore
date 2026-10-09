@@ -15,10 +15,13 @@
     @include('partials.seo-meta', [
         'title' => $pageTitle,
         'description' => trim($__env->yieldContent('meta_description', 'Akses layanan Wiboost Store dengan aman dan praktis.')),
-        'robots' => 'noindex,nofollow,noarchive,nosnippet',
+        // Login & register boleh diindeks; halaman auth lain (lupa/reset password, verifikasi, form privat) tetap noindex.
+        'robots' => (request()->routeIs('login', 'register') || request()->is('login', 'register'))
+            ? 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
+            : 'noindex,nofollow,noarchive,nosnippet',
     ])
     @include('partials.site-icons')
-    <link rel="preload" as="image" href="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" fetchpriority="high">
+    <link rel="preload" as="image" type="image/webp" href="{{ asset('images/wiboost-logo-nav.png.webp') }}?v=20260613-nav2" fetchpriority="high">
 
     @include('partials.font-nunito')
     @include('partials.vite-preload')
@@ -346,7 +349,7 @@
             <nav class="{{ $isPublicMarketingForm ? 'wiboost-public-guest-nav fixed inset-x-0 top-0 z-50 px-0 pointer-events-none' : 'relative z-20 -mx-4 mt-0 w-auto sm:-mx-6 lg:-mx-8' }}">
                 <div class="{{ $isPublicMarketingForm ? 'wiboost-public-guest-nav-bar' : '' }} flex items-center justify-between rounded-none border-0 border-b-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-6 lg:px-8">
                     <a href="{{ Auth::check() ? (Auth::user()->isAdmin() ? route('admin.dashboard') : route('user.dashboard')) : route('home') }}" class="{{ $isPublicMarketingForm ? 'wiboost-public-guest-brand' : '' }} flex items-center gap-3 group">
-                        <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="{{ $isPublicMarketingForm ? 'wiboost-public-guest-logo' : '' }} h-12 w-12 shrink-0 rounded-full object-contain drop-shadow-sm transition-transform group-hover:scale-105 sm:h-14 sm:w-14">
+                        <img src="{{ asset('images/wiboost-logo-nav.png.webp') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="{{ $isPublicMarketingForm ? 'wiboost-public-guest-logo' : '' }} h-12 w-12 shrink-0 rounded-full object-contain drop-shadow-sm transition-transform group-hover:scale-105 sm:h-14 sm:w-14">
                         <p class="{{ $isPublicMarketingForm ? 'wiboost-public-guest-brand-text' : '' }} text-lg font-black leading-none text-[#2b3a67] drop-shadow-sm sm:text-2xl">Wiboost Store</p>
                     </a>
 

@@ -3,8 +3,6 @@ Allow: /
 Disallow: /admin
 Disallow: /user
 Disallow: /profile
-Disallow: /login
-Disallow: /register
 Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /formulir/

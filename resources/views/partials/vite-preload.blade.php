@@ -3,7 +3,8 @@
     $wiboostManifest = is_file($wiboostManifestPath)
         ? (json_decode((string) file_get_contents($wiboostManifestPath), true) ?: [])
         : [];
-    $wiboostCssFile = $wiboostManifest['resources/css/app.css']['file'] ?? null;
+    $wiboostCssEntryKey = $wiboostCssEntry ?? 'resources/css/app.css';
+    $wiboostCssFile = $wiboostManifest[$wiboostCssEntryKey]['file'] ?? null;
 @endphp
 
 @if($wiboostCssFile)

@@ -65,7 +65,7 @@
 
             <div class="wiboost-header-logo-frame col-start-1 row-start-2 flex shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] bg-[#f4f9ff] text-[#5a76c8] shadow-inner">
                 @if($subCategoryImage)
-                    <img src="{{ Storage::url($subCategoryImage) }}" alt="{{ $subCategory }}" class="wiboost-square-logo-img drop-shadow-sm">
+                    <img src="{{ \App\Support\WiboostImage::thumb($subCategoryImage, 192) }}" alt="" class="wiboost-square-logo-img drop-shadow-sm">
                 @else
                     <span class="text-4xl font-black drop-shadow-sm">{{ Str::upper(Str::substr($subCategory, 0, 1)) }}</span>
                 @endif

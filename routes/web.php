@@ -130,6 +130,51 @@ Route::get('/wiboost-share-preview-20261009-v5.jpg', function () {
     ]);
 })->name('social.preview.image');
 
+// Thumbnail WebP kecil untuk ikon kategori/produk; dibuat saat pertama diminta lalu disajikan statis.
+Route::get('/storage/thumbs/{size}/{path}', function (int $size, string $path) {
+    $thumb = \App\Support\WiboostImage::generate($size, $path);
+
+    if ($thumb === null) {
+        $original = \App\Support\WiboostImage::findSource(preg_replace('/\.webp$/i', '', $path) ?: $path);
+        abort_unless($original !== null, 404);
+
+        return Response::file($original, ['Cache-Control' => 'public, max-age=86400']);
+    }
+
+    return Response::file($thumb, [
+        'Content-Type' => 'image/webp',
+        'Cache-Control' => 'public, max-age=2592000',
+    ]);
+})->where('size', '96|128|192|256|384')->where('path', '[A-Za-z0-9_\-/.]+')
+    ->withoutMiddleware([
+        \Illuminate\Session\Middleware\StartSession::class,
+        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+        \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+    ])->name('wiboost.thumb');
+
+// Cadangan CSS utama: dilayani langsung dari folder build aplikasi (bukan docroot) dan hanya dipanggil
+// bila stylesheet Vite gagal dimuat. Tanpa sesi/cookie supaya bisa di-cache.
+Route::get('/wiboost-fallback.css', function () {
+    $manifestPath = public_path('build/manifest.json');
+    $manifest = is_file($manifestPath) ? (json_decode((string) file_get_contents($manifestPath), true) ?: []) : [];
+    $entry = request()->query("e") === "admin" ? "resources/css/admin.css" : "resources/css/app.css";
+    $cssFile = $manifest[$entry]["file"] ?? null;
+    $path = $cssFile ? public_path('build/' . $cssFile) : null;
+
+    abort_unless($path && is_file($path), 404);
+
+    return Response::file($path, [
+        'Content-Type' => 'text/css; charset=UTF-8',
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+})->withoutMiddleware([
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+])->name('wiboost.fallback-css');
+
 Route::get('/this.onerror=null;this.src={fallback}', function () {
     return redirect(asset('images/wiboost-logo-nav.png') . '?v=20260613-nav2', 301);
 })->where('fallback', '.*')

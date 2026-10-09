@@ -10,7 +10,7 @@
         'canonical' => route('home'),
     ])
     @include('partials.site-icons')
-    <link rel="preload" as="image" href="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" fetchpriority="high">
+    <link rel="preload" as="image" type="image/webp" href="{{ asset('images/wiboost-logo-nav.png.webp') }}?v=20260613-nav2" fetchpriority="high">
 
     @include('partials.font-nunito')
     @include('partials.vite-preload')
@@ -782,7 +782,7 @@
         <div class="w-full max-w-none pointer-events-auto">
             <div class="nav-skeu flex items-center justify-between rounded-none border-0 border-b-4 border-white bg-white/90 px-4 py-3 shadow-xl shadow-[#bde0fe]/50 backdrop-blur-md sm:px-6 lg:px-8">
                 <a href="{{ Auth::check() ? (Auth::user()->isAdmin() ? route('admin.dashboard') : route('user.dashboard')) : route('home') }}" class="flex items-center gap-3 group">
-                    <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 rounded-full object-contain drop-shadow-sm transition-transform group-hover:scale-105 sm:h-14 sm:w-14">
+                    <img src="{{ asset('images/wiboost-logo-nav.png.webp') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="h-12 w-12 shrink-0 rounded-full object-contain drop-shadow-sm transition-transform group-hover:scale-105 sm:h-14 sm:w-14">
                     <p class="text-lg font-black leading-none text-[#2b3a67] drop-shadow-sm sm:text-2xl">Wiboost Store</p>
                 </a>
                 <div class="flex items-center gap-3">
@@ -804,7 +804,7 @@
     <!-- SECTION HERO & DATA REAL-TIME -->
     <main class="welcome-hero-section relative flex items-center justify-center bg-wiboost-sky overflow-hidden border-b-[6px] border-[#f0f5ff]">
         <div class="welcome-section-inner max-w-7xl px-6 sm:px-8 lg:px-8 relative z-10">
-            <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="welcome-hero-logo">
+            <img src="{{ asset('images/wiboost-logo-nav.png.webp') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" fetchpriority="high" loading="eager" decoding="async" class="welcome-hero-logo">
             <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
                 <h1 class="welcome-hero-title font-black text-[#2b3a67] drop-shadow-sm">
                     Wiboost Store
@@ -861,7 +861,7 @@
                             @endif
                             <div class="welcome-category-icon mb-3 text-[#5a76c8] transition-transform duration-300 group-hover:scale-110">
                                 @if($cat->image)
-                                    <img src="{{ Storage::url($cat->image) }}" alt="{{ $cat->name }}" class="drop-shadow-sm">
+                                    <img src="{{ \App\Support\WiboostImage::thumb($cat->image, 192) }}" alt="" width="96" height="96" loading="lazy" decoding="async" class="drop-shadow-sm">
                                 @else
                                     <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['label' => $cat->name, 'class' => 'h-9 w-9'])</span>
                                 @endif

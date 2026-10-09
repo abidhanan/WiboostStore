@@ -21,7 +21,7 @@
         });
 
         window.addEventListener('load', () => {
-            window.setTimeout(loadGoogleAnalytics, 3000);
+            window.setTimeout(loadGoogleAnalytics, 12000);
         }, { once: true });
     })();
 </script>

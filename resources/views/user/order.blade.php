@@ -622,7 +622,7 @@
                 @if($categoryUsesTargetEmoji)
                     <span class="text-2xl leading-none drop-shadow-sm sm:text-3xl">{{ \App\Support\WiboostEmoji::forCategory($category) }}</span>
                 @elseif($category->image)
-                    <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="wiboost-header-logo-img drop-shadow-sm">
+                    <img src="{{ \App\Support\WiboostImage::thumb($category->image, 192) }}" alt="" class="wiboost-header-logo-img drop-shadow-sm">
                 @else
                     <span class="drop-shadow-sm">@include('partials.wiboost-icon', ['label' => $category->name, 'class' => 'h-10 w-10'])</span>
                 @endif
@@ -833,7 +833,7 @@
                         @elseif(! $forceEmoteLogoOnly && $product->display_logo_image)
                             <div class="{{ $logoBoxClass }}">
                                 <span class="hidden text-[#5a76c8] drop-shadow-sm">@include('partials.wiboost-icon', ['label' => $product->name, 'class' => 'h-10 w-10'])</span>
-                                <img src="{{ Storage::url($product->display_logo_image) }}" alt="" class="wiboost-square-logo-img drop-shadow-sm" onerror="this.classList.add('hidden'); this.previousElementSibling.classList.remove('hidden');">
+                                <img src="{{ \App\Support\WiboostImage::thumb($product->display_logo_image, 192) }}" alt="" decoding="async" class="wiboost-square-logo-img drop-shadow-sm" onerror="this.classList.add('hidden'); this.previousElementSibling.classList.remove('hidden');">
                             </div>
                         @elseif($product->display_logo_emote)
                             <div class="{{ $logoBoxClass }} text-[#5a76c8] drop-shadow-sm">

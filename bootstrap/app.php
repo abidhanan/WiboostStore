@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         foreach ([
             \App\Http\Middleware\CompressTextResponse::class,
+            \App\Http\Middleware\MinifyInlineCss::class,
             \App\Http\Middleware\LogActivity::class,
         ] as $middlewareClass) {
             if (class_exists($middlewareClass)) {

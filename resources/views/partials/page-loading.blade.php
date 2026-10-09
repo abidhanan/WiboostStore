@@ -56,7 +56,7 @@
     <div class="text-center">
         <div class="wiboost-loader-mark mx-auto mb-4">
             <div class="wiboost-loader-ring"></div>
-            <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Loading Wiboost Store" width="192" height="192" loading="eager" decoding="async" class="wiboost-loader-logo drop-shadow-lg">
+            <img src="{{ asset('images/wiboost-logo-nav.png.webp') }}?v=20260613-nav2" alt="Loading Wiboost Store" width="192" height="192" loading="eager" decoding="async" class="wiboost-loader-logo drop-shadow-lg">
         </div>
         <p class="text-sm font-black tracking-wide text-white">Memuat...</p>
     </div>

@@ -33,7 +33,7 @@
         'robots' => 'noindex,nofollow,noarchive,nosnippet',
     ])
     @include('partials.site-icons')
-    <link rel="preload" as="image" href="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" fetchpriority="high">
+    <link rel="preload" as="image" type="image/webp" href="{{ asset('images/wiboost-logo-nav.png.webp') }}?v=20260613-nav2" fetchpriority="high">
     @include('partials.font-nunito')
     @include('partials.vite-preload')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -738,7 +738,7 @@
             $currentUser = $currentUser->fresh();
             Auth::setUser($currentUser);
         }
-        $brandLogoUrl = asset('images/wiboost-logo-nav.png') . '?v=20260613-nav2';
+        $brandLogoUrl = asset('images/wiboost-logo-nav.png.webp') . '?v=20260613-nav2';
         $defaultProfilePhotoUrl = \App\Models\User::defaultProfilePhotoUrl();
         $currentUserPhotoUrl = $currentUser?->profile_photo_url ?? $defaultProfilePhotoUrl;
         $currentUserDisplayName = trim((string) ($currentUser?->name ?? 'User'));

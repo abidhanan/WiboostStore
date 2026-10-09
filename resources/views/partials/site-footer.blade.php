@@ -7,7 +7,7 @@
         <div class="mb-10 flex flex-col items-center gap-6 text-center md:flex-row md:justify-between md:gap-8 md:text-left">
             <div class="min-w-0 text-center md:text-left">
                 <div class="mb-3 flex items-center justify-center gap-2 md:justify-start">
-                    <img src="{{ asset('images/wiboost-logo-nav.png') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" loading="lazy" decoding="async" class="h-10 w-10 shrink-0 object-contain drop-shadow-sm md:h-12 md:w-12">
+                    <img src="{{ asset('images/wiboost-logo-nav.png.webp') }}?v=20260613-nav2" alt="Logo Wiboost Store" width="192" height="192" loading="lazy" decoding="async" class="h-10 w-10 shrink-0 object-contain drop-shadow-sm md:h-12 md:w-12">
                     <span class="whitespace-nowrap text-xl font-black text-[#2b3a67] md:text-2xl">Wiboost Store</span>
                 </div>
                 <p class="footer-description mx-auto font-bold text-[#8faaf3] md:mx-0"><span class="md:block md:whitespace-nowrap">Platform penyedia layanan suntik sosmed, top up game,</span> <span class="md:block md:whitespace-nowrap">paket data operator, dan aplikasi premium dengan proses cepat, aman, dan praktis.</span></p>
